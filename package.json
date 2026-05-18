@@ -1,0 +1,13 @@
+{
+  "name": "fortune-hunter",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "generate": "node scripts/generate-data.mjs",
+    "dev": "node scripts/serve.mjs",
+    "check": "node --check scripts/generate-data.mjs && node --check scripts/serve.mjs"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}

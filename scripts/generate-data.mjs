@@ -105,6 +105,13 @@ function average(values, period) {
   return slice.reduce((sum, value) => sum + value, 0) / period;
 }
 
+function stddev(values) {
+  if (!values.length) return null;
+  const mean = values.reduce((sum, value) => sum + value, 0) / values.length;
+  const variance = values.reduce((sum, value) => sum + (value - mean) ** 2, 0) / values.length;
+  return Math.sqrt(variance);
+}
+
 function ema(values, period) {
   if (values.length < period) return null;
   const first = values.slice(0, period).reduce((sum, value) => sum + value, 0) / period;
@@ -144,6 +151,7 @@ function round(value, digits = 2) {
 function analyzeWindow(history, stock) {
   const closes = history.map(day => day.close);
   const volumes = history.map(day => day.volume || 0);
+  const returns = closes.slice(1).map((value, idx) => (value - closes[idx]) / closes[idx]);
   const latest = history.at(-1);
   const ma5 = average(closes, 5);
   const ma20 = average(closes, 20);
@@ -153,10 +161,72 @@ function analyzeWindow(history, stock) {
   const vol20 = average(volumes, 20);
   const ret20 = closes.length > 20 ? pct(latest.close, closes.at(-21)) : null;
   const ret60 = closes.length > 60 ? pct(latest.close, closes.at(-61)) : null;
+  const returnAbs60 = returns.length >= 60 ? returns.slice(-60).reduce((sum, value) => sum + Math.abs(value), 0) : null;
+  const intentFactor60 = returnAbs60 && ret60 !== null ? (ret60 / 100) / returnAbs60 : null;
+  const std20 = returns.length >= 20 ? stddev(returns.slice(-20)) : null;
+  const std60 = returns.length >= 60 ? stddev(returns.slice(-60)) : null;
+  const min60 = closes.length >= 60 ? Math.min(...closes.slice(-60)) : null;
+  const max60 = closes.length >= 60 ? Math.max(...closes.slice(-60)) : null;
+  const rsv60 = min60 !== null && max60 !== null && max60 !== min60 ? (latest.close - min60) / (max60 - min60) : null;
+
+  const gateTrend = ma60 && latest.close > ma60;
+  const gateVolume = latest.volume > 100000;
+  const gateOverheat = ret60 === null || ret60 < 20;
 
   let score = 0;
   const reasons = [];
   const risks = [];
+
+  if (gateTrend) {
+    score += 8;
+    reasons.push('股價位於60日線上方，符合中期多頭趨勢。');
+  } else {
+    score -= 12;
+    risks.push('股價跌回60日線下方，趨勢保護不足。');
+  }
+  if (gateVolume) {
+    score += 6;
+    reasons.push('日成交量高於10萬股，具備基本流動性。');
+  } else {
+    score -= 10;
+    risks.push('成交量偏低，進出場滑價風險較高。');
+  }
+  if (gateOverheat) {
+    score += 4;
+  } else {
+    score -= 12;
+    risks.push(`近60日漲幅 ${ret60.toFixed(1)}% 偏大，容易追高。`);
+  }
+  if (intentFactor60 !== null) {
+    if (intentFactor60 > 0.42) {
+      score += 15;
+      reasons.push(`價格意圖因子 ${intentFactor60.toFixed(3)} 偏高，走勢較接近穩定推升。`);
+    } else if (intentFactor60 > 0.28) {
+      score += 8;
+      reasons.push(`價格意圖因子 ${intentFactor60.toFixed(3)} 中性偏強。`);
+    } else {
+      score -= 10;
+      risks.push(`價格意圖因子 ${intentFactor60.toFixed(3)} 偏低，價格路徑較震盪。`);
+    }
+  }
+  if (rsv60 !== null) {
+    if (rsv60 > 0.9) {
+      score += 12;
+      reasons.push(`60日相對位置 ${rsv60.toFixed(2)}，屬於高動能區。`);
+    } else if (rsv60 < 0.35) {
+      score -= 8;
+      risks.push(`60日相對位置 ${rsv60.toFixed(2)} 偏低，動能不足。`);
+    }
+  }
+  if (std20 !== null && std60 !== null) {
+    if (std20 < std60 * 0.9) {
+      score += 8;
+      reasons.push('短期波動低於長期波動，價格結構較穩。');
+    } else if (std20 > std60 * 1.2) {
+      score -= 8;
+      risks.push('短期波動明顯放大，回撤風險升高。');
+    }
+  }
 
   if (ma20 && ma60 && latest.close > ma20 && ma20 > ma60) {
     score += 24;
@@ -208,7 +278,8 @@ function analyzeWindow(history, stock) {
   }
 
   score = Math.max(0, Math.min(100, Math.round(score)));
-  const signal = score >= 68 ? '買入候選' : score >= 55 ? '觀察候選' : '暫不進場';
+  const hardPass = gateTrend && gateVolume && gateOverheat;
+  const signal = hardPass ? (score >= 72 ? '買入候選' : score >= 58 ? '觀察候選' : '暫不進場') : '暫不進場';
   const stop = ma20 ? Math.min(latest.close * 0.92, ma20 * 0.97) : latest.close * 0.92;
   const riskPerShare = Math.max(latest.close - stop, latest.close * 0.03);
   const entryLow = ma20 ? Math.max(stop, ma20 * 0.99) : latest.close * 0.985;
@@ -225,7 +296,13 @@ function analyzeWindow(history, stock) {
     change60d: round(ret60),
     metrics: {
       ma5: round(ma5), ma20: round(ma20), ma60: round(ma60),
-      rsi14: round(rsi14, 1), macd: round(macdNow), volume20d: Math.round(vol20 || 0)
+      rsi14: round(rsi14, 1),
+      macd: round(macdNow),
+      volume20d: Math.round(vol20 || 0),
+      std20: round(std20, 4),
+      std60: round(std60, 4),
+      rsv60: round(rsv60, 3),
+      intentFactor60: round(intentFactor60, 4)
     },
     reasons,
     risks,
@@ -323,7 +400,7 @@ async function main() {
     generatedAtTaipei: new Intl.DateTimeFormat('zh-TW', {
       timeZone: 'Asia/Taipei', dateStyle: 'medium', timeStyle: 'medium'
     }).format(new Date()),
-    source: 'TWSE OpenAPI、TPEx 公開日收盤 API、Yahoo Finance chart API；GitHub Actions 定時更新。',
+    source: 'TWSE OpenAPI、TPEx 公開日收盤 API、Yahoo Finance chart API；整合價格意圖因子與60日動能/波動框架，GitHub Actions 定時更新。',
     universeSize: universe.length,
     scanned: pool.length,
     scanStrategy: `上市成交金額前 ${Math.min(twse.length, SYMBOLS_PER_MARKET)} 檔 + 上櫃成交金額前 ${Math.min(tpex.length, SYMBOLS_PER_MARKET)} 檔`,

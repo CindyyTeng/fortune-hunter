@@ -377,6 +377,10 @@ function renderCard(item) {
           <div class="metric"><b>${fmt(item.metrics?.rsi14)}</b><span>RSI(14)</span></div>
           <div class="metric"><b>${money(item.metrics?.ma20)}</b><span>20日線</span></div>
           <div class="metric"><b class="${pctClass(item.change60d)}">${fmt(item.change60d, '%')}</b><span>近三個月</span></div>
+          <div class="metric"><b>${fmt(item.metrics?.intentFactor60)}</b><span>價格意圖因子(60日)</span></div>
+          <div class="metric"><b>${fmt(item.metrics?.rsv60)}</b><span>60日相對位置</span></div>
+          <div class="metric"><b>${fmt(item.metrics?.std20)}</b><span>20日波動</span></div>
+          <div class="metric"><b>${fmt(item.metrics?.std60)}</b><span>60日波動</span></div>
         </div>
 
         <div class="section-title">推論依據</div>

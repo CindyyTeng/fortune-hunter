@@ -87,6 +87,18 @@ button { font:inherit; }
   white-space:nowrap;
 }
 .refresh:disabled { opacity:.62; cursor:wait; }
+.action-group { display:flex; gap:8px; width:100%; max-width:290px; }
+.live {
+  min-height:40px;
+  padding:8px 12px;
+  border:1px solid rgba(255,255,255,.24);
+  background:rgba(251,248,237,.12);
+  color:#fbf8ed;
+  border-radius:8px;
+  cursor:pointer;
+  font-weight:800;
+  white-space:nowrap;
+}
 .hero {
   display:grid;
   grid-template-columns:minmax(0, 1fr) 310px;
@@ -253,7 +265,8 @@ footer {
 @media (max-width: 860px) {
   #app { padding:10px 8px 42px; }
   .topbar { align-items:flex-start; flex-direction:column; }
-  .refresh { width:100%; }
+  .action-group { max-width:none; }
+  .refresh, .live { width:100%; }
   .hero { grid-template-columns:1fr; padding:18px 14px; }
   .hero h1 { font-size:38px; }
   .stats { grid-template-columns:repeat(2, 1fr); }
@@ -282,7 +295,10 @@ footer {
           <strong>獵金羅盤</strong>
         </div>
       </div>
-      <button id="refresh" class="refresh" type="button">重新讀取</button>
+      <div class="action-group">
+        <button id="refresh" class="refresh" type="button">重新讀取</button>
+        <button id="live" class="live" type="button">即時連線</button>
+      </div>
     </header>
 
     <section class="hero">
@@ -316,6 +332,7 @@ footer {
 <script>
 const els = {
   refresh: document.getElementById('refresh'),
+  live: document.getElementById('live'),
   asOf: document.getElementById('asOf'),
   universe: document.getElementById('universe'),
   scanned: document.getElementById('scanned'),
@@ -325,6 +342,9 @@ const els = {
   message: document.getElementById('message'),
   cards: document.getElementById('cards')
 };
+let currentData = null;
+let liveSource = null;
+let liveUrl = localStorage.getItem('fh_live_url') || '';
 
 const escapeMap = { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' };
 function esc(value) {
@@ -374,6 +394,7 @@ function renderCard(item) {
 
         <div class="metrics">
           <div class="metric"><b>${money(item.latestPrice)}</b><span>最新收盤 ${esc(item.latestDate || '')}</span></div>
+          <div class="metric"><b class="${pctClass(item.liveChangePercent)}">${fmt(item.liveChangePercent, '%')}</b><span>即時變動(若有)</span></div>
           <div class="metric"><b>${fmt(item.metrics?.rsi14)}</b><span>RSI(14)</span></div>
           <div class="metric"><b>${money(item.metrics?.ma20)}</b><span>20日線</span></div>
           <div class="metric"><b class="${pctClass(item.change60d)}">${fmt(item.change60d, '%')}</b><span>近三個月</span></div>
@@ -410,6 +431,7 @@ async function loadData() {
     const response = await fetch(`data/recommendations.json?ts=${Date.now()}`, { cache:'no-store' });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const data = await response.json();
+    currentData = data;
     const count = data.recommendations?.length || 0;
     els.asOf.textContent = data.generatedAtTaipei || localTime(data.asOf);
     els.universe.textContent = Number(data.universeSize || 0).toLocaleString('zh-TW');
@@ -424,6 +446,7 @@ async function loadData() {
       return;
     }
     els.cards.innerHTML = data.recommendations.map(renderCard).join('');
+    if (liveUrl) connectLive(liveUrl);
   } catch (error) {
     els.message.textContent = `資料讀取失敗：${error.message}`;
     els.heroCopy.textContent = '資料尚未準備完成。';
@@ -433,7 +456,64 @@ async function loadData() {
   }
 }
 
+function applyLiveQuotes(payload) {
+  if (!currentData?.recommendations?.length || !payload?.quotes?.length) return;
+  const quoteMap = new Map(payload.quotes.map(quote => [quote.symbol, quote]));
+  for (const row of currentData.recommendations) {
+    const symbol = `${row.code}.${row.market === '上市' ? 'TW' : 'TWO'}`;
+    const live = quoteMap.get(symbol);
+    if (!live) continue;
+    row.latestPrice = live.price;
+    row.latestDate = new Date(live.ts).toISOString().slice(0, 10);
+    row.liveChangePercent = live.changePercent;
+  }
+  els.asOf.textContent = `即時 ${new Intl.DateTimeFormat('zh-TW', { timeStyle:'medium' }).format(new Date())}`;
+  els.cards.innerHTML = currentData.recommendations.map(renderCard).join('');
+}
+
+function connectLive(url) {
+  if (liveSource) {
+    liveSource.close();
+    liveSource = null;
+  }
+  try {
+    const streamUrl = url.endsWith('/stream') ? url : `${url.replace(/\/$/, '')}/stream`;
+    liveSource = new EventSource(streamUrl);
+    liveSource.addEventListener('quotes', event => {
+      const payload = JSON.parse(event.data);
+      applyLiveQuotes(payload);
+      els.message.textContent = `即時串流中：${url}`;
+    });
+    liveSource.addEventListener('error', () => {
+      els.message.textContent = `即時串流中斷，使用靜態資料：${url}`;
+    });
+  } catch (error) {
+    els.message.textContent = `即時串流啟動失敗：${error.message}`;
+  }
+}
+
+function setupLiveButton() {
+  els.live.textContent = liveUrl ? '即時連線中' : '即時連線';
+  els.live.addEventListener('click', () => {
+    const input = prompt('請輸入後端網址，例如 https://your-live.onrender.com', liveUrl || '');
+    if (input === null) return;
+    liveUrl = input.trim();
+    if (!liveUrl) {
+      localStorage.removeItem('fh_live_url');
+      if (liveSource) liveSource.close();
+      liveSource = null;
+      els.live.textContent = '即時連線';
+      els.message.textContent = '已關閉即時模式，使用 GitHub Actions 產生的靜態資料。';
+      return;
+    }
+    localStorage.setItem('fh_live_url', liveUrl);
+    els.live.textContent = '即時連線中';
+    connectLive(liveUrl);
+  });
+}
+
 els.refresh.addEventListener('click', loadData);
+setupLiveButton();
 loadData();
 </script>
 </body>

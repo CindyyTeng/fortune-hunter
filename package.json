@@ -6,7 +6,8 @@
   "scripts": {
     "generate": "node scripts/generate-data.mjs",
     "dev": "node scripts/serve.mjs",
-    "check": "node --check scripts/generate-data.mjs && node --check scripts/serve.mjs"
+    "live": "node scripts/live-server.mjs",
+    "check": "node --check scripts/generate-data.mjs && node --check scripts/serve.mjs && node --check scripts/live-server.mjs"
   },
   "dependencies": {},
   "devDependencies": {}

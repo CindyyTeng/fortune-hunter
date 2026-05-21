@@ -3,24 +3,26 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>獵金羅盤 Fortune Hunter</title>
+<title>Fortune Hunter 中短期型態選股</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Noto+Serif+TC:wght@700;900&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Newsreader:opsz,wght@6..72,600;6..72,700&display=swap" rel="stylesheet">
 <style>
 :root {
-  --ink:#162019;
-  --muted:#6c7666;
-  --panel:#fffdf5;
-  --panel-soft:#f6f0df;
-  --line:rgba(33,48,33,.14);
-  --green:#1f6a45;
-  --green-dark:#143d2b;
-  --mint:#dcebd8;
-  --gold:#c8952f;
-  --gold-soft:#fff1c7;
-  --red:#b34034;
-  --teal:#247c75;
-  --shadow:0 16px 42px rgba(24,39,26,.14);
+  --ink:#21191a;
+  --muted:#6c5d61;
+  --line:rgba(84,44,53,.16);
+  --paper:#fffaf5;
+  --paper-soft:#fff3ea;
+  --paper-deep:#f7e2d7;
+  --brand:#a12d3f;
+  --brand-strong:#7f1d33;
+  --brand-soft:#f4d3db;
+  --warn:#d28a2f;
+  --navy:#24324a;
+  --down:#1d8b66;
+  --up:#c43a3a;
+  --shadow:0 18px 44px rgba(75,31,42,.12);
 }
 * { box-sizing:border-box; }
 body {
@@ -29,9 +31,9 @@ body {
   color:var(--ink);
   font-family:'Noto Sans TC', sans-serif;
   background:
-    linear-gradient(120deg, rgba(255,255,255,.72) 0 1px, transparent 1px 42px),
-    linear-gradient(90deg, rgba(31,106,69,.08), transparent 34%),
-    linear-gradient(180deg, #fbf8ed 0%, #edf4e7 48%, #d7e9d3 100%);
+    radial-gradient(circle at top right, rgba(161,45,63,.12), transparent 28%),
+    radial-gradient(circle at left 20%, rgba(210,138,47,.10), transparent 30%),
+    linear-gradient(180deg, #fffdfb 0%, #fff7f1 48%, #f8ebe4 100%);
 }
 body::before {
   content:"";
@@ -39,136 +41,224 @@ body::before {
   inset:0;
   pointer-events:none;
   background:
-    linear-gradient(135deg, transparent 0 58%, rgba(200,149,47,.12) 58% 59%, transparent 59%),
-    radial-gradient(ellipse at 72% 8%, rgba(36,124,117,.16), transparent 42%);
+    linear-gradient(120deg, rgba(255,255,255,.46) 0 1px, transparent 1px 34px),
+    linear-gradient(90deg, rgba(161,45,63,.05), transparent 38%);
   z-index:-1;
 }
 button { font:inherit; }
-#app { width:min(1180px, 100%); margin:0 auto; padding:22px 14px 58px; }
+a { color:inherit; }
+#app { width:min(1240px, 100%); margin:0 auto; padding:22px 14px 60px; }
 .shell {
   border:1px solid var(--line);
-  background:rgba(255,253,245,.82);
+  border-radius:22px;
+  background:rgba(255,250,245,.86);
   box-shadow:var(--shadow);
-  backdrop-filter:blur(10px);
+  backdrop-filter:blur(12px);
+  overflow:hidden;
 }
 .topbar {
   display:flex;
-  align-items:center;
   justify-content:space-between;
-  gap:14px;
-  padding:14px 18px;
-  border-radius:8px 8px 0 0;
-  background:#17241b;
-  color:#fbf8ed;
+  align-items:center;
+  gap:18px;
+  padding:18px 22px;
+  background:
+    linear-gradient(135deg, rgba(255,255,255,.08), transparent 42%),
+    linear-gradient(120deg, var(--navy), #301a22 60%, var(--brand-strong));
+  color:#fff7f1;
 }
-.brand { display:flex; align-items:center; gap:12px; min-width:0; }
+.brand {
+  display:flex;
+  align-items:center;
+  gap:14px;
+  min-width:0;
+}
 .brand-mark {
-  width:38px;
-  height:38px;
+  width:44px;
+  height:44px;
   display:grid;
   place-items:center;
-  border:1px solid rgba(255,255,255,.22);
-  background:linear-gradient(135deg, var(--gold), #ffe6a3);
-  color:#17241b;
+  border-radius:14px;
+  background:linear-gradient(135deg, #ffcc89, #fff2d8);
+  color:#4a1d23;
   font-weight:900;
-  border-radius:50%;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.45);
 }
-.brand small { display:block; color:#cbd8bf; font-size:12px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; }
-.brand strong { display:block; font-family:'Noto Serif TC', serif; font-size:24px; letter-spacing:.04em; white-space:nowrap; }
-.refresh {
-  min-height:40px;
-  padding:8px 14px;
-  border:1px solid rgba(255,255,255,.24);
-  background:#fbf8ed;
-  color:#17241b;
-  border-radius:8px;
-  cursor:pointer;
-  font-weight:900;
-  white-space:nowrap;
+.brand small {
+  display:block;
+  color:#f7d8dc;
+  font-size:12px;
+  font-weight:700;
+  letter-spacing:.14em;
+  text-transform:uppercase;
 }
-.refresh:disabled { opacity:.62; cursor:wait; }
-.action-group { display:flex; gap:8px; width:100%; max-width:290px; }
+.brand strong {
+  display:block;
+  font-family:'Newsreader', serif;
+  font-size:28px;
+  letter-spacing:.01em;
+}
+.action-group {
+  display:flex;
+  gap:10px;
+  width:100%;
+  max-width:320px;
+}
+.refresh,
 .live {
-  min-height:40px;
-  padding:8px 12px;
-  border:1px solid rgba(255,255,255,.24);
-  background:rgba(251,248,237,.12);
-  color:#fbf8ed;
-  border-radius:8px;
+  flex:1;
+  min-height:42px;
+  padding:10px 14px;
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,.18);
   cursor:pointer;
   font-weight:800;
-  white-space:nowrap;
+}
+.refresh {
+  background:#fff8f2;
+  color:#351c21;
+}
+.live {
+  background:rgba(255,255,255,.08);
+  color:#fff7f1;
+}
+.refresh:disabled,
+.live:disabled {
+  opacity:.64;
+  cursor:wait;
 }
 .hero {
   display:grid;
-  grid-template-columns:minmax(0, 1fr) 310px;
+  grid-template-columns:minmax(0, 1.25fr) minmax(270px, .75fr);
   gap:18px;
   padding:24px 22px 18px;
 }
-.hero h1 {
-  margin:0;
-  max-width:820px;
-  font-family:'Noto Serif TC', serif;
-  font-size:52px;
-  line-height:1.05;
-  letter-spacing:0;
-  color:#173c28;
+.hero-copy {
+  padding:24px;
+  border-radius:22px;
+  background:
+    linear-gradient(140deg, rgba(161,45,63,.10), rgba(255,255,255,.75)),
+    linear-gradient(180deg, #fffdfb, #fff3ea);
+  border:1px solid rgba(161,45,63,.12);
 }
-.lead { margin:12px 0 0; max-width:760px; color:var(--muted); line-height:1.75; }
+.hero-copy h1 {
+  margin:0;
+  font-family:'Newsreader', serif;
+  font-size:54px;
+  line-height:1;
+  letter-spacing:-.02em;
+  color:#341a1e;
+}
+.lead {
+  margin:14px 0 0;
+  max-width:720px;
+  color:var(--muted);
+  line-height:1.8;
+}
+.hero-chip-row {
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  margin-top:18px;
+}
+.hero-chip {
+  padding:8px 12px;
+  border-radius:999px;
+  background:#fff7ef;
+  border:1px solid rgba(161,45,63,.14);
+  color:#5a2e34;
+  font-size:12px;
+  font-weight:800;
+}
 .market-card {
-  align-self:stretch;
-  border:1px solid var(--line);
-  border-radius:8px;
-  background:linear-gradient(180deg, #1f6a45, #173c28);
-  color:#fbf8ed;
-  padding:16px;
+  display:grid;
+  gap:14px;
+  padding:20px;
+  border-radius:22px;
+  background:
+    linear-gradient(180deg, rgba(36,50,74,.98), rgba(55,25,34,.96)),
+    linear-gradient(180deg, #24324a, #3c1d28);
+  color:#fff7f1;
   position:relative;
   overflow:hidden;
 }
 .market-card::after {
   content:"";
   position:absolute;
-  inset:auto -20px -26px 28%;
-  height:90px;
-  background:linear-gradient(135deg, transparent 0 42%, rgba(255,230,163,.34) 42% 44%, transparent 44% 55%, rgba(255,230,163,.22) 55% 57%, transparent 57%);
+  inset:auto -24px -24px auto;
+  width:140px;
+  height:140px;
+  border-radius:50%;
+  background:radial-gradient(circle, rgba(255,205,136,.35), transparent 70%);
 }
-.market-card span { color:#d8e8d4; font-size:12px; font-weight:700; }
-.market-card b { display:block; margin-top:6px; font-size:32px; line-height:1; }
-.market-card p { margin:10px 0 0; color:#eaf2dc; line-height:1.6; position:relative; z-index:1; }
+.market-card span {
+  color:#ffd2d8;
+  font-size:12px;
+  font-weight:700;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+}
+.market-card b {
+  display:block;
+  font-size:34px;
+  line-height:1;
+}
+.market-card p {
+  margin:0;
+  color:#fde9ea;
+  line-height:1.7;
+  position:relative;
+  z-index:1;
+}
 .stats {
   display:grid;
   grid-template-columns:repeat(4, 1fr);
-  gap:1px;
-  border-top:1px solid var(--line);
-  border-bottom:1px solid var(--line);
-  background:var(--line);
+  gap:12px;
+  padding:0 22px 22px;
 }
 .stat {
-  padding:14px 18px;
-  background:rgba(255,253,245,.86);
+  padding:16px;
+  border-radius:18px;
+  border:1px solid var(--line);
+  background:rgba(255,250,245,.9);
+  box-shadow:0 8px 20px rgba(73,35,43,.05);
 }
-.stat strong { display:block; font-size:22px; color:#183f2a; line-height:1.2; word-break:break-word; }
-.stat span { display:block; margin-top:4px; color:var(--muted); font-size:12px; }
+.stat strong {
+  display:block;
+  font-size:22px;
+  color:#311c21;
+  line-height:1.2;
+}
+.stat span {
+  display:block;
+  margin-top:6px;
+  color:var(--muted);
+  font-size:12px;
+}
 .notice {
-  margin:16px 0;
-  padding:13px 14px;
-  border:1px solid rgba(36,124,117,.18);
-  border-left:4px solid var(--teal);
-  border-radius:8px;
-  background:rgba(255,253,245,.72);
-  color:#354438;
-  line-height:1.65;
+  margin:18px 0;
+  padding:15px 16px;
+  border:1px solid rgba(161,45,63,.18);
+  border-left:6px solid var(--brand);
+  border-radius:16px;
+  background:rgba(255,250,245,.9);
+  color:#51363b;
+  line-height:1.7;
 }
-.cards { display:grid; gap:12px; }
+.cards {
+  display:grid;
+  gap:14px;
+}
 .card {
   display:grid;
-  grid-template-columns:minmax(0, 1fr) 300px;
+  grid-template-columns:minmax(0, 1fr) 320px;
   gap:16px;
-  padding:16px;
+  padding:18px;
   border:1px solid var(--line);
-  border-radius:8px;
-  background:rgba(255,253,245,.9);
-  box-shadow:0 10px 26px rgba(24,39,26,.08);
+  border-radius:22px;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.9), rgba(255,246,240,.94));
+  box-shadow:0 14px 32px rgba(73,35,43,.08);
 }
 .card-head {
   display:flex;
@@ -176,111 +266,220 @@ button { font:inherit; }
   gap:16px;
   align-items:flex-start;
 }
-.stock-name { margin:0; font-size:25px; line-height:1.25; }
-.stock-code { display:inline-block; margin-left:8px; color:var(--muted); font-size:13px; font-weight:700; }
-.signal {
+.stock-name {
+  margin:0;
+  font-size:28px;
+  line-height:1.15;
+}
+.stock-code {
+  display:inline-block;
+  margin-left:10px;
+  color:var(--muted);
+  font-size:13px;
+  font-weight:700;
+}
+.signal-row {
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  margin-top:10px;
+}
+.signal,
+.sell-badge {
   display:inline-flex;
-  margin-top:8px;
-  padding:4px 9px;
-  border:1px solid rgba(31,106,69,.24);
+  align-items:center;
+  padding:5px 10px;
   border-radius:999px;
-  background:var(--mint);
-  color:#173c28;
   font-size:12px;
   font-weight:900;
 }
+.signal {
+  border:1px solid rgba(161,45,63,.18);
+  background:var(--brand-soft);
+  color:#6b1e30;
+}
+.sell-badge {
+  border:1px solid rgba(36,50,74,.16);
+  background:#f8ebe4;
+  color:#49343a;
+}
 .score {
-  min-width:102px;
+  min-width:132px;
   text-align:right;
 }
-.score strong { display:block; color:#173c28; font-size:42px; line-height:.95; }
-.score span { color:var(--muted); font-size:12px; font-weight:700; }
+.score strong {
+  display:block;
+  font-size:46px;
+  line-height:.95;
+  color:#341a1e;
+}
+.score span {
+  color:var(--muted);
+  font-size:12px;
+  font-weight:700;
+}
 .score-bar {
-  height:6px;
-  margin-top:8px;
-  border-radius:99px;
-  background:#e4dfcf;
+  height:8px;
+  margin-top:10px;
+  border-radius:999px;
+  background:#eaded8;
   overflow:hidden;
 }
-.score-bar i { display:block; height:100%; width:var(--score); background:linear-gradient(90deg, var(--gold), var(--green)); }
+.score-bar i {
+  display:block;
+  height:100%;
+  width:var(--score);
+  background:linear-gradient(90deg, #d99843, var(--brand));
+}
 .metrics {
   display:grid;
   grid-template-columns:repeat(4, minmax(0, 1fr));
-  gap:8px;
-  margin:14px 0;
+  gap:10px;
+  margin:16px 0;
 }
 .metric {
-  min-height:76px;
-  padding:10px;
-  border:1px solid var(--line);
-  border-radius:8px;
-  background:#fffaf0;
+  min-height:84px;
+  padding:12px;
+  border:1px solid rgba(161,45,63,.12);
+  border-radius:16px;
+  background:#fff8f2;
 }
-.metric b { display:block; font-size:16px; overflow-wrap:anywhere; }
-.metric span { display:block; margin-top:4px; color:var(--muted); font-size:11px; line-height:1.35; }
-.section-title { margin:15px 0 7px; color:#173c28; font-size:13px; font-weight:900; letter-spacing:.04em; text-transform:uppercase; }
+.metric b {
+  display:block;
+  font-size:16px;
+  color:#301c21;
+  overflow-wrap:anywhere;
+}
+.metric span {
+  display:block;
+  margin-top:6px;
+  color:var(--muted);
+  font-size:11px;
+  line-height:1.4;
+}
+.section-title {
+  margin:16px 0 8px;
+  color:#4f2730;
+  font-size:13px;
+  font-weight:900;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+}
 .reason-list {
   margin:0;
   padding-left:18px;
-  line-height:1.72;
+  line-height:1.76;
 }
-.reason-list li { margin:2px 0; }
-.plan { display:grid; gap:8px; }
+.reason-list li { margin:3px 0; }
+.plan {
+  display:grid;
+  gap:10px;
+}
 .plan-row {
-  padding:10px 11px;
-  border:1px solid rgba(200,149,47,.22);
-  border-radius:8px;
-  background:linear-gradient(180deg, #fffdf7, #fff7df);
-  line-height:1.64;
+  padding:12px;
+  border-radius:16px;
+  border:1px solid rgba(210,138,47,.22);
+  background:linear-gradient(180deg, #fffdf8, #fff4e7);
+  line-height:1.7;
 }
 .side {
   border-left:1px solid var(--line);
   padding-left:16px;
 }
-.backtests { display:grid; gap:8px; }
-.backtest {
-  padding:10px;
-  border:1px solid rgba(36,124,117,.18);
-  border-radius:8px;
-  background:rgba(36,124,117,.07);
-  line-height:1.55;
+.side-panel {
+  padding:14px;
+  border-radius:18px;
+  border:1px solid rgba(36,50,74,.10);
+  background:#fff7f1;
 }
-.backtest b { display:block; color:#1f4e4a; margin-bottom:3px; }
-.positive { color:#1f6a45; font-weight:900; }
-.negative { color:var(--red); font-weight:900; }
+.warning-box {
+  padding:12px;
+  border-radius:16px;
+  border:1px solid rgba(161,45,63,.18);
+  background:linear-gradient(180deg, #fff3f3, #fff7f2);
+  line-height:1.7;
+}
+.warning-box strong {
+  color:#7f1d33;
+}
+.backtests {
+  display:grid;
+  gap:10px;
+}
+.backtest {
+  padding:12px;
+  border:1px solid rgba(36,50,74,.12);
+  border-radius:16px;
+  background:#fdf8f4;
+  line-height:1.6;
+}
+.backtest b {
+  display:block;
+  color:#2f2f3a;
+  margin-bottom:4px;
+}
+.positive {
+  color:var(--up);
+  font-weight:900;
+}
+.negative {
+  color:var(--down);
+  font-weight:900;
+}
 .empty {
-  padding:36px 16px;
+  padding:40px 16px;
   border:1px solid var(--line);
-  border-radius:8px;
-  background:rgba(255,253,245,.86);
+  border-radius:18px;
+  background:rgba(255,250,245,.9);
   text-align:center;
   color:var(--muted);
 }
 footer {
   margin-top:18px;
-  color:#616b5c;
+  color:#665a5c;
   font-size:12px;
   line-height:1.8;
 }
+@media (max-width: 980px) {
+  .hero {
+    grid-template-columns:1fr;
+  }
+  .stats {
+    grid-template-columns:repeat(2, 1fr);
+  }
+  .card {
+    grid-template-columns:1fr;
+  }
+  .side {
+    border-left:0;
+    padding-left:0;
+    border-top:1px solid var(--line);
+    padding-top:14px;
+  }
+}
 @media (max-width: 860px) {
   #app { padding:10px 8px 42px; }
-  .topbar { align-items:flex-start; flex-direction:column; }
-  .action-group { max-width:none; }
-  .refresh, .live { width:100%; }
-  .hero { grid-template-columns:1fr; padding:18px 14px; }
-  .hero h1 { font-size:38px; }
-  .stats { grid-template-columns:repeat(2, 1fr); }
-  .card { grid-template-columns:1fr; padding:13px; }
-  .card-head { display:block; }
-  .score { margin-top:12px; text-align:left; }
-  .metrics { grid-template-columns:repeat(2, minmax(0, 1fr)); }
-  .side { border-left:0; padding-left:0; border-top:1px solid var(--line); padding-top:12px; }
+  .topbar {
+    flex-direction:column;
+    align-items:flex-start;
+  }
+  .action-group {
+    max-width:none;
+  }
+  .hero-copy h1 {
+    font-size:40px;
+  }
+  .metrics {
+    grid-template-columns:repeat(2, minmax(0, 1fr));
+  }
 }
 @media (max-width: 440px) {
-  .brand strong { font-size:21px; }
-  .hero h1 { font-size:32px; }
-  .stats { grid-template-columns:1fr; }
-  .metrics { grid-template-columns:1fr; }
+  .brand strong { font-size:23px; }
+  .hero-copy h1 { font-size:34px; }
+  .stats,
+  .metrics {
+    grid-template-columns:1fr;
+  }
 }
 </style>
 </head>
@@ -292,40 +491,49 @@ footer {
         <div class="brand-mark">FH</div>
         <div>
           <small>Fortune Hunter</small>
-          <strong>獵金羅盤</strong>
+          <strong>中短期型態選股</strong>
         </div>
       </div>
       <div class="action-group">
-        <button id="refresh" class="refresh" type="button">重新讀取</button>
+        <button id="refresh" class="refresh" type="button">重新整理</button>
         <button id="live" class="live" type="button">即時連線</button>
       </div>
     </header>
 
     <section class="hero">
-      <div>
-        <h1>台股資金狩獵儀表板</h1>
-        <p class="lead">追蹤上市與上櫃股票的量價趨勢、技術條件與近三個月覆盤，把買入候選、進出場區間與風險位置整理成一張可行動清單。</p>
+      <div class="hero-copy">
+        <h1>兩週內做完一筆節奏漂亮的交易</h1>
+        <p class="lead">
+          這個版本把量價、均線、短線波動與你提供的型態觀念整合在一起，專注找
+          5 到 10 個交易日內有機會完成表態的中短期候選，不再把邏輯拉成偏長抱的風格。
+        </p>
+        <div class="hero-chip-row">
+          <div class="hero-chip">買方型態整合</div>
+          <div class="hero-chip">賣出警告邏輯</div>
+          <div class="hero-chip">兩週內交易規劃</div>
+        </div>
       </div>
       <aside class="market-card">
-        <span>本輪候選</span>
+        <span>本次候選</span>
         <b id="heroCount">-</b>
-        <p id="heroCopy">等待最新資料載入。</p>
+        <p id="heroCopy">等待最新掃描結果。</p>
       </aside>
     </section>
 
     <section class="stats" aria-live="polite">
-      <div class="stat"><strong id="asOf">讀取中</strong><span>資料時間</span></div>
-      <div class="stat"><strong id="universe">-</strong><span>上市上櫃股票池</span></div>
-      <div class="stat"><strong id="scanned">-</strong><span>本次實際掃描</span></div>
-      <div class="stat"><strong id="count">-</strong><span>買入/觀察候選</span></div>
+      <div class="stat"><strong id="asOf">尚未更新</strong><span>資料時間</span></div>
+      <div class="stat"><strong id="universe">-</strong><span>上市上櫃母體</span></div>
+      <div class="stat"><strong id="scanned">-</strong><span>本次掃描檔數</span></div>
+      <div class="stat"><strong id="count">-</strong><span>短線買入 / 觀察</span></div>
     </section>
   </section>
 
-  <section id="message" class="notice">正在讀取最新分析資料。</section>
+  <section id="message" class="notice">正在等待最新分析資料。</section>
   <section id="cards" class="cards"></section>
 
   <footer>
-    資料來源：TWSE OpenAPI、TPEx 公開日收盤資料、Yahoo Finance chart API。GitHub Pages 顯示 GitHub Actions 產生的最新分析結果；所有內容僅供研究與篩選，不構成投資建議。
+    資料來源包含 TWSE OpenAPI、TPEx 日收盤資料與 Yahoo Finance 歷史 K 線。
+    畫面上的型態偏向、賣出警告與部位建議，都是針對中短期兩週內操作做的規則式推論。
   </footer>
 </main>
 
@@ -342,26 +550,32 @@ const els = {
   message: document.getElementById('message'),
   cards: document.getElementById('cards')
 };
+
 let currentData = null;
 let liveSource = null;
 let liveUrl = localStorage.getItem('fh_live_url') || '';
 
 const escapeMap = { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' };
+
 function esc(value) {
   return String(value ?? '').replace(/[&<>"']/g, char => escapeMap[char]);
 }
+
 function pctClass(value) {
   return Number(value) >= 0 ? 'positive' : 'negative';
 }
+
 function fmt(value, suffix = '') {
   return value === null || value === undefined ? '-' : `${esc(value)}${suffix}`;
 }
+
 function money(value) {
   return value === null || value === undefined ? '-' : `NT$ ${Number(value).toLocaleString('zh-TW')}`;
 }
+
 function localTime(iso) {
   if (!iso) return '尚未產生';
-  return new Intl.DateTimeFormat('zh-TW', { dateStyle:'medium', timeStyle:'short' }).format(new Date(iso));
+  return new Intl.DateTimeFormat('zh-TW', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(iso));
 }
 
 function renderBacktests(backtests) {
@@ -370,20 +584,28 @@ function renderBacktests(backtests) {
     <div class="backtest">
       <b>${esc(hit.date)} 觸發，分數 ${fmt(hit.signalScore)}</b>
       <div>進場 ${money(hit.entryPrice)}</div>
-      <div>5日 <span class="${pctClass(hit.return5d)}">${fmt(hit.return5d, '%')}</span>，20日 <span class="${pctClass(hit.return20d)}">${fmt(hit.return20d, '%')}</span></div>
-      <div>20日最大漲幅 <span class="${pctClass(hit.maxGain20d)}">${fmt(hit.maxGain20d, '%')}</span>，最大回撤 <span class="${pctClass(hit.maxDrawdown20d)}">${fmt(hit.maxDrawdown20d, '%')}</span></div>
+      <div>3 日 <span class="${pctClass(hit.return3d)}">${fmt(hit.return3d, '%')}</span>，10 日 <span class="${pctClass(hit.return10d)}">${fmt(hit.return10d, '%')}</span></div>
+      <div>10 日最大漲幅 <span class="${pctClass(hit.maxGain10d)}">${fmt(hit.maxGain10d, '%')}</span>，最大回撤 <span class="${pctClass(hit.maxDrawdown10d)}">${fmt(hit.maxDrawdown10d, '%')}</span></div>
     </div>`).join('');
 }
 
 function renderCard(item) {
   const score = Math.max(0, Math.min(100, Number(item.score || 0)));
+  const patternBias = item.patterns?.bias || '-';
+  const waitPatterns = item.patterns?.watch || [];
+  const sellLevel = item.sellWarning?.level || '無';
+  const sellReasons = item.sellWarning?.reasons || [];
+
   return `
     <article class="card">
       <div>
         <div class="card-head">
           <div>
             <h2 class="stock-name">${esc(item.name)}<span class="stock-code">${esc(item.code)} ${esc(item.market)}</span></h2>
-            <span class="signal">${esc(item.signal)}</span>
+            <div class="signal-row">
+              <span class="signal">${esc(item.signal)}</span>
+              <span class="sell-badge">賣出警告：${esc(sellLevel)}</span>
+            </div>
           </div>
           <div class="score">
             <strong>${score}</strong>
@@ -396,61 +618,78 @@ function renderCard(item) {
           <div class="metric"><b>${money(item.latestPrice)}</b><span>最新收盤 ${esc(item.latestDate || '')}</span></div>
           <div class="metric"><b class="${pctClass(item.liveChangePercent)}">${fmt(item.liveChangePercent, '%')}</b><span>即時變動(若有)</span></div>
           <div class="metric"><b>${fmt(item.metrics?.rsi14)}</b><span>RSI(14)</span></div>
-          <div class="metric"><b>${money(item.metrics?.ma20)}</b><span>20日線</span></div>
-          <div class="metric"><b class="${pctClass(item.change60d)}">${fmt(item.change60d, '%')}</b><span>近三個月</span></div>
-          <div class="metric"><b>${fmt(item.metrics?.intentFactor60)}</b><span>價格意圖因子(60日)</span></div>
-          <div class="metric"><b>${fmt(item.metrics?.rsv60)}</b><span>60日相對位置</span></div>
-          <div class="metric"><b>${fmt(item.metrics?.std20)}</b><span>20日波動</span></div>
-          <div class="metric"><b>${fmt(item.metrics?.std60)}</b><span>60日波動</span></div>
+          <div class="metric"><b>${esc(patternBias)}</b><span>型態偏向</span></div>
+          <div class="metric"><b class="${pctClass(item.change10d)}">${fmt(item.change10d, '%')}</b><span>近 10 日漲幅</span></div>
+          <div class="metric"><b class="${pctClass(item.change20d)}">${fmt(item.change20d, '%')}</b><span>近 20 日漲幅</span></div>
+          <div class="metric"><b>${fmt(item.metrics?.intentFactor60)}</b><span>價格意圖因子</span></div>
+          <div class="metric"><b>${fmt(item.metrics?.rsv60)}</b><span>60 日相對位置</span></div>
+          <div class="metric"><b>${money(item.metrics?.ma5)}</b><span>5 日線</span></div>
+          <div class="metric"><b>${money(item.metrics?.ma20)}</b><span>20 日線</span></div>
+          <div class="metric"><b>${fmt(item.metrics?.stopPct, '%')}</b><span>目前止損寬度</span></div>
+          <div class="metric"><b>${fmt(item.metrics?.std20)}</b><span>20 日波動</span></div>
         </div>
 
-        <div class="section-title">推論依據</div>
+        <div class="section-title">進場依據</div>
         <ul class="reason-list">${(item.reasons || []).map(reason => `<li>${esc(reason)}</li>`).join('')}</ul>
+        ${waitPatterns.length ? `<div class="section-title">等待型態</div><ul class="reason-list">${waitPatterns.map(pattern => `<li>${esc(pattern)}</li>`).join('')}</ul>` : ''}
         ${(item.risks || []).length ? `<div class="section-title">風險提醒</div><ul class="reason-list">${item.risks.map(risk => `<li>${esc(risk)}</li>`).join('')}</ul>` : ''}
 
         <div class="section-title">操作手法</div>
         <div class="plan">
+          <div class="plan-row"><b>持有週期：</b>${esc(item.plan?.horizon || '-')}</div>
           <div class="plan-row"><b>買進：</b>${esc(item.plan?.entry || '-')}</div>
           <div class="plan-row"><b>賣出：</b>${esc(item.plan?.takeProfit || '-')}</div>
           <div class="plan-row"><b>止損：</b>${esc(item.plan?.stopLoss || '-')}</div>
+          <div class="plan-row"><b>賣出警告應對：</b>${esc(item.plan?.exitWarning || '-')}</div>
           <div class="plan-row"><b>部位：</b>${esc(item.plan?.positionSizing || '-')}</div>
         </div>
       </div>
 
       <aside class="side">
-        <div class="section-title">三個月覆盤</div>
-        <div class="backtests">${renderBacktests(item.backtest)}</div>
+        <div class="side-panel">
+          <div class="section-title">賣出警告</div>
+          <div class="warning-box">
+            <strong>${esc(sellLevel)} 等級</strong>
+            <div>${esc(item.sellWarning?.action || '目前沒有額外賣出警告。')}</div>
+          </div>
+          ${sellReasons.length ? `<ul class="reason-list">${sellReasons.map(reason => `<li>${esc(reason)}</li>`).join('')}</ul>` : '<div class="notice" style="margin:12px 0 0;">目前沒有額外賣出警告，仍要遵守兩週內的出場紀律。</div>'}
+
+          <div class="section-title">三個月覆盤</div>
+          <div class="backtests">${renderBacktests(item.backtest)}</div>
+        </div>
       </aside>
     </article>`;
 }
 
 async function loadData() {
   els.refresh.disabled = true;
-  els.message.textContent = '正在讀取最新分析資料。';
+  els.message.textContent = '正在讀取最新的中短期型態分析。';
   try {
-    const response = await fetch(`data/recommendations.json?ts=${Date.now()}`, { cache:'no-store' });
+    const response = await fetch(`data/recommendations.json?ts=${Date.now()}`, { cache: 'no-store' });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const data = await response.json();
     currentData = data;
     const count = data.recommendations?.length || 0;
+
     els.asOf.textContent = data.generatedAtTaipei || localTime(data.asOf);
     els.universe.textContent = Number(data.universeSize || 0).toLocaleString('zh-TW');
     els.scanned.textContent = Number(data.scanned || 0).toLocaleString('zh-TW');
     els.count.textContent = count;
     els.heroCount.textContent = count;
-    els.heroCopy.textContent = data.scanStrategy || '上市上櫃候選池已完成掃描。';
+    els.heroCopy.textContent = data.scanStrategy || '等待下一次掃描。';
     els.message.textContent = data.source || '資料已載入。';
 
     if (!count) {
-      els.cards.innerHTML = '<div class="empty">目前沒有符合條件的買入候選。請到 GitHub Actions 手動執行一次 Update market recommendations。</div>';
+      els.cards.innerHTML = '<div class="empty">目前沒有符合條件的短線候選。請稍後再刷新，或到 GitHub Actions 手動執行一次更新。</div>';
       return;
     }
+
     els.cards.innerHTML = data.recommendations.map(renderCard).join('');
     if (liveUrl) connectLive(liveUrl);
   } catch (error) {
     els.message.textContent = `資料讀取失敗：${error.message}`;
-    els.heroCopy.textContent = '資料尚未準備完成。';
-    els.cards.innerHTML = '<div class="empty">找不到推薦資料。請確認 data/recommendations.json 已由 Node 腳本產生並部署。</div>';
+    els.heroCopy.textContent = '尚未取得推薦資料。';
+    els.cards.innerHTML = '<div class="empty">找不到推薦資料。請先確認 data/recommendations.json 已經產生並部署。</div>';
   } finally {
     els.refresh.disabled = false;
   }
@@ -467,7 +706,7 @@ function applyLiveQuotes(payload) {
     row.latestDate = new Date(live.ts).toISOString().slice(0, 10);
     row.liveChangePercent = live.changePercent;
   }
-  els.asOf.textContent = `即時 ${new Intl.DateTimeFormat('zh-TW', { timeStyle:'medium' }).format(new Date())}`;
+  els.asOf.textContent = `即時 ${new Intl.DateTimeFormat('zh-TW', { timeStyle: 'medium' }).format(new Date())}`;
   els.cards.innerHTML = currentData.recommendations.map(renderCard).join('');
 }
 
@@ -482,10 +721,10 @@ function connectLive(url) {
     liveSource.addEventListener('quotes', event => {
       const payload = JSON.parse(event.data);
       applyLiveQuotes(payload);
-      els.message.textContent = `即時串流中：${url}`;
+      els.message.textContent = `即時串流已連線：${url}`;
     });
     liveSource.addEventListener('error', () => {
-      els.message.textContent = `即時串流中斷，使用靜態資料：${url}`;
+      els.message.textContent = `即時串流中斷，已退回靜態資料：${url}`;
     });
   } catch (error) {
     els.message.textContent = `即時串流啟動失敗：${error.message}`;
@@ -503,7 +742,7 @@ function setupLiveButton() {
       if (liveSource) liveSource.close();
       liveSource = null;
       els.live.textContent = '即時連線';
-      els.message.textContent = '已關閉即時模式，使用 GitHub Actions 產生的靜態資料。';
+      els.message.textContent = '已關閉即時模式，改用靜態資料。';
       return;
     }
     localStorage.setItem('fh_live_url', liveUrl);

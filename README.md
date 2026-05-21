@@ -1,8 +1,17 @@
-# 獵金羅盤 Fortune Hunter
+# Fortune Hunter
 
-台灣上市與上櫃股票推薦靜態網站。Node 腳本會抓取最新可取得的市場資料、計算技術指標、執行近三個月覆盤，並輸出給 GitHub Pages 使用的 `data/recommendations.json`。
+Fortune Hunter 是一個面向台股中短期交易的靜態選股頁面。  
+目前版本把量價、均線、波動、型態判讀與即時 SSE 報價整合在一起，專注找 **5 到 10 個交易日內有機會完成表態** 的候選股，而不是偏長抱的配置型標的。
 
-## 本機指令
+## 這版做了什麼
+
+- 整合中短期型態選股：`W底 / 頭肩底 / 上升三角形 / 上升旗形 / 下降楔形`
+- 加入空頭賣出警告：`M頭 / 三重頂 / 下跌旗形 / 上升楔形`
+- 每檔股票都會產生不同的部位與止損建議
+- 持有週期改成兩週內為主，超過 10 個交易日沒有表態就偏向出場
+- 前端支援 Render / 其他 Node 主機提供的 SSE 即時串流
+
+## 指令
 
 ```bash
 npm run generate
@@ -11,37 +20,66 @@ npm run dev
 npm run live
 ```
 
-`npm run generate` 會重新抓資料並產生推薦結果。
+- `npm run generate`
+  重新抓取市場資料並產生 `data/recommendations.json`
+- `npm run check`
+  檢查 Node 腳本語法
+- `npm run dev`
+  啟動本機靜態預覽，預設 `http://localhost:4173`
+- `npm run live`
+  啟動即時 SSE 後端，預設 `http://localhost:8787`
 
-`npm run check` 會檢查 Node 腳本語法。
+## 選股邏輯
 
-`npm run dev` 會啟動本機預覽網站。
+目前評分會綜合這幾類訊號：
 
-`npm run live` 會啟動即時 SSE 後端（預設 `http://localhost:8787`）。
+- 中短期趨勢：股價、5 日線、20 日線、60 日線的相對位置
+- 動能與節奏：`RSI`、`MACD`、近 10 日 / 20 日漲幅
+- 波動與路徑：20 日 / 60 日波動、價格意圖因子、60 日相對位置
+- 型態加分：偏多型態成立時加分，等待型態只提醒不硬加分
+- 賣出警告：空頭型態、跌回 5 日線 / 20 日線、過熱與高波動會直接影響出場建議
 
-## 部署方式
+## 即時串流
 
-此專案適合用 GitHub Pages 部署。`.github/workflows/update-data.yml` 會在台股開盤日定時執行 Node 腳本，並更新 `data/recommendations.json`。
+前端是靜態頁面，本身不會長連線抓報價。  
+要看即時數字，需要另外啟動 `npm run live` 或部署 `scripts/live-server.mjs`。
 
-### 即時模式（免費小後端）
+後端提供三個路徑：
 
-GitHub Pages 只能放靜態前端，不會長駐執行程式。若要秒級更新體感，可加一個免費後端服務：
+- `/health`
+- `/quotes`
+- `/stream`
 
-1. 在 Render 或 Railway 建立一個 Web Service。
-2. 指向同一份專案，啟動指令填：`npm run live`
-3. 設定環境變數（可選）：
-   - `PORT`：平台自動帶入即可
-   - `POLL_MS`：輪詢頻率，預設 `8000`
-   - `SYMBOLS`：要追蹤的股票代碼，例：`2330.TW,8299.TWO`
-4. 部署完成後會有一個網址，例如 `https://xxx.onrender.com`
-5. 打開前端網站，點「即時連線」按鈕，貼上該網址，前端會連 `.../stream`
+前端連接方式：
 
-後端提供三個端點：
+1. 打開網站
+2. 點右上角 `即時連線`
+3. 貼上後端網址，例如 `https://your-live.onrender.com`
+4. 前端會自動連到 `.../stream`
 
-- `/health`：檢查服務是否存活
-- `/quotes`：目前即時快照
-- `/stream`：SSE 即時推播
+## Render 部署
 
-## 資料來源
+如果你要部署即時後端到 Render，最基本設定如下：
 
-資料來源包含 TWSE OpenAPI、TPEx 公開日收盤資料與 Yahoo Finance chart API。所有分析只供研究與篩選，不構成投資建議。
+- `Runtime`: `Node`
+- `Build Command`: `npm install`
+- `Start Command`: `npm run live`
+- `Health Check Path`: `/health`
+
+建議環境變數：
+
+- `POLL_MS=8000`
+- `ALLOW_ORIGIN=*`
+
+`PORT` 不用自己填，Render 會提供。
+
+## GitHub Pages
+
+靜態頁面可以直接部署到 GitHub Pages。  
+常見做法是把 repo 根目錄的 `index.html` 與 `data/recommendations.json` 一起發布。
+
+## 注意
+
+- 這套型態判讀是規則式邏輯，不是機器學習模型
+- 它適合幫你快速篩掉不合節奏的標的，不代表可以跳過停損
+- 目前設計重點是 **中短期兩週內操作**

@@ -1,7 +1,8 @@
 const OUTPUT = new URL('../data/recommendations.json', import.meta.url);
 const SYMBOLS_PER_MARKET = Number(process.env.SYMBOLS_PER_MARKET || 120);
 const CONCURRENCY = Number(process.env.CONCURRENCY || 6);
-const USER_AGENT = 'fortune-hunter/1.0';
+const USER_AGENT = 'fortune-hunter/2.1';
+const HOLD_DAYS = 10;
 
 const warnings = [];
 
@@ -62,10 +63,7 @@ async function fetchTpexUniverse() {
   const json = await fetchJson('https://www.tpex.org.tw/www/zh-tw/afterTrading/otc', {
     method: 'POST',
     body,
-    headers: {
-      'content-type': 'application/x-www-form-urlencoded; charset=UTF-8',
-      'user-agent': USER_AGENT
-    }
+    headers: { 'content-type': 'application/x-www-form-urlencoded; charset=UTF-8' }
   });
   const rows = json.tables?.[0]?.data || [];
   return rows.map(row => {
@@ -87,15 +85,15 @@ async function fetchYahooHistory(symbol) {
   const json = await fetchJson(url);
   const result = json.chart?.result?.[0];
   if (!result?.timestamp?.length) throw new Error(`沒有 ${symbol} 歷史資料`);
-  const q = result.indicators?.quote?.[0];
-  if (!q) throw new Error(`沒有 ${symbol} K線欄位`);
+  const quote = result.indicators?.quote?.[0];
+  if (!quote) throw new Error(`沒有 ${symbol} K 線欄位`);
   return result.timestamp.map((timestamp, index) => ({
     date: new Date(timestamp * 1000).toISOString().slice(0, 10),
-    open: q.open[index],
-    high: q.high[index],
-    low: q.low[index],
-    close: q.close[index],
-    volume: q.volume[index]
+    open: quote.open[index],
+    high: quote.high[index],
+    low: quote.low[index],
+    close: quote.close[index],
+    volume: quote.volume[index]
   })).filter(day => [day.open, day.high, day.low, day.close].every(Number.isFinite));
 }
 
@@ -105,10 +103,15 @@ function average(values, period) {
   return slice.reduce((sum, value) => sum + value, 0) / period;
 }
 
+function mean(values) {
+  if (!values.length) return null;
+  return values.reduce((sum, value) => sum + value, 0) / values.length;
+}
+
 function stddev(values) {
   if (!values.length) return null;
-  const mean = values.reduce((sum, value) => sum + value, 0) / values.length;
-  const variance = values.reduce((sum, value) => sum + (value - mean) ** 2, 0) / values.length;
+  const avg = mean(values);
+  const variance = values.reduce((sum, value) => sum + (value - avg) ** 2, 0) / values.length;
   return Math.sqrt(variance);
 }
 
@@ -148,6 +151,261 @@ function round(value, digits = 2) {
   return Number(value.toFixed(digits));
 }
 
+function clamp(value, min, max) {
+  return Math.min(max, Math.max(min, value));
+}
+
+function pivotPoints(values, kind, lookback = 30) {
+  const size = Math.min(lookback, values.length);
+  const offset = values.length - size;
+  const slice = values.slice(-size);
+  const pivots = [];
+  for (let i = 2; i < slice.length - 2; i++) {
+    const value = slice[i];
+    const window = slice.slice(i - 2, i + 3);
+    const matched = kind === 'low' ? value === Math.min(...window) : value === Math.max(...window);
+    if (!matched) continue;
+    const index = offset + i;
+    if (pivots.length && index - pivots.at(-1).index < 3) continue;
+    pivots.push({ index, value });
+  }
+  return pivots;
+}
+
+function nearRatio(a, b) {
+  const base = (a + b) / 2;
+  return base ? Math.abs(a - b) / base : Infinity;
+}
+
+function detectPatterns(history, latest, ma5, ma20, ma60) {
+  const closes = history.map(day => day.close);
+  const highs = history.map(day => day.high);
+  const lows = history.map(day => day.low);
+  const bullish = [];
+  const bearish = [];
+  const watch = [];
+  let score = 0;
+
+  if (history.length < 30 || !ma20 || !ma60) {
+    return { score: 0, bias: '資料不足', bullish, bearish, watch };
+  }
+
+  const recent15 = history.slice(-15);
+  const recent20 = history.slice(-20);
+  const range15 = (Math.max(...recent15.map(day => day.high)) - Math.min(...recent15.map(day => day.low))) / latest.close;
+  const range20 = Math.max(...recent20.map(day => day.high)) - Math.min(...recent20.map(day => day.low));
+  const range7 = Math.max(...highs.slice(-7)) - Math.min(...lows.slice(-7));
+  const highPivots = pivotPoints(highs, 'high', 30);
+  const lowPivots = pivotPoints(lows, 'low', 30);
+  const avgHighEarly = mean(highs.slice(-20, -10));
+  const avgHighLate = mean(highs.slice(-10));
+  const avgLowEarly = mean(lows.slice(-20, -10));
+  const avgLowLate = mean(lows.slice(-10));
+  const pullbackStart = closes.at(-8);
+  const trendStart = closes.at(-20);
+  const preMove = trendStart ? pct(pullbackStart, trendStart) : null;
+  const recentMove = pullbackStart ? pct(latest.close, pullbackStart) : null;
+
+  if (lowPivots.length >= 2) {
+    const [leftLow, rightLow] = lowPivots.slice(-2);
+    const neckline = Math.max(...highs.slice(leftLow.index, rightLow.index + 1));
+    if (rightLow.index - leftLow.index >= 4
+      && nearRatio(leftLow.value, rightLow.value) <= 0.06
+      && latest.close > neckline * 1.01
+      && latest.close > ma20) {
+      bullish.push('W底/雙底完成，價格已站上頸線。');
+      score += 14;
+    }
+  }
+
+  if (lowPivots.length >= 3) {
+    const lows3 = lowPivots.slice(-3);
+    const neckline = Math.max(...highs.slice(lows3[0].index, lows3[2].index + 1));
+    if (lows3[1].value < lows3[0].value * 0.96
+      && lows3[1].value < lows3[2].value * 0.96
+      && nearRatio(lows3[0].value, lows3[2].value) <= 0.08
+      && latest.close >= neckline * 0.99
+      && latest.close > ma20) {
+      bullish.push('頭肩底雛形明確，右肩完成後接近突破。');
+      score += 12;
+    }
+  }
+
+  if (highPivots.length >= 2 && lowPivots.length >= 2) {
+    const highs2 = highPivots.slice(-2);
+    const lows2 = lowPivots.slice(-2);
+    const resistance = Math.max(...highs2.map(item => item.value));
+    if (nearRatio(highs2[0].value, highs2[1].value) <= 0.04
+      && lows2[1].value > lows2[0].value * 1.03
+      && latest.close >= resistance * 0.98
+      && ma20 > ma60) {
+      bullish.push('上升三角形整理後接近突破，屬於偏強續攻型態。');
+      score += 12;
+    }
+  }
+
+  if (preMove !== null && recentMove !== null
+    && preMove > 8
+    && recentMove > -6 && recentMove < 4
+    && range20 > 0
+    && range7 / range20 < 0.55
+    && Math.min(...lows.slice(-7)) > ma20 * 0.98) {
+    bullish.push('上升旗形，急漲後以小幅整理消化賣壓。');
+    score += 10;
+  }
+
+  if (highPivots.length >= 2 && lowPivots.length >= 2) {
+    const highs2 = highPivots.slice(-2);
+    const lows2 = lowPivots.slice(-2);
+    const highMove = pct(highs2[1].value, highs2[0].value);
+    const lowMove = pct(lows2[1].value, lows2[0].value);
+    if (highMove < -4
+      && lowMove < 0
+      && Math.abs(lowMove) < Math.abs(highMove)
+      && latest.close > (ma5 || ma20)
+      && latest.close > mean(closes.slice(-3))) {
+      bullish.push('下降楔形收斂，空方力道遞減。');
+      score += 10;
+    }
+  }
+
+  if (highPivots.length >= 2) {
+    const [leftHigh, rightHigh] = highPivots.slice(-2);
+    const neckline = Math.min(...lows.slice(leftHigh.index, rightHigh.index + 1));
+    if (rightHigh.index - leftHigh.index >= 4
+      && nearRatio(leftHigh.value, rightHigh.value) <= 0.06
+      && latest.close < neckline * 0.99) {
+      bearish.push('M頭/雙頂成立，頸線已失守。');
+      score -= 14;
+    }
+  }
+
+  if (highPivots.length >= 3) {
+    const highs3 = highPivots.slice(-3);
+    const peakMax = Math.max(...highs3.map(item => item.value));
+    const peakMin = Math.min(...highs3.map(item => item.value));
+    const neckline = Math.min(...lows.slice(highs3[0].index, highs3[2].index + 1));
+    if (peakMin / peakMax >= 0.93 && latest.close < neckline * 0.99) {
+      bearish.push('三重頂完成，反壓區反覆測試後轉弱。');
+      score -= 16;
+    }
+  }
+
+  if (preMove !== null && recentMove !== null
+    && preMove < -8
+    && recentMove > -3 && recentMove < 4
+    && range20 > 0
+    && range7 / range20 < 0.55
+    && Math.max(...highs.slice(-7)) < ma20 * 1.03) {
+    bearish.push('下跌旗形，反彈偏弱且仍在空方控制內。');
+    score -= 10;
+  }
+
+  if (highPivots.length >= 2 && lowPivots.length >= 2) {
+    const highs2 = highPivots.slice(-2);
+    const lows2 = lowPivots.slice(-2);
+    const highMove = pct(highs2[1].value, highs2[0].value);
+    const lowMove = pct(lows2[1].value, lows2[0].value);
+    if (highMove > 4
+      && lowMove > highMove * 1.2
+      && latest.close < (ma5 || ma20)) {
+      bearish.push('上升楔形末端轉弱，追價風險偏高。');
+      score -= 10;
+    }
+  }
+
+  if (range15 < 0.08) watch.push('箱型盤整，先等帶量突破再追。');
+
+  if (avgHighEarly && avgHighLate && avgLowEarly && avgLowLate
+    && avgHighLate < avgHighEarly * 0.99
+    && avgLowLate > avgLowEarly * 1.01
+    && range20 / latest.close < 0.18) {
+    watch.push('三角收斂，方向尚未表態。');
+  }
+
+  if (avgHighEarly && avgHighLate && avgLowEarly && avgLowLate) {
+    const earlyWidth = avgHighEarly - avgLowEarly;
+    const lateWidth = avgHighLate - avgLowLate;
+    if (avgHighLate > avgHighEarly * 1.03
+      && avgLowLate > avgLowEarly * 1.03
+      && earlyWidth > 0
+      && Math.abs(lateWidth - earlyWidth) / earlyWidth < 0.25) {
+      watch.push('上升通道內推進，等回下緣或正式突破。');
+    }
+  }
+
+  score = clamp(score, -24, 24);
+  const bias = score >= 12 ? '偏多'
+    : score <= -12 ? '偏空'
+    : watch.length ? '等待'
+    : '中性';
+
+  return { score, bias, bullish, bearish, watch: watch.slice(0, 3) };
+}
+
+function buildSellWarning(latest, ma5, ma20, rsi14, ret20, std20, patterns) {
+  let score = 0;
+  const reasons = [];
+
+  if (patterns.bearish.length) {
+    score += 14 + Math.min(8, patterns.bearish.length * 3);
+    reasons.push(...patterns.bearish);
+  }
+  if (ma5 && latest.close < ma5) {
+    score += 5;
+    reasons.push('收盤跌回 5 日線下方，短線轉弱。');
+  }
+  if (ma20 && latest.close < ma20) {
+    score += 9;
+    reasons.push('收盤跌回 20 日線下方，兩週節奏被破壞。');
+  }
+  if (rsi14 !== null && rsi14 > 74) {
+    score += 6;
+    reasons.push(`RSI ${rsi14.toFixed(1)} 過熱，若無續量容易轉弱。`);
+  }
+  if (ret20 !== null && ret20 > 18) {
+    score += 6;
+    reasons.push(`近 20 日已漲 ${ret20.toFixed(1)}%，短線容易獲利回吐。`);
+  }
+  if (std20 !== null && std20 > 0.035) {
+    score += 4;
+    reasons.push('20 日波動偏大，應縮短觀察與持有時間。');
+  }
+
+  const level = score >= 24 ? '高'
+    : score >= 14 ? '中'
+    : score >= 7 ? '低'
+    : '無';
+
+  const action = level === '高'
+    ? '以保本或先減碼為主，只留少量觀察倉。'
+    : level === '中'
+      ? '只要再跌破 5 日線或隔天無法站回，就應先出場。'
+      : level === '低'
+        ? '維持短線紀律，5 到 10 個交易日內沒有續攻就先退。'
+        : '沿 5 日線續抱，但最晚 10 個交易日內要完成表態。';
+
+  return { score, level, reasons, action };
+}
+
+function buildPositionSizing(latestClose, stop, std20, sellWarning) {
+  const stopPct = latestClose ? (latestClose - stop) / latestClose : 0.05;
+  let riskBudgetPct = std20 !== null && std20 > 0.035 ? 0.7
+    : std20 !== null && std20 > 0.025 ? 0.9
+      : 1.2;
+
+  if (sellWarning.level === '中') riskBudgetPct = Math.min(riskBudgetPct, 0.8);
+  if (sellWarning.level === '高') riskBudgetPct = Math.min(riskBudgetPct, 0.6);
+
+  const capitalPct = clamp((riskBudgetPct / Math.max(stopPct * 100, 2.5)) * 100, 8, 28);
+  return {
+    riskBudgetPct: round(riskBudgetPct, 1),
+    capitalPct: Math.round(capitalPct),
+    stopPct: round(stopPct * 100, 1),
+    text: `單筆風險先控制在總資金 ${round(riskBudgetPct, 1)}%，以目前止損寬度約 ${round(stopPct * 100, 1)}% 計算，單檔資金先抓 ${Math.round(capitalPct)}% 左右。`
+  };
+}
+
 function analyzeWindow(history, stock) {
   const closes = history.map(day => day.close);
   const volumes = history.map(day => day.volume || 0);
@@ -159,6 +417,8 @@ function analyzeWindow(history, stock) {
   const rsi14 = rsi(closes, 14);
   const macdNow = macd(closes);
   const vol20 = average(volumes, 20);
+  const ret5 = closes.length > 5 ? pct(latest.close, closes.at(-6)) : null;
+  const ret10 = closes.length > 10 ? pct(latest.close, closes.at(-11)) : null;
   const ret20 = closes.length > 20 ? pct(latest.close, closes.at(-21)) : null;
   const ret60 = closes.length > 60 ? pct(latest.close, closes.at(-61)) : null;
   const returnAbs60 = returns.length >= 60 ? returns.slice(-60).reduce((sum, value) => sum + Math.abs(value), 0) : null;
@@ -169,148 +429,155 @@ function analyzeWindow(history, stock) {
   const max60 = closes.length >= 60 ? Math.max(...closes.slice(-60)) : null;
   const rsv60 = min60 !== null && max60 !== null && max60 !== min60 ? (latest.close - min60) / (max60 - min60) : null;
 
-  const gateTrend = ma60 && latest.close > ma60;
+  const gateTrend = ma20 && ma60 && latest.close > ma20 && ma20 > ma60;
   const gateVolume = latest.volume > 100000;
-  const gateOverheat = ret60 === null || ret60 < 20;
+  const gateHeat = ret20 === null || ret20 < 18;
 
   let score = 0;
   const reasons = [];
   const risks = [];
 
   if (gateTrend) {
-    score += 8;
-    reasons.push('股價位於60日線上方，符合中期多頭趨勢。');
+    score += 16;
+    reasons.push('價格站上 20 日線，且 20 日線高於 60 日線，符合中短期多方架構。');
   } else {
-    score -= 12;
-    risks.push('股價跌回60日線下方，趨勢保護不足。');
+    score -= 14;
+    risks.push('價格未站穩 20 日線之上，不符合兩週內偏強節奏。');
+  }
+  if (ma5 && ma20 && latest.close >= ma5 && ma5 >= ma20) {
+    score += 10;
+    reasons.push('收盤守在 5 日線與 20 日線上方，短線買盤仍在。');
+  } else if (ma5 && latest.close < ma5) {
+    score -= 8;
+    risks.push('收盤跌回 5 日線下方，短線續攻力道不足。');
   }
   if (gateVolume) {
     score += 6;
-    reasons.push('日成交量高於10萬股，具備基本流動性。');
+    reasons.push('成交量高於 10 萬股，具備基本流動性。');
   } else {
     score -= 10;
-    risks.push('成交量偏低，進出場滑價風險較高。');
+    risks.push('成交量偏低，短打時滑價風險偏高。');
   }
-  if (gateOverheat) {
-    score += 4;
-  } else {
-    score -= 12;
-    risks.push(`近60日漲幅 ${ret60.toFixed(1)}% 偏大，容易追高。`);
+  if (!gateHeat) {
+    score -= 14;
+    risks.push(`近 20 日漲幅 ${ret20.toFixed(1)}% 偏大，兩週內追價風險高。`);
+  } else if (ret10 !== null && ret10 > 0 && ret10 < 12) {
+    score += 8;
+    reasons.push(`近 10 日漲幅 ${ret10.toFixed(1)}%，仍屬可接受的短線推進。`);
   }
   if (intentFactor60 !== null) {
-    if (intentFactor60 > 0.42) {
-      score += 15;
-      reasons.push(`價格意圖因子 ${intentFactor60.toFixed(3)} 偏高，走勢較接近穩定推升。`);
-    } else if (intentFactor60 > 0.28) {
+    if (intentFactor60 > 0.28) {
       score += 8;
-      reasons.push(`價格意圖因子 ${intentFactor60.toFixed(3)} 中性偏強。`);
-    } else {
-      score -= 10;
-      risks.push(`價格意圖因子 ${intentFactor60.toFixed(3)} 偏低，價格路徑較震盪。`);
+      reasons.push(`價格意圖因子 ${intentFactor60.toFixed(3)} 偏強，走勢較乾淨。`);
+    } else if (intentFactor60 < 0.08) {
+      score -= 8;
+      risks.push(`價格意圖因子 ${intentFactor60.toFixed(3)} 偏低，走勢容易震盪洗盤。`);
     }
   }
   if (rsv60 !== null) {
-    if (rsv60 > 0.9) {
-      score += 12;
-      reasons.push(`60日相對位置 ${rsv60.toFixed(2)}，屬於高動能區。`);
-    } else if (rsv60 < 0.35) {
-      score -= 8;
-      risks.push(`60日相對位置 ${rsv60.toFixed(2)} 偏低，動能不足。`);
+    if (rsv60 >= 0.72 && rsv60 <= 0.96) {
+      score += 8;
+      reasons.push(`60 日相對位置 ${rsv60.toFixed(2)}，介於強勢但未過度鈍化區間。`);
+    } else if (rsv60 > 0.98) {
+      score -= 6;
+      risks.push(`60 日相對位置 ${rsv60.toFixed(2)} 太高，容易遇到短線獲利了結。`);
     }
   }
   if (std20 !== null && std60 !== null) {
-    if (std20 < std60 * 0.9) {
+    if (std20 < std60 * 0.95) {
       score += 8;
-      reasons.push('短期波動低於長期波動，價格結構較穩。');
-    } else if (std20 > std60 * 1.2) {
-      score -= 8;
-      risks.push('短期波動明顯放大，回撤風險升高。');
+      reasons.push('短期波動低於長期波動，整理結構較乾淨。');
+    } else if (std20 > std60 * 1.15) {
+      score -= 6;
+      risks.push('短期波動放大，短打必須縮小部位。');
     }
   }
-
-  if (ma20 && ma60 && latest.close > ma20 && ma20 > ma60) {
-    score += 24;
-    reasons.push('價格站上20日線，且20日線高於60日線，代表中短期趨勢偏多。');
-  }
-  if (ma5 && ma20 && ma5 > ma20) {
+  if (rsi14 !== null && rsi14 >= 48 && rsi14 <= 68) {
     score += 12;
-    reasons.push('5日均線高於20日均線，短線買盤仍有延續性。');
-  }
-  if (rsi14 !== null && rsi14 >= 45 && rsi14 <= 68) {
-    score += 16;
-    reasons.push(`RSI ${rsi14.toFixed(1)} 位於健康偏強區，尚未明顯過熱。`);
-  } else if (rsi14 !== null && rsi14 < 35) {
-    score += 6;
-    risks.push(`RSI ${rsi14.toFixed(1)} 偏弱，若要進場需等待止跌訊號。`);
-  } else if (rsi14 !== null && rsi14 > 75) {
-    score -= 14;
-    risks.push(`RSI ${rsi14.toFixed(1)} 過熱，追高風險偏大。`);
+    reasons.push(`RSI ${rsi14.toFixed(1)} 位於健康偏強區，適合中短線推進。`);
+  } else if (rsi14 !== null && rsi14 > 74) {
+    score -= 10;
+    risks.push(`RSI ${rsi14.toFixed(1)} 過熱，應把操作週期壓得更短。`);
+  } else if (rsi14 !== null && rsi14 < 42) {
+    score -= 8;
+    risks.push(`RSI ${rsi14.toFixed(1)} 偏弱，尚未形成短打優勢。`);
   }
   if (macdNow !== null && macdNow > 0) {
-    score += 12;
-    reasons.push('MACD 為正，動能仍站在多方。');
-  }
-  if (vol20 && latest.volume > vol20 * 1.25) {
-    score += 12;
-    reasons.push('成交量高於20日均量，資金關注度提升。');
-  }
-  if (ma20 && latest.close >= ma20 * 0.98 && latest.close <= ma20 * 1.08) {
-    score += 10;
-    reasons.push('股價離20日線不遠，較容易用月線規劃風險報酬。');
-  } else if (ma20 && latest.close > ma20 * 1.15) {
-    score -= 10;
-    risks.push('股價離20日線過遠，短線容易拉回整理。');
-  }
-  if (ret60 !== null && ret60 > 0 && ret60 < 45) {
     score += 8;
-    reasons.push(`近三個月漲幅 ${ret60.toFixed(1)}%，趨勢向上但未到極端噴出。`);
+    reasons.push('MACD 仍在零軸上方，短線動能未失真。');
   }
-  if (ret20 !== null && ret20 > 25) {
+  if (vol20 && latest.volume > vol20 * 1.2) {
+    score += 8;
+    reasons.push('量能高於 20 日均量，突破成功率較佳。');
+  }
+  if (ma20 && latest.close >= ma20 * 0.99 && latest.close <= ma20 * 1.07) {
+    score += 10;
+    reasons.push('股價距離 20 日線不遠，短打風險報酬比更容易控制。');
+  } else if (ma20 && latest.close > ma20 * 1.12) {
     score -= 10;
-    risks.push(`近20日已漲 ${ret20.toFixed(1)}%，短線過度延伸。`);
+    risks.push('股價離 20 日線過遠，兩週內容易先拉回再說。');
   }
   if (stock.pe && stock.pe > 0 && stock.pe < 30) {
-    score += 6;
-    reasons.push(`本益比 ${stock.pe.toFixed(1)}，估值尚未明顯失控。`);
+    score += 4;
+    reasons.push(`本益比 ${stock.pe.toFixed(1)}，估值沒有明顯失控。`);
   } else if (stock.pe && stock.pe > 60) {
-    score -= 8;
-    risks.push(`本益比 ${stock.pe.toFixed(1)} 偏高，基本面安全邊際較低。`);
+    score -= 6;
+    risks.push(`本益比 ${stock.pe.toFixed(1)} 偏高，短線情緒退潮時會更脆弱。`);
   }
 
-  score = Math.max(0, Math.min(100, Math.round(score)));
-  const hardPass = gateTrend && gateVolume && gateOverheat;
-  const signal = hardPass ? (score >= 72 ? '買入候選' : score >= 58 ? '觀察候選' : '暫不進場') : '暫不進場';
-  const stop = ma20 ? Math.min(latest.close * 0.92, ma20 * 0.97) : latest.close * 0.92;
-  const riskPerShare = Math.max(latest.close - stop, latest.close * 0.03);
-  const entryLow = ma20 ? Math.max(stop, ma20 * 0.99) : latest.close * 0.985;
-  const entryHigh = latest.close * 1.015;
-  const target1 = latest.close + riskPerShare * 1.8;
-  const target2 = latest.close + riskPerShare * 2.8;
+  const patterns = detectPatterns(history, latest, ma5, ma20, ma60);
+  score += patterns.score;
+  reasons.push(...patterns.bullish);
+  risks.push(...patterns.bearish);
+
+  const sellWarning = buildSellWarning(latest, ma5, ma20, rsi14, ret20, std20, patterns);
+  score -= sellWarning.level === '高' ? 10 : sellWarning.level === '中' ? 6 : 0;
+
+  score = clamp(Math.round(score), 0, 100);
+  const stop = ma20 ? Math.min(latest.close * 0.95, ma20 * 0.985) : latest.close * 0.95;
+  const riskPerShare = Math.max(latest.close - stop, latest.close * 0.025);
+  const entryLow = ma5 && ma20 ? Math.max(stop, Math.min(ma5, ma20) * 0.995) : latest.close * 0.99;
+  const entryHigh = latest.close * 1.012;
+  const targetFast = latest.close + riskPerShare * 1.1;
+  const targetFull = latest.close + riskPerShare * 1.7;
+  const sizing = buildPositionSizing(latest.close, stop, std20, sellWarning);
+  const hardPass = gateTrend && gateVolume && gateHeat && sellWarning.level !== '高';
+  const signal = hardPass ? (score >= 74 ? '短線買入' : score >= 60 ? '短線觀察' : '暫不進場') : '暫不進場';
 
   return {
     score,
     signal,
     latestDate: latest.date,
     latestPrice: round(latest.close),
+    change5d: round(ret5),
+    change10d: round(ret10),
     change20d: round(ret20),
     change60d: round(ret60),
     metrics: {
-      ma5: round(ma5), ma20: round(ma20), ma60: round(ma60),
+      ma5: round(ma5),
+      ma20: round(ma20),
+      ma60: round(ma60),
       rsi14: round(rsi14, 1),
       macd: round(macdNow),
       volume20d: Math.round(vol20 || 0),
       std20: round(std20, 4),
       std60: round(std60, 4),
       rsv60: round(rsv60, 3),
-      intentFactor60: round(intentFactor60, 4)
+      intentFactor60: round(intentFactor60, 4),
+      patternScore: patterns.score,
+      stopPct: sizing.stopPct
     },
+    patterns,
+    sellWarning,
     reasons,
     risks,
     plan: {
-      entry: `分批區間 NT$ ${entryLow.toFixed(2)} - ${entryHigh.toFixed(2)}。優先等拉回不破20日線，或放量突破近期高點後少量試單。`,
-      takeProfit: `第一段 NT$ ${target1.toFixed(2)} 先減碼，第二段 NT$ ${target2.toFixed(2)} 視量價續抱。`,
-      stopLoss: `收盤跌破 NT$ ${stop.toFixed(2)}，或放量跌破20日線且隔日無法收復，應退出。`,
-      positionSizing: '單筆風險建議控制在總資金 1% - 2%，不要因分數高就重倉。'
+      horizon: `以 ${HOLD_DAYS} 個交易日內完成為主，超過兩週仍沒有續攻就先退。`,
+      entry: `分批區間 NT$ ${entryLow.toFixed(2)} - ${entryHigh.toFixed(2)}。優先等回測 5 日線/20 日線不破，或帶量突破最近壓力後再進。`,
+      takeProfit: `5 個交易日先看 NT$ ${targetFast.toFixed(2)}，10 個交易日完整目標看 NT$ ${targetFull.toFixed(2)}。先到先減碼，不戀戰。`,
+      stopLoss: `收盤跌破 NT$ ${stop.toFixed(2)} 就退出；若 2 天內站不回 5 日線，也視為短打失敗。`,
+      exitWarning: sellWarning.action,
+      positionSizing: sizing.text
     }
   };
 }
@@ -319,25 +586,25 @@ function backtest(history, stock) {
   const hits = [];
   const start = Math.max(60, history.length - 75);
   let lastHit = -99;
-  for (let i = start; i < history.length - 5; i++) {
-    if (i - lastHit < 7) continue;
+  for (let i = start; i < history.length - 10; i++) {
+    if (i - lastHit < 6) continue;
     const sample = history.slice(0, i + 1);
     const analysis = analyzeWindow(sample, stock);
-    if (analysis.score < 68) continue;
+    if (analysis.signal !== '短線買入') continue;
     const entry = history[i].close;
-    const close5 = history[Math.min(i + 5, history.length - 1)].close;
-    const close20 = history[Math.min(i + 20, history.length - 1)].close;
-    const future = history.slice(i + 1, Math.min(i + 21, history.length));
+    const close3 = history[Math.min(i + 3, history.length - 1)].close;
+    const close10 = history[Math.min(i + HOLD_DAYS, history.length - 1)].close;
+    const future = history.slice(i + 1, Math.min(i + HOLD_DAYS + 1, history.length));
     const maxClose = Math.max(...future.map(day => day.close));
     const minClose = Math.min(...future.map(day => day.close));
     hits.push({
       date: history[i].date,
       signalScore: analysis.score,
       entryPrice: round(entry),
-      return5d: round(pct(close5, entry)),
-      return20d: round(pct(close20, entry)),
-      maxGain20d: round(pct(maxClose, entry)),
-      maxDrawdown20d: round(pct(minClose, entry))
+      return3d: round(pct(close3, entry)),
+      return10d: round(pct(close10, entry)),
+      maxGain10d: round(pct(maxClose, entry)),
+      maxDrawdown10d: round(pct(minClose, entry))
     });
     lastHit = i;
     if (hits.length >= 3) break;
@@ -370,11 +637,11 @@ async function main() {
       return [];
     })
   ]);
+
   const universe = [...twse, ...tpex].sort((a, b) => b.tradeValue - a.tradeValue);
-  const pool = [
-    ...twse.slice(0, SYMBOLS_PER_MARKET),
-    ...tpex.slice(0, SYMBOLS_PER_MARKET)
-  ].sort((a, b) => b.tradeValue - a.tradeValue);
+  const pool = [...twse.slice(0, SYMBOLS_PER_MARKET), ...tpex.slice(0, SYMBOLS_PER_MARKET)]
+    .sort((a, b) => b.tradeValue - a.tradeValue);
+
   const analyzed = await mapLimit(pool, CONCURRENCY, async stock => {
     const history = await fetchYahooHistory(stock.yahooSymbol);
     if (history.length < 70) throw new Error('歷史資料不足');
@@ -398,12 +665,14 @@ async function main() {
   const data = {
     asOf: new Date().toISOString(),
     generatedAtTaipei: new Intl.DateTimeFormat('zh-TW', {
-      timeZone: 'Asia/Taipei', dateStyle: 'medium', timeStyle: 'medium'
+      timeZone: 'Asia/Taipei',
+      dateStyle: 'medium',
+      timeStyle: 'medium'
     }).format(new Date()),
-    source: 'TWSE OpenAPI、TPEx 公開日收盤 API、Yahoo Finance chart API；整合價格意圖因子與60日動能/波動框架，GitHub Actions 定時更新。',
+    source: 'TWSE OpenAPI、TPEx 公開日收盤 API、Yahoo Finance chart API；整合中短期型態選股、兩週內交易規劃與賣出警告邏輯，由 GitHub Actions 定時更新。',
     universeSize: universe.length,
     scanned: pool.length,
-    scanStrategy: `上市成交金額前 ${Math.min(twse.length, SYMBOLS_PER_MARKET)} 檔 + 上櫃成交金額前 ${Math.min(tpex.length, SYMBOLS_PER_MARKET)} 檔`,
+    scanStrategy: `以上市成交金額前 ${Math.min(twse.length, SYMBOLS_PER_MARKET)} 檔 + 上櫃成交金額前 ${Math.min(tpex.length, SYMBOLS_PER_MARKET)} 檔，尋找兩週內可操作的中短期型態。`,
     marketCoverage: {
       twse: twse.length,
       tpex: tpex.length

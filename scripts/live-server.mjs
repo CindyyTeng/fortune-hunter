@@ -24,16 +24,38 @@ function send(res, status, body, type = 'application/json; charset=utf-8') {
 
 async function fetchQuotes() {
   const endpoint = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${encodeURIComponent(SYMBOLS.join(','))}`;
+
+  console.log('[live-server] symbols:', SYMBOLS.join(','));
+  console.log('[live-server] yahoo endpoint:', endpoint);
+
   const response = await fetch(endpoint, {
-    headers: { 'user-agent': 'fortune-hunter-live/1.0' }
+    headers: {
+      'user-agent': 'Mozilla/5.0 fortune-hunter-live/1.0',
+      'accept': 'application/json'
+    }
   });
-  if (!response.ok) throw new Error(`Yahoo quote HTTP ${response.status}`);
-  const json = await response.json();
+
+  console.log('[live-server] yahoo status:', response.status);
+
+  const text = await response.text();
+
+  if (!response.ok) {
+    console.error('[live-server] yahoo response:', text.slice(0, 500));
+    throw new Error(`Yahoo quote HTTP ${response.status}`);
+  }
+
+  console.log('[live-server] yahoo raw:', text.slice(0, 300));
+
+  const json = JSON.parse(text);
   const rows = json?.quoteResponse?.result || [];
+
+  console.log('[live-server] yahoo rows:', rows.length);
+
   const quotes = rows.map(item => {
     const price = Number(item.regularMarketPrice);
     const prev = Number(item.regularMarketPreviousClose);
     const pct = prev ? ((price - prev) / prev) * 100 : 0;
+
     return {
       symbol: item.symbol,
       name: item.shortName || item.longName || item.symbol,
@@ -42,6 +64,7 @@ async function fetchQuotes() {
       ts: item.regularMarketTime ? item.regularMarketTime * 1000 : Date.now()
     };
   }).filter(item => item.price !== null);
+
   return {
     type: 'quotes',
     asOf: new Date().toISOString(),
@@ -60,12 +83,17 @@ async function pollAndBroadcast() {
     lastPayload = await fetchQuotes();
     broadcast(lastPayload);
   } catch (error) {
-    const payload = {
+    console.error('[live-server] poll failed:', error);
+
+    lastPayload = {
       type: 'error',
       asOf: new Date().toISOString(),
-      message: error.message
+      source: 'Yahoo quote API',
+      message: error.message,
+      quotes: []
     };
-    broadcast(payload);
+
+    broadcast(lastPayload);
   }
 }
 

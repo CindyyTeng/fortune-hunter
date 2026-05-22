@@ -12,6 +12,8 @@ const SYMBOLS = (process.env.SYMBOLS || '2330.TW,2317.TW,2454.TW,2308.TW,2882.TW
 
 const clients = new Set();
 let lastPayload = null;
+let yahooCookie = '';
+let yahooCrumb = '';
 
 function send(res, status, body, type = 'application/json; charset=utf-8') {
   res.writeHead(status, {
@@ -22,29 +24,95 @@ function send(res, status, body, type = 'application/json; charset=utf-8') {
   res.end(body);
 }
 
-async function fetchQuotes() {
-  const endpoint = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${encodeURIComponent(SYMBOLS.join(','))}`;
+function getSetCookieHeader(response) {
+  const raw = response.headers.getSetCookie?.() || [];
+  if (raw.length) return raw.map(v => v.split(';')[0]).join('; ');
 
-  console.log('[live-server] symbols:', SYMBOLS.join(','));
-  console.log('[live-server] yahoo endpoint:', endpoint);
+  const single = response.headers.get('set-cookie');
+  return single ? single.split(',').map(v => v.split(';')[0]).join('; ') : '';
+}
 
-  const response = await fetch(endpoint, {
+async function refreshYahooSession() {
+  console.log('[yahoo] refreshing session...');
+
+  const pageRes = await fetch('https://finance.yahoo.com/quote/AAPL', {
     headers: {
-      'user-agent': 'Mozilla/5.0 fortune-hunter-live/1.0',
-      'accept': 'application/json'
+      'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 Chrome/124 Safari/537.36',
+      'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
     }
   });
 
-  console.log('[live-server] yahoo status:', response.status);
+  yahooCookie = getSetCookieHeader(pageRes);
+  console.log('[yahoo] cookie length:', yahooCookie.length);
 
-  const text = await response.text();
+  const crumbRes = await fetch('https://query2.finance.yahoo.com/v1/test/getcrumb', {
+    headers: {
+      'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 Chrome/124 Safari/537.36',
+      'accept': 'text/plain,*/*',
+      'cookie': yahooCookie
+    }
+  });
+
+  const crumbText = await crumbRes.text();
+
+  if (!crumbRes.ok) {
+    console.error('[yahoo] crumb status:', crumbRes.status);
+    console.error('[yahoo] crumb response:', crumbText.slice(0, 300));
+    throw new Error(`Yahoo crumb HTTP ${crumbRes.status}`);
+  }
+
+  yahooCrumb = crumbText.trim();
+  console.log('[yahoo] crumb:', yahooCrumb ? 'OK' : 'EMPTY');
+
+  if (!yahooCrumb) throw new Error('Yahoo crumb empty');
+}
+
+async function fetchQuotes() {
+  if (!yahooCookie || !yahooCrumb) {
+    await refreshYahooSession();
+  }
+
+  const endpoint =
+    `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${encodeURIComponent(SYMBOLS.join(','))}&crumb=${encodeURIComponent(yahooCrumb)}`;
+
+  console.log('[live-server] yahoo endpoint:', endpoint);
+
+  let response = await fetch(endpoint, {
+    headers: {
+      'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 Chrome/124 Safari/537.36',
+      'accept': 'application/json',
+      'cookie': yahooCookie
+    }
+  });
+
+  let text = await response.text();
+
+  if (response.status === 401) {
+    console.warn('[yahoo] 401, refreshing session and retrying once...');
+    yahooCookie = '';
+    yahooCrumb = '';
+    await refreshYahooSession();
+
+    const retryEndpoint =
+      `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${encodeURIComponent(SYMBOLS.join(','))}&crumb=${encodeURIComponent(yahooCrumb)}`;
+
+    response = await fetch(retryEndpoint, {
+      headers: {
+        'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 Chrome/124 Safari/537.36',
+        'accept': 'application/json',
+        'cookie': yahooCookie
+      }
+    });
+
+    text = await response.text();
+  }
+
+  console.log('[live-server] yahoo status:', response.status);
 
   if (!response.ok) {
     console.error('[live-server] yahoo response:', text.slice(0, 500));
     throw new Error(`Yahoo quote HTTP ${response.status}`);
   }
-
-  console.log('[live-server] yahoo raw:', text.slice(0, 300));
 
   const json = JSON.parse(text);
   const rows = json?.quoteResponse?.result || [];
@@ -72,7 +140,6 @@ async function fetchQuotes() {
     quotes
   };
 }
-
 function broadcast(payload) {
   const chunk = `event: quotes\ndata: ${JSON.stringify(payload)}\n\n`;
   for (const res of clients) res.write(chunk);

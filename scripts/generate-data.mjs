@@ -3,6 +3,8 @@ const SYMBOLS_PER_MARKET = Number(process.env.SYMBOLS_PER_MARKET || 120);
 const CONCURRENCY = Number(process.env.CONCURRENCY || 6);
 const USER_AGENT = 'fortune-hunter/2.1';
 const HOLD_DAYS = 10;
+const MOMENTUM_LOOKBACK_DAYS = 126;
+const MOMENTUM_SKIP_DAYS = 21;
 const OVERNIGHT_SYMBOLS = {
   sp500: '^GSPC',
   nasdaq: '^IXIC',
@@ -87,7 +89,7 @@ async function fetchTpexUniverse() {
 }
 
 async function fetchYahooHistory(symbol) {
-  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?range=6mo&interval=1d&includePrePost=false&events=div%2Csplits`;
+  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?range=1y&interval=1d&includePrePost=false&events=div%2Csplits`;
   const json = await fetchJson(url);
   const result = json.chart?.result?.[0];
   if (!result?.timestamp?.length) throw new Error(`沒有 ${symbol} 歷史資料`);
@@ -566,8 +568,7 @@ function buildOvernightImpact(stock, overnightContext) {
   };
 }
 
-function analyzeWindow(history, stock, overnightContext = null, options = {}) {
-  const includeOvernight = options.includeOvernight !== false;
+function analyzeWindow(history, stock, overnightContext = null, includeOvernight = true) {
   const closes = history.map(day => day.close);
   const volumes = history.map(day => day.volume || 0);
   const returns = closes.slice(1).map((value, idx) => (value - closes[idx]) / closes[idx]);
@@ -582,6 +583,15 @@ function analyzeWindow(history, stock, overnightContext = null, options = {}) {
   const ret10 = closes.length > 10 ? pct(latest.close, closes.at(-11)) : null;
   const ret20 = closes.length > 20 ? pct(latest.close, closes.at(-21)) : null;
   const ret60 = closes.length > 60 ? pct(latest.close, closes.at(-61)) : null;
+  const momentumStartIndex = closes.length - MOMENTUM_SKIP_DAYS - MOMENTUM_LOOKBACK_DAYS;
+  const momentumEndIndex = closes.length - MOMENTUM_SKIP_DAYS;
+  const mom126_21 = momentumStartIndex >= 0 && momentumEndIndex > momentumStartIndex
+    ? pct(closes.at(momentumEndIndex - 1), closes.at(momentumStartIndex))
+    : null;
+  const yearHigh = closes.length >= 120 ? Math.max(...closes) : null;
+  const nearYearHigh = yearHigh ? latest.close / yearHigh : null;
+  const pullback20 = closes.length > 20 ? Math.max(...closes.slice(-20)) : null;
+  const drawdown20 = pullback20 ? ((latest.close - pullback20) / pullback20) * 100 : null;
   const returnAbs60 = returns.length >= 60 ? returns.slice(-60).reduce((sum, value) => sum + Math.abs(value), 0) : null;
   const intentFactor60 = returnAbs60 && ret60 !== null ? (ret60 / 100) / returnAbs60 : null;
   const std20 = returns.length >= 20 ? stddev(returns.slice(-20)) : null;
@@ -697,6 +707,31 @@ function analyzeWindow(history, stock, overnightContext = null, options = {}) {
     reasons.push(...overnightImpact.reasons);
     risks.push(...overnightImpact.risks);
   }
+  if (mom126_21 !== null) {
+    if (mom126_21 > 18 && mom126_21 < 85) {
+      score += 9;
+      reasons.push(`中期動能(126-21) ${mom126_21.toFixed(1)}%，符合趨勢延續。`);
+    } else if (mom126_21 <= 0) {
+      score -= 9;
+      risks.push(`中期動能(126-21) ${mom126_21.toFixed(1)}%，中期趨勢偏弱。`);
+    } else if (mom126_21 >= 100) {
+      score -= 5;
+      risks.push(`中期動能(126-21) ${mom126_21.toFixed(1)}% 過熱，短線回檔風險升高。`);
+    }
+  }
+  if (nearYearHigh !== null) {
+    if (nearYearHigh >= 0.88 && nearYearHigh <= 0.98) {
+      score += 6;
+      reasons.push(`年高貼近度 ${(nearYearHigh * 100).toFixed(1)}%，屬強勢但未極端。`);
+    } else if (nearYearHigh < 0.72) {
+      score -= 6;
+      risks.push(`年高貼近度 ${(nearYearHigh * 100).toFixed(1)}%，離主升段偏遠。`);
+    }
+  }
+  if (drawdown20 !== null && drawdown20 <= -9) {
+    score -= 7;
+    risks.push(`近 20 日回撤 ${drawdown20.toFixed(1)}%，短線結構仍偏脆弱。`);
+  }
 
   const sellWarning = buildSellWarning(latest, ma5, ma20, rsi14, ret20, std20, patterns);
   if (overnightImpact && overnightImpact.score <= -6) {
@@ -745,6 +780,9 @@ function analyzeWindow(history, stock, overnightContext = null, options = {}) {
       std60: round(std60, 4),
       rsv60: round(rsv60, 3),
       intentFactor60: round(intentFactor60, 4),
+      momentum126_21: round(mom126_21, 2),
+      nearYearHigh: round(nearYearHigh, 3),
+      drawdown20: round(drawdown20, 2),
       patternScore: patterns.score,
       stopPct: sizing.stopPct
     },
@@ -778,7 +816,7 @@ function backtest(history, stock) {
   for (let i = start; i < history.length - 10; i++) {
     if (i - lastHit < 6) continue;
     const sample = history.slice(0, i + 1);
-    const analysis = analyzeWindow(sample, stock, null, { includeOvernight: false });
+    const analysis = analyzeWindow(sample, stock, null, false);
     if (analysis.signal !== '短線買入') continue;
     const entry = history[i].close;
     const close3 = history[Math.min(i + 3, history.length - 1)].close;

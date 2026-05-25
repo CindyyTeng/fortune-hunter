@@ -82,7 +82,7 @@ function normalizeSymbol(value) {
 
 function marketToSuffix(market) {
   const text = String(market || '').toUpperCase();
-  if (text === 'TWO' || text.includes('櫃')) return 'TWO';
+  if (text === 'TWO' || text === 'OTC' || text.includes('櫃')) return 'TWO';
   return 'TW';
 }
 

@@ -99,3 +99,11 @@ Live symbols are not hardcoded anymore. By default, the server reads the latest 
 - AI hardware names lean on Nasdaq + `^SOX`
 - finance names lean on Dow Jones
 - The effect is not only descriptive. It adjusts recommendation score, risk text, and sell-warning behavior for the next Taiwan session.
+
+## Advanced Ranking Factors
+
+The ranking now also rewards stronger medium-term leaders while avoiding obvious overheating.
+
+- `12-1 momentum`: uses the last `126` trading days but skips the most recent `21` days.
+- `Near-year-high`: rewards names trading near their yearly high without already going fully vertical.
+- `20-day drawdown`: penalizes names whose recent pullback still looks structurally weak.

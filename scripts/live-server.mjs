@@ -1,19 +1,18 @@
 import http from 'node:http';
+import { readFile } from 'node:fs/promises';
 
 const PORT = Number(process.env.PORT || 8787);
 const POLL_MS = Number(process.env.POLL_MS || 8000);
 const MAX_SYMBOLS = Number(process.env.MAX_SYMBOLS || 12);
 const ALLOW_ORIGIN = process.env.ALLOW_ORIGIN || '*';
-const SYMBOLS = (process.env.SYMBOLS || '2330.TW,2317.TW,2454.TW,2308.TW,2882.TW,2891.TW,2303.TW,2382.TW,3711.TW,8299.TWO,3105.TWO,6274.TWO')
-  .split(',')
-  .map(v => v.trim())
-  .filter(Boolean)
-  .slice(0, MAX_SYMBOLS);
+const DATA_FILE = new URL('../data/recommendations.json', import.meta.url);
+const SYMBOLS_OVERRIDE = process.env.SYMBOLS || '';
 
 const clients = new Set();
 let lastPayload = null;
 let yahooCookie = '';
 let yahooCrumb = '';
+let lastSymbols = [];
 
 function send(res, status, body, type = 'application/json; charset=utf-8') {
   res.writeHead(status, {
@@ -75,6 +74,41 @@ function toNumber(value) {
   return Number.isFinite(number) ? number : null;
 }
 
+function normalizeSymbol(value) {
+  const text = String(value || '').trim().toUpperCase();
+  if (/^\d{4}\.TW(O)?$/.test(text)) return text;
+  return null;
+}
+
+function marketToSuffix(market) {
+  const text = String(market || '').toUpperCase();
+  if (text === 'TWO' || text.includes('櫃')) return 'TWO';
+  return 'TW';
+}
+
+async function resolveSymbols() {
+  if (SYMBOLS_OVERRIDE.trim()) {
+    const override = SYMBOLS_OVERRIDE
+      .split(',')
+      .map(normalizeSymbol)
+      .filter(Boolean)
+      .slice(0, MAX_SYMBOLS);
+    if (override.length) return override;
+  }
+
+  const raw = await readFile(DATA_FILE, 'utf8');
+  const json = JSON.parse(raw);
+  const list = (json?.recommendations || [])
+    .map(item => normalizeSymbol(`${item.code}.${marketToSuffix(item.market)}`))
+    .filter(Boolean)
+    .slice(0, MAX_SYMBOLS);
+
+  if (!list.length) {
+    throw new Error('No symbols found in data/recommendations.json');
+  }
+  return list;
+}
+
 function toTwseChannel(symbol) {
   const [code, market] = symbol.split('.');
   const exchange = market === 'TWO' ? 'otc' : 'tse';
@@ -100,8 +134,8 @@ function toTimestamp(row) {
   return Date.now();
 }
 
-async function fetchTwseQuotes() {
-  const channels = SYMBOLS.map(toTwseChannel).join('|');
+async function fetchTwseQuotes(symbols) {
+  const channels = symbols.map(toTwseChannel).join('|');
   const endpoint =
     `https://mis.twse.com.tw/stock/api/getStockInfo.jsp?ex_ch=${encodeURIComponent(channels)}&json=1&delay=0&_=${Date.now()}`;
 
@@ -151,13 +185,13 @@ async function fetchTwseQuotes() {
   };
 }
 
-async function fetchYahooQuotes() {
+async function fetchYahooQuotes(symbols) {
   if (!yahooCookie || !yahooCrumb) {
     await refreshYahooSession();
   }
 
   const endpoint =
-    `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${encodeURIComponent(SYMBOLS.join(','))}&crumb=${encodeURIComponent(yahooCrumb)}`;
+    `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${encodeURIComponent(symbols.join(','))}&crumb=${encodeURIComponent(yahooCrumb)}`;
 
   console.log('[live-server] yahoo endpoint:', endpoint);
 
@@ -178,7 +212,7 @@ async function fetchYahooQuotes() {
     await refreshYahooSession();
 
     const retryEndpoint =
-      `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${encodeURIComponent(SYMBOLS.join(','))}&crumb=${encodeURIComponent(yahooCrumb)}`;
+      `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${encodeURIComponent(symbols.join(','))}&crumb=${encodeURIComponent(yahooCrumb)}`;
 
     response = await fetch(retryEndpoint, {
       headers: {
@@ -225,12 +259,12 @@ async function fetchYahooQuotes() {
   };
 }
 
-async function fetchQuotes() {
+async function fetchQuotes(symbols) {
   try {
-    return await fetchTwseQuotes();
+    return await fetchTwseQuotes(symbols);
   } catch (twseError) {
     console.warn('[live-server] twse failed, trying yahoo fallback:', twseError.message);
-    return await fetchYahooQuotes();
+    return await fetchYahooQuotes(symbols);
   }
 }
 function broadcast(payload) {
@@ -240,7 +274,9 @@ function broadcast(payload) {
 
 async function pollAndBroadcast() {
   try {
-    lastPayload = await fetchQuotes();
+    const symbols = await resolveSymbols();
+    lastSymbols = symbols;
+    lastPayload = await fetchQuotes(symbols);
     broadcast(lastPayload);
   } catch (error) {
     console.error('[live-server] poll failed:', error);
@@ -271,7 +307,7 @@ const server = http.createServer((req, res) => {
   }
 
   if (url.pathname === '/health') {
-    send(res, 200, JSON.stringify({ ok: true, clients: clients.size, symbols: SYMBOLS.length }));
+    send(res, 200, JSON.stringify({ ok: true, clients: clients.size, symbols: lastSymbols.length || 0 }));
     return;
   }
 

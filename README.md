@@ -86,6 +86,8 @@ npm run live
 ## Live Quote Source
 
 `scripts/live-server.mjs` now requests realtime quotes from TWSE MIS first. Yahoo Finance quote API is kept only as a fallback, because cloud hosts such as Render may be rate-limited or blocked by Yahoo.
+Live symbols are not hardcoded anymore. By default, the server reads the latest symbols from `data/recommendations.json` on each polling cycle and keeps only the first `MAX_SYMBOLS`.
+`SYMBOLS` env var is now optional and only used as a manual override.
 
 ## Overnight Market Factor
 

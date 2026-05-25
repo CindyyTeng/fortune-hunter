@@ -520,6 +520,8 @@ npm run live
 - Fallback source: Yahoo Finance quote API
 - Reason: Render and similar cloud hosts can be rate-limited or blocked by Yahoo, so relying on Yahoo alone makes realtime quotes unstable.
 - Frontend contract: unchanged. The server still emits `quotes[]` with `symbol`, `name`, `price`, `changePercent`, and `ts`.
+- Symbol source: no hardcoded list. The server resolves symbols from `data/recommendations.json` every polling cycle, then applies `MAX_SYMBOLS` as the cap.
+- Optional override: set `SYMBOLS=2330.TW,2454.TW,...` only when you explicitly want fixed symbols.
 
 ---
 

@@ -1,4 +1,4 @@
-const OUTPUT = new URL('../data/recommendations.json', import.meta.url);
+﻿const OUTPUT = new URL('../data/recommendations.json', import.meta.url);
 const SYMBOLS_PER_MARKET = Number(process.env.SYMBOLS_PER_MARKET || 120);
 const CONCURRENCY = Number(process.env.CONCURRENCY || 6);
 const USER_AGENT = 'fortune-hunter/2.1';
@@ -92,9 +92,9 @@ async function fetchYahooHistory(symbol) {
   const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?range=1y&interval=1d&includePrePost=false&events=div%2Csplits`;
   const json = await fetchJson(url);
   const result = json.chart?.result?.[0];
-  if (!result?.timestamp?.length) throw new Error(`沒有 ${symbol} 歷史資料`);
+  if (!result?.timestamp?.length) throw new Error(`無法取得 ${symbol} 歷史資料`);
   const quote = result.indicators?.quote?.[0];
-  if (!quote) throw new Error(`沒有 ${symbol} K 線欄位`);
+  if (!quote) throw new Error(`無法解析 ${symbol} K 線資料`);
   return result.timestamp.map((timestamp, index) => ({
     date: new Date(timestamp * 1000).toISOString().slice(0, 10),
     open: quote.open[index],
@@ -241,7 +241,7 @@ function detectPatterns(history, latest, ma5, ma20, ma60) {
   let score = 0;
 
   if (history.length < 30 || !ma20 || !ma60) {
-    return { score: 0, bias: '資料不足', bullish, bearish, watch };
+    return { score: 0, bias: '鞈?銝雲', bullish, bearish, watch };
   }
 
   const recent15 = history.slice(-15);
@@ -267,7 +267,7 @@ function detectPatterns(history, latest, ma5, ma20, ma60) {
       && nearRatio(leftLow.value, rightLow.value) <= 0.06
       && latest.close > neckline * 1.01
       && latest.close > ma20) {
-      bullish.push('W底/雙底完成，價格已站上頸線。');
+      bullish.push('W 底（雙底）成形且突破頸線，屬偏多訊號。');
       score += 14;
     }
   }
@@ -280,7 +280,7 @@ function detectPatterns(history, latest, ma5, ma20, ma60) {
       && nearRatio(lows3[0].value, lows3[2].value) <= 0.08
       && latest.close >= neckline * 0.99
       && latest.close > ma20) {
-      bullish.push('頭肩底雛形明確，右肩完成後接近突破。');
+      bullish.push('疑似倒頭肩底，右肩完成後接近突破區。');
       score += 12;
     }
   }
@@ -293,7 +293,7 @@ function detectPatterns(history, latest, ma5, ma20, ma60) {
       && lows2[1].value > lows2[0].value * 1.03
       && latest.close >= resistance * 0.98
       && ma20 > ma60) {
-      bullish.push('上升三角形整理後接近突破，屬於偏強續攻型態。');
+      bullish.push('上升三角形收斂，接近壓力位，留意放量突破。');
       score += 12;
     }
   }
@@ -304,7 +304,7 @@ function detectPatterns(history, latest, ma5, ma20, ma60) {
     && range20 > 0
     && range7 / range20 < 0.55
     && Math.min(...lows.slice(-7)) > ma20 * 0.98) {
-    bullish.push('上升旗形，急漲後以小幅整理消化賣壓。');
+    bullish.push('上升旗形整理後延續上攻，屬趨勢中繼。');
     score += 10;
   }
 
@@ -318,7 +318,7 @@ function detectPatterns(history, latest, ma5, ma20, ma60) {
       && Math.abs(lowMove) < Math.abs(highMove)
       && latest.close > (ma5 || ma20)
       && latest.close > mean(closes.slice(-3))) {
-      bullish.push('下降楔形收斂，空方力道遞減。');
+      bullish.push('下降楔形突破，偏向跌深反彈或趨勢反轉。');
       score += 10;
     }
   }
@@ -329,7 +329,7 @@ function detectPatterns(history, latest, ma5, ma20, ma60) {
     if (rightHigh.index - leftHigh.index >= 4
       && nearRatio(leftHigh.value, rightHigh.value) <= 0.06
       && latest.close < neckline * 0.99) {
-      bearish.push('M頭/雙頂成立，頸線已失守。');
+      bearish.push('M 頭（雙頂）成形，頸線附近要嚴控風險。');
       score -= 14;
     }
   }
@@ -340,7 +340,7 @@ function detectPatterns(history, latest, ma5, ma20, ma60) {
     const peakMin = Math.min(...highs3.map(item => item.value));
     const neckline = Math.min(...lows.slice(highs3[0].index, highs3[2].index + 1));
     if (peakMin / peakMax >= 0.93 && latest.close < neckline * 0.99) {
-      bearish.push('三重頂完成，反壓區反覆測試後轉弱。');
+      bearish.push('菱形頂震盪後轉弱，常見於高檔反轉。');
       score -= 16;
     }
   }
@@ -351,7 +351,7 @@ function detectPatterns(history, latest, ma5, ma20, ma60) {
     && range20 > 0
     && range7 / range20 < 0.55
     && Math.max(...highs.slice(-7)) < ma20 * 1.03) {
-    bearish.push('下跌旗形，反彈偏弱且仍在空方控制內。');
+    bearish.push('下跌旗形跌破下緣，屬續跌訊號。');
     score -= 10;
   }
 
@@ -363,18 +363,18 @@ function detectPatterns(history, latest, ma5, ma20, ma60) {
     if (highMove > 4
       && lowMove > highMove * 1.2
       && latest.close < (ma5 || ma20)) {
-      bearish.push('上升楔形末端轉弱，追價風險偏高。');
+      bearish.push('上升楔形跌破，常見多頭末段轉弱。');
       score -= 10;
     }
   }
 
-  if (range15 < 0.08) watch.push('箱型盤整，先等帶量突破再追。');
+  if (range15 < 0.08) watch.push('箱型盤整偏窄，等待方向表態。');
 
   if (avgHighEarly && avgHighLate && avgLowEarly && avgLowLate
     && avgHighLate < avgHighEarly * 0.99
     && avgLowLate > avgLowEarly * 1.01
     && range20 / latest.close < 0.18) {
-    watch.push('三角收斂，方向尚未表態。');
+    watch.push('三角收斂接近末端，突破前先觀望。');
   }
 
   if (avgHighEarly && avgHighLate && avgLowEarly && avgLowLate) {
@@ -384,7 +384,7 @@ function detectPatterns(history, latest, ma5, ma20, ma60) {
       && avgLowLate > avgLowEarly * 1.03
       && earlyWidth > 0
       && Math.abs(lateWidth - earlyWidth) / earlyWidth < 0.25) {
-      watch.push('上升通道內推進，等回下緣或正式突破。');
+      watch.push('擴散三角波動放大，先等止穩或明確突破。');
     }
   }
 
@@ -407,23 +407,23 @@ function buildSellWarning(latest, ma5, ma20, rsi14, ret20, std20, patterns) {
   }
   if (ma5 && latest.close < ma5) {
     score += 5;
-    reasons.push('收盤跌回 5 日線下方，短線轉弱。');
+    reasons.push('價格跌破 5 日線，短線轉弱。');
   }
   if (ma20 && latest.close < ma20) {
     score += 9;
-    reasons.push('收盤跌回 20 日線下方，兩週節奏被破壞。');
+    reasons.push('價格跌破 20 日線，中短期結構轉弱。');
   }
   if (rsi14 !== null && rsi14 > 74) {
     score += 6;
-    reasons.push(`RSI ${rsi14.toFixed(1)} 過熱，若無續量容易轉弱。`);
+    reasons.push(`RSI ${rsi14.toFixed(1)} 過熱，追價風險增加。`);
   }
   if (ret20 !== null && ret20 > 18) {
     score += 6;
-    reasons.push(`近 20 日已漲 ${ret20.toFixed(1)}%，短線容易獲利回吐。`);
+    reasons.push(`近 20 日漲幅 ${ret20.toFixed(1)}% 偏熱，易震盪。`);
   }
   if (std20 !== null && std20 > 0.035) {
     score += 4;
-    reasons.push('20 日波動偏大，應縮短觀察與持有時間。');
+    reasons.push('20 日波動偏高，單日回撤風險提高。');
   }
 
   const level = score >= 24 ? '高'
@@ -432,12 +432,12 @@ function buildSellWarning(latest, ma5, ma20, rsi14, ret20, std20, patterns) {
     : '無';
 
   const action = level === '高'
-    ? '以保本或先減碼為主，只留少量觀察倉。'
+    ? '優先保本：先減碼 50% 以上，跌破關鍵支撐時全面退場。'
     : level === '中'
-      ? '只要再跌破 5 日線或隔天無法站回，就應先出場。'
+      ? '控制風險：先減碼到半倉，若 2 天內無法站回 5 日線則續降部位。'
       : level === '低'
-        ? '維持短線紀律，5 到 10 個交易日內沒有續攻就先退。'
-        : '沿 5 日線續抱，但最晚 10 個交易日內要完成表態。';
+        ? '提高警戒：保留核心部位，5-10 天內若量價轉弱就先出一半。'
+        : '暫無明確賣出警告，持續依停損與持有週期管理。';
 
   return { score, level, reasons, action };
 }
@@ -456,7 +456,7 @@ function buildPositionSizing(latestClose, stop, std20, sellWarning) {
     riskBudgetPct: round(riskBudgetPct, 1),
     capitalPct: Math.round(capitalPct),
     stopPct: round(stopPct * 100, 1),
-    text: `單筆風險先控制在總資金 ${round(riskBudgetPct, 1)}%，以目前止損寬度約 ${round(stopPct * 100, 1)}% 計算，單檔資金先抓 ${Math.round(capitalPct)}% 左右。`
+    text: `單筆風險建議控制在總資金 ${round(riskBudgetPct, 1)}%，以止損幅度 ${round(stopPct * 100, 1)}% 推估，單檔資金上限約 ${Math.round(capitalPct)}%。`
   };
 }
 
@@ -465,12 +465,12 @@ function inferThemes(stock) {
   const code = stock.code || '';
   const themes = [];
 
-  if (/金控|銀行|保險|證券|票券/.test(name)) themes.push('finance');
-  if (/半導體|晶圓|矽|IC|晶片|封測|光罩|驅動/.test(name)
+  if (/金|銀行|證券|保險/.test(name)) themes.push('finance');
+  if (/半導體|IC|晶|矽|封測|電子/.test(name)
     || ['2330', '2303', '2454', '3034', '3711', '2344', '2379', '3443', '6415', '8299'].includes(code)) {
     themes.push('semiconductor');
   }
-  if (/伺服器|電腦|主機板|顯卡|網通/.test(name)
+  if (/伺服器|AI|網通|資料中心/.test(name)
     || ['2317', '2382', '3231', '6669', '3017', '2356', '2376', '2357', '2383', '4938'].includes(code)) {
     themes.push('ai-hardware');
   }
@@ -503,55 +503,55 @@ function buildOvernightImpact(stock, overnightContext) {
   if (marketMove !== null) {
     if (marketMove <= -2) {
       score -= 12;
-      risks.push(`昨夜美股整體偏弱，綜合變動 ${marketMove.toFixed(2)}%，台股隔日開盤承壓。`);
+      risks.push(`美股大盤偏弱（${marketMove.toFixed(2)}%），隔日開盤承壓機率高。`);
     } else if (marketMove <= -1) {
       score -= 7;
-      risks.push(`昨夜美股轉弱，綜合變動 ${marketMove.toFixed(2)}%，不利隔日追價。`);
+      risks.push(`美股大盤轉弱（${marketMove.toFixed(2)}%），短線風險上升。`);
     } else if (marketMove >= 1.5) {
       score += 6;
-      reasons.push(`昨夜美股整體偏強，綜合變動 ${marketMove.toFixed(2)}%，有利隔日開盤情緒。`);
+      reasons.push(`美股大盤強勢（${marketMove.toFixed(2)}%），有利台股風險偏好。`);
     } else if (marketMove >= 0.8) {
       score += 3;
-      reasons.push(`昨夜美股小幅偏強，綜合變動 ${marketMove.toFixed(2)}%，外部風險相對和緩。`);
+      reasons.push(`美股大盤偏多（${marketMove.toFixed(2)}%），情緒有支撐。`);
     }
   }
 
   if (themes.includes('semiconductor') && soxMove !== null) {
     if (soxMove <= -2.5) {
       score -= 10;
-      risks.push(`費半昨夜下跌 ${soxMove.toFixed(2)}%，半導體族群隔日容易先被調節。`);
+      risks.push(`費半重挫（${soxMove.toFixed(2)}%），半導體族群開盤易受壓。`);
     } else if (soxMove <= -1) {
       score -= 6;
-      risks.push(`費半昨夜偏弱 ${soxMove.toFixed(2)}%，半導體族群開盤容易先受壓。`);
+      risks.push(`費半轉弱（${soxMove.toFixed(2)}%），半導體短線偏保守。`);
     } else if (soxMove >= 2) {
       score += 6;
-      reasons.push(`費半昨夜上漲 ${soxMove.toFixed(2)}%，有利半導體族群隔日續強。`);
+      reasons.push(`費半強彈（${soxMove.toFixed(2)}%），半導體族群有助攻。`);
     } else if (soxMove >= 1) {
       score += 3;
-      reasons.push(`費半昨夜偏強 ${soxMove.toFixed(2)}%，半導體族群情緒較佳。`);
+      reasons.push(`費半偏多（${soxMove.toFixed(2)}%），半導體動能改善。`);
     }
   }
 
   if (themes.includes('ai-hardware') && techMove !== null) {
     if (techMove <= -2) {
       score -= 8;
-      risks.push(`美國科技股昨夜偏弱 ${techMove.toFixed(2)}%，AI 硬體族群隔日容易先震盪。`);
+      risks.push(`科技指數走弱（${techMove.toFixed(2)}%），AI/電子族群風險升高。`);
     } else if (techMove <= -1) {
       score -= 5;
-      risks.push(`美國科技股昨夜轉弱 ${techMove.toFixed(2)}%，AI 硬體開盤不宜追高。`);
+      risks.push(`科技指數偏弱（${techMove.toFixed(2)}%），追價勝率下降。`);
     } else if (techMove >= 1.8) {
       score += 5;
-      reasons.push(`美國科技股昨夜偏強 ${techMove.toFixed(2)}%，AI 硬體族群開盤氣氛較有利。`);
+      reasons.push(`科技指數轉強（${techMove.toFixed(2)}%），AI/電子族群有利。`);
     }
   }
 
   if (themes.includes('finance') && dowMove !== null) {
     if (dowMove <= -1.5) {
       score -= 5;
-      risks.push(`道瓊昨夜下跌 ${dowMove.toFixed(2)}%，金融股隔日承接力可能轉弱。`);
+      risks.push(`道瓊下跌（${dowMove.toFixed(2)}%），金融族群可能受壓。`);
     } else if (dowMove >= 1.2) {
       score += 3;
-      reasons.push(`道瓊昨夜上漲 ${dowMove.toFixed(2)}%，金融股隔日情緒較穩。`);
+      reasons.push(`道瓊上漲（${dowMove.toFixed(2)}%），金融族群情緒改善。`);
     }
   }
 
@@ -565,6 +565,39 @@ function buildOvernightImpact(stock, overnightContext) {
     techComposite: techMove,
     soxChange: soxMove,
     dowChange: dowMove
+  };
+}
+
+function decideHoldDays(std20, patternScore, overnightScore, sellLevel) {
+  if (sellLevel === '高') return 5;
+  if (sellLevel === '中') return 7;
+  if (std20 !== null && std20 > 0.04) return 5;
+  if (std20 !== null && std20 > 0.028) return 7;
+  if (overnightScore <= -6) return 5;
+  if (overnightScore <= -3) return 7;
+  if (patternScore >= 10 && overnightScore >= 0) return 10;
+  return 7;
+}
+
+function buildHoldPlan(holdDays, latestClose, stop, targetFast, targetFull, ma5, ma20, sellWarning) {
+  const midDays = Math.max(3, Math.ceil(holdDays / 2));
+  const maHint = ma5
+    ? `若 2 天內都站不上 5 日線`
+    : `若 2 天內無法維持反彈節奏`;
+  const baseExit = holdDays <= 5
+    ? `偏短打節奏：若在 ${holdDays} 天內沒有延續上攻，先減碼保留現金。`
+    : holdDays <= 7
+      ? `標準中短期：觀察到第 ${holdDays} 天，若量價轉弱就分批退場。`
+      : `偏順勢持有：最多看 ${holdDays} 天，途中若跌破關鍵均線就提前出場。`;
+  const exitWarning = sellWarning.level === '高' || sellWarning.level === '中'
+    ? sellWarning.action
+    : baseExit;
+
+  return {
+    horizon: `建議持有 ${holdDays} 個交易日，若提前達標或轉弱可提早調整。`,
+    takeProfit: `${midDays} 天先看 NT$ ${targetFast.toFixed(2)}；${holdDays} 天內續強再看 NT$ ${targetFull.toFixed(2)}。`,
+    stopLoss: `收盤跌破 NT$ ${stop.toFixed(2)} 或走勢轉弱先退，${maHint}也要主動降部位。`,
+    exitWarning
   };
 }
 
@@ -610,90 +643,90 @@ function analyzeWindow(history, stock, overnightContext = null, includeOvernight
 
   if (gateTrend) {
     score += 16;
-    reasons.push('價格站上 20 日線，且 20 日線高於 60 日線，符合中短期多方架構。');
+    reasons.push('價格位於 20 日線上方，且 20 日線高於 60 日線，趨勢偏多。');
   } else {
     score -= 14;
-    risks.push('價格未站穩 20 日線之上，不符合兩週內偏強節奏。');
+    risks.push('價格仍在 20 日線下方或均線走平，趨勢延續性較弱。');
   }
   if (ma5 && ma20 && latest.close >= ma5 && ma5 >= ma20) {
     score += 10;
-    reasons.push('收盤守在 5 日線與 20 日線上方，短線買盤仍在。');
+    reasons.push('價格與 5 日線、20 日線維持多方排列，短中期動能一致。');
   } else if (ma5 && latest.close < ma5) {
     score -= 8;
-    risks.push('收盤跌回 5 日線下方，短線續攻力道不足。');
+    risks.push('價格跌破 5 日線，短線節奏可能轉弱。');
   }
   if (gateVolume) {
     score += 6;
-    reasons.push('成交量高於 10 萬股，具備基本流動性。');
+    reasons.push('成交量大於 20 日均量，資金關注度上升。');
   } else {
     score -= 10;
-    risks.push('成交量偏低，短打時滑價風險偏高。');
+    risks.push('成交量不足，突破的延續性可能受限。');
   }
   if (!gateHeat) {
     score -= 14;
-    risks.push(`近 20 日漲幅 ${ret20.toFixed(1)}% 偏大，兩週內追價風險高。`);
+    risks.push(`近 20 日漲幅 ${ret20.toFixed(1)}% 偏熱，短線震盪風險升高。`);
   } else if (ret10 !== null && ret10 > 0 && ret10 < 12) {
     score += 8;
-    reasons.push(`近 10 日漲幅 ${ret10.toFixed(1)}%，仍屬可接受的短線推進。`);
+    reasons.push(`近 10 日漲幅 ${ret10.toFixed(1)}%，動能穩定且不過熱。`);
   }
   if (intentFactor60 !== null) {
     if (intentFactor60 > 0.28) {
       score += 8;
-      reasons.push(`價格意圖因子 ${intentFactor60.toFixed(3)} 偏強，走勢較乾淨。`);
+      reasons.push(`價格意圖因子 ${intentFactor60.toFixed(3)} 偏高，趨勢推進力道充足。`);
     } else if (intentFactor60 < 0.08) {
       score -= 8;
-      risks.push(`價格意圖因子 ${intentFactor60.toFixed(3)} 偏低，走勢容易震盪洗盤。`);
+      risks.push(`價格意圖因子 ${intentFactor60.toFixed(3)} 偏低，可能是盤整末端。`);
     }
   }
   if (rsv60 !== null) {
     if (rsv60 >= 0.72 && rsv60 <= 0.96) {
       score += 8;
-      reasons.push(`60 日相對位置 ${rsv60.toFixed(2)}，介於強勢但未過度鈍化區間。`);
+      reasons.push(`60 日相對位置 ${rsv60.toFixed(2)}，接近強勢區但仍有空間。`);
     } else if (rsv60 > 0.98) {
       score -= 6;
-      risks.push(`60 日相對位置 ${rsv60.toFixed(2)} 太高，容易遇到短線獲利了結。`);
+      risks.push(`60 日相對位置 ${rsv60.toFixed(2)} 過高，留意拉回風險。`);
     }
   }
   if (std20 !== null && std60 !== null) {
     if (std20 < std60 * 0.95) {
       score += 8;
-      reasons.push('短期波動低於長期波動，整理結構較乾淨。');
+      reasons.push('短期波動低於中期波動，結構較穩定。');
     } else if (std20 > std60 * 1.15) {
       score -= 6;
-      risks.push('短期波動放大，短打必須縮小部位。');
+      risks.push('短期波動擴大，需降低部位避免情緒盤。');
     }
   }
   if (rsi14 !== null && rsi14 >= 48 && rsi14 <= 68) {
     score += 12;
-    reasons.push(`RSI ${rsi14.toFixed(1)} 位於健康偏強區，適合中短線推進。`);
+    reasons.push(`RSI ${rsi14.toFixed(1)} 位於健康強勢區。`);
   } else if (rsi14 !== null && rsi14 > 74) {
     score -= 10;
-    risks.push(`RSI ${rsi14.toFixed(1)} 過熱，應把操作週期壓得更短。`);
+    risks.push(`RSI ${rsi14.toFixed(1)} 偏高，留意高檔震盪。`);
   } else if (rsi14 !== null && rsi14 < 42) {
     score -= 8;
-    risks.push(`RSI ${rsi14.toFixed(1)} 偏弱，尚未形成短打優勢。`);
+    risks.push(`RSI ${rsi14.toFixed(1)} 偏弱，反彈延續性待確認。`);
   }
   if (macdNow !== null && macdNow > 0) {
     score += 8;
-    reasons.push('MACD 仍在零軸上方，短線動能未失真。');
+    reasons.push('MACD 在零軸上方，動能結構偏多。');
   }
   if (vol20 && latest.volume > vol20 * 1.2) {
     score += 8;
-    reasons.push('量能高於 20 日均量，突破成功率較佳。');
+    reasons.push('成交量高於 20 日均量，突破可信度提升。');
   }
   if (ma20 && latest.close >= ma20 * 0.99 && latest.close <= ma20 * 1.07) {
     score += 10;
-    reasons.push('股價距離 20 日線不遠，短打風險報酬比更容易控制。');
+    reasons.push('價格貼近 20 日線上方，適合順勢回測布局。');
   } else if (ma20 && latest.close > ma20 * 1.12) {
     score -= 10;
-    risks.push('股價離 20 日線過遠，兩週內容易先拉回再說。');
+    risks.push('乖離 20 日線過大，短線易出現均值回歸。');
   }
   if (stock.pe && stock.pe > 0 && stock.pe < 30) {
     score += 4;
-    reasons.push(`本益比 ${stock.pe.toFixed(1)}，估值沒有明顯失控。`);
+    reasons.push(`本益比 ${stock.pe.toFixed(1)} 在可接受區間。`);
   } else if (stock.pe && stock.pe > 60) {
     score -= 6;
-    risks.push(`本益比 ${stock.pe.toFixed(1)} 偏高，短線情緒退潮時會更脆弱。`);
+    risks.push(`本益比 ${stock.pe.toFixed(1)} 偏高，評價修正風險較大。`);
   }
 
   const patterns = detectPatterns(history, latest, ma5, ma20, ma60);
@@ -710,27 +743,27 @@ function analyzeWindow(history, stock, overnightContext = null, includeOvernight
   if (mom126_21 !== null) {
     if (mom126_21 > 18 && mom126_21 < 85) {
       score += 9;
-      reasons.push(`中期動能(126-21) ${mom126_21.toFixed(1)}%，符合趨勢延續。`);
+      reasons.push(`動能(126-21) ${mom126_21.toFixed(1)}%，位於可延續區間。`);
     } else if (mom126_21 <= 0) {
       score -= 9;
-      risks.push(`中期動能(126-21) ${mom126_21.toFixed(1)}%，中期趨勢偏弱。`);
+      risks.push(`動能(126-21) ${mom126_21.toFixed(1)}%，中期趨勢偏弱。`);
     } else if (mom126_21 >= 100) {
       score -= 5;
-      risks.push(`中期動能(126-21) ${mom126_21.toFixed(1)}% 過熱，短線回檔風險升高。`);
+      risks.push(`動能(126-21) ${mom126_21.toFixed(1)}% 過熱，留意回檔。`);
     }
   }
   if (nearYearHigh !== null) {
     if (nearYearHigh >= 0.88 && nearYearHigh <= 0.98) {
       score += 6;
-      reasons.push(`年高貼近度 ${(nearYearHigh * 100).toFixed(1)}%，屬強勢但未極端。`);
+      reasons.push(`接近年高 ${(nearYearHigh * 100).toFixed(1)}%，強勢結構完整。`);
     } else if (nearYearHigh < 0.72) {
       score -= 6;
-      risks.push(`年高貼近度 ${(nearYearHigh * 100).toFixed(1)}%，離主升段偏遠。`);
+      risks.push(`距離年高 ${(nearYearHigh * 100).toFixed(1)}%，仍在修復區。`);
     }
   }
   if (drawdown20 !== null && drawdown20 <= -9) {
     score -= 7;
-    risks.push(`近 20 日回撤 ${drawdown20.toFixed(1)}%，短線結構仍偏脆弱。`);
+    risks.push(`近 20 日回檔 ${drawdown20.toFixed(1)}%，波動風險提高。`);
   }
 
   const sellWarning = buildSellWarning(latest, ma5, ma20, rsi14, ret20, std20, patterns);
@@ -740,11 +773,11 @@ function analyzeWindow(history, stock, overnightContext = null, includeOvernight
       : sellWarning.score >= 14 ? '中'
       : sellWarning.score >= 7 ? '低'
       : '無';
-    sellWarning.reasons.push('隔夜外盤偏空，隔日開盤續抱與追價都要更保守。');
+    sellWarning.reasons.push('隔夜風險轉弱，若反彈無量，隔日續跌機率提高。');
     if (sellWarning.level === '高') {
-      sellWarning.action = '隔夜外盤偏空且個股結構轉弱，應優先降低持股或等開盤反彈先調節。';
+      sellWarning.action = '隔夜風險偏空，建議先降至防守部位，開盤轉弱就續減碼。';
     } else if (sellWarning.level === '中') {
-      sellWarning.action = '隔夜外盤轉弱，若開盤無法站回 5 日線，應先減碼再觀察。';
+      sellWarning.action = '隔夜風險偏弱，先降槓桿，2 天內無法站回 5 日線則續減碼。';
     }
   }
   score -= sellWarning.level === '高' ? 10 : sellWarning.level === '中' ? 6 : 0;
@@ -757,8 +790,19 @@ function analyzeWindow(history, stock, overnightContext = null, includeOvernight
   const targetFast = latest.close + riskPerShare * 1.1;
   const targetFull = latest.close + riskPerShare * 1.7;
   const sizing = buildPositionSizing(latest.close, stop, std20, sellWarning);
+  const holdDays = decideHoldDays(std20, patterns.score, overnightImpact?.score ?? 0, sellWarning.level);
+  const holdPlan = buildHoldPlan(
+    holdDays,
+    latest.close,
+    stop,
+    targetFast,
+    targetFull,
+    ma5,
+    ma20,
+    sellWarning
+  );
   const hardPass = gateTrend && gateVolume && gateHeat && sellWarning.level !== '高';
-  const signal = hardPass ? (score >= 74 ? '短線買入' : score >= 60 ? '短線觀察' : '暫不進場') : '暫不進場';
+  const signal = hardPass ? (score >= 74 ? '買入候選' : score >= 60 ? '偏多觀察' : '等待進場') : '等待進場';
 
   return {
     score,
@@ -799,11 +843,11 @@ function analyzeWindow(history, stock, overnightContext = null, includeOvernight
     reasons,
     risks,
     plan: {
-      horizon: `以 ${HOLD_DAYS} 個交易日內完成為主，超過兩週仍沒有續攻就先退。`,
+      horizon: holdPlan.horizon,
       entry: `分批區間 NT$ ${entryLow.toFixed(2)} - ${entryHigh.toFixed(2)}。優先等回測 5 日線/20 日線不破，或帶量突破最近壓力後再進。`,
-      takeProfit: `5 個交易日先看 NT$ ${targetFast.toFixed(2)}，10 個交易日完整目標看 NT$ ${targetFull.toFixed(2)}。先到先減碼，不戀戰。`,
-      stopLoss: `收盤跌破 NT$ ${stop.toFixed(2)} 就退出；若 2 天內站不回 5 日線，也視為短打失敗。`,
-      exitWarning: sellWarning.action,
+      takeProfit: holdPlan.takeProfit,
+      stopLoss: holdPlan.stopLoss,
+      exitWarning: holdPlan.exitWarning,
       positionSizing: sizing.text
     }
   };
@@ -817,7 +861,7 @@ function backtest(history, stock) {
     if (i - lastHit < 6) continue;
     const sample = history.slice(0, i + 1);
     const analysis = analyzeWindow(sample, stock, null, false);
-    if (analysis.signal !== '短線買入') continue;
+    if (analysis.signal !== '?剔?鞎瑕') continue;
     const entry = history[i].close;
     const close3 = history[Math.min(i + 3, history.length - 1)].close;
     const close10 = history[Math.min(i + HOLD_DAYS, history.length - 1)].close;
@@ -860,7 +904,7 @@ async function main() {
   const [twse, tpex] = await Promise.all([
     fetchTwseUniverse(),
     fetchTpexUniverse().catch(error => {
-      warnings.push(`TPEx 上櫃資料取得失敗：${error.message}`);
+      warnings.push(`TPEx 銝?鞈???憭望?嚗?{error.message}`);
       return [];
     })
   ]);
@@ -890,7 +934,7 @@ async function main() {
   });
 
   const recommendations = analyzed
-    .filter(item => item.signal !== '暫不進場')
+    .filter(item => item.signal !== '等待進場')
     .sort((a, b) => b.score - a.score || b.tradeValue - a.tradeValue)
     .slice(0, 12);
 
@@ -901,10 +945,10 @@ async function main() {
       dateStyle: 'medium',
       timeStyle: 'medium'
     }).format(new Date()),
-    source: 'TWSE OpenAPI、TPEx 公開日收盤 API、Yahoo Finance chart API；整合中短期型態選股、兩週內交易規劃與賣出警告邏輯，由 GitHub Actions 定時更新。',
+    source: 'TWSE OpenAPI、TPEX API、Yahoo Finance chart API（夜盤風險因子）',
     universeSize: universe.length,
     scanned: pool.length,
-    scanStrategy: `以上市成交金額前 ${Math.min(twse.length, SYMBOLS_PER_MARKET)} 檔 + 上櫃成交金額前 ${Math.min(tpex.length, SYMBOLS_PER_MARKET)} 檔，尋找兩週內可操作的中短期型態。`,
+    scanStrategy: `上市成交值前 ${Math.min(twse.length, SYMBOLS_PER_MARKET)} 檔 + 上櫃成交值前 ${Math.min(tpex.length, SYMBOLS_PER_MARKET)} 檔，套用趨勢/型態/隔夜風險後篩出候選。`,
     overnightContext,
     marketCoverage: {
       twse: twse.length,
@@ -923,3 +967,4 @@ main().catch(error => {
   console.error(error);
   process.exit(1);
 });
+

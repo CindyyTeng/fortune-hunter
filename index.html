@@ -260,6 +260,24 @@ a { color:inherit; }
     linear-gradient(180deg, rgba(255,255,255,.9), rgba(255,246,240,.94));
   box-shadow:0 14px 32px rgba(73,35,43,.08);
 }
+.card-toolbar {
+  display:flex;
+  justify-content:flex-end;
+  margin-bottom:8px;
+}
+.card-toggle {
+  border:1px solid rgba(36,50,74,.14);
+  background:#fff8f2;
+  color:#3d2a2f;
+  border-radius:10px;
+  padding:6px 10px;
+  font-size:12px;
+  font-weight:800;
+  cursor:pointer;
+}
+.card.collapsed .card-body {
+  display:none;
+}
 .card-head {
   display:flex;
   justify-content:space-between;
@@ -589,16 +607,24 @@ function renderBacktests(backtests) {
     </div>`).join('');
 }
 
-function renderCard(item) {
+function renderCard(item, index) {
   const score = Math.max(0, Math.min(100, Number(item.score || 0)));
   const patternBias = item.patterns?.bias || '-';
   const waitPatterns = item.patterns?.watch || [];
   const sellLevel = item.sellWarning?.level || '無';
   const sellReasons = item.sellWarning?.reasons || [];
+  const cardId = `card-${esc(item.code)}-${index}`;
+  const collapsed = index > 1;
+  const buttonLabel = collapsed ? '展開詳情' : '收合詳情';
 
   return `
-    <article class="card">
-      <div>
+    <article class="card ${collapsed ? 'collapsed' : ''}" data-card>
+      <div class="card-toolbar">
+        <button class="card-toggle" type="button" aria-expanded="${collapsed ? 'false' : 'true'}" aria-controls="${cardId}">
+          ${buttonLabel}
+        </button>
+      </div>
+      <div id="${cardId}" class="card-body">
         <div class="card-head">
           <div>
             <h2 class="stock-name">${esc(item.name)}<span class="stock-code">${esc(item.code)} ${esc(item.market)}</span></h2>
@@ -661,6 +687,19 @@ function renderCard(item) {
     </article>`;
 }
 
+function bindCardToggles() {
+  document.querySelectorAll('.card-toggle').forEach(button => {
+    button.addEventListener('click', () => {
+      const card = button.closest('[data-card]');
+      if (!card) return;
+      card.classList.toggle('collapsed');
+      const expanded = !card.classList.contains('collapsed');
+      button.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+      button.textContent = expanded ? '收合詳情' : '展開詳情';
+    });
+  });
+}
+
 async function loadData() {
   els.refresh.disabled = true;
   els.message.textContent = '正在讀取最新的中短期型態分析。';
@@ -685,6 +724,7 @@ async function loadData() {
     }
 
     els.cards.innerHTML = data.recommendations.map(renderCard).join('');
+    bindCardToggles();
     if (liveUrl) connectLive(liveUrl);
   } catch (error) {
     els.message.textContent = `資料讀取失敗：${error.message}`;
@@ -708,6 +748,7 @@ function applyLiveQuotes(payload) {
   }
   els.asOf.textContent = `即時 ${new Intl.DateTimeFormat('zh-TW', { timeStyle: 'medium' }).format(new Date())}`;
   els.cards.innerHTML = currentData.recommendations.map(renderCard).join('');
+  bindCardToggles();
 }
 
 function connectLive(url) {

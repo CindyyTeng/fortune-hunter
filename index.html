@@ -625,8 +625,15 @@ let currentData = null;
 let liveSource = null;
 let liveUrl = localStorage.getItem('fh_live_url') || '';
 
+// ✅全域記住每張卡的收合狀態
+const collapsedCards = new Map();
+function getCardKey(item) {
+  return `${item.code}-${item.market}`;
+}  
+
 const escapeMap = { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' };
 
+  
 function esc(value) {
   return String(value ?? '').replace(/[&<>"']/g, char => escapeMap[char]);
 }
@@ -669,12 +676,16 @@ function renderCard(item, index) {
   const overnight = item.overnight || {};
   const holdDays = item.plan?.horizon?.match(/\d+/)?.[0] || '-';
   const sellTone = sellLevel === '高' || sellLevel === '中' || sellLevel === '低' ? 'danger' : 'calm';
+  const cardKey = getCardKey(item);
   const cardId = `card-${esc(item.code)}-${index}`;
-  const collapsed = index > 1;
+  
+  const collapsed = collapsedCards.has(cardKey)
+    ? collapsedCards.get(cardKey)
+    : index > 1;
   const buttonLabel = collapsed ? '展開詳情' : '收合詳情';
 
   return `
-    <article class="card ${collapsed ? 'collapsed' : ''}" data-card>
+   <article class="card ${collapsed ? 'collapsed' : ''}" data-card data-card-key="${esc(cardKey)}">
       <div class="card-summary">
         <div class="card-summary-main">
           <div class="summary-title">
@@ -776,11 +787,26 @@ function renderCard(item, index) {
 
 function bindCardToggles() {
   document.querySelectorAll('.card-toggle').forEach(button => {
+    // ✅ 避免重綁造成一按觸發多次（保險）
+    if (button.dataset.bound === '1') return;
+    button.dataset.bound = '1';
+
     button.addEventListener('click', () => {
       const card = button.closest('[data-card]');
       if (!card) return;
+
+      // 1) 切換 UI
       card.classList.toggle('collapsed');
-      const expanded = !card.classList.contains('collapsed');
+
+      // 2) 取得目前狀態
+      const collapsed = card.classList.contains('collapsed');
+      const expanded = !collapsed;
+
+      // 3) ✅ 存進 Map（關鍵）
+      const cardKey = card.dataset.cardKey; // 需要你在 <article> 加 data-card-key
+      if (cardKey) collapsedCards.set(cardKey, collapsed);
+
+      // 4) 同步按鈕文案/無障礙屬性
       button.setAttribute('aria-expanded', expanded ? 'true' : 'false');
       button.textContent = expanded ? '收合詳情' : '展開詳情';
     });

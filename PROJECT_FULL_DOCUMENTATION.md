@@ -510,3 +510,33 @@ npm run live
 - 讓前端顯示「資料 freshness」（上次生成距今幾分鐘）
 - 增加策略版本號（便於比較不同邏輯表現）
 
+---
+
+## 18. Live Quote Source Update
+
+`scripts/live-server.mjs` uses TWSE MIS realtime quotes as the primary source for `/quotes` and `/stream`.
+
+- Primary source: `https://mis.twse.com.tw/stock/api/getStockInfo.jsp`
+- Fallback source: Yahoo Finance quote API
+- Reason: Render and similar cloud hosts can be rate-limited or blocked by Yahoo, so relying on Yahoo alone makes realtime quotes unstable.
+- Frontend contract: unchanged. The server still emits `quotes[]` with `symbol`, `name`, `price`, `changePercent`, and `ts`.
+
+---
+
+## 19. Overnight Market Factor
+
+The stock-picking logic now includes the previous U.S. session as a next-day Taiwan-market risk factor.
+
+- Data source: Yahoo Finance daily chart API for `^GSPC`, `^IXIC`, `^DJI`, and `^SOX`
+- Scope:
+- broad-market risk adjusts the base score using a composite of S&P 500, Nasdaq, and Dow Jones
+- semiconductor-linked names receive extra adjustment from `^SOX`
+- AI hardware names receive extra adjustment from Nasdaq + `^SOX`
+- finance names receive extra adjustment from Dow Jones
+- Behavioral effect:
+- affects recommendation score directly
+- adds overnight risk/reason text into `reasons[]` or `risks[]`
+- can increase sell-warning severity when the overnight backdrop is clearly weak
+- Output:
+- top-level `overnightContext` is stored in `data/recommendations.json`
+- each recommendation also carries its own `overnight` summary object

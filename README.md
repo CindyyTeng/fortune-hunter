@@ -83,3 +83,17 @@ npm run live
 - 這套型態判讀是規則式邏輯，不是機器學習模型
 - 它適合幫你快速篩掉不合節奏的標的，不代表可以跳過停損
 - 目前設計重點是 **中短期兩週內操作**
+## Live Quote Source
+
+`scripts/live-server.mjs` now requests realtime quotes from TWSE MIS first. Yahoo Finance quote API is kept only as a fallback, because cloud hosts such as Render may be rate-limited or blocked by Yahoo.
+
+## Overnight Market Factor
+
+`scripts/generate-data.mjs` now includes overnight external-market context in the stock-picking score.
+
+- Market-wide risk uses S&P 500, Nasdaq, and Dow Jones composite movement from the latest U.S. session.
+- Theme-level risk uses sector matching:
+- semiconductor names lean on `^SOX`
+- AI hardware names lean on Nasdaq + `^SOX`
+- finance names lean on Dow Jones
+- The effect is not only descriptive. It adjusts recommendation score, risk text, and sell-warning behavior for the next Taiwan session.

@@ -3,6 +3,12 @@ const SYMBOLS_PER_MARKET = Number(process.env.SYMBOLS_PER_MARKET || 120);
 const CONCURRENCY = Number(process.env.CONCURRENCY || 6);
 const USER_AGENT = 'fortune-hunter/2.1';
 const HOLD_DAYS = 10;
+const OVERNIGHT_SYMBOLS = {
+  sp500: '^GSPC',
+  nasdaq: '^IXIC',
+  dow: '^DJI',
+  sox: '^SOX'
+};
 
 const warnings = [];
 
@@ -95,6 +101,52 @@ async function fetchYahooHistory(symbol) {
     close: quote.close[index],
     volume: quote.volume[index]
   })).filter(day => [day.open, day.high, day.low, day.close].every(Number.isFinite));
+}
+
+function latestChange(history) {
+  if (!history || history.length < 2) return null;
+  return pct(history.at(-1).close, history.at(-2).close);
+}
+
+async function fetchOvernightContext() {
+  const entries = await Promise.all(
+    Object.entries(OVERNIGHT_SYMBOLS).map(async ([key, symbol]) => {
+      const history = await fetchYahooHistory(symbol);
+      return [key, {
+        symbol,
+        date: history.at(-1)?.date || null,
+        close: round(history.at(-1)?.close),
+        change: round(latestChange(history))
+      }];
+    })
+  );
+
+  const indices = Object.fromEntries(entries);
+  const marketComposite = round(
+    (indices.sp500?.change || 0) * 0.45
+      + (indices.nasdaq?.change || 0) * 0.35
+      + (indices.dow?.change || 0) * 0.2,
+    2
+  );
+  const techComposite = round(
+    (indices.nasdaq?.change || 0) * 0.45
+      + (indices.sox?.change || 0) * 0.55,
+    2
+  );
+
+  const bias = marketComposite <= -1.2
+    ? 'risk-off'
+    : marketComposite >= 1.2
+      ? 'risk-on'
+      : 'neutral';
+
+  return {
+    asOf: new Date().toISOString(),
+    bias,
+    marketComposite,
+    techComposite,
+    indices
+  };
 }
 
 function average(values, period) {
@@ -406,7 +458,116 @@ function buildPositionSizing(latestClose, stop, std20, sellWarning) {
   };
 }
 
-function analyzeWindow(history, stock) {
+function inferThemes(stock) {
+  const name = stock.name || '';
+  const code = stock.code || '';
+  const themes = [];
+
+  if (/金控|銀行|保險|證券|票券/.test(name)) themes.push('finance');
+  if (/半導體|晶圓|矽|IC|晶片|封測|光罩|驅動/.test(name)
+    || ['2330', '2303', '2454', '3034', '3711', '2344', '2379', '3443', '6415', '8299'].includes(code)) {
+    themes.push('semiconductor');
+  }
+  if (/伺服器|電腦|主機板|顯卡|網通/.test(name)
+    || ['2317', '2382', '3231', '6669', '3017', '2356', '2376', '2357', '2383', '4938'].includes(code)) {
+    themes.push('ai-hardware');
+  }
+  if (!themes.length) themes.push('broad-market');
+
+  return themes;
+}
+
+function buildOvernightImpact(stock, overnightContext) {
+  if (!overnightContext) {
+    return {
+      score: 0,
+      bias: 'neutral',
+      reasons: [],
+      risks: [],
+      themes: inferThemes(stock)
+    };
+  }
+
+  const themes = inferThemes(stock);
+  const reasons = [];
+  const risks = [];
+  let score = 0;
+
+  const marketMove = overnightContext.marketComposite;
+  const techMove = overnightContext.techComposite;
+  const soxMove = overnightContext.indices.sox?.change ?? null;
+  const dowMove = overnightContext.indices.dow?.change ?? null;
+
+  if (marketMove !== null) {
+    if (marketMove <= -2) {
+      score -= 12;
+      risks.push(`昨夜美股整體偏弱，綜合變動 ${marketMove.toFixed(2)}%，台股隔日開盤承壓。`);
+    } else if (marketMove <= -1) {
+      score -= 7;
+      risks.push(`昨夜美股轉弱，綜合變動 ${marketMove.toFixed(2)}%，不利隔日追價。`);
+    } else if (marketMove >= 1.5) {
+      score += 6;
+      reasons.push(`昨夜美股整體偏強，綜合變動 ${marketMove.toFixed(2)}%，有利隔日開盤情緒。`);
+    } else if (marketMove >= 0.8) {
+      score += 3;
+      reasons.push(`昨夜美股小幅偏強，綜合變動 ${marketMove.toFixed(2)}%，外部風險相對和緩。`);
+    }
+  }
+
+  if (themes.includes('semiconductor') && soxMove !== null) {
+    if (soxMove <= -2.5) {
+      score -= 10;
+      risks.push(`費半昨夜下跌 ${soxMove.toFixed(2)}%，半導體族群隔日容易先被調節。`);
+    } else if (soxMove <= -1) {
+      score -= 6;
+      risks.push(`費半昨夜偏弱 ${soxMove.toFixed(2)}%，半導體族群開盤容易先受壓。`);
+    } else if (soxMove >= 2) {
+      score += 6;
+      reasons.push(`費半昨夜上漲 ${soxMove.toFixed(2)}%，有利半導體族群隔日續強。`);
+    } else if (soxMove >= 1) {
+      score += 3;
+      reasons.push(`費半昨夜偏強 ${soxMove.toFixed(2)}%，半導體族群情緒較佳。`);
+    }
+  }
+
+  if (themes.includes('ai-hardware') && techMove !== null) {
+    if (techMove <= -2) {
+      score -= 8;
+      risks.push(`美國科技股昨夜偏弱 ${techMove.toFixed(2)}%，AI 硬體族群隔日容易先震盪。`);
+    } else if (techMove <= -1) {
+      score -= 5;
+      risks.push(`美國科技股昨夜轉弱 ${techMove.toFixed(2)}%，AI 硬體開盤不宜追高。`);
+    } else if (techMove >= 1.8) {
+      score += 5;
+      reasons.push(`美國科技股昨夜偏強 ${techMove.toFixed(2)}%，AI 硬體族群開盤氣氛較有利。`);
+    }
+  }
+
+  if (themes.includes('finance') && dowMove !== null) {
+    if (dowMove <= -1.5) {
+      score -= 5;
+      risks.push(`道瓊昨夜下跌 ${dowMove.toFixed(2)}%，金融股隔日承接力可能轉弱。`);
+    } else if (dowMove >= 1.2) {
+      score += 3;
+      reasons.push(`道瓊昨夜上漲 ${dowMove.toFixed(2)}%，金融股隔日情緒較穩。`);
+    }
+  }
+
+  return {
+    score,
+    bias: score <= -6 ? 'headwind' : score >= 6 ? 'tailwind' : 'neutral',
+    reasons: reasons.slice(0, 3),
+    risks: risks.slice(0, 3),
+    themes,
+    marketComposite: marketMove,
+    techComposite: techMove,
+    soxChange: soxMove,
+    dowChange: dowMove
+  };
+}
+
+function analyzeWindow(history, stock, overnightContext = null, options = {}) {
+  const includeOvernight = options.includeOvernight !== false;
   const closes = history.map(day => day.close);
   const volumes = history.map(day => day.volume || 0);
   const returns = closes.slice(1).map((value, idx) => (value - closes[idx]) / closes[idx]);
@@ -530,7 +691,27 @@ function analyzeWindow(history, stock) {
   reasons.push(...patterns.bullish);
   risks.push(...patterns.bearish);
 
+  const overnightImpact = includeOvernight ? buildOvernightImpact(stock, overnightContext) : null;
+  if (overnightImpact) {
+    score += overnightImpact.score;
+    reasons.push(...overnightImpact.reasons);
+    risks.push(...overnightImpact.risks);
+  }
+
   const sellWarning = buildSellWarning(latest, ma5, ma20, rsi14, ret20, std20, patterns);
+  if (overnightImpact && overnightImpact.score <= -6) {
+    sellWarning.score += 6;
+    sellWarning.level = sellWarning.score >= 24 ? '高'
+      : sellWarning.score >= 14 ? '中'
+      : sellWarning.score >= 7 ? '低'
+      : '無';
+    sellWarning.reasons.push('隔夜外盤偏空，隔日開盤續抱與追價都要更保守。');
+    if (sellWarning.level === '高') {
+      sellWarning.action = '隔夜外盤偏空且個股結構轉弱，應優先降低持股或等開盤反彈先調節。';
+    } else if (sellWarning.level === '中') {
+      sellWarning.action = '隔夜外盤轉弱，若開盤無法站回 5 日線，應先減碼再觀察。';
+    }
+  }
   score -= sellWarning.level === '高' ? 10 : sellWarning.level === '中' ? 6 : 0;
 
   score = clamp(Math.round(score), 0, 100);
@@ -568,6 +749,14 @@ function analyzeWindow(history, stock) {
       stopPct: sizing.stopPct
     },
     patterns,
+    overnight: overnightImpact ? {
+      bias: overnightImpact.bias,
+      themes: overnightImpact.themes,
+      marketComposite: round(overnightImpact.marketComposite, 2),
+      techComposite: round(overnightImpact.techComposite, 2),
+      soxChange: round(overnightImpact.soxChange, 2),
+      dowChange: round(overnightImpact.dowChange, 2)
+    } : null,
     sellWarning,
     reasons,
     risks,
@@ -589,7 +778,7 @@ function backtest(history, stock) {
   for (let i = start; i < history.length - 10; i++) {
     if (i - lastHit < 6) continue;
     const sample = history.slice(0, i + 1);
-    const analysis = analyzeWindow(sample, stock);
+    const analysis = analyzeWindow(sample, stock, null, { includeOvernight: false });
     if (analysis.signal !== '短線買入') continue;
     const entry = history[i].close;
     const close3 = history[Math.min(i + 3, history.length - 1)].close;
@@ -638,6 +827,11 @@ async function main() {
     })
   ]);
 
+  const overnightContext = await fetchOvernightContext().catch(error => {
+    warnings.push(`Overnight context fetch failed: ${error.message}`);
+    return null;
+  });
+
   const universe = [...twse, ...tpex].sort((a, b) => b.tradeValue - a.tradeValue);
   const pool = [...twse.slice(0, SYMBOLS_PER_MARKET), ...tpex.slice(0, SYMBOLS_PER_MARKET)]
     .sort((a, b) => b.tradeValue - a.tradeValue);
@@ -645,7 +839,7 @@ async function main() {
   const analyzed = await mapLimit(pool, CONCURRENCY, async stock => {
     const history = await fetchYahooHistory(stock.yahooSymbol);
     if (history.length < 70) throw new Error('歷史資料不足');
-    const analysis = analyzeWindow(history, stock);
+    const analysis = analyzeWindow(history, stock, overnightContext);
     return {
       code: stock.code,
       name: stock.name,
@@ -673,6 +867,7 @@ async function main() {
     universeSize: universe.length,
     scanned: pool.length,
     scanStrategy: `以上市成交金額前 ${Math.min(twse.length, SYMBOLS_PER_MARKET)} 檔 + 上櫃成交金額前 ${Math.min(tpex.length, SYMBOLS_PER_MARKET)} 檔，尋找兩週內可操作的中短期型態。`,
+    overnightContext,
     marketCoverage: {
       twse: twse.length,
       tpex: tpex.length

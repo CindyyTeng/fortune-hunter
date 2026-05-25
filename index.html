@@ -10,19 +10,19 @@
 <style>
 :root {
   --ink:#21191a;
-  --muted:#6c5d61;
-  --line:rgba(84,44,53,.16);
-  --paper:#fffaf5;
-  --paper-soft:#fff3ea;
-  --paper-deep:#f7e2d7;
-  --brand:#a12d3f;
-  --brand-strong:#7f1d33;
-  --brand-soft:#f4d3db;
-  --warn:#d28a2f;
-  --navy:#24324a;
+  --muted:#64707d;
+  --line:rgba(39,48,58,.14);
+  --paper:#f4f6f8;
+  --paper-soft:#ffffff;
+  --paper-deep:#eef1f4;
+  --brand:#b4233f;
+  --brand-strong:#7f1630;
+  --brand-soft:#f6dce3;
+  --warn:#c98219;
+  --navy:#202833;
   --down:#1d8b66;
   --up:#c43a3a;
-  --shadow:0 18px 44px rgba(75,31,42,.12);
+  --shadow:0 18px 44px rgba(27,35,45,.10);
 }
 * { box-sizing:border-box; }
 body {
@@ -31,9 +31,9 @@ body {
   color:var(--ink);
   font-family:'Noto Sans TC', sans-serif;
   background:
-    radial-gradient(circle at top right, rgba(161,45,63,.12), transparent 28%),
-    radial-gradient(circle at left 20%, rgba(210,138,47,.10), transparent 30%),
-    linear-gradient(180deg, #fffdfb 0%, #fff7f1 48%, #f8ebe4 100%);
+    radial-gradient(circle at 8% 0%, rgba(180,35,63,.12), transparent 28%),
+    radial-gradient(circle at 92% 8%, rgba(32,40,51,.12), transparent 26%),
+    linear-gradient(180deg, #f9fafb 0%, #eef1f4 100%);
 }
 body::before {
   content:"";
@@ -41,16 +41,16 @@ body::before {
   inset:0;
   pointer-events:none;
   background:
-    linear-gradient(120deg, rgba(255,255,255,.42) 0 1px, transparent 1px 34px),
-    linear-gradient(90deg, rgba(161,45,63,.05), transparent 38%);
+    linear-gradient(120deg, rgba(32,40,51,.045) 0 1px, transparent 1px 36px),
+    linear-gradient(90deg, rgba(255,255,255,.7), transparent 44%);
   z-index:-1;
 }
 button { font:inherit; }
 #app { width:min(1240px, 100%); margin:0 auto; padding:22px 14px 60px; }
 .shell {
   border:1px solid var(--line);
-  border-radius:22px;
-  background:rgba(255,250,245,.86);
+  border-radius:18px;
+  background:rgba(255,255,255,.92);
   box-shadow:var(--shadow);
   backdrop-filter:blur(12px);
   overflow:hidden;
@@ -61,9 +61,7 @@ button { font:inherit; }
   align-items:center;
   gap:18px;
   padding:18px 22px;
-  background:
-    linear-gradient(135deg, rgba(255,255,255,.08), transparent 42%),
-    linear-gradient(120deg, var(--navy), #301a22 60%, var(--brand-strong));
+  background:linear-gradient(120deg, var(--navy), #2d2026 58%, var(--brand-strong));
   color:#fff7f1;
 }
 .brand {
@@ -76,7 +74,7 @@ button { font:inherit; }
   height:44px;
   display:grid;
   place-items:center;
-  border-radius:14px;
+  border-radius:8px;
   background:linear-gradient(135deg, #ffcc89, #fff2d8);
   color:#4a1d23;
   font-weight:900;
@@ -106,7 +104,7 @@ button { font:inherit; }
   flex:1;
   min-height:42px;
   padding:10px 14px;
-  border-radius:12px;
+  border-radius:8px;
   border:1px solid rgba(255,255,255,.18);
   cursor:pointer;
   font-weight:800;
@@ -121,11 +119,11 @@ button { font:inherit; }
 }
 .hero-copy {
   padding:24px;
-  border-radius:22px;
+  border-radius:18px;
   background:
-    linear-gradient(140deg, rgba(161,45,63,.10), rgba(255,255,255,.75)),
-    linear-gradient(180deg, #fffdfb, #fff3ea);
-  border:1px solid rgba(161,45,63,.12);
+    linear-gradient(135deg, rgba(180,35,63,.09), rgba(255,255,255,.9) 44%),
+    linear-gradient(180deg, #ffffff, #f8fafc);
+  border:1px solid rgba(39,48,58,.12);
 }
 .hero-copy h1 {
   margin:0;
@@ -148,8 +146,8 @@ button { font:inherit; }
 }
 .hero-chip {
   padding:8px 12px;
-  border-radius:999px;
-  background:#fff7ef;
+  border-radius:8px;
+  background:#fff;
   border:1px solid rgba(161,45,63,.14);
   color:#5a2e34;
   font-size:12px;
@@ -159,10 +157,8 @@ button { font:inherit; }
   display:grid;
   gap:14px;
   padding:20px;
-  border-radius:22px;
-  background:
-    linear-gradient(180deg, rgba(36,50,74,.98), rgba(55,25,34,.96)),
-    linear-gradient(180deg, #24324a, #3c1d28);
+  border-radius:18px;
+  background:linear-gradient(145deg, #1f2933, #241d2a 52%, #7f1630);
   color:#fff7f1;
   position:relative;
   overflow:hidden;
@@ -198,9 +194,9 @@ button { font:inherit; }
 }
 .stat {
   padding:16px;
-  border-radius:18px;
+  border-radius:8px;
   border:1px solid var(--line);
-  background:rgba(255,250,245,.9);
+  background:#fff;
   box-shadow:0 8px 20px rgba(73,35,43,.05);
 }
 .stat strong { display:block; font-size:22px; color:#311c21; line-height:1.2; }
@@ -210,36 +206,46 @@ button { font:inherit; }
   padding:15px 16px;
   border:1px solid rgba(161,45,63,.18);
   border-left:6px solid var(--brand);
-  border-radius:16px;
-  background:rgba(255,250,245,.9);
+  border-radius:8px;
+  background:#fff;
   color:#51363b;
   line-height:1.7;
 }
 .cards { display:grid; gap:16px; }
 .card {
   border:1px solid var(--line);
-  border-radius:22px;
-  background:linear-gradient(180deg, rgba(255,255,255,.9), rgba(255,246,240,.94));
-  box-shadow:0 14px 32px rgba(73,35,43,.08);
+  border-radius:18px;
+  background:linear-gradient(180deg, #ffffff, #fbfcfd);
+  box-shadow:0 18px 42px rgba(32,40,51,.09);
   overflow:hidden;
 }
 .card-summary {
   display:grid;
-  grid-template-columns:minmax(0, 1fr) auto;
-  gap:12px;
+  grid-template-columns:minmax(220px, .9fr) minmax(360px, 1.1fr) auto;
+  gap:14px;
   align-items:center;
-  padding:14px 16px;
-  background:linear-gradient(180deg, #fffdfb, #fff6ef);
+  padding:16px 18px;
+  background:linear-gradient(90deg, #ffffff, #f8fafc 62%, rgba(180,35,63,.05));
+  border-bottom:1px solid var(--line);
+}
+.card.collapsed .card-summary {
+  border-bottom:0;
 }
 .card-summary-main {
   display:flex;
-  align-items:center;
-  gap:10px;
-  flex-wrap:wrap;
+  flex-direction:column;
+  align-items:flex-start;
+  gap:8px;
+  min-width:0;
+}
+.summary-title {
+  display:flex;
+  align-items:baseline;
+  gap:8px;
   min-width:0;
 }
 .summary-name {
-  font-size:20px;
+  font-size:22px;
   font-weight:900;
   color:#2f2024;
 }
@@ -250,19 +256,46 @@ button { font:inherit; }
 }
 .summary-score {
   padding:5px 10px;
-  border-radius:999px;
-  background:#f4ebe6;
+  border-radius:8px;
+  background:#f3f4f6;
   border:1px solid rgba(84,44,53,.18);
   font-size:12px;
   font-weight:900;
   color:#4a2d33;
+}
+.summary-tags {
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+}
+.summary-mini {
+  display:grid;
+  grid-template-columns:repeat(4, minmax(0, 1fr));
+  gap:8px;
+}
+.summary-mini span {
+  min-height:54px;
+  padding:8px 10px;
+  border:1px solid rgba(39,48,58,.12);
+  border-radius:12px;
+  background:#fff;
+  color:var(--muted);
+  font-size:11px;
+  line-height:1.25;
+}
+.summary-mini b {
+  display:block;
+  margin-bottom:4px;
+  color:#291c20;
+  font-size:15px;
+  overflow-wrap:anywhere;
 }
 .signal,
 .sell-badge {
   display:inline-flex;
   align-items:center;
   padding:5px 10px;
-  border-radius:999px;
+  border-radius:8px;
   font-size:12px;
   font-weight:900;
 }
@@ -273,15 +306,23 @@ button { font:inherit; }
 }
 .sell-badge {
   border:1px solid rgba(36,50,74,.16);
-  background:#f8ebe4;
+  background:#fff4e7;
   color:#49343a;
 }
 .card-toggle {
   border:1px solid rgba(36,50,74,.18);
-  background:#fff8f2;
+  background:#202833;
+  color:#fff;
+  box-shadow:0 10px 20px rgba(32,40,51,.12);
+  min-width:92px;
+}
+.card.collapsed .card-toggle {
+  background:#fff;
   color:#3d2a2f;
+}
+.card-toggle {
   border-radius:10px;
-  padding:8px 12px;
+  padding:9px 12px;
   font-size:12px;
   font-weight:900;
   cursor:pointer;
@@ -290,7 +331,7 @@ button { font:inherit; }
   display:grid;
   grid-template-columns:minmax(0, 1fr) 320px;
   gap:16px;
-  padding:0 16px 16px;
+  padding:18px;
 }
 .card.collapsed .card-detail { display:none; }
 .card-head {
@@ -355,9 +396,9 @@ button { font:inherit; }
 .metric {
   min-height:84px;
   padding:12px;
-  border:1px solid rgba(161,45,63,.12);
-  border-radius:16px;
-  background:#fff8f2;
+  border:1px solid rgba(39,48,58,.12);
+  border-radius:14px;
+  background:linear-gradient(180deg, #ffffff, #f8fafc);
 }
 .metric b {
   display:block;
@@ -392,7 +433,7 @@ button { font:inherit; }
 }
 .plan-row {
   padding:12px;
-  border-radius:16px;
+  border-radius:12px;
   border:1px solid rgba(210,138,47,.22);
   background:linear-gradient(180deg, #fffdf8, #fff4e7);
   line-height:1.7;
@@ -403,24 +444,66 @@ button { font:inherit; }
 }
 .side-panel {
   padding:14px;
-  border-radius:18px;
+  border-radius:16px;
   border:1px solid rgba(36,50,74,.10);
-  background:#fff7f1;
+  background:linear-gradient(180deg, #ffffff, #f8fafc);
+  position:sticky;
+  top:14px;
 }
 .warning-box {
   padding:12px;
-  border-radius:16px;
+  border-radius:14px;
   border:1px solid rgba(161,45,63,.18);
   background:linear-gradient(180deg, #fff3f3, #fff7f2);
   line-height:1.7;
 }
 .warning-box strong { color:#7f1d33; }
+.warning-box.calm {
+  border-color:rgba(32,40,51,.12);
+  background:linear-gradient(180deg, #f8fafc, #ffffff);
+}
+.warning-box.danger {
+  border-color:rgba(180,35,63,.34);
+  box-shadow:inset 4px 0 0 var(--brand);
+}
+.side-grid {
+  display:grid;
+  gap:8px;
+  margin-top:12px;
+}
+.side-row {
+  padding:10px;
+  border:1px solid rgba(39,48,58,.12);
+  border-radius:12px;
+  background:#fff;
+  line-height:1.55;
+}
+.side-row b {
+  display:block;
+  margin-bottom:4px;
+  color:#2f2024;
+  font-size:12px;
+}
+.market-strip {
+  display:grid;
+  grid-template-columns:repeat(2, minmax(0, 1fr));
+  gap:8px;
+  margin-top:10px;
+}
+.market-pill {
+  padding:8px;
+  border-radius:12px;
+  background:#f3f4f6;
+  color:#3d4852;
+  font-size:12px;
+  font-weight:800;
+}
 .backtests { display:grid; gap:10px; }
 .backtest {
   padding:12px;
   border:1px solid rgba(36,50,74,.12);
-  border-radius:16px;
-  background:#fdf8f4;
+  border-radius:8px;
+  background:#fff;
   line-height:1.6;
 }
 .backtest b { display:block; color:#2f2f3a; margin-bottom:4px; }
@@ -443,6 +526,8 @@ footer {
 @media (max-width: 980px) {
   .hero { grid-template-columns:1fr; }
   .stats { grid-template-columns:repeat(2, 1fr); }
+  .card-summary { grid-template-columns:1fr auto; }
+  .summary-mini { grid-column:1 / -1; }
   .card-detail { grid-template-columns:1fr; }
   .side {
     border-left:0;
@@ -463,6 +548,8 @@ footer {
   .hero-copy h1 { font-size:34px; }
   .stats, .metrics { grid-template-columns:1fr; }
   .card-summary { grid-template-columns:1fr; }
+  .summary-mini { grid-template-columns:repeat(2, minmax(0, 1fr)); }
+  .card-toggle { width:100%; }
 }
 </style>
 </head>
@@ -578,6 +665,10 @@ function renderCard(item, index) {
   const waitPatterns = item.patterns?.watch || [];
   const sellLevel = item.sellWarning?.level || '無';
   const sellReasons = item.sellWarning?.reasons || [];
+  const sideRisks = sellReasons.length ? sellReasons : (item.risks || []).slice(0, 2);
+  const overnight = item.overnight || {};
+  const holdDays = item.plan?.horizon?.match(/\d+/)?.[0] || '-';
+  const sellTone = sellLevel === '高' || sellLevel === '中' || sellLevel === '低' ? 'danger' : 'calm';
   const cardId = `card-${esc(item.code)}-${index}`;
   const collapsed = index > 1;
   const buttonLabel = collapsed ? '展開詳情' : '收合詳情';
@@ -586,11 +677,21 @@ function renderCard(item, index) {
     <article class="card ${collapsed ? 'collapsed' : ''}" data-card>
       <div class="card-summary">
         <div class="card-summary-main">
-          <span class="summary-name">${esc(item.name)}</span>
-          <span class="summary-code">${esc(item.code)} ${esc(item.market)}</span>
-          <span class="summary-score">分數 ${score}/100</span>
-          <span class="signal">${esc(item.signal || '等待進場')}</span>
-          <span class="sell-badge">賣出警告：${esc(sellLevel)}</span>
+          <div class="summary-title">
+            <span class="summary-name">${esc(item.name)}</span>
+            <span class="summary-code">${esc(item.code)} ${esc(item.market)}</span>
+          </div>
+          <div class="summary-tags">
+            <span class="summary-score">分數 ${score}/100</span>
+            <span class="signal">${esc(item.signal || '等待進場')}</span>
+            <span class="sell-badge">賣出警告：${esc(sellLevel)}</span>
+          </div>
+        </div>
+        <div class="summary-mini">
+          <span><b>${money(item.latestPrice)}</b>最新收盤</span>
+          <span><b class="${pctClass(item.change10d)}">${fmt(item.change10d, '%')}</b>近 10 日</span>
+          <span><b>${esc(patternBias)}</b>型態傾向</span>
+          <span><b>${esc(holdDays)} 天</b>建議週期</span>
         </div>
         <button class="card-toggle" type="button" aria-expanded="${collapsed ? 'false' : 'true'}" aria-controls="${cardId}">
           ${buttonLabel}
@@ -648,11 +749,22 @@ function renderCard(item, index) {
         <aside class="side">
           <div class="side-panel">
             <div class="section-title">賣出警告</div>
-            <div class="warning-box">
-              <strong>${esc(sellLevel)} 等級</strong>
+            <div class="warning-box ${sellTone}">
+              <strong>${esc(sellLevel)} 等級｜警戒分 ${fmt(item.sellWarning?.score)}</strong>
               <div>${esc(item.sellWarning?.action || '目前無明確賣出警告，仍需紀律控管。')}</div>
             </div>
-            ${sellReasons.length ? `<ul class="reason-list">${sellReasons.map(reason => `<li>${esc(reason)}</li>`).join('')}</ul>` : '<div class="notice" style="margin:12px 0 0;">目前沒有額外賣出警示，請依停損與持有週期管理。</div>'}
+            <div class="side-grid">
+              <div class="side-row"><b>出場應對</b>${esc(item.plan?.exitWarning || '-')}</div>
+              <div class="side-row"><b>停損條件</b>${esc(item.plan?.stopLoss || '-')}</div>
+              <div class="side-row"><b>主要風險</b>${sideRisks.length ? sideRisks.map(esc).join(' / ') : '目前沒有額外風險文字，仍依停損與持有週期管理。'}</div>
+            </div>
+            <div class="section-title">隔夜影響</div>
+            <div class="market-strip">
+              <div class="market-pill">美股 ${fmt(overnight.marketComposite, '%')}</div>
+              <div class="market-pill">科技 ${fmt(overnight.techComposite, '%')}</div>
+              <div class="market-pill">費半 ${fmt(overnight.soxChange, '%')}</div>
+              <div class="market-pill">道瓊 ${fmt(overnight.dowChange, '%')}</div>
+            </div>
 
             <div class="section-title">回測參考</div>
             <div class="backtests">${renderBacktests(item.backtest)}</div>

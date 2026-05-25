@@ -1,12 +1,12 @@
 {
-  "asOf": "2026-05-25T14:44:46.779Z",
-  "generatedAtTaipei": "2026年5月25日 晚上10:44:46",
+  "asOf": "2026-05-25T15:06:53.164Z",
+  "generatedAtTaipei": "2026年5月25日 晚上11:06:53",
   "source": "TWSE OpenAPI、TPEX API、Yahoo Finance chart API（夜盤風險因子）",
   "universeSize": 1960,
   "scanned": 240,
   "scanStrategy": "上市成交值前 120 檔 + 上櫃成交值前 120 檔，套用趨勢/型態/隔夜風險後篩出候選。",
   "overnightContext": {
-    "asOf": "2026-05-25T14:44:42.263Z",
+    "asOf": "2026-05-25T15:06:48.516Z",
     "bias": "neutral",
     "marketComposite": 0.35,
     "techComposite": 1.18,
@@ -123,7 +123,17 @@
         "exitWarning": "標準中短期：觀察到第 7 天，若量價轉弱就分批退場。",
         "positionSizing": "單筆風險建議控制在總資金 0.9%，以止損幅度 5.1% 推估，單檔資金上限約 18%。"
       },
-      "backtest": []
+      "backtest": [
+        {
+          "date": "2026-04-28",
+          "signalScore": 83,
+          "entryPrice": 894,
+          "return3d": -0.89,
+          "return10d": -7.94,
+          "maxGain10d": -0.89,
+          "maxDrawdown10d": -10.29
+        }
+      ]
     },
     {
       "code": "2388",
@@ -285,7 +295,35 @@
         "exitWarning": "偏順勢持有：最多看 10 天，途中若跌破關鍵均線就提前出場。",
         "positionSizing": "單筆風險建議控制在總資金 1.2%，以止損幅度 5.6% 推估，單檔資金上限約 22%。"
       },
-      "backtest": []
+      "backtest": [
+        {
+          "date": "2026-01-26",
+          "signalScore": 100,
+          "entryPrice": 51,
+          "return3d": 1.96,
+          "return10d": 1.96,
+          "maxGain10d": 1.96,
+          "maxDrawdown10d": -0.39
+        },
+        {
+          "date": "2026-02-03",
+          "signalScore": 76,
+          "entryPrice": 51.1,
+          "return3d": 0.98,
+          "return10d": 9.39,
+          "maxGain10d": 9.39,
+          "maxDrawdown10d": 0.2
+        },
+        {
+          "date": "2026-02-11",
+          "signalScore": 80,
+          "entryPrice": 52.2,
+          "return3d": 2.49,
+          "return10d": -2.3,
+          "maxGain10d": 7.09,
+          "maxDrawdown10d": -3.26
+        }
+      ]
     },
     {
       "code": "3709",
@@ -367,7 +405,35 @@
         "exitWarning": "標準中短期：觀察到第 7 天，若量價轉弱就分批退場。",
         "positionSizing": "單筆風險建議控制在總資金 0.7%，以止損幅度 8.2% 推估，單檔資金上限約 8%。"
       },
-      "backtest": []
+      "backtest": [
+        {
+          "date": "2026-01-30",
+          "signalScore": 81,
+          "entryPrice": 61.7,
+          "return3d": 7.78,
+          "return10d": 2.27,
+          "maxGain10d": 7.78,
+          "maxDrawdown10d": -2.43
+        },
+        {
+          "date": "2026-02-11",
+          "signalScore": 75,
+          "entryPrice": 62,
+          "return3d": 11.94,
+          "return10d": 25,
+          "maxGain10d": 25,
+          "maxDrawdown10d": 1.77
+        },
+        {
+          "date": "2026-03-03",
+          "signalScore": 89,
+          "entryPrice": 70.5,
+          "return3d": 0,
+          "return10d": -0.71,
+          "maxGain10d": 9.93,
+          "maxDrawdown10d": -6.81
+        }
+      ]
     },
     {
       "code": "3265",
@@ -448,7 +514,35 @@
         "exitWarning": "標準中短期：觀察到第 7 天，若量價轉弱就分批退場。",
         "positionSizing": "單筆風險建議控制在總資金 0.9%，以止損幅度 7.2% 推估，單檔資金上限約 13%。"
       },
-      "backtest": []
+      "backtest": [
+        {
+          "date": "2026-01-29",
+          "signalScore": 81,
+          "entryPrice": 144,
+          "return3d": -5.56,
+          "return10d": -0.35,
+          "maxGain10d": -0.35,
+          "maxDrawdown10d": -7.99
+        },
+        {
+          "date": "2026-02-23",
+          "signalScore": 91,
+          "entryPrice": 143.5,
+          "return3d": 4.53,
+          "return10d": -9.76,
+          "maxGain10d": 4.53,
+          "maxDrawdown10d": -13.24
+        },
+        {
+          "date": "2026-03-25",
+          "signalScore": 87,
+          "entryPrice": 142,
+          "return3d": 0.7,
+          "return10d": 14.79,
+          "maxGain10d": 14.79,
+          "maxDrawdown10d": -1.76
+        }
+      ]
     },
     {
       "code": "8039",
@@ -530,7 +624,35 @@
         "exitWarning": "偏短打節奏：若在 5 天內沒有延續上攻，先減碼保留現金。",
         "positionSizing": "單筆風險建議控制在總資金 0.7%，以止損幅度 8.6% 推估，單檔資金上限約 8%。"
       },
-      "backtest": []
+      "backtest": [
+        {
+          "date": "2026-01-26",
+          "signalScore": 100,
+          "entryPrice": 93.4,
+          "return3d": -3.32,
+          "return10d": -8.99,
+          "maxGain10d": -1.82,
+          "maxDrawdown10d": -10.81
+        },
+        {
+          "date": "2026-02-04",
+          "signalScore": 79,
+          "entryPrice": 88.9,
+          "return3d": -4.39,
+          "return10d": 19.8,
+          "maxGain10d": 19.8,
+          "maxDrawdown10d": -9
+        },
+        {
+          "date": "2026-02-26",
+          "signalScore": 99,
+          "entryPrice": 97,
+          "return3d": 4.64,
+          "return10d": 31.96,
+          "maxGain10d": 31.96,
+          "maxDrawdown10d": -0.31
+        }
+      ]
     },
     {
       "code": "6761",
@@ -609,7 +731,35 @@
         "exitWarning": "偏短打節奏：若在 5 天內沒有延續上攻，先減碼保留現金。",
         "positionSizing": "單筆風險建議控制在總資金 0.7%，以止損幅度 6.5% 推估，單檔資金上限約 11%。"
       },
-      "backtest": []
+      "backtest": [
+        {
+          "date": "2026-01-28",
+          "signalScore": 77,
+          "entryPrice": 153,
+          "return3d": -4.58,
+          "return10d": -3.92,
+          "maxGain10d": -3.59,
+          "maxDrawdown10d": -10.13
+        },
+        {
+          "date": "2026-02-11",
+          "signalScore": 89,
+          "entryPrice": 147,
+          "return3d": 3.74,
+          "return10d": 6.12,
+          "maxGain10d": 14.63,
+          "maxDrawdown10d": 1.36
+        },
+        {
+          "date": "2026-03-03",
+          "signalScore": 100,
+          "entryPrice": 159.5,
+          "return3d": 5.64,
+          "return10d": 5.33,
+          "maxGain10d": 5.64,
+          "maxDrawdown10d": -6.58
+        }
+      ]
     },
     {
       "code": "3661",
@@ -927,7 +1077,17 @@
         "exitWarning": "標準中短期：觀察到第 7 天，若量價轉弱就分批退場。",
         "positionSizing": "單筆風險建議控制在總資金 0.9%，以止損幅度 7.4% 推估，單檔資金上限約 12%。"
       },
-      "backtest": []
+      "backtest": [
+        {
+          "date": "2026-03-12",
+          "signalScore": 81,
+          "entryPrice": 49.5,
+          "return3d": -6.67,
+          "return10d": -3.84,
+          "maxGain10d": -0.2,
+          "maxDrawdown10d": -8.18
+        }
+      ]
     },
     {
       "code": "3227",
@@ -1011,7 +1171,17 @@
         "exitWarning": "偏順勢持有：最多看 10 天，途中若跌破關鍵均線就提前出場。",
         "positionSizing": "單筆風險建議控制在總資金 1.2%，以止損幅度 6.8% 推估，單檔資金上限約 18%。"
       },
-      "backtest": []
+      "backtest": [
+        {
+          "date": "2026-01-28",
+          "signalScore": 75,
+          "entryPrice": 214.5,
+          "return3d": -9.09,
+          "return10d": -10.96,
+          "maxGain10d": -2.8,
+          "maxDrawdown10d": -13.52
+        }
+      ]
     }
   ],
   "warnings": []

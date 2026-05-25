@@ -241,7 +241,7 @@ function detectPatterns(history, latest, ma5, ma20, ma60) {
   let score = 0;
 
   if (history.length < 30 || !ma20 || !ma60) {
-    return { score: 0, bias: '鞈?銝雲', bullish, bearish, watch };
+    return { score: 0, bias: '資料不足', bullish, bearish, watch };
   }
 
   const recent15 = history.slice(-15);
@@ -861,7 +861,7 @@ function backtest(history, stock) {
     if (i - lastHit < 6) continue;
     const sample = history.slice(0, i + 1);
     const analysis = analyzeWindow(sample, stock, null, false);
-    if (analysis.signal !== '?剔?鞎瑕') continue;
+    if (analysis.signal !== '買入候選') continue;
     const entry = history[i].close;
     const close3 = history[Math.min(i + 3, history.length - 1)].close;
     const close10 = history[Math.min(i + HOLD_DAYS, history.length - 1)].close;
@@ -904,7 +904,7 @@ async function main() {
   const [twse, tpex] = await Promise.all([
     fetchTwseUniverse(),
     fetchTpexUniverse().catch(error => {
-      warnings.push(`TPEx 銝?鞈???憭望?嚗?{error.message}`);
+      warnings.push(`TPEx 上櫃資料讀取失敗：${error.message}`);
       return [];
     })
   ]);

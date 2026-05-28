@@ -12,6 +12,13 @@ const OVERNIGHT_SYMBOLS = {
   dow: '^DJI',
   sox: '^SOX'
 };
+const OVERNIGHT_GROUPS = {
+  taiwanSentiment: ['EWT', 'TSM', 'UMC'],
+  memory: ['MU', 'WDC', 'STX'],
+  passiveComponents: ['VSH', 'APH', 'TEL', 'GLW'],
+  aiHardware: ['NVDA', 'AMD', 'AVGO', 'SMCI', 'DELL'],
+  powerEquipment: ['ETN', 'PWR', 'GEV', 'VRT', 'HUBB']
+};
 
 const warnings = [];
 
@@ -112,19 +119,39 @@ function latestChange(history) {
 }
 
 async function fetchOvernightContext() {
+  const fetchChange = async symbol => {
+    const history = await fetchYahooHistory(symbol);
+    return {
+      symbol,
+      date: history.at(-1)?.date || null,
+      close: round(history.at(-1)?.close),
+      change: round(latestChange(history))
+    };
+  };
   const entries = await Promise.all(
     Object.entries(OVERNIGHT_SYMBOLS).map(async ([key, symbol]) => {
-      const history = await fetchYahooHistory(symbol);
-      return [key, {
-        symbol,
-        date: history.at(-1)?.date || null,
-        close: round(history.at(-1)?.close),
-        change: round(latestChange(history))
-      }];
+      return [key, await fetchChange(symbol)];
     })
   );
 
   const indices = Object.fromEntries(entries);
+  const groupEntries = await Promise.all(
+    Object.entries(OVERNIGHT_GROUPS).map(async ([key, symbols]) => {
+      const quotes = (await Promise.all(
+        symbols.map(symbol => fetchChange(symbol).catch(error => {
+          warnings.push(`Overnight ${symbol}: ${error.message}`);
+          return null;
+        }))
+      )).filter(Boolean);
+      const changes = quotes.map(item => item.change).filter(Number.isFinite);
+      return [key, {
+        symbols,
+        quotes,
+        change: changes.length ? round(mean(changes), 2) : null
+      }];
+    })
+  );
+  const groups = Object.fromEntries(groupEntries);
   const marketComposite = round(
     (indices.sp500?.change || 0) * 0.45
       + (indices.nasdaq?.change || 0) * 0.35
@@ -134,6 +161,12 @@ async function fetchOvernightContext() {
   const techComposite = round(
     (indices.nasdaq?.change || 0) * 0.45
       + (indices.sox?.change || 0) * 0.55,
+    2
+  );
+  const taiwanComposite = round(
+    (groups.taiwanSentiment?.change || 0) * 0.65
+      + (indices.sox?.change || 0) * 0.2
+      + (indices.nasdaq?.change || 0) * 0.15,
     2
   );
 
@@ -148,6 +181,8 @@ async function fetchOvernightContext() {
     bias,
     marketComposite,
     techComposite,
+    taiwanComposite,
+    groups,
     indices
   };
 }
@@ -605,12 +640,24 @@ function inferThemes(stock) {
   const themes = [];
 
   if (/金|銀行|證券|保險/.test(name)) themes.push('finance');
-  if (/半導體|IC|晶|矽|封測|電子/.test(name)
-    || ['2330', '2303', '2454', '3034', '3711', '2344', '2379', '3443', '6415', '8299'].includes(code)) {
+  if (/記憶體|DRAM|快閃|模組|儲存|威剛|創見|群聯|南亞科|華邦電|旺宏|十銓|品安/.test(name)
+    || ['2408', '2344', '2337', '3260', '2451', '8299', '4967', '8088'].includes(code)) {
+    themes.push('memory');
+  }
+  if (/被動|電阻|電容|MLCC|國巨|華新科|禾伸堂|凱美|信昌電|鈺邦|蜜望實/.test(name)
+    || ['2327', '2492', '3026', '2375', '6173', '6449', '8043'].includes(code)) {
+    themes.push('passiveComponents');
+  }
+  if (/電機|重電|電纜|電線|變壓器|電力|儲能|充電|電源|台達電|中興電|華城|亞力|士電|大同|東元|樂事綠能/.test(name)
+    || ['1513', '1519', '1503', '1504', '2308', '2371', '1605', '1609', '1611', '1529'].includes(code)) {
+    themes.push('powerEquipment');
+  }
+  if (/半導體|IC|晶|矽|封測|電子|材料|設備|再生晶圓|萬潤|世禾|信紘科|崇越電|辛耘|帆宣|弘塑|中砂|志聖/.test(name)
+    || ['2330', '2303', '2454', '3034', '3711', '2344', '2379', '3443', '6415', '8299', '6187', '3551', '6667', '3388', '3583', '6196', '3131', '1560', '2467'].includes(code)) {
     themes.push('semiconductor');
   }
-  if (/伺服器|AI|網通|資料中心/.test(name)
-    || ['2317', '2382', '3231', '6669', '3017', '2356', '2376', '2357', '2383', '4938'].includes(code)) {
+  if (/伺服器|AI|網通|資料中心|電源|台達電|光寶|廣達|緯創/.test(name)
+    || ['2308', '2317', '2382', '3231', '6669', '3017', '2356', '2376', '2357', '2383', '4938'].includes(code)) {
     themes.push('ai-hardware');
   }
   if (!themes.length) themes.push('broad-market');
@@ -636,8 +683,16 @@ function buildOvernightImpact(stock, overnightContext) {
 
   const marketMove = overnightContext.marketComposite;
   const techMove = overnightContext.techComposite;
+  const taiwanMove = overnightContext.taiwanComposite ?? null;
   const soxMove = overnightContext.indices.sox?.change ?? null;
   const dowMove = overnightContext.indices.dow?.change ?? null;
+  const groupLabels = {
+    semiconductor: '費半/半導體',
+    memory: '美股記憶體族群',
+    passiveComponents: '美股電子零組件/被動元件代理族群',
+    aiHardware: '美股 AI 硬體族群',
+    powerEquipment: '美股電力設備族群'
+  };
 
   if (marketMove !== null) {
     if (marketMove <= -2) {
@@ -652,6 +707,16 @@ function buildOvernightImpact(stock, overnightContext) {
     } else if (marketMove >= 0.8) {
       score += 3;
       reasons.push(`美股大盤偏多（${marketMove.toFixed(2)}%），情緒有支撐。`);
+    }
+  }
+
+  if (taiwanMove !== null) {
+    if (taiwanMove <= -1.5) {
+      score -= 7;
+      risks.push(`台股 ADR/ETF 夜盤情緒偏弱（${taiwanMove.toFixed(2)}%），隔日台股開盤承壓。`);
+    } else if (taiwanMove >= 1.2) {
+      score += 4;
+      reasons.push(`台股 ADR/ETF 夜盤情緒偏多（${taiwanMove.toFixed(2)}%），有利隔日風險承接。`);
     }
   }
 
@@ -694,14 +759,48 @@ function buildOvernightImpact(stock, overnightContext) {
     }
   }
 
+  const groupThemePairs = [
+    ['memory', 'memory'],
+    ['passiveComponents', 'passiveComponents'],
+    ['aiHardware', 'ai-hardware'],
+    ['powerEquipment', 'powerEquipment']
+  ];
+  for (const [groupKey, theme] of groupThemePairs) {
+    const groupMove = overnightContext.groups?.[groupKey]?.change;
+    if (!themes.includes(theme) || groupMove === null || groupMove === undefined) continue;
+    const label = groupLabels[groupKey];
+    if (groupMove <= -3) {
+      score -= 13;
+      risks.push(`${label}大跌（${groupMove.toFixed(2)}%），同族群隔日容易被拖累。`);
+    } else if (groupMove <= -1.5) {
+      score -= 8;
+      risks.push(`${label}轉弱（${groupMove.toFixed(2)}%），隔日追價勝率下降。`);
+    } else if (groupMove >= 3) {
+      score += 9;
+      reasons.push(`${label}強漲（${groupMove.toFixed(2)}%），同族群隔日有利多延伸。`);
+    } else if (groupMove >= 1.5) {
+      score += 5;
+      reasons.push(`${label}偏多（${groupMove.toFixed(2)}%），族群情緒改善。`);
+    }
+  }
+
   return {
     score,
     bias: score <= -6 ? 'headwind' : score >= 6 ? 'tailwind' : 'neutral',
-    reasons: reasons.slice(0, 3),
-    risks: risks.slice(0, 3),
+    reasons: reasons.slice(0, 5),
+    risks: risks.slice(0, 5),
     themes,
     marketComposite: marketMove,
     techComposite: techMove,
+    taiwanComposite: taiwanMove,
+    groupImpacts: {
+      ...(themes.includes('semiconductor') ? { semiconductor: round(soxMove, 2) } : {}),
+      ...Object.fromEntries(
+        Object.entries(overnightContext.groups || {})
+          .filter(([key]) => groupThemePairs.some(([groupKey, theme]) => key === groupKey && themes.includes(theme)))
+          .map(([key, value]) => [key, round(value.change, 2)])
+      )
+    },
     soxChange: soxMove,
     dowChange: dowMove
   };
@@ -996,6 +1095,8 @@ function analyzeWindow(history, stock, overnightContext = null, includeOvernight
       themes: overnightImpact.themes,
       marketComposite: round(overnightImpact.marketComposite, 2),
       techComposite: round(overnightImpact.techComposite, 2),
+      taiwanComposite: round(overnightImpact.taiwanComposite, 2),
+      groupImpacts: overnightImpact.groupImpacts,
       soxChange: round(overnightImpact.soxChange, 2),
       dowChange: round(overnightImpact.dowChange, 2)
     } : null,
@@ -1043,6 +1144,36 @@ function backtest(history, stock) {
   return hits;
 }
 
+function applyBacktestDiscipline(analysis, hits) {
+  if (!hits.length) return analysis;
+  const weakHits = hits.filter(hit => hit.return3d <= -5 || hit.return10d <= -6 || hit.maxDrawdown10d <= -10);
+  const failedSetup = hits.find(hit => hit.return10d <= -6 && hit.maxGain10d <= 1);
+  if (!weakHits.length && !failedSetup) return analysis;
+
+  const penalty = failedSetup ? 20 : Math.min(12, weakHits.length * 6);
+  analysis.score = clamp(analysis.score - penalty, 0, 100);
+  analysis.risks.push(
+    failedSetup
+      ? `近期相似高分訊號在 ${failedSetup.date} 失效：10 日 ${failedSetup.return10d}%、最大漲幅 ${failedSetup.maxGain10d}%、最大回撤 ${failedSetup.maxDrawdown10d}%，本次先降級觀察。`
+      : `近期相似訊號有 ${weakHits.length} 次回撤偏大，需降低追價期待。`
+  );
+
+  if (analysis.sellWarning.level === '無') analysis.sellWarning.level = '低';
+  analysis.sellWarning.score += failedSetup ? 8 : 4;
+  analysis.sellWarning.reasons.push('近期回測顯示相似高分訊號曾快速失效，需提高賣出警戒。');
+  analysis.sellWarning.action = failedSetup
+    ? '近期相似訊號失效，除非重新站回壓力並放量，否則先觀察不追價。'
+    : analysis.sellWarning.action;
+  analysis.plan.exitWarning = analysis.sellWarning.action;
+
+  if (failedSetup) {
+    analysis.signal = '等待進場';
+  } else if (analysis.signal === '買入候選') {
+    analysis.signal = '偏多觀察';
+  }
+  return analysis;
+}
+
 async function mapLimit(items, limit, worker) {
   const results = [];
   let index = 0;
@@ -1082,6 +1213,8 @@ async function main() {
     const history = await fetchYahooHistory(stock.yahooSymbol);
     if (history.length < 70) throw new Error('歷史資料不足');
     const analysis = analyzeWindow(history, stock, overnightContext);
+    const hits = backtest(history, stock);
+    applyBacktestDiscipline(analysis, hits);
     return {
       code: stock.code,
       name: stock.name,
@@ -1089,7 +1222,7 @@ async function main() {
       pe: stock.pe,
       tradeValue: stock.tradeValue,
       ...analysis,
-      backtest: backtest(history, stock)
+      backtest: hits
     };
   });
 

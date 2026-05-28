@@ -705,6 +705,20 @@ function renderBacktests(backtests) {
     </div>`).join('');
 }
 
+function renderGroupImpacts(groupImpacts = {}) {
+  const labels = {
+    semiconductor: '半導體',
+    memory: '記憶體',
+    passiveComponents: '被動元件',
+    aiHardware: 'AI硬體',
+    powerEquipment: '電力設備'
+  };
+  const rows = Object.entries(groupImpacts)
+    .filter(([, value]) => value !== null && value !== undefined)
+    .map(([key, value]) => `${labels[key] || key} ${fmt(value, '%')}`);
+  return rows.length ? rows.join(' / ') : '無對應族群代理資料';
+}
+
 function renderCard(item, index) {
   const score = Math.max(0, Math.min(100, Number(item.score || 0)));
   const patternBias = item.patterns?.bias || '-';
@@ -832,9 +846,11 @@ function renderCard(item, index) {
             <div class="market-strip">
               <div class="market-pill">美股 ${fmt(overnight.marketComposite, '%')}</div>
               <div class="market-pill">科技 ${fmt(overnight.techComposite, '%')}</div>
+              <div class="market-pill">台股夜盤/ADR ${fmt(overnight.taiwanComposite, '%')}</div>
               <div class="market-pill">費半 ${fmt(overnight.soxChange, '%')}</div>
               <div class="market-pill">道瓊 ${fmt(overnight.dowChange, '%')}</div>
             </div>
+            <div class="side-row"><b>族群夜盤</b>${esc(renderGroupImpacts(overnight.groupImpacts))}</div>
 
             <div class="section-title">回測參考</div>
             <div class="backtests">${renderBacktests(item.backtest)}</div>

@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises';
 
 const PORT = Number(process.env.PORT || 8787);
 const POLL_MS = Number(process.env.POLL_MS || 8000);
-const MAX_SYMBOLS = Number(process.env.MAX_SYMBOLS || 12);
+const MAX_SYMBOLS = Number(process.env.MAX_SYMBOLS || 7);
 const ALLOW_ORIGIN = process.env.ALLOW_ORIGIN || '*';
 const DATA_FILE = new URL('../data/recommendations.json', import.meta.url);
 const SYMBOLS_OVERRIDE = process.env.SYMBOLS || '';

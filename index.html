@@ -427,6 +427,44 @@ button { font:inherit; }
   line-height:1.76;
 }
 .reason-list li { margin:3px 0; }
+.decision-board {
+  display:grid;
+  grid-template-columns:repeat(2, minmax(0, 1fr));
+  gap:12px;
+  margin:18px 0;
+}
+.decision-card {
+  padding:14px;
+  border:1px solid rgba(39,48,58,.12);
+  border-left:5px solid var(--brand);
+  border-radius:14px;
+  background:linear-gradient(180deg, #ffffff, #f8fafc);
+  line-height:1.68;
+}
+.decision-card.sell { border-left-color:var(--warn); }
+.decision-card.stop { border-left-color:#202833; }
+.decision-card.hold { border-left-color:#7f1630; }
+.decision-card b {
+  display:block;
+  margin-bottom:6px;
+  color:#2f2024;
+  font-size:15px;
+}
+.analysis-fold {
+  margin-top:12px;
+  border:1px solid var(--line);
+  border-radius:14px;
+  background:#fff;
+  overflow:hidden;
+}
+.analysis-fold summary {
+  cursor:pointer;
+  padding:13px 14px;
+  font-weight:900;
+  color:#341a1e;
+  background:linear-gradient(90deg, #fff, #f8fafc);
+}
+.analysis-body { padding:0 14px 14px; }
 .plan {
   display:grid;
   gap:10px;
@@ -541,6 +579,7 @@ footer {
   .topbar { flex-direction:column; align-items:flex-start; }
   .action-group { max-width:none; }
   .hero-copy h1 { font-size:40px; }
+  .decision-board { grid-template-columns:1fr; }
   .metrics { grid-template-columns:repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 440px) {
@@ -572,7 +611,7 @@ footer {
 
     <section class="hero">
       <div class="hero-copy">
-        <h1>中短線候選股</h1>
+        <h1>賺賺賺錢</h1>
         <p class="lead">
           聚焦台股中短期機會，整合趨勢、型態、賣出警告與隔夜風險，
           自動產出 5、7、10 天節奏不同的交易建議。
@@ -726,6 +765,17 @@ function renderCard(item, index) {
             </div>
           </div>
 
+          <div class="decision-board">
+            <div class="decision-card buy"><b>何時買</b>${esc(item.plan?.entry || '-')}</div>
+            <div class="decision-card sell"><b>何時賣</b>${esc(item.plan?.takeProfit || '-')}</div>
+            <div class="decision-card stop"><b>何時停損</b>${esc(item.plan?.stopLoss || '-')}</div>
+            <div class="decision-card hold"><b>持有多久 / 部位</b>${esc(item.plan?.horizon || '-')}<br>${esc(item.plan?.positionSizing || '-')}</div>
+          </div>
+
+          <details class="analysis-fold">
+            <summary>查看指標、進場依據與完整操作</summary>
+            <div class="analysis-body">
+          <div class="section-title">判斷指標（輔助）</div>
           <div class="metrics">
             <div class="metric"><b>${money(item.latestPrice)}</b><span>最新收盤 ${esc(item.latestDate || '')}</span></div>
             <div class="metric"><b class="${pctClass(item.liveChangePercent)}">${fmt(item.liveChangePercent, '%')}</b><span>即時變動（若有）</span></div>
@@ -736,7 +786,14 @@ function renderCard(item, index) {
             <div class="metric"><b>${fmt(item.metrics?.intentFactor60)}</b><span>價格意圖因子</span></div>
             <div class="metric"><b>${fmt(item.metrics?.rsv60)}</b><span>60 日相對位置</span></div>
             <div class="metric"><b>${money(item.metrics?.ma5)}</b><span>5 日線</span></div>
+            <div class="metric"><b>${money(item.metrics?.ma10)}</b><span>10 日線</span></div>
             <div class="metric"><b>${money(item.metrics?.ma20)}</b><span>20 日線</span></div>
+            <div class="metric"><b>${fmt(item.metrics?.maDeduct)}/3</b><span>均線扣抵通過</span></div>
+            <div class="metric"><b>${fmt(item.metrics?.priceActionScore)}</b><span>價格行為 SOP 因子</span></div>
+            <div class="metric"><b>${fmt(item.metrics?.volumeRatio)}</b><span>量比</span></div>
+            <div class="metric"><b>${fmt(item.metrics?.rewardRisk)}</b><span>風險報酬比</span></div>
+            <div class="metric"><b>${money(item.metrics?.support)}</b><span>近 20 日支撐</span></div>
+            <div class="metric"><b>${money(item.metrics?.resistance)}</b><span>近 25 日壓力</span></div>
             <div class="metric"><b>${fmt(item.metrics?.stopPct, '%')}</b><span>建議止損幅度</span></div>
             <div class="metric"><b>${fmt(item.metrics?.std20)}</b><span>20 日波動</span></div>
           </div>
@@ -755,6 +812,8 @@ function renderCard(item, index) {
             <div class="plan-row"><b>賣出警告應對：</b>${esc(item.plan?.exitWarning || '-')}</div>
             <div class="plan-row"><b>部位：</b>${esc(item.plan?.positionSizing || '-')}</div>
           </div>
+            </div>
+          </details>
         </div>
 
         <aside class="side">

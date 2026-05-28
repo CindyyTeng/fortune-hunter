@@ -1,5 +1,6 @@
 ﻿const OUTPUT = new URL('../data/recommendations.json', import.meta.url);
 const SYMBOLS_PER_MARKET = Number(process.env.SYMBOLS_PER_MARKET || 120);
+const RECOMMENDATION_LIMIT = Number(process.env.RECOMMENDATION_LIMIT || 7);
 const CONCURRENCY = Number(process.env.CONCURRENCY || 6);
 const USER_AGENT = 'fortune-hunter/2.1';
 const HOLD_DAYS = 10;
@@ -397,13 +398,151 @@ function detectPatterns(history, latest, ma5, ma20, ma60) {
   return { score, bias, bullish, bearish, watch: watch.slice(0, 3) };
 }
 
-function buildSellWarning(latest, ma5, ma20, rsi14, ret20, std20, patterns) {
+function analyzePriceActionSop(history, latest, ma5, ma10, ma20, vol20) {
+  const closes = history.map(day => day.close);
+  const highs = history.map(day => day.high);
+  const recent = history.slice(-26, -1);
+  const reasons = [];
+  const risks = [];
+  const warnings = [];
+  let score = 0;
+
+  const resistance = recent.length ? Math.max(...recent.map(day => day.high)) : null;
+  const support = recent.length ? Math.min(...recent.slice(-20).map(day => day.low)) : null;
+  const volumeRatio = vol20 ? latest.volume / vol20 : null;
+  const strongBull = history.slice(-12, -1).reverse()
+    .find(day => day.close > day.open && pct(day.close, day.open) >= 3 && (!vol20 || day.volume > vol20 * 1.1));
+  const strongBear = history.slice(-12, -1).reverse()
+    .find(day => day.open > day.close && pct(day.open, day.close) >= 3 && (!vol20 || day.volume > vol20 * 1.1));
+
+  if (resistance && latest.close > resistance * 1.005 && latest.low >= resistance * 0.985) {
+    score += 8;
+    reasons.push('原壓力區被突破後沒有明顯跌回，符合壓力轉支撐觀察。');
+  } else if (resistance && latest.high > resistance * 1.005 && latest.close < resistance) {
+    score -= 7;
+    risks.push('突破近 25 日壓力後收不住，留意假突破或上影線壓力。');
+  }
+
+  if (support && latest.close < support * 0.99) {
+    score -= 12;
+    risks.push('收盤跌破近 20 日支撐區，支撐轉壓力前不急著接。');
+    warnings.push('支撐跌破後容易引發停損賣壓，反彈無法站回支撐應先退場。');
+  }
+
+  if (strongBull) {
+    if (latest.close < strongBull.low * 0.995) {
+      score -= 10;
+      risks.push('跌破近期長紅低點，多方駐守區失守。');
+      warnings.push('長紅低點失守，代表原先買盤防線被破壞。');
+    } else if (latest.low <= strongBull.low * 1.02 && latest.close >= strongBull.low) {
+      score += 6;
+      reasons.push('回測近期長紅低點附近仍守住，短線防守點明確。');
+    }
+  }
+
+  if (strongBear) {
+    if (latest.close > strongBear.open * 1.005) {
+      score += 6;
+      reasons.push('站上近期長黑高點，空方壓力區被突破。');
+    } else if (latest.high >= strongBear.open * 0.99 && latest.close < strongBear.open) {
+      score -= 5;
+      risks.push('接近近期長黑高點後仍壓回，空方壓力尚未解除。');
+    }
+  }
+
+  const maDeduct = [
+    closes.length > 5 && latest.close > closes.at(-6),
+    closes.length > 10 && latest.close > closes.at(-11),
+    closes.length > 20 && latest.close > closes.at(-21)
+  ].filter(Boolean).length;
+  if (maDeduct >= 2) {
+    score += 6;
+    reasons.push('收盤價高於多條均線扣抵值，有利 5/10/20 日線延續上揚。');
+  } else {
+    score -= 6;
+    risks.push('收盤價未站上多數均線扣抵值，均線續揚力道不足。');
+  }
+
+  if (ma5 && ma10 && ma20) {
+    const spread = Math.max(ma5, ma10, ma20) / Math.min(ma5, ma10, ma20) - 1;
+    if (spread < 0.035 && latest.close > ma5 && latest.close > ma10 && latest.close > ma20 && maDeduct >= 2) {
+      score += 8;
+      reasons.push('均線糾結後向上發散，屬等待表態後的偏多訊號。');
+    } else if (spread < 0.025) {
+      risks.push('均線仍糾結，尚未明確表態前不宜重倉。');
+    }
+  }
+
+  const prevMa5 = closes.length > 5 ? average(closes.slice(0, -1), 5) : null;
+  const prevMa20 = closes.length > 20 ? average(closes.slice(0, -1), 20) : null;
+  if (ma5 && prevMa5 && ma5 > prevMa5 && latest.low <= ma5 * 1.015 && latest.close >= ma5 && latest.close > latest.open) {
+    score += 6;
+    reasons.push('拉回上揚 5 日線有撐，符合順勢拉回觀察。');
+  }
+  if (ma20 && prevMa20 && ma20 >= prevMa20 && latest.low <= ma20 * 1.02 && latest.close >= ma20) {
+    score += 5;
+    reasons.push('20 日線附近守穩，中短期防守線明確。');
+  }
+
+  const ret20 = closes.length > 20 ? pct(latest.close, closes.at(-21)) : null;
+  const high10 = highs.length >= 10 ? Math.max(...highs.slice(-10)) : null;
+  const pullbackFromHigh = high10 ? pct(latest.close, high10) : null;
+  if (ret20 !== null && pullbackFromHigh !== null && ret20 > 8 && pullbackFromHigh > -6) {
+    score += 6;
+    reasons.push('上漲段推進明確且拉回幅度不深，趨勢角度仍偏健康。');
+  } else if (ret20 !== null && ret20 < -8 && ma5 && ma20 && ma5 < ma20) {
+    score -= 8;
+    risks.push('下跌段較明確且短均線在中均線下方，先避免逆勢摸底。');
+  }
+
+  if (volumeRatio !== null) {
+    if (volumeRatio >= 1.5 && latest.close >= latest.open) {
+      score += 5;
+      reasons.push(`量比約 ${volumeRatio.toFixed(1)} 倍且收盤不弱，代表當日資金有表態。`);
+    } else if (volumeRatio < 0.75 && latest.close > latest.open) {
+      risks.push(`量比約 ${volumeRatio.toFixed(1)} 倍，量能不足時突破容易失真。`);
+    }
+  }
+
+  const range = latest.high - latest.low;
+  const upperWick = latest.high - Math.max(latest.open, latest.close);
+  if (range > 0 && ret20 !== null && ret20 > 18 && vol20 && latest.volume > vol20 * 1.8
+    && (upperWick / range > 0.35 || latest.close < latest.open)) {
+    score -= 9;
+    risks.push('高檔放量但留下壓回痕跡，可能接近短線竭盡點。');
+    warnings.push('短線竭盡風險升高，若隔日無法續強應先減碼。');
+  }
+
+  const lowerWick = Math.min(latest.open, latest.close) - latest.low;
+  if (range > 0 && ret20 !== null && ret20 < -10 && volumeRatio !== null && volumeRatio >= 1.5
+    && lowerWick / range > 0.4 && latest.close > latest.open) {
+    score += 4;
+    reasons.push('跌深後放量留下長下影線，可能出現短線止穩力道。');
+  }
+
+  return {
+    score: clamp(score, -24, 24),
+    reasons,
+    risks,
+    warnings,
+    maDeduct,
+    volumeRatio: round(volumeRatio, 2),
+    support: round(support),
+    resistance: round(resistance)
+  };
+}
+
+function buildSellWarning(latest, ma5, ma20, rsi14, ret20, std20, patterns, priceAction = null) {
   let score = 0;
   const reasons = [];
 
   if (patterns.bearish.length) {
     score += 14 + Math.min(8, patterns.bearish.length * 3);
     reasons.push(...patterns.bearish);
+  }
+  if (priceAction?.warnings?.length) {
+    score += 8 + Math.min(8, priceAction.warnings.length * 3);
+    reasons.push(...priceAction.warnings);
   }
   if (ma5 && latest.close < ma5) {
     score += 5;
@@ -595,7 +734,7 @@ function buildHoldPlan(holdDays, latestClose, stop, targetFast, targetFull, ma5,
 
   return {
     horizon: `建議持有 ${holdDays} 個交易日，若提前達標或轉弱可提早調整。`,
-    takeProfit: `${midDays} 天先看 NT$ ${targetFast.toFixed(2)}；${holdDays} 天內續強再看 NT$ ${targetFull.toFixed(2)}。`,
+    takeProfit: `${midDays} 天先看 NT$ ${targetFast.toFixed(2)} 可先出一半；${holdDays} 天內續強再看 NT$ ${targetFull.toFixed(2)}，剩餘部位用 5 日線移動停利。`,
     stopLoss: `收盤跌破 NT$ ${stop.toFixed(2)} 或走勢轉弱先退，${maHint}也要主動降部位。`,
     exitWarning
   };
@@ -607,6 +746,7 @@ function analyzeWindow(history, stock, overnightContext = null, includeOvernight
   const returns = closes.slice(1).map((value, idx) => (value - closes[idx]) / closes[idx]);
   const latest = history.at(-1);
   const ma5 = average(closes, 5);
+  const ma10 = average(closes, 10);
   const ma20 = average(closes, 20);
   const ma60 = average(closes, 60);
   const rsi14 = rsi(closes, 14);
@@ -734,6 +874,11 @@ function analyzeWindow(history, stock, overnightContext = null, includeOvernight
   reasons.push(...patterns.bullish);
   risks.push(...patterns.bearish);
 
+  const priceAction = analyzePriceActionSop(history, latest, ma5, ma10, ma20, vol20);
+  score += priceAction.score;
+  reasons.push(...priceAction.reasons);
+  risks.push(...priceAction.risks);
+
   const overnightImpact = includeOvernight ? buildOvernightImpact(stock, overnightContext) : null;
   if (overnightImpact) {
     score += overnightImpact.score;
@@ -766,7 +911,7 @@ function analyzeWindow(history, stock, overnightContext = null, includeOvernight
     risks.push(`近 20 日回檔 ${drawdown20.toFixed(1)}%，波動風險提高。`);
   }
 
-  const sellWarning = buildSellWarning(latest, ma5, ma20, rsi14, ret20, std20, patterns);
+  const sellWarning = buildSellWarning(latest, ma5, ma20, rsi14, ret20, std20, patterns, priceAction);
   if (overnightImpact && overnightImpact.score <= -6) {
     sellWarning.score += 6;
     sellWarning.level = sellWarning.score >= 24 ? '高'
@@ -782,13 +927,21 @@ function analyzeWindow(history, stock, overnightContext = null, includeOvernight
   }
   score -= sellWarning.level === '高' ? 10 : sellWarning.level === '中' ? 6 : 0;
 
-  score = clamp(Math.round(score), 0, 100);
   const stop = ma20 ? Math.min(latest.close * 0.95, ma20 * 0.985) : latest.close * 0.95;
   const riskPerShare = Math.max(latest.close - stop, latest.close * 0.025);
   const entryLow = ma5 && ma20 ? Math.max(stop, Math.min(ma5, ma20) * 0.995) : latest.close * 0.99;
   const entryHigh = latest.close * 1.012;
   const targetFast = latest.close + riskPerShare * 1.1;
   const targetFull = latest.close + riskPerShare * 1.7;
+  const rewardRisk = riskPerShare ? (targetFull - latest.close) / riskPerShare : null;
+  if (rewardRisk !== null && rewardRisk >= 1.5) {
+    score += 4;
+    reasons.push(`預估風險報酬比約 ${rewardRisk.toFixed(1)}，符合先規劃停損再進場。`);
+  } else {
+    score -= 6;
+    risks.push('預估風險報酬比不足，需等更靠近支撐才有操作價值。');
+  }
+  score = clamp(Math.round(score), 0, 100);
   const sizing = buildPositionSizing(latest.close, stop, std20, sellWarning);
   const holdDays = decideHoldDays(std20, patterns.score, overnightImpact?.score ?? 0, sellWarning.level);
   const holdPlan = buildHoldPlan(
@@ -815,6 +968,7 @@ function analyzeWindow(history, stock, overnightContext = null, includeOvernight
     change60d: round(ret60),
     metrics: {
       ma5: round(ma5),
+      ma10: round(ma10),
       ma20: round(ma20),
       ma60: round(ma60),
       rsi14: round(rsi14, 1),
@@ -827,6 +981,12 @@ function analyzeWindow(history, stock, overnightContext = null, includeOvernight
       momentum126_21: round(mom126_21, 2),
       nearYearHigh: round(nearYearHigh, 3),
       drawdown20: round(drawdown20, 2),
+      priceActionScore: priceAction.score,
+      maDeduct: priceAction.maDeduct,
+      volumeRatio: priceAction.volumeRatio,
+      support: priceAction.support,
+      resistance: priceAction.resistance,
+      rewardRisk: round(rewardRisk, 2),
       patternScore: patterns.score,
       stopPct: sizing.stopPct
     },
@@ -844,7 +1004,7 @@ function analyzeWindow(history, stock, overnightContext = null, includeOvernight
     risks,
     plan: {
       horizon: holdPlan.horizon,
-      entry: `分批區間 NT$ ${entryLow.toFixed(2)} - ${entryHigh.toFixed(2)}。優先等回測 5 日線/20 日線不破，或帶量突破最近壓力後再進。`,
+      entry: `分批區間 NT$ ${entryLow.toFixed(2)} - ${entryHigh.toFixed(2)}。優先等回測 5 日線/20 日線或支撐區不破，或帶量突破近壓 ${priceAction.resistance ? `NT$ ${priceAction.resistance}` : '區間高點'} 後再進；若已拉開 1:1 風險報酬，再等回測 5 日線守穩才加碼。`,
       takeProfit: holdPlan.takeProfit,
       stopLoss: holdPlan.stopLoss,
       exitWarning: holdPlan.exitWarning,
@@ -936,7 +1096,7 @@ async function main() {
   const recommendations = analyzed
     .filter(item => item.signal !== '等待進場')
     .sort((a, b) => b.score - a.score || b.tradeValue - a.tradeValue)
-    .slice(0, 12);
+    .slice(0, RECOMMENDATION_LIMIT);
 
   const data = {
     asOf: new Date().toISOString(),
@@ -948,7 +1108,7 @@ async function main() {
     source: 'TWSE OpenAPI、TPEX API、Yahoo Finance chart API（夜盤風險因子）',
     universeSize: universe.length,
     scanned: pool.length,
-    scanStrategy: `上市成交值前 ${Math.min(twse.length, SYMBOLS_PER_MARKET)} 檔 + 上櫃成交值前 ${Math.min(tpex.length, SYMBOLS_PER_MARKET)} 檔，套用趨勢/型態/隔夜風險後篩出候選。`,
+    scanStrategy: `上市成交值前 ${Math.min(twse.length, SYMBOLS_PER_MARKET)} 檔 + 上櫃成交值前 ${Math.min(tpex.length, SYMBOLS_PER_MARKET)} 檔，套用趨勢/型態/價格行為/隔夜風險後取前 ${RECOMMENDATION_LIMIT} 檔。`,
     overnightContext,
     marketCoverage: {
       twse: twse.length,

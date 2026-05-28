@@ -567,7 +567,7 @@ function analyzePriceActionSop(history, latest, ma5, ma10, ma20, vol20) {
   };
 }
 
-function buildSellWarning(latest, ma5, ma20, rsi14, ret20, std20, patterns, priceAction = null) {
+function buildSellWarning(latest, ma5, ma20, rsi14, ret5, ret20, std20, patterns, priceAction = null, volumeRatio = null, rsv60 = null) {
   let score = 0;
   const reasons = [];
 
@@ -583,21 +583,45 @@ function buildSellWarning(latest, ma5, ma20, rsi14, ret20, std20, patterns, pric
     score += 5;
     reasons.push('價格跌破 5 日線，短線轉弱。');
   }
+  if (ma5 && ma20 && ma5 < ma20 && latest.close <= ma20 * 1.04) {
+    score += 7;
+    reasons.push('5 日線仍低於 20 日線，較像反彈而非趨勢續攻。');
+  }
   if (ma20 && latest.close < ma20) {
     score += 9;
     reasons.push('價格跌破 20 日線，中短期結構轉弱。');
+  }
+  if (rsi14 !== null && rsi14 < 45) {
+    score += 7;
+    reasons.push(`RSI ${rsi14.toFixed(1)} 偏弱，買盤強度不足。`);
   }
   if (rsi14 !== null && rsi14 > 74) {
     score += 6;
     reasons.push(`RSI ${rsi14.toFixed(1)} 過熱，追價風險增加。`);
   }
+  if (ret5 !== null && ret5 > 6 && ret20 !== null && ret20 <= 0) {
+    score += 8;
+    reasons.push(`近 5 日反彈 ${ret5.toFixed(1)}%，但 20 日動能仍未轉正，容易是假反彈。`);
+  }
   if (ret20 !== null && ret20 > 18) {
     score += 6;
     reasons.push(`近 20 日漲幅 ${ret20.toFixed(1)}% 偏熱，易震盪。`);
   }
+  if (volumeRatio !== null && volumeRatio < 0.9 && latest.close >= latest.open) {
+    score += 5;
+    reasons.push(`反彈量比僅 ${volumeRatio.toFixed(1)} 倍，缺少放量確認。`);
+  }
+  if (rsv60 !== null && rsv60 > 0.97) {
+    score += 5;
+    reasons.push(`60 日相對位置 ${rsv60.toFixed(2)} 偏高，靠近短線高位。`);
+  }
   if (std20 !== null && std20 > 0.035) {
     score += 4;
     reasons.push('20 日波動偏高，單日回撤風險提高。');
+  }
+  if (priceAction?.risks?.some(risk => risk.includes('假突破') || risk.includes('壓力'))) {
+    score += 6;
+    reasons.push('價格行為出現壓力或假突破風險。');
   }
 
   const level = score >= 24 ? '高'
@@ -871,9 +895,13 @@ function analyzeWindow(history, stock, overnightContext = null, includeOvernight
   const min60 = closes.length >= 60 ? Math.min(...closes.slice(-60)) : null;
   const max60 = closes.length >= 60 ? Math.max(...closes.slice(-60)) : null;
   const rsv60 = min60 !== null && max60 !== null && max60 !== min60 ? (latest.close - min60) / (max60 - min60) : null;
+  const volumeRatio = vol20 ? latest.volume / vol20 : null;
 
   const gateTrend = ma20 && ma60 && latest.close > ma20 && ma20 > ma60;
-  const gateVolume = latest.volume > 100000;
+  const gateLiquidity = latest.volume > 100000;
+  const gateShortTrend = ma5 && ma20 && ma5 >= ma20;
+  const gateVolumeConfirm = volumeRatio === null || volumeRatio >= 0.9;
+  const gateMomentum = ret20 === null || ret20 > 0 || (ret10 !== null && ret10 >= 6);
   const gateHeat = ret20 === null || ret20 < 18;
 
   let score = 0;
@@ -893,17 +921,27 @@ function analyzeWindow(history, stock, overnightContext = null, includeOvernight
   } else if (ma5 && latest.close < ma5) {
     score -= 8;
     risks.push('價格跌破 5 日線，短線節奏可能轉弱。');
+  } else if (ma5 && ma20 && ma5 < ma20 && latest.close > ma20) {
+    score -= 10;
+    risks.push('5 日線仍低於 20 日線，這比較像短線反彈，不是完整多方排列。');
   }
-  if (gateVolume) {
-    score += 6;
-    reasons.push('成交量大於 20 日均量，資金關注度上升。');
+  if (gateLiquidity) {
+    score += 3;
+    reasons.push('流動性足夠，進出場較不容易卡住。');
   } else {
     score -= 10;
-    risks.push('成交量不足，突破的延續性可能受限。');
+    risks.push('流動性不足，突破的延續性與進出場品質可能受限。');
+  }
+  if (volumeRatio !== null && volumeRatio < 0.9 && latest.close >= latest.open) {
+    score -= 8;
+    risks.push(`量比 ${volumeRatio.toFixed(2)} 未放大，上漲缺少成交量確認。`);
   }
   if (!gateHeat) {
     score -= 14;
     risks.push(`近 20 日漲幅 ${ret20.toFixed(1)}% 偏熱，短線震盪風險升高。`);
+  } else if (ret20 !== null && ret20 <= 0 && ret5 !== null && ret5 > 5) {
+    score -= 12;
+    risks.push(`近 5 日反彈 ${ret5.toFixed(1)}%，但 20 日動能 ${ret20.toFixed(1)}% 尚未轉正，容易追到反彈尾端。`);
   } else if (ret10 !== null && ret10 > 0 && ret10 < 12) {
     score += 8;
     reasons.push(`近 10 日漲幅 ${ret10.toFixed(1)}%，動能穩定且不過熱。`);
@@ -1010,7 +1048,7 @@ function analyzeWindow(history, stock, overnightContext = null, includeOvernight
     risks.push(`近 20 日回檔 ${drawdown20.toFixed(1)}%，波動風險提高。`);
   }
 
-  const sellWarning = buildSellWarning(latest, ma5, ma20, rsi14, ret20, std20, patterns, priceAction);
+  const sellWarning = buildSellWarning(latest, ma5, ma20, rsi14, ret5, ret20, std20, patterns, priceAction, volumeRatio, rsv60);
   if (overnightImpact && overnightImpact.score <= -6) {
     sellWarning.score += 6;
     sellWarning.level = sellWarning.score >= 24 ? '高'
@@ -1041,6 +1079,8 @@ function analyzeWindow(history, stock, overnightContext = null, includeOvernight
     risks.push('預估風險報酬比不足，需等更靠近支撐才有操作價值。');
   }
   score = clamp(Math.round(score), 0, 100);
+  const riskCap = sellWarning.level === '低' ? 96 : risks.length >= 2 ? 98 : 100;
+  score = Math.min(score, riskCap);
   const sizing = buildPositionSizing(latest.close, stop, std20, sellWarning);
   const holdDays = decideHoldDays(std20, patterns.score, overnightImpact?.score ?? 0, sellWarning.level);
   const holdPlan = buildHoldPlan(
@@ -1053,7 +1093,14 @@ function analyzeWindow(history, stock, overnightContext = null, includeOvernight
     ma20,
     sellWarning
   );
-  const hardPass = gateTrend && gateVolume && gateHeat && sellWarning.level !== '高';
+  const hardPass = gateTrend
+    && gateLiquidity
+    && gateShortTrend
+    && gateVolumeConfirm
+    && gateMomentum
+    && gateHeat
+    && (rsi14 === null || rsi14 >= 45)
+    && sellWarning.level !== '高';
   const signal = hardPass ? (score >= 74 ? '買入候選' : score >= 60 ? '偏多觀察' : '等待進場') : '等待進場';
 
   return {

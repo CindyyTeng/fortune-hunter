@@ -1,5 +1,5 @@
 ﻿const OUTPUT = new URL('../data/recommendations.json', import.meta.url);
-const SYMBOLS_PER_MARKET = Number(process.env.SYMBOLS_PER_MARKET || 120);
+const SYMBOLS_PER_MARKET = Number(process.env.SYMBOLS_PER_MARKET || 180);
 const RECOMMENDATION_LIMIT = Number(process.env.RECOMMENDATION_LIMIT || 7);
 const CONCURRENCY = Number(process.env.CONCURRENCY || 6);
 const USER_AGENT = 'fortune-hunter/2.1';
@@ -456,6 +456,9 @@ function analyzePriceActionSop(history, latest, ma5, ma10, ma20, vol20) {
   } else if (resistance && latest.high > resistance * 1.005 && latest.close < resistance) {
     score -= 7;
     risks.push('突破近 25 日壓力後收不住，留意假突破或上影線壓力。');
+  } else if (resistance && latest.close >= resistance * 0.99 && latest.close <= resistance * 1.005) {
+    score -= 5;
+    risks.push('收盤貼近近 25 日壓力，上方空間不足，需等有效突破後再追。');
   }
 
   if (support && latest.close < support * 0.99) {
@@ -580,7 +583,7 @@ function buildSellWarning(latest, ma5, ma20, rsi14, ret5, ret20, std20, patterns
     reasons.push(...priceAction.warnings);
   }
   if (ma5 && latest.close < ma5) {
-    score += 5;
+    score += 7;
     reasons.push('價格跌破 5 日線，短線轉弱。');
   }
   if (ma5 && ma20 && ma5 < ma20 && latest.close <= ma20 * 1.04) {
@@ -612,7 +615,7 @@ function buildSellWarning(latest, ma5, ma20, rsi14, ret5, ret20, std20, patterns
     reasons.push(`反彈量比僅 ${volumeRatio.toFixed(1)} 倍，缺少放量確認。`);
   }
   if (rsv60 !== null && rsv60 > 0.97) {
-    score += 5;
+    score += 7;
     reasons.push(`60 日相對位置 ${rsv60.toFixed(2)} 偏高，靠近短線高位。`);
   }
   if (std20 !== null && std20 > 0.035) {
@@ -899,6 +902,7 @@ function analyzeWindow(history, stock, overnightContext = null, includeOvernight
 
   const gateTrend = ma20 && ma60 && latest.close > ma20 && ma20 > ma60;
   const gateLiquidity = latest.volume > 100000;
+  const gatePriceAboveMa5 = ma5 && latest.close >= ma5;
   const gateShortTrend = ma5 && ma20 && ma5 >= ma20;
   const gateVolumeConfirm = volumeRatio === null || volumeRatio >= 0.9;
   const gateMomentum = ret20 === null || ret20 > 0 || (ret10 !== null && ret10 >= 6);
@@ -1015,6 +1019,14 @@ function analyzeWindow(history, stock, overnightContext = null, includeOvernight
   score += priceAction.score;
   reasons.push(...priceAction.reasons);
   risks.push(...priceAction.risks);
+  const resistanceRoomPct = priceAction.resistance ? pct(priceAction.resistance, latest.close) : null;
+  const gateUpsideRoom = resistanceRoomPct === null
+    || resistanceRoomPct >= 4
+    || latest.close > priceAction.resistance * 1.01;
+  if (resistanceRoomPct !== null && resistanceRoomPct >= 0 && resistanceRoomPct < 4) {
+    score -= 8;
+    risks.push(`距離近 25 日壓力只剩 ${resistanceRoomPct.toFixed(1)}%，追價風險報酬不佳。`);
+  }
 
   const overnightImpact = includeOvernight ? buildOvernightImpact(stock, overnightContext) : null;
   if (overnightImpact) {
@@ -1068,8 +1080,15 @@ function analyzeWindow(history, stock, overnightContext = null, includeOvernight
   const riskPerShare = Math.max(latest.close - stop, latest.close * 0.025);
   const entryLow = ma5 && ma20 ? Math.max(stop, Math.min(ma5, ma20) * 0.995) : latest.close * 0.99;
   const entryHigh = latest.close * 1.012;
-  const targetFast = latest.close + riskPerShare * 1.1;
-  const targetFull = latest.close + riskPerShare * 1.7;
+  const resistanceTarget = priceAction.resistance && priceAction.resistance > latest.close
+    ? priceAction.resistance * 0.995
+    : null;
+  const targetFast = resistanceTarget
+    ? Math.min(latest.close + riskPerShare * 1.1, resistanceTarget)
+    : latest.close + riskPerShare * 1.1;
+  const targetFull = resistanceTarget
+    ? Math.min(latest.close + riskPerShare * 1.7, resistanceTarget)
+    : latest.close + riskPerShare * 1.7;
   const rewardRisk = riskPerShare ? (targetFull - latest.close) / riskPerShare : null;
   if (rewardRisk !== null && rewardRisk >= 1.5) {
     score += 4;
@@ -1079,7 +1098,10 @@ function analyzeWindow(history, stock, overnightContext = null, includeOvernight
     risks.push('預估風險報酬比不足，需等更靠近支撐才有操作價值。');
   }
   score = clamp(Math.round(score), 0, 100);
-  const riskCap = sellWarning.level === '低' ? 96 : risks.length >= 2 ? 98 : 100;
+  const riskCap = sellWarning.level === '中' ? 88
+    : sellWarning.level === '低' ? 92
+      : risks.length >= 2 ? 94
+        : 100;
   score = Math.min(score, riskCap);
   const sizing = buildPositionSizing(latest.close, stop, std20, sellWarning);
   const holdDays = decideHoldDays(std20, patterns.score, overnightImpact?.score ?? 0, sellWarning.level);
@@ -1095,13 +1117,19 @@ function analyzeWindow(history, stock, overnightContext = null, includeOvernight
   );
   const hardPass = gateTrend
     && gateLiquidity
+    && gatePriceAboveMa5
     && gateShortTrend
     && gateVolumeConfirm
     && gateMomentum
+    && gateUpsideRoom
     && gateHeat
+    && (rewardRisk === null || rewardRisk >= 1.1)
     && (rsi14 === null || rsi14 >= 45)
     && sellWarning.level !== '高';
-  const signal = hardPass ? (score >= 74 ? '買入候選' : score >= 60 ? '偏多觀察' : '等待進場') : '等待進場';
+  if (!hardPass) score = Math.min(score, 72);
+  const signal = hardPass
+    ? (score >= 74 && sellWarning.level === '無' ? '買入候選' : score >= 60 ? '偏多觀察' : '等待進場')
+    : '等待進場';
 
   return {
     score,
@@ -1133,6 +1161,7 @@ function analyzeWindow(history, stock, overnightContext = null, includeOvernight
       support: priceAction.support,
       resistance: priceAction.resistance,
       rewardRisk: round(rewardRisk, 2),
+      resistanceRoomPct: round(resistanceRoomPct, 2),
       patternScore: patterns.score,
       stopPct: sizing.stopPct
     },

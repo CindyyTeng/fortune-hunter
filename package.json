@@ -5,9 +5,15 @@
   "type": "module",
   "scripts": {
     "generate": "node scripts/generate-data.mjs",
+    "backtest:tw2y": "node scripts/backtest-tw-2y-export.mjs",
     "dev": "node scripts/serve.mjs",
     "live": "node scripts/live-server.mjs",
-    "check": "node --check scripts/generate-data.mjs && node --check scripts/serve.mjs && node --check scripts/live-server.mjs"
+    "backtest:modes": "node scripts/backtest-trade-modes.mjs",
+    "backtest:scenarios": "node scripts/backtest-scenarios.mjs",
+    "diagnose:best-mode": "node scripts/diagnose-best-mode.mjs",
+    "paper": "node scripts/paper-trader.mjs",
+    "paper:loop": "node scripts/paper-trader.mjs --loop",
+    "check": "node --check scripts/generate-data.mjs && node --check scripts/serve.mjs && node --check scripts/live-server.mjs && node --check scripts/backtest-tw-2y-export.mjs && node --check scripts/backtest-trade-modes.mjs && node --check scripts/backtest-scenarios.mjs && node --check scripts/diagnose-best-mode.mjs && node --check scripts/paper-trader.mjs"
   },
   "dependencies": {},
   "devDependencies": {}

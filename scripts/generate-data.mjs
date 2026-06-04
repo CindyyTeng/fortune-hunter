@@ -833,15 +833,71 @@ function buildOvernightImpact(stock, overnightContext) {
   };
 }
 
+function buildMarketContext(stocks) {
+  const marketGroups = new Map();
+  const themeGroups = new Map();
+  const push = (map, key, value) => {
+    if (!Number.isFinite(value)) return;
+    if (!map.has(key)) map.set(key, []);
+    map.get(key).push(value);
+  };
+  for (const stock of stocks) {
+    const dayMove = pct(stock.close, stock.open);
+    push(marketGroups, stock.market, dayMove);
+    for (const theme of inferThemes(stock)) push(themeGroups, theme, dayMove);
+  }
+  const averageMap = map => Object.fromEntries([...map.entries()].map(([key, values]) => [
+    key,
+    round(values.reduce((sum, value) => sum + value, 0) / values.length, 2)
+  ]));
+  return {
+    markets: averageMap(marketGroups),
+    themes: averageMap(themeGroups)
+  };
+}
+
+function buildMarketFlowImpact(stock, marketContext) {
+  if (!marketContext) return null;
+  const themes = inferThemes(stock);
+  const marketMove = marketContext.markets?.[stock.market] ?? null;
+  const themeMoves = themes.map(theme => marketContext.themes?.[theme]).filter(Number.isFinite);
+  const themeMove = themeMoves.length ? round(themeMoves.reduce((sum, value) => sum + value, 0) / themeMoves.length, 2) : null;
+  const reasons = [];
+  const risks = [];
+  let score = 0;
+
+  if (marketMove !== null) {
+    if (marketMove < -0.5) {
+      score -= 8;
+      risks.push(`同市場當日平均下跌 ${marketMove.toFixed(2)}%，大盤環境逆風。`);
+    } else if (marketMove > 0.5) {
+      score += 4;
+      reasons.push(`同市場當日平均上漲 ${marketMove.toFixed(2)}%，大盤環境順風。`);
+    }
+  }
+  if (themeMove !== null) {
+    if (themeMove < -0.7) {
+      score -= 10;
+      risks.push(`同族群當日平均下跌 ${themeMove.toFixed(2)}%，族群資金逆風。`);
+    } else if (themeMove > 0.7) {
+      score += 5;
+      reasons.push(`同族群當日平均上漲 ${themeMove.toFixed(2)}%，族群資金順風。`);
+    }
+  }
+
+  return {
+    score,
+    isHeadwind: score <= -8,
+    marketMove,
+    themeMove,
+    themes,
+    reasons,
+    risks
+  };
+}
+
 function decideHoldDays(std20, patternScore, overnightScore, sellLevel) {
-  if (sellLevel === '高') return 5;
-  if (sellLevel === '中') return 7;
-  if (std20 !== null && std20 > 0.04) return 5;
-  if (std20 !== null && std20 > 0.028) return 7;
-  if (overnightScore <= -6) return 5;
-  if (overnightScore <= -3) return 7;
-  if (patternScore >= 10 && overnightScore >= 0) return 10;
-  return 7;
+  return 5;
 }
 
 function buildHoldPlan(holdDays, latestClose, stop, targetFast, targetFull, ma5, ma20, sellWarning) {
@@ -866,7 +922,7 @@ function buildHoldPlan(holdDays, latestClose, stop, targetFast, targetFull, ma5,
   };
 }
 
-function analyzeWindow(history, stock, overnightContext = null, includeOvernight = true) {
+function analyzeWindow(history, stock, overnightContext = null, includeOvernight = true, marketContext = null) {
   const closes = history.map(day => day.close);
   const volumes = history.map(day => day.volume || 0);
   const returns = closes.slice(1).map((value, idx) => (value - closes[idx]) / closes[idx]);
@@ -895,6 +951,9 @@ function analyzeWindow(history, stock, overnightContext = null, includeOvernight
   const intentFactor60 = returnAbs60 && ret60 !== null ? (ret60 / 100) / returnAbs60 : null;
   const std20 = returns.length >= 20 ? stddev(returns.slice(-20)) : null;
   const std60 = returns.length >= 60 ? stddev(returns.slice(-60)) : null;
+  const avg20TradeValue = history.length >= 20
+    ? mean(history.slice(-20).map(day => (day.close || 0) * (day.volume || 0)))
+    : null;
   const min60 = closes.length >= 60 ? Math.min(...closes.slice(-60)) : null;
   const max60 = closes.length >= 60 ? Math.max(...closes.slice(-60)) : null;
   const rsv60 = min60 !== null && max60 !== null && max60 !== min60 ? (latest.close - min60) / (max60 - min60) : null;
@@ -980,12 +1039,15 @@ function analyzeWindow(history, stock, overnightContext = null, includeOvernight
   if (rsi14 !== null && rsi14 >= 48 && rsi14 <= 68) {
     score += 12;
     reasons.push(`RSI ${rsi14.toFixed(1)} 位於健康強勢區。`);
+  } else if (rsi14 !== null && rsi14 > 78) {
+    score -= 16;
+    risks.push(`RSI ${rsi14.toFixed(1)} 過熱，兩年回測顯示此區間容易追到短線高點。`);
   } else if (rsi14 !== null && rsi14 > 74) {
     score -= 10;
     risks.push(`RSI ${rsi14.toFixed(1)} 偏高，留意高檔震盪。`);
-  } else if (rsi14 !== null && rsi14 < 42) {
-    score -= 8;
-    risks.push(`RSI ${rsi14.toFixed(1)} 偏弱，反彈延續性待確認。`);
+  } else if (rsi14 !== null && rsi14 < 50) {
+    score -= 14;
+    risks.push(`RSI ${rsi14.toFixed(1)} 未達 50，回測顯示突破後續航力偏弱。`);
   }
   if (macdNow !== null && macdNow > 0) {
     score += 8;
@@ -1034,6 +1096,12 @@ function analyzeWindow(history, stock, overnightContext = null, includeOvernight
     reasons.push(...overnightImpact.reasons);
     risks.push(...overnightImpact.risks);
   }
+  const marketFlowImpact = includeOvernight ? buildMarketFlowImpact(stock, marketContext) : null;
+  if (marketFlowImpact) {
+    score += marketFlowImpact.score;
+    reasons.push(...marketFlowImpact.reasons);
+    risks.push(...marketFlowImpact.risks);
+  }
   if (mom126_21 !== null) {
     if (mom126_21 > 18 && mom126_21 < 85) {
       score += 9;
@@ -1058,6 +1126,32 @@ function analyzeWindow(history, stock, overnightContext = null, includeOvernight
   if (drawdown20 !== null && drawdown20 <= -9) {
     score -= 7;
     risks.push(`近 20 日回檔 ${drawdown20.toFixed(1)}%，波動風險提高。`);
+  }
+
+  const highVolLowLiquidity = std20 !== null
+    && avg20TradeValue !== null
+    && std20 >= 0.05
+    && avg20TradeValue < 100000000;
+  const lowTradeValue = avg20TradeValue !== null && avg20TradeValue < 50000000;
+  const strictRisk = (avg20TradeValue !== null && avg20TradeValue < 300000000)
+    || (std20 !== null && std20 >= 0.035)
+    || (stock.market === '上櫃' && (
+      (avg20TradeValue !== null && avg20TradeValue < 500000000)
+      || (std20 !== null && std20 >= 0.03)
+    ));
+  if (highVolLowLiquidity) {
+    score -= 18;
+    risks.push('20 日波動高但均成交值低於 1 億，兩年回測顯示容易出現大幅回撤。');
+  }
+  if (strictRisk) {
+    risks.push('此股屬上櫃、低流動性或高波動條件，需套用更嚴格的進場門檻。');
+  }
+  if (lowTradeValue) {
+    score -= 16;
+    risks.push('20 日均成交值低於 5,000 萬，進出場品質不足，排除買入候選。');
+  } else if (avg20TradeValue !== null && avg20TradeValue < 100000000) {
+    score -= 8;
+    risks.push('20 日均成交值低於 1 億，需降低部位並避免追價。');
   }
 
   const sellWarning = buildSellWarning(latest, ma5, ma20, rsi14, ret5, ret20, std20, patterns, priceAction, volumeRatio, rsv60);
@@ -1124,7 +1218,14 @@ function analyzeWindow(history, stock, overnightContext = null, includeOvernight
     && gateUpsideRoom
     && gateHeat
     && (rewardRisk === null || rewardRisk >= 1.1)
-    && (rsi14 === null || rsi14 >= 45)
+    && (rsi14 === null || (rsi14 >= 50 && rsi14 <= 78))
+    && !highVolLowLiquidity
+    && !lowTradeValue
+    && (mom126_21 === null || mom126_21 > -15)
+    && (nearYearHigh === null || nearYearHigh >= 0.6)
+    && (intentFactor60 === null || intentFactor60 >= -0.02)
+    && (!strictRisk || (score >= 88 && (rsi14 === null || (rsi14 >= 50 && rsi14 <= 74)) && (rewardRisk === null || rewardRisk >= 1.2)))
+    && (!marketFlowImpact || !marketFlowImpact.isHeadwind)
     && sellWarning.level !== '高';
   if (!hardPass) score = Math.min(score, 72);
   const signal = hardPass
@@ -1150,6 +1251,7 @@ function analyzeWindow(history, stock, overnightContext = null, includeOvernight
       volume20d: Math.round(vol20 || 0),
       std20: round(std20, 4),
       std60: round(std60, 4),
+      avg20TradeValue: round(avg20TradeValue, 0),
       rsv60: round(rsv60, 3),
       intentFactor60: round(intentFactor60, 4),
       momentum126_21: round(mom126_21, 2),
@@ -1163,7 +1265,8 @@ function analyzeWindow(history, stock, overnightContext = null, includeOvernight
       rewardRisk: round(rewardRisk, 2),
       resistanceRoomPct: round(resistanceRoomPct, 2),
       patternScore: patterns.score,
-      stopPct: sizing.stopPct
+      stopPct: sizing.stopPct,
+      strictRisk
     },
     patterns,
     overnight: overnightImpact ? {
@@ -1176,12 +1279,18 @@ function analyzeWindow(history, stock, overnightContext = null, includeOvernight
       soxChange: round(overnightImpact.soxChange, 2),
       dowChange: round(overnightImpact.dowChange, 2)
     } : null,
+    marketFlow: marketFlowImpact ? {
+      themes: marketFlowImpact.themes,
+      marketMove: marketFlowImpact.marketMove,
+      themeMove: marketFlowImpact.themeMove,
+      isHeadwind: marketFlowImpact.isHeadwind
+    } : null,
     sellWarning,
     reasons,
     risks,
     plan: {
       horizon: holdPlan.horizon,
-      entry: `分批區間 NT$ ${entryLow.toFixed(2)} - ${entryHigh.toFixed(2)}。優先等回測 5 日線/20 日線或支撐區不破，或帶量突破近壓 ${priceAction.resistance ? `NT$ ${priceAction.resistance}` : '區間高點'} 後再進；若已拉開 1:1 風險報酬，再等回測 5 日線守穩才加碼。`,
+      entry: `分批區間 NT$ ${entryLow.toFixed(2)} - ${entryHigh.toFixed(2)}。優先等回測 5 日線/20 日線或支撐區不破；若走突破，盤中突破近壓 ${priceAction.resistance ? `NT$ ${priceAction.resistance}` : '區間高點'} 後才觸發，且不要追超過突破價約 6%。本版回測以 5 個交易日節奏為主，不過早被 5 日線洗出。`,
       takeProfit: holdPlan.takeProfit,
       stopLoss: holdPlan.stopLoss,
       exitWarning: holdPlan.exitWarning,
@@ -1282,13 +1391,14 @@ async function main() {
   });
 
   const universe = [...twse, ...tpex].sort((a, b) => b.tradeValue - a.tradeValue);
+  const marketContext = buildMarketContext(universe);
   const pool = [...twse.slice(0, SYMBOLS_PER_MARKET), ...tpex.slice(0, SYMBOLS_PER_MARKET)]
     .sort((a, b) => b.tradeValue - a.tradeValue);
 
   const analyzed = await mapLimit(pool, CONCURRENCY, async stock => {
     const history = await fetchYahooHistory(stock.yahooSymbol);
     if (history.length < 70) throw new Error('歷史資料不足');
-    const analysis = analyzeWindow(history, stock, overnightContext);
+    const analysis = analyzeWindow(history, stock, overnightContext, true, marketContext);
     const hits = backtest(history, stock);
     applyBacktestDiscipline(analysis, hits);
     return {
@@ -1319,6 +1429,7 @@ async function main() {
     scanned: pool.length,
     scanStrategy: `上市成交值前 ${Math.min(twse.length, SYMBOLS_PER_MARKET)} 檔 + 上櫃成交值前 ${Math.min(tpex.length, SYMBOLS_PER_MARKET)} 檔，套用趨勢/型態/價格行為/隔夜風險後取前 ${RECOMMENDATION_LIMIT} 檔。`,
     overnightContext,
+    marketContext,
     marketCoverage: {
       twse: twse.length,
       tpex: tpex.length

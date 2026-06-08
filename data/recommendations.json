@@ -1,12 +1,12 @@
 {
-  "asOf": "2026-06-08T05:59:29.490Z",
-  "generatedAtTaipei": "2026年6月8日 下午1:59:29",
+  "asOf": "2026-06-08T09:20:04.376Z",
+  "generatedAtTaipei": "2026年6月8日 下午5:20:04",
   "source": "TWSE OpenAPI、TPEX API、Yahoo Finance chart API（夜盤風險因子）",
-  "universeSize": 1957,
+  "universeSize": 1953,
   "scanned": 240,
   "scanStrategy": "上市成交值前 120 檔 + 上櫃成交值前 120 檔，套用趨勢/型態/價格行為/隔夜風險後取前 7 檔。",
   "overnightContext": {
-    "asOf": "2026-06-08T05:59:26.813Z",
+    "asOf": "2026-06-08T09:20:01.646Z",
     "bias": "risk-off",
     "marketComposite": -2.92,
     "techComposite": -7.52,
@@ -218,21 +218,21 @@
   "marketContext": {
     "markets": {
       "上市": -0.63,
-      "上櫃": -0.31
+      "上櫃": 3.32
     },
     "themes": {
-      "semiconductor": -1.3,
-      "memory": -4.09,
+      "semiconductor": 0.97,
+      "memory": -0.99,
       "powerEquipment": -6.22,
-      "ai-hardware": -1.1,
-      "broad-market": -0.44,
-      "passiveComponents": 7.18,
-      "finance": -0.2
+      "ai-hardware": -0.85,
+      "broad-market": 1.2,
+      "passiveComponents": 8.61,
+      "finance": 0.59
     }
   },
   "marketCoverage": {
     "twse": 1080,
-    "tpex": 877
+    "tpex": 873
   },
   "recommendations": [],
   "warnings": []

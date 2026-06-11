@@ -5,15 +5,24 @@
   "type": "module",
   "scripts": {
     "generate": "node scripts/generate-data.mjs",
-    "backtest:tw2y": "node scripts/backtest-tw-2y-export.mjs",
+    "backtest:tw2y": "node scripts/backtest-tw-2y-export.mjs --years=2",
+    "backtest:tw10y": "node scripts/backtest-tw-2y-export.mjs --years=10",
     "dev": "node scripts/serve.mjs",
     "live": "node scripts/live-server.mjs",
     "backtest:modes": "node scripts/backtest-trade-modes.mjs",
     "backtest:scenarios": "node scripts/backtest-scenarios.mjs",
+    "optimize:risk": "node scripts/optimize-risk-rules.mjs",
+    "optimize:realized10y": "node scripts/optimize-realized-10y.mjs",
+    "optimize:indicators10y": "node scripts/optimize-realized-10y.mjs --indicators-only",
+    "optimize:portfolio10y": "node scripts/optimize-realized-10y.mjs --risk-only",
+    "optimize:exits10y": "node scripts/optimize-realized-10y.mjs --exits-only",
+    "optimize:hedge10y": "node scripts/optimize-market-hedge-10y.mjs",
+    "validate:factors10y": "node scripts/validate-factors-10y.mjs",
+    "export:optimized10y": "node scripts/export-optimized-report-10y.mjs",
     "diagnose:best-mode": "node scripts/diagnose-best-mode.mjs",
     "paper": "node scripts/paper-trader.mjs",
     "paper:loop": "node scripts/paper-trader.mjs --loop",
-    "check": "node --check scripts/generate-data.mjs && node --check scripts/serve.mjs && node --check scripts/live-server.mjs && node --check scripts/backtest-tw-2y-export.mjs && node --check scripts/backtest-trade-modes.mjs && node --check scripts/backtest-scenarios.mjs && node --check scripts/diagnose-best-mode.mjs && node --check scripts/paper-trader.mjs"
+    "check": "node --check scripts/generate-data.mjs && node --check scripts/serve.mjs && node --check scripts/live-server.mjs && node --check scripts/backtest-tw-2y-export.mjs && node --check scripts/backtest-trade-modes.mjs && node --check scripts/backtest-scenarios.mjs && node --check scripts/optimize-risk-rules.mjs && node --check scripts/optimize-realized-10y.mjs && node --check scripts/optimize-market-hedge-10y.mjs && node --check scripts/validate-factors-10y.mjs && node --check scripts/export-optimized-report-10y.mjs && node --check scripts/diagnose-best-mode.mjs && node --check scripts/paper-trader.mjs"
   },
   "dependencies": {},
   "devDependencies": {}

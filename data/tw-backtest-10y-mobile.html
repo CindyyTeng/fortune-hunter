@@ -1,0 +1,1119 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Fortune Hunter 手機回測報表</title>
+<style>
+:root{--bg:#f6f3ef;--card:#fff;--ink:#23181b;--muted:#6b6570;--brand:#b4233f;--line:rgba(35,24,27,.12);--shadow:0 14px 34px rgba(35,24,27,.08)}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,"Noto Sans TC",sans-serif;background:linear-gradient(180deg,#fcfaf8 0%,#f2ebe6 100%);color:var(--ink)}
+.wrap{max-width:980px;margin:0 auto;padding:16px}
+.hero{background:linear-gradient(135deg,#1f2933,#7f1630);color:#fff;padding:18px;border-radius:18px;box-shadow:var(--shadow)}
+.hero h1{margin:0;font-size:30px}
+.hero p{margin:8px 0 0;color:#f8dfe3;line-height:1.7}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:12px 0}
+.stat,.panel,.trade{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow)}
+.stat{padding:12px}
+.stat b{display:block;font-size:22px}
+.stat span{color:var(--muted);font-size:12px}
+.panel{padding:12px;margin-top:10px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{padding:10px 8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{position:sticky;top:0;background:#fff}
+.num{text-align:right;font-variant-numeric:tabular-nums}
+.pos{color:#0e7a5e;font-weight:700}
+.neg{color:#b4233f;font-weight:700}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.chip{display:inline-flex;padding:6px 10px;border-radius:999px;background:#f6e4e8;color:#5f1d2f;font-size:12px;font-weight:700}
+.trade{padding:12px;margin-bottom:10px}
+.trade-head{display:flex;justify-content:space-between;gap:10px;align-items:center}
+.trade-meta{display:flex;gap:10px;flex-wrap:wrap;color:var(--muted);font-size:12px;margin-top:8px}
+.tag{padding:4px 8px;border-radius:999px;background:#fff4e7;border:1px solid rgba(201,130,25,.25);font-size:12px;font-weight:700}
+.small{color:var(--muted);font-size:12px;line-height:1.7}
+@media (max-width:640px){.grid{grid-template-columns:1fr}table{font-size:12px}.wrap{padding:10px}.hero h1{font-size:24px}}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <section class="hero">
+    <h1>Fortune Hunter 手機回測報表</h1>
+    <p>區間 2016-06-11 ～ 2026-06-11，平均月報酬 0.4% ，最大回撤 -10.83% 。</p>
+    <div class="chips">
+      <span class="chip">交易 290 筆</span>
+      <span class="chip">勝率 48.28%</span>
+      <span class="chip">目標 10%</span>
+      <span class="chip">回測暖機 11y-period</span>
+    </div>
+  </section>
+  <section class="grid">
+    <div class="stat"><b>0.4%</b><span>平均月報酬</span></div>
+    <div class="stat"><b>-10.83%</b><span>最大回撤</span></div>
+    <div class="stat"><b>15.17%</b><span>最佳月份</span></div>
+    <div class="stat"><b>-4.62%</b><span>最差月份</span></div>
+  </section>
+  <section class="panel">
+    <h2>月績效</h2>
+    <div style="overflow:auto">
+      <table>
+        <thead><tr><th>月份</th><th class="num">月初資金</th><th class="num">月底資金</th><th class="num">月報酬</th><th class="num">新進場</th><th class="num">出場</th></tr></thead>
+        <tbody>
+      <tr>
+        <td>2016-06</td>
+        <td class="num">1,000,000</td>
+        <td class="num">994,514</td>
+        <td class="num neg">-0.55%</td>
+        <td class="num">2</td>
+        <td class="num">1</td>
+      </tr>
+      <tr>
+        <td>2016-07</td>
+        <td class="num">994,514</td>
+        <td class="num">1,015,603</td>
+        <td class="num pos">2.12%</td>
+        <td class="num">5</td>
+        <td class="num">6</td>
+      </tr>
+      <tr>
+        <td>2016-08</td>
+        <td class="num">1,015,603</td>
+        <td class="num">1,039,054</td>
+        <td class="num pos">2.31%</td>
+        <td class="num">3</td>
+        <td class="num">3</td>
+      </tr>
+      <tr>
+        <td>2016-09</td>
+        <td class="num">1,039,054</td>
+        <td class="num">1,039,650</td>
+        <td class="num pos">0.06%</td>
+        <td class="num">1</td>
+        <td class="num">1</td>
+      </tr>
+      <tr>
+        <td>2016-10</td>
+        <td class="num">1,039,650</td>
+        <td class="num">1,039,650</td>
+        <td class="num pos">0%</td>
+        <td class="num">0</td>
+        <td class="num">0</td>
+      </tr>
+      <tr>
+        <td>2016-11</td>
+        <td class="num">1,039,650</td>
+        <td class="num">1,039,650</td>
+        <td class="num pos">0%</td>
+        <td class="num">0</td>
+        <td class="num">0</td>
+      </tr>
+      <tr>
+        <td>2016-12</td>
+        <td class="num">1,039,650</td>
+        <td class="num">1,039,650</td>
+        <td class="num pos">0%</td>
+        <td class="num">0</td>
+        <td class="num">0</td>
+      </tr>
+      <tr>
+        <td>2017-01</td>
+        <td class="num">1,039,650</td>
+        <td class="num">1,039,650</td>
+        <td class="num pos">0%</td>
+        <td class="num">1</td>
+        <td class="num">0</td>
+      </tr>
+      <tr>
+        <td>2017-02</td>
+        <td class="num">1,039,650</td>
+        <td class="num">1,042,453</td>
+        <td class="num pos">0.27%</td>
+        <td class="num">4</td>
+        <td class="num">4</td>
+      </tr>
+      <tr>
+        <td>2017-03</td>
+        <td class="num">1,042,453</td>
+        <td class="num">1,042,829</td>
+        <td class="num pos">0.04%</td>
+        <td class="num">2</td>
+        <td class="num">2</td>
+      </tr>
+      <tr>
+        <td>2017-04</td>
+        <td class="num">1,042,829</td>
+        <td class="num">1,039,655</td>
+        <td class="num neg">-0.3%</td>
+        <td class="num">1</td>
+        <td class="num">2</td>
+      </tr>
+      <tr>
+        <td>2017-05</td>
+        <td class="num">1,039,655</td>
+        <td class="num">1,039,655</td>
+        <td class="num pos">0%</td>
+        <td class="num">0</td>
+        <td class="num">0</td>
+      </tr>
+      <tr>
+        <td>2017-06</td>
+        <td class="num">1,039,655</td>
+        <td class="num">1,027,797</td>
+        <td class="num neg">-1.14%</td>
+        <td class="num">1</td>
+        <td class="num">1</td>
+      </tr>
+      <tr>
+        <td>2017-07</td>
+        <td class="num">1,027,797</td>
+        <td class="num">1,029,183</td>
+        <td class="num pos">0.13%</td>
+        <td class="num">1</td>
+        <td class="num">1</td>
+      </tr>
+      <tr>
+        <td>2017-08</td>
+        <td class="num">1,029,183</td>
+        <td class="num">1,024,572</td>
+        <td class="num neg">-0.45%</td>
+        <td class="num">2</td>
+        <td class="num">2</td>
+      </tr>
+      <tr>
+        <td>2017-09</td>
+        <td class="num">1,024,572</td>
+        <td class="num">1,024,572</td>
+        <td class="num pos">0%</td>
+        <td class="num">0</td>
+        <td class="num">0</td>
+      </tr>
+      <tr>
+        <td>2017-10</td>
+        <td class="num">1,024,572</td>
+        <td class="num">1,041,190</td>
+        <td class="num pos">1.62%</td>
+        <td class="num">3</td>
+        <td class="num">3</td>
+      </tr>
+      <tr>
+        <td>2017-11</td>
+        <td class="num">1,041,190</td>
+        <td class="num">1,048,970</td>
+        <td class="num pos">0.75%</td>
+        <td class="num">1</td>
+        <td class="num">1</td>
+      </tr>
+      <tr>
+        <td>2017-12</td>
+        <td class="num">1,048,970</td>
+        <td class="num">1,048,970</td>
+        <td class="num pos">0%</td>
+        <td class="num">1</td>
+        <td class="num">0</td>
+      </tr>
+      <tr>
+        <td>2018-01</td>
+        <td class="num">1,048,970</td>
+        <td class="num">1,054,076</td>
+        <td class="num pos">0.49%</td>
+        <td class="num">2</td>
+        <td class="num">3</td>
+      </tr>
+      <tr>
+        <td>2018-02</td>
+        <td class="num">1,054,076</td>
+        <td class="num">1,054,076</td>
+        <td class="num pos">0%</td>
+        <td class="num">1</td>
+        <td class="num">0</td>
+      </tr>
+      <tr>
+        <td>2018-03</td>
+        <td class="num">1,054,076</td>
+        <td class="num">1,048,134</td>
+        <td class="num neg">-0.56%</td>
+        <td class="num">2</td>
+        <td class="num">2</td>
+      </tr>
+      <tr>
+        <td>2018-04</td>
+        <td class="num">1,048,134</td>
+        <td class="num">1,052,227</td>
+        <td class="num pos">0.39%</td>
+        <td class="num">0</td>
+        <td class="num">1</td>
+      </tr>
+      <tr>
+        <td>2018-05</td>
+        <td class="num">1,052,227</td>
+        <td class="num">1,054,790</td>
+        <td class="num pos">0.24%</td>
+        <td class="num">1</td>
+        <td class="num">1</td>
+      </tr>
+      <tr>
+        <td>2018-06</td>
+        <td class="num">1,054,790</td>
+        <td class="num">1,049,135</td>
+        <td class="num neg">-0.54%</td>
+        <td class="num">1</td>
+        <td class="num">1</td>
+      </tr>
+      <tr>
+        <td>2018-07</td>
+        <td class="num">1,049,135</td>
+        <td class="num">1,049,135</td>
+        <td class="num pos">0%</td>
+        <td class="num">0</td>
+        <td class="num">0</td>
+      </tr>
+      <tr>
+        <td>2018-08</td>
+        <td class="num">1,049,135</td>
+        <td class="num">1,050,175</td>
+        <td class="num pos">0.1%</td>
+        <td class="num">2</td>
+        <td class="num">1</td>
+      </tr>
+      <tr>
+        <td>2018-09</td>
+        <td class="num">1,050,175</td>
+        <td class="num">1,041,443</td>
+        <td class="num neg">-0.83%</td>
+        <td class="num">2</td>
+        <td class="num">3</td>
+      </tr>
+      <tr>
+        <td>2018-10</td>
+        <td class="num">1,041,443</td>
+        <td class="num">1,041,443</td>
+        <td class="num pos">0%</td>
+        <td class="num">0</td>
+        <td class="num">0</td>
+      </tr>
+      <tr>
+        <td>2018-11</td>
+        <td class="num">1,041,443</td>
+        <td class="num">1,041,443</td>
+        <td class="num pos">0%</td>
+        <td class="num">1</td>
+        <td class="num">0</td>
+      </tr>
+      <tr>
+        <td>2018-12</td>
+        <td class="num">1,041,443</td>
+        <td class="num">1,039,910</td>
+        <td class="num neg">-0.15%</td>
+        <td class="num">0</td>
+        <td class="num">1</td>
+      </tr>
+      <tr>
+        <td>2019-01</td>
+        <td class="num">1,039,910</td>
+        <td class="num">1,036,509</td>
+        <td class="num neg">-0.33%</td>
+        <td class="num">3</td>
+        <td class="num">3</td>
+      </tr>
+      <tr>
+        <td>2019-02</td>
+        <td class="num">1,036,509</td>
+        <td class="num">1,041,671</td>
+        <td class="num pos">0.5%</td>
+        <td class="num">2</td>
+        <td class="num">2</td>
+      </tr>
+      <tr>
+        <td>2019-03</td>
+        <td class="num">1,041,671</td>
+        <td class="num">1,041,671</td>
+        <td class="num pos">0%</td>
+        <td class="num">0</td>
+        <td class="num">0</td>
+      </tr>
+      <tr>
+        <td>2019-04</td>
+        <td class="num">1,041,671</td>
+        <td class="num">1,049,839</td>
+        <td class="num pos">0.78%</td>
+        <td class="num">1</td>
+        <td class="num">1</td>
+      </tr>
+      <tr>
+        <td>2019-05</td>
+        <td class="num">1,049,839</td>
+        <td class="num">1,039,083</td>
+        <td class="num neg">-1.02%</td>
+        <td class="num">1</td>
+        <td class="num">1</td>
+      </tr>
+      <tr>
+        <td>2019-06</td>
+        <td class="num">1,039,083</td>
+        <td class="num">1,039,083</td>
+        <td class="num pos">0%</td>
+        <td class="num">0</td>
+        <td class="num">0</td>
+      </tr>
+      <tr>
+        <td>2019-07</td>
+        <td class="num">1,039,083</td>
+        <td class="num">1,070,741</td>
+        <td class="num pos">3.05%</td>
+        <td class="num">3</td>
+        <td class="num">3</td>
+      </tr>
+      <tr>
+        <td>2019-08</td>
+        <td class="num">1,070,741</td>
+        <td class="num">1,053,782</td>
+        <td class="num neg">-1.58%</td>
+        <td class="num">3</td>
+        <td class="num">3</td>
+      </tr>
+      <tr>
+        <td>2019-09</td>
+        <td class="num">1,053,782</td>
+        <td class="num">1,054,252</td>
+        <td class="num pos">0.04%</td>
+        <td class="num">2</td>
+        <td class="num">2</td>
+      </tr>
+      <tr>
+        <td>2019-10</td>
+        <td class="num">1,054,252</td>
+        <td class="num">1,053,729</td>
+        <td class="num neg">-0.05%</td>
+        <td class="num">2</td>
+        <td class="num">1</td>
+      </tr>
+      <tr>
+        <td>2019-11</td>
+        <td class="num">1,053,729</td>
+        <td class="num">1,044,561</td>
+        <td class="num neg">-0.87%</td>
+        <td class="num">0</td>
+        <td class="num">1</td>
+      </tr>
+      <tr>
+        <td>2019-12</td>
+        <td class="num">1,044,561</td>
+        <td class="num">1,044,561</td>
+        <td class="num pos">0%</td>
+        <td class="num">0</td>
+        <td class="num">0</td>
+      </tr>
+      <tr>
+        <td>2020-01</td>
+        <td class="num">1,044,561</td>
+        <td class="num">1,011,905</td>
+        <td class="num neg">-3.13%</td>
+        <td class="num">4</td>
+        <td class="num">3</td>
+      </tr>
+      <tr>
+        <td>2020-02</td>
+        <td class="num">1,011,905</td>
+        <td class="num">982,967</td>
+        <td class="num neg">-2.86%</td>
+        <td class="num">0</td>
+        <td class="num">1</td>
+      </tr>
+      <tr>
+        <td>2020-03</td>
+        <td class="num">982,967</td>
+        <td class="num">982,967</td>
+        <td class="num pos">0%</td>
+        <td class="num">0</td>
+        <td class="num">0</td>
+      </tr>
+      <tr>
+        <td>2020-04</td>
+        <td class="num">982,967</td>
+        <td class="num">982,967</td>
+        <td class="num pos">0%</td>
+        <td class="num">0</td>
+        <td class="num">0</td>
+      </tr>
+      <tr>
+        <td>2020-05</td>
+        <td class="num">982,967</td>
+        <td class="num">959,499</td>
+        <td class="num neg">-2.39%</td>
+        <td class="num">4</td>
+        <td class="num">4</td>
+      </tr>
+      <tr>
+        <td>2020-06</td>
+        <td class="num">959,499</td>
+        <td class="num">980,122</td>
+        <td class="num pos">2.15%</td>
+        <td class="num">3</td>
+        <td class="num">3</td>
+      </tr>
+      <tr>
+        <td>2020-07</td>
+        <td class="num">980,122</td>
+        <td class="num">1,016,398</td>
+        <td class="num pos">3.7%</td>
+        <td class="num">6</td>
+        <td class="num">6</td>
+      </tr>
+      <tr>
+        <td>2020-08</td>
+        <td class="num">1,016,398</td>
+        <td class="num">1,038,745</td>
+        <td class="num pos">2.2%</td>
+        <td class="num">5</td>
+        <td class="num">5</td>
+      </tr>
+      <tr>
+        <td>2020-09</td>
+        <td class="num">1,038,745</td>
+        <td class="num">1,031,533</td>
+        <td class="num neg">-0.69%</td>
+        <td class="num">1</td>
+        <td class="num">1</td>
+      </tr>
+      <tr>
+        <td>2020-10</td>
+        <td class="num">1,031,533</td>
+        <td class="num">1,026,256</td>
+        <td class="num neg">-0.51%</td>
+        <td class="num">1</td>
+        <td class="num">1</td>
+      </tr>
+      <tr>
+        <td>2020-11</td>
+        <td class="num">1,026,256</td>
+        <td class="num">1,093,099</td>
+        <td class="num pos">6.51%</td>
+        <td class="num">8</td>
+        <td class="num">6</td>
+      </tr>
+      <tr>
+        <td>2020-12</td>
+        <td class="num">1,093,099</td>
+        <td class="num">1,133,971</td>
+        <td class="num pos">3.74%</td>
+        <td class="num">2</td>
+        <td class="num">4</td>
+      </tr>
+      <tr>
+        <td>2021-01</td>
+        <td class="num">1,133,971</td>
+        <td class="num">1,117,231</td>
+        <td class="num neg">-1.48%</td>
+        <td class="num">1</td>
+        <td class="num">1</td>
+      </tr>
+      <tr>
+        <td>2021-02</td>
+        <td class="num">1,117,231</td>
+        <td class="num">1,112,879</td>
+        <td class="num neg">-0.39%</td>
+        <td class="num">2</td>
+        <td class="num">1</td>
+      </tr>
+      <tr>
+        <td>2021-03</td>
+        <td class="num">1,112,879</td>
+        <td class="num">1,141,329</td>
+        <td class="num pos">2.56%</td>
+        <td class="num">3</td>
+        <td class="num">3</td>
+      </tr>
+      <tr>
+        <td>2021-04</td>
+        <td class="num">1,141,329</td>
+        <td class="num">1,172,201</td>
+        <td class="num pos">2.7%</td>
+        <td class="num">3</td>
+        <td class="num">4</td>
+      </tr>
+      <tr>
+        <td>2021-05</td>
+        <td class="num">1,172,201</td>
+        <td class="num">1,172,201</td>
+        <td class="num pos">0%</td>
+        <td class="num">0</td>
+        <td class="num">0</td>
+      </tr>
+      <tr>
+        <td>2021-06</td>
+        <td class="num">1,172,201</td>
+        <td class="num">1,203,139</td>
+        <td class="num pos">2.64%</td>
+        <td class="num">7</td>
+        <td class="num">1</td>
+      </tr>
+      <tr>
+        <td>2021-07</td>
+        <td class="num">1,203,139</td>
+        <td class="num">1,224,946</td>
+        <td class="num pos">1.81%</td>
+        <td class="num">7</td>
+        <td class="num">11</td>
+      </tr>
+      <tr>
+        <td>2021-08</td>
+        <td class="num">1,224,946</td>
+        <td class="num">1,243,706</td>
+        <td class="num pos">1.53%</td>
+        <td class="num">2</td>
+        <td class="num">3</td>
+      </tr>
+      <tr>
+        <td>2021-09</td>
+        <td class="num">1,243,706</td>
+        <td class="num">1,237,827</td>
+        <td class="num neg">-0.47%</td>
+        <td class="num">1</td>
+        <td class="num">2</td>
+      </tr>
+      <tr>
+        <td>2021-10</td>
+        <td class="num">1,237,827</td>
+        <td class="num">1,237,827</td>
+        <td class="num pos">0%</td>
+        <td class="num">0</td>
+        <td class="num">0</td>
+      </tr>
+      <tr>
+        <td>2021-11</td>
+        <td class="num">1,237,827</td>
+        <td class="num">1,246,209</td>
+        <td class="num pos">0.68%</td>
+        <td class="num">1</td>
+        <td class="num">1</td>
+      </tr>
+      <tr>
+        <td>2021-12</td>
+        <td class="num">1,246,209</td>
+        <td class="num">1,248,376</td>
+        <td class="num pos">0.17%</td>
+        <td class="num">9</td>
+        <td class="num">8</td>
+      </tr>
+      <tr>
+        <td>2022-01</td>
+        <td class="num">1,248,376</td>
+        <td class="num">1,246,233</td>
+        <td class="num neg">-0.17%</td>
+        <td class="num">0</td>
+        <td class="num">1</td>
+      </tr>
+      <tr>
+        <td>2022-02</td>
+        <td class="num">1,246,233</td>
+        <td class="num">1,226,380</td>
+        <td class="num neg">-1.59%</td>
+        <td class="num">1</td>
+        <td class="num">1</td>
+      </tr>
+      <tr>
+        <td>2022-03</td>
+        <td class="num">1,226,380</td>
+        <td class="num">1,254,125</td>
+        <td class="num pos">2.26%</td>
+        <td class="num">3</td>
+        <td class="num">3</td>
+      </tr>
+      <tr>
+        <td>2022-04</td>
+        <td class="num">1,254,125</td>
+        <td class="num">1,275,011</td>
+        <td class="num pos">1.67%</td>
+        <td class="num">1</td>
+        <td class="num">1</td>
+      </tr>
+      <tr>
+        <td>2022-05</td>
+        <td class="num">1,275,011</td>
+        <td class="num">1,264,989</td>
+        <td class="num neg">-0.79%</td>
+        <td class="num">1</td>
+        <td class="num">1</td>
+      </tr>
+      <tr>
+        <td>2022-06</td>
+        <td class="num">1,264,989</td>
+        <td class="num">1,239,706</td>
+        <td class="num neg">-2%</td>
+        <td class="num">1</td>
+        <td class="num">1</td>
+      </tr>
+      <tr>
+        <td>2022-07</td>
+        <td class="num">1,239,706</td>
+        <td class="num">1,239,706</td>
+        <td class="num pos">0%</td>
+        <td class="num">0</td>
+        <td class="num">0</td>
+      </tr>
+      <tr>
+        <td>2022-08</td>
+        <td class="num">1,239,706</td>
+        <td class="num">1,224,057</td>
+        <td class="num neg">-1.26%</td>
+        <td class="num">5</td>
+        <td class="num">5</td>
+      </tr>
+      <tr>
+        <td>2022-09</td>
+        <td class="num">1,224,057</td>
+        <td class="num">1,215,900</td>
+        <td class="num neg">-0.67%</td>
+        <td class="num">1</td>
+        <td class="num">1</td>
+      </tr>
+      <tr>
+        <td>2022-10</td>
+        <td class="num">1,215,900</td>
+        <td class="num">1,215,900</td>
+        <td class="num pos">0%</td>
+        <td class="num">0</td>
+        <td class="num">0</td>
+      </tr>
+      <tr>
+        <td>2022-11</td>
+        <td class="num">1,215,900</td>
+        <td class="num">1,210,532</td>
+        <td class="num neg">-0.44%</td>
+        <td class="num">3</td>
+        <td class="num">3</td>
+      </tr>
+      <tr>
+        <td>2022-12</td>
+        <td class="num">1,210,532</td>
+        <td class="num">1,237,747</td>
+        <td class="num pos">2.25%</td>
+        <td class="num">2</td>
+        <td class="num">2</td>
+      </tr>
+      <tr>
+        <td>2023-01</td>
+        <td class="num">1,237,747</td>
+        <td class="num">1,233,202</td>
+        <td class="num neg">-0.37%</td>
+        <td class="num">1</td>
+        <td class="num">1</td>
+      </tr>
+      <tr>
+        <td>2023-02</td>
+        <td class="num">1,233,202</td>
+        <td class="num">1,219,287</td>
+        <td class="num neg">-1.13%</td>
+        <td class="num">2</td>
+        <td class="num">2</td>
+      </tr>
+      <tr>
+        <td>2023-03</td>
+        <td class="num">1,219,287</td>
+        <td class="num">1,213,903</td>
+        <td class="num neg">-0.44%</td>
+        <td class="num">4</td>
+        <td class="num">4</td>
+      </tr>
+      <tr>
+        <td>2023-04</td>
+        <td class="num">1,213,903</td>
+        <td class="num">1,233,493</td>
+        <td class="num pos">1.61%</td>
+        <td class="num">7</td>
+        <td class="num">6</td>
+      </tr>
+      <tr>
+        <td>2023-05</td>
+        <td class="num">1,233,493</td>
+        <td class="num">1,234,821</td>
+        <td class="num pos">0.11%</td>
+        <td class="num">1</td>
+        <td class="num">1</td>
+      </tr>
+      <tr>
+        <td>2023-06</td>
+        <td class="num">1,234,821</td>
+        <td class="num">1,242,614</td>
+        <td class="num pos">0.63%</td>
+        <td class="num">5</td>
+        <td class="num">6</td>
+      </tr>
+      <tr>
+        <td>2023-07</td>
+        <td class="num">1,242,614</td>
+        <td class="num">1,196,007</td>
+        <td class="num neg">-3.75%</td>
+        <td class="num">6</td>
+        <td class="num">5</td>
+      </tr>
+      <tr>
+        <td>2023-08</td>
+        <td class="num">1,196,007</td>
+        <td class="num">1,187,216</td>
+        <td class="num neg">-0.74%</td>
+        <td class="num">1</td>
+        <td class="num">1</td>
+      </tr>
+      <tr>
+        <td>2023-09</td>
+        <td class="num">1,187,216</td>
+        <td class="num">1,172,771</td>
+        <td class="num neg">-1.22%</td>
+        <td class="num">4</td>
+        <td class="num">3</td>
+      </tr>
+      <tr>
+        <td>2023-10</td>
+        <td class="num">1,172,771</td>
+        <td class="num">1,165,386</td>
+        <td class="num neg">-0.63%</td>
+        <td class="num">2</td>
+        <td class="num">4</td>
+      </tr>
+      <tr>
+        <td>2023-11</td>
+        <td class="num">1,165,386</td>
+        <td class="num">1,168,456</td>
+        <td class="num pos">0.26%</td>
+        <td class="num">7</td>
+        <td class="num">5</td>
+      </tr>
+      <tr>
+        <td>2023-12</td>
+        <td class="num">1,168,456</td>
+        <td class="num">1,213,845</td>
+        <td class="num pos">3.88%</td>
+        <td class="num">3</td>
+        <td class="num">5</td>
+      </tr>
+      <tr>
+        <td>2024-01</td>
+        <td class="num">1,213,845</td>
+        <td class="num">1,157,783</td>
+        <td class="num neg">-4.62%</td>
+        <td class="num">6</td>
+        <td class="num">6</td>
+      </tr>
+      <tr>
+        <td>2024-02</td>
+        <td class="num">1,157,783</td>
+        <td class="num">1,176,479</td>
+        <td class="num pos">1.61%</td>
+        <td class="num">5</td>
+        <td class="num">4</td>
+      </tr>
+      <tr>
+        <td>2024-03</td>
+        <td class="num">1,176,479</td>
+        <td class="num">1,211,001</td>
+        <td class="num pos">2.93%</td>
+        <td class="num">2</td>
+        <td class="num">3</td>
+      </tr>
+      <tr>
+        <td>2024-04</td>
+        <td class="num">1,211,001</td>
+        <td class="num">1,211,001</td>
+        <td class="num pos">0%</td>
+        <td class="num">0</td>
+        <td class="num">0</td>
+      </tr>
+      <tr>
+        <td>2024-05</td>
+        <td class="num">1,211,001</td>
+        <td class="num">1,179,833</td>
+        <td class="num neg">-2.57%</td>
+        <td class="num">5</td>
+        <td class="num">4</td>
+      </tr>
+      <tr>
+        <td>2024-06</td>
+        <td class="num">1,179,833</td>
+        <td class="num">1,164,238</td>
+        <td class="num neg">-1.32%</td>
+        <td class="num">5</td>
+        <td class="num">6</td>
+      </tr>
+      <tr>
+        <td>2024-07</td>
+        <td class="num">1,164,238</td>
+        <td class="num">1,192,126</td>
+        <td class="num pos">2.4%</td>
+        <td class="num">3</td>
+        <td class="num">3</td>
+      </tr>
+      <tr>
+        <td>2024-08</td>
+        <td class="num">1,192,126</td>
+        <td class="num">1,192,126</td>
+        <td class="num pos">0%</td>
+        <td class="num">0</td>
+        <td class="num">0</td>
+      </tr>
+      <tr>
+        <td>2024-09</td>
+        <td class="num">1,192,126</td>
+        <td class="num">1,204,797</td>
+        <td class="num pos">1.06%</td>
+        <td class="num">2</td>
+        <td class="num">2</td>
+      </tr>
+      <tr>
+        <td>2024-10</td>
+        <td class="num">1,204,797</td>
+        <td class="num">1,184,704</td>
+        <td class="num neg">-1.67%</td>
+        <td class="num">1</td>
+        <td class="num">1</td>
+      </tr>
+      <tr>
+        <td>2024-11</td>
+        <td class="num">1,184,704</td>
+        <td class="num">1,195,206</td>
+        <td class="num pos">0.89%</td>
+        <td class="num">2</td>
+        <td class="num">2</td>
+      </tr>
+      <tr>
+        <td>2024-12</td>
+        <td class="num">1,195,206</td>
+        <td class="num">1,191,545</td>
+        <td class="num neg">-0.31%</td>
+        <td class="num">3</td>
+        <td class="num">3</td>
+      </tr>
+      <tr>
+        <td>2025-01</td>
+        <td class="num">1,191,545</td>
+        <td class="num">1,191,545</td>
+        <td class="num pos">0%</td>
+        <td class="num">0</td>
+        <td class="num">0</td>
+      </tr>
+      <tr>
+        <td>2025-02</td>
+        <td class="num">1,191,545</td>
+        <td class="num">1,176,342</td>
+        <td class="num neg">-1.28%</td>
+        <td class="num">2</td>
+        <td class="num">2</td>
+      </tr>
+      <tr>
+        <td>2025-03</td>
+        <td class="num">1,176,342</td>
+        <td class="num">1,176,342</td>
+        <td class="num pos">0%</td>
+        <td class="num">0</td>
+        <td class="num">0</td>
+      </tr>
+      <tr>
+        <td>2025-04</td>
+        <td class="num">1,176,342</td>
+        <td class="num">1,176,342</td>
+        <td class="num pos">0%</td>
+        <td class="num">0</td>
+        <td class="num">0</td>
+      </tr>
+      <tr>
+        <td>2025-05</td>
+        <td class="num">1,176,342</td>
+        <td class="num">1,176,342</td>
+        <td class="num pos">0%</td>
+        <td class="num">0</td>
+        <td class="num">0</td>
+      </tr>
+      <tr>
+        <td>2025-06</td>
+        <td class="num">1,176,342</td>
+        <td class="num">1,165,944</td>
+        <td class="num neg">-0.88%</td>
+        <td class="num">10</td>
+        <td class="num">5</td>
+      </tr>
+      <tr>
+        <td>2025-07</td>
+        <td class="num">1,165,944</td>
+        <td class="num">1,214,059</td>
+        <td class="num pos">4.13%</td>
+        <td class="num">5</td>
+        <td class="num">9</td>
+      </tr>
+      <tr>
+        <td>2025-08</td>
+        <td class="num">1,214,059</td>
+        <td class="num">1,211,387</td>
+        <td class="num neg">-0.22%</td>
+        <td class="num">7</td>
+        <td class="num">4</td>
+      </tr>
+      <tr>
+        <td>2025-09</td>
+        <td class="num">1,211,387</td>
+        <td class="num">1,199,930</td>
+        <td class="num neg">-0.95%</td>
+        <td class="num">2</td>
+        <td class="num">6</td>
+      </tr>
+      <tr>
+        <td>2025-10</td>
+        <td class="num">1,199,930</td>
+        <td class="num">1,203,896</td>
+        <td class="num pos">0.33%</td>
+        <td class="num">1</td>
+        <td class="num">1</td>
+      </tr>
+      <tr>
+        <td>2025-11</td>
+        <td class="num">1,203,896</td>
+        <td class="num">1,185,926</td>
+        <td class="num neg">-1.49%</td>
+        <td class="num">1</td>
+        <td class="num">1</td>
+      </tr>
+      <tr>
+        <td>2025-12</td>
+        <td class="num">1,185,926</td>
+        <td class="num">1,165,062</td>
+        <td class="num neg">-1.76%</td>
+        <td class="num">5</td>
+        <td class="num">2</td>
+      </tr>
+      <tr>
+        <td>2026-01</td>
+        <td class="num">1,165,062</td>
+        <td class="num">1,341,821</td>
+        <td class="num pos">15.17%</td>
+        <td class="num">15</td>
+        <td class="num">16</td>
+      </tr>
+      <tr>
+        <td>2026-02</td>
+        <td class="num">1,341,821</td>
+        <td class="num">1,384,583</td>
+        <td class="num pos">3.19%</td>
+        <td class="num">3</td>
+        <td class="num">3</td>
+      </tr>
+      <tr>
+        <td>2026-03</td>
+        <td class="num">1,384,583</td>
+        <td class="num">1,537,178</td>
+        <td class="num pos">11.02%</td>
+        <td class="num">3</td>
+        <td class="num">5</td>
+      </tr>
+      <tr>
+        <td>2026-04</td>
+        <td class="num">1,537,178</td>
+        <td class="num">1,642,660</td>
+        <td class="num pos">6.86%</td>
+        <td class="num">6</td>
+        <td class="num">6</td>
+      </tr>
+      <tr>
+        <td>2026-05</td>
+        <td class="num">1,642,660</td>
+        <td class="num">1,604,509</td>
+        <td class="num neg">-2.32%</td>
+        <td class="num">6</td>
+        <td class="num">5</td>
+      </tr>
+      <tr>
+        <td>2026-06</td>
+        <td class="num">1,604,509</td>
+        <td class="num">1,574,675</td>
+        <td class="num neg">-1.86%</td>
+        <td class="num">2</td>
+        <td class="num">3</td>
+      </tr></tbody>
+      </table>
+    </div>
+  </section>
+  <section class="panel">
+    <h2>前 7 檔候選</h2>
+    
+      <article class="trade">
+        <div class="trade-head">
+          <strong>4915 致伸</strong>
+          <span class="tag">偏多觀察</span>
+        </div>
+        <div class="trade-meta">
+          <span>分數 92/100</span>
+          <span>零股探索</span>
+          <span>-2.74%</span>
+        </div>
+      </article>
+      <article class="trade">
+        <div class="trade-head">
+          <strong>4746 台耀</strong>
+          <span class="tag">偏多觀察</span>
+        </div>
+        <div class="trade-meta">
+          <span>分數 92/100</span>
+          <span>零股探索</span>
+          <span>0.5%</span>
+        </div>
+      </article>
+      <article class="trade">
+        <div class="trade-head">
+          <strong>1101 台泥</strong>
+          <span class="tag">買入候選</span>
+        </div>
+        <div class="trade-meta">
+          <span>分數 94/100</span>
+          <span>嚴格風險降部位</span>
+          <span>1.62%</span>
+        </div>
+      </article>
+      <article class="trade">
+        <div class="trade-head">
+          <strong>3163 波若威</strong>
+          <span class="tag">偏多觀察</span>
+        </div>
+        <div class="trade-meta">
+          <span>分數 92/100</span>
+          <span>零股探索</span>
+          <span>4.09%</span>
+        </div>
+      </article>
+      <article class="trade">
+        <div class="trade-head">
+          <strong>4935 茂林-KY</strong>
+          <span class="tag">偏多觀察</span>
+        </div>
+        <div class="trade-meta">
+          <span>分數 92/100</span>
+          <span>零股探索</span>
+          <span>3.92%</span>
+        </div>
+      </article>
+      <article class="trade">
+        <div class="trade-head">
+          <strong>2301 光寶科</strong>
+          <span class="tag">偏多觀察</span>
+        </div>
+        <div class="trade-meta">
+          <span>分數 92/100</span>
+          <span>零股探索</span>
+          <span>-2.66%</span>
+        </div>
+      </article>
+      <article class="trade">
+        <div class="trade-head">
+          <strong>2347 聯強</strong>
+          <span class="tag">偏多觀察</span>
+        </div>
+        <div class="trade-meta">
+          <span>分數 92/100</span>
+          <span>零股探索</span>
+          <span>3.29%</span>
+        </div>
+      </article>
+  </section>
+  <section class="panel">
+    <h2>操作提醒</h2>
+    <div class="small">這份報表是手機優先的閱讀版，不需要 Excel App。若要看完整明細，建議回到桌機開 xlsx；若只想快速確認績效與月報，這個 HTML 就夠了。</div>
+  </section>
+</main>
+</body>
+</html>

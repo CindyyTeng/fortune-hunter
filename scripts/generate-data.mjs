@@ -1,5 +1,5 @@
 ﻿const OUTPUT = new URL('../data/recommendations.json', import.meta.url);
-const SYMBOLS_PER_MARKET = Number(process.env.SYMBOLS_PER_MARKET || 180);
+const SYMBOLS_PER_MARKET = Number(process.env.SYMBOLS_PER_MARKET || 500);
 const RECOMMENDATION_LIMIT = Number(process.env.RECOMMENDATION_LIMIT || 7);
 const CONCURRENCY = Number(process.env.CONCURRENCY || 6);
 const USER_AGENT = 'fortune-hunter/2.1';
@@ -10,7 +10,10 @@ const OVERNIGHT_SYMBOLS = {
   sp500: '^GSPC',
   nasdaq: '^IXIC',
   dow: '^DJI',
-  sox: '^SOX'
+  sox: '^SOX',
+  nikkei: '^N225',
+  kospi: '^KS11',
+  kosdaq: '^KQ11'
 };
 const OVERNIGHT_GROUPS = {
   taiwanSentiment: ['EWT', 'TSM', 'UMC'],
@@ -76,11 +79,21 @@ async function fetchTwseUniverse() {
 
 async function fetchTpexUniverse() {
   const body = new URLSearchParams({ response: 'json', date: '', type: 'AL' });
-  const json = await fetchJson('https://www.tpex.org.tw/www/zh-tw/afterTrading/otc', {
-    method: 'POST',
-    body,
-    headers: { 'content-type': 'application/x-www-form-urlencoded; charset=UTF-8' }
-  });
+  let json;
+  let lastError;
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    try {
+      json = await fetchJson('https://www.tpex.org.tw/www/zh-tw/afterTrading/otc', {
+        method: 'POST',
+        body,
+        headers: { 'content-type': 'application/x-www-form-urlencoded; charset=UTF-8' }
+      }, 60000);
+      break;
+    } catch (error) {
+      lastError = error;
+    }
+  }
+  if (!json) throw lastError;
   const rows = json.tables?.[0]?.data || [];
   return rows.map(row => {
     const code = String(row[0] || '').trim();
@@ -169,10 +182,17 @@ async function fetchOvernightContext() {
       + (indices.nasdaq?.change || 0) * 0.15,
     2
   );
+  const asiaComposite = round(
+    (indices.nikkei?.change || 0) * 0.45
+      + (indices.kospi?.change || 0) * 0.35
+      + (indices.kosdaq?.change || 0) * 0.2,
+    2
+  );
+  const globalComposite = round(marketComposite * 0.6 + asiaComposite * 0.4, 2);
 
-  const bias = marketComposite <= -1.2
+  const bias = marketComposite <= -1.2 || asiaComposite <= -1
     ? 'risk-off'
-    : marketComposite >= 1.2
+    : marketComposite >= 1.2 || asiaComposite >= 1
       ? 'risk-on'
       : 'neutral';
 
@@ -182,6 +202,8 @@ async function fetchOvernightContext() {
     marketComposite,
     techComposite,
     taiwanComposite,
+    asiaComposite,
+    globalComposite,
     groups,
     indices
   };
@@ -711,6 +733,8 @@ function buildOvernightImpact(stock, overnightContext) {
   const marketMove = overnightContext.marketComposite;
   const techMove = overnightContext.techComposite;
   const taiwanMove = overnightContext.taiwanComposite ?? null;
+  const asiaMove = overnightContext.asiaComposite ?? null;
+  const globalMove = overnightContext.globalComposite ?? null;
   const soxMove = overnightContext.indices.sox?.change ?? null;
   const dowMove = overnightContext.indices.dow?.change ?? null;
   const groupLabels = {
@@ -744,6 +768,32 @@ function buildOvernightImpact(stock, overnightContext) {
     } else if (taiwanMove >= 1.2) {
       score += 4;
       reasons.push(`台股 ADR/ETF 夜盤情緒偏多（${taiwanMove.toFixed(2)}%），有利隔日風險承接。`);
+    }
+  }
+
+  if (globalMove !== null) {
+    if (globalMove <= -1.5) {
+      score -= 12;
+      risks.push(`美股與日韓股市同步轉弱（全球綜合 ${globalMove.toFixed(2)}%），台股開盤容易跟跌。`);
+    } else if (globalMove <= -0.8) {
+      score -= 6;
+      risks.push(`全球風險偏弱（${globalMove.toFixed(2)}%），短線先降低追價。`);
+    } else if (globalMove >= 1.2) {
+      score += 5;
+      reasons.push(`全球股市風險偏好改善（${globalMove.toFixed(2)}%），有利短線承接。`);
+    }
+  }
+
+  if (asiaMove !== null) {
+    if (asiaMove <= -1.2) {
+      score -= 9;
+      risks.push(`日韓股市同步下跌（${asiaMove.toFixed(2)}%），台股盤中承壓風險升高。`);
+    } else if (asiaMove <= -0.6) {
+      score -= 5;
+      risks.push(`日韓股市偏弱（${asiaMove.toFixed(2)}%），開盤追價勝率下降。`);
+    } else if (asiaMove >= 1) {
+      score += 4;
+      reasons.push(`日韓股市偏多（${asiaMove.toFixed(2)}%），有利亞洲資金情緒。`);
     }
   }
 
@@ -820,6 +870,8 @@ function buildOvernightImpact(stock, overnightContext) {
     marketComposite: marketMove,
     techComposite: techMove,
     taiwanComposite: taiwanMove,
+    asiaComposite: asiaMove,
+    globalComposite: globalMove,
     groupImpacts: {
       ...(themes.includes('semiconductor') ? { semiconductor: round(soxMove, 2) } : {}),
       ...Object.fromEntries(
@@ -901,7 +953,6 @@ function decideHoldDays(std20, patternScore, overnightScore, sellLevel) {
 }
 
 function buildHoldPlan(holdDays, latestClose, stop, targetFast, targetFull, ma5, ma20, sellWarning) {
-  const midDays = Math.max(3, Math.ceil(holdDays / 2));
   const maHint = ma5
     ? `若 2 天內都站不上 5 日線`
     : `若 2 天內無法維持反彈節奏`;
@@ -916,9 +967,9 @@ function buildHoldPlan(holdDays, latestClose, stop, targetFast, targetFull, ma5,
 
   return {
     horizon: `建議持有 ${holdDays} 個交易日，若提前達標或轉弱可提早調整。`,
-    takeProfit: `${midDays} 天先看 NT$ ${targetFast.toFixed(2)} 可先出一半；${holdDays} 天內續強再看 NT$ ${targetFull.toFixed(2)}，剩餘部位用 5 日線移動停利。`,
+    takeProfit: `先看 NT$ ${targetFast.toFixed(2)}；收盤淨報酬曾達 3% 後，若自高點回落 5 個百分點則提前停利，${holdDays} 天內續強再看 NT$ ${targetFull.toFixed(2)}。`,
     stopLoss: `收盤跌破 NT$ ${stop.toFixed(2)} 或走勢轉弱先退，${maHint}也要主動降部位。`,
-    exitWarning
+    exitWarning: `${exitWarning} 已有獲利時，以約 1% 報酬保護線作為最低停利參考。`
   };
 }
 
@@ -953,6 +1004,9 @@ function analyzeWindow(history, stock, overnightContext = null, includeOvernight
   const std60 = returns.length >= 60 ? stddev(returns.slice(-60)) : null;
   const avg20TradeValue = history.length >= 20
     ? mean(history.slice(-20).map(day => (day.close || 0) * (day.volume || 0)))
+    : null;
+  const maxRange20 = history.length >= 20
+    ? Math.max(...history.slice(-20).map(day => pct(day.high, day.low) || 0))
     : null;
   const min60 = closes.length >= 60 ? Math.min(...closes.slice(-60)) : null;
   const max60 = closes.length >= 60 ? Math.max(...closes.slice(-60)) : null;
@@ -1132,7 +1186,10 @@ function analyzeWindow(history, stock, overnightContext = null, includeOvernight
     && avg20TradeValue !== null
     && std20 >= 0.05
     && avg20TradeValue < 100000000;
-  const lowTradeValue = avg20TradeValue !== null && avg20TradeValue < 50000000;
+  const lowTradeValue = avg20TradeValue !== null && avg20TradeValue < 100000000;
+  const lowVolatility = std20 !== null && std20 < 0.02;
+  const highVolatility = std20 !== null && std20 > 0.085;
+  const highRange = maxRange20 !== null && maxRange20 > 14;
   const strictRisk = (avg20TradeValue !== null && avg20TradeValue < 300000000)
     || (std20 !== null && std20 >= 0.035)
     || (stock.market === '上櫃' && (
@@ -1148,10 +1205,15 @@ function analyzeWindow(history, stock, overnightContext = null, includeOvernight
   }
   if (lowTradeValue) {
     score -= 16;
-    risks.push('20 日均成交值低於 5,000 萬，進出場品質不足，排除買入候選。');
-  } else if (avg20TradeValue !== null && avg20TradeValue < 100000000) {
+    risks.push('20 日均成交值低於 1 億，兩年回測顯示進出場品質較差，排除買入候選。');
+  }
+  if (lowVolatility) {
     score -= 8;
-    risks.push('20 日均成交值低於 1 億，需降低部位並避免追價。');
+    risks.push('20 日波動低於 2%，突破後月績效貢獻不足。');
+  }
+  if (highVolatility || highRange) {
+    score -= 12;
+    risks.push('20 日波動或單日振幅過大，容易出現假突破與停損擴大。');
   }
 
   const sellWarning = buildSellWarning(latest, ma5, ma20, rsi14, ret5, ret20, std20, patterns, priceAction, volumeRatio, rsv60);
@@ -1218,18 +1280,21 @@ function analyzeWindow(history, stock, overnightContext = null, includeOvernight
     && gateUpsideRoom
     && gateHeat
     && (rewardRisk === null || rewardRisk >= 1.1)
-    && (rsi14 === null || (rsi14 >= 50 && rsi14 <= 78))
+    && (rsi14 === null || (rsi14 >= 60 && rsi14 <= 78))
     && !highVolLowLiquidity
     && !lowTradeValue
-    && (mom126_21 === null || mom126_21 > -15)
-    && (nearYearHigh === null || nearYearHigh >= 0.6)
-    && (intentFactor60 === null || intentFactor60 >= -0.02)
-    && (!strictRisk || (score >= 88 && (rsi14 === null || (rsi14 >= 50 && rsi14 <= 74)) && (rewardRisk === null || rewardRisk >= 1.2)))
+    && !lowVolatility
+    && !highVolatility
+    && !highRange
+    && (mom126_21 === null || mom126_21 > -30)
+    && (nearYearHigh === null || nearYearHigh >= 0.45)
+    && (intentFactor60 === null || intentFactor60 >= -0.1)
+    && (!strictRisk || (score >= 88 && (rsi14 === null || (rsi14 >= 60 && rsi14 <= 74)) && (rewardRisk === null || rewardRisk >= 1.2)))
     && (!marketFlowImpact || !marketFlowImpact.isHeadwind)
     && sellWarning.level !== '高';
   if (!hardPass) score = Math.min(score, 72);
   const signal = hardPass
-    ? (score >= 74 && sellWarning.level === '無' ? '買入候選' : score >= 60 ? '偏多觀察' : '等待進場')
+    ? (score >= 78 && sellWarning.level === '無' ? '買入候選' : score >= 60 ? '偏多觀察' : '等待進場')
     : '等待進場';
 
   return {
@@ -1252,6 +1317,7 @@ function analyzeWindow(history, stock, overnightContext = null, includeOvernight
       std20: round(std20, 4),
       std60: round(std60, 4),
       avg20TradeValue: round(avg20TradeValue, 0),
+      maxRange20: round(maxRange20, 2),
       rsv60: round(rsv60, 3),
       intentFactor60: round(intentFactor60, 4),
       momentum126_21: round(mom126_21, 2),
@@ -1275,6 +1341,8 @@ function analyzeWindow(history, stock, overnightContext = null, includeOvernight
       marketComposite: round(overnightImpact.marketComposite, 2),
       techComposite: round(overnightImpact.techComposite, 2),
       taiwanComposite: round(overnightImpact.taiwanComposite, 2),
+      asiaComposite: round(overnightImpact.asiaComposite, 2),
+      globalComposite: round(overnightImpact.globalComposite, 2),
       groupImpacts: overnightImpact.groupImpacts,
       soxChange: round(overnightImpact.soxChange, 2),
       dowChange: round(overnightImpact.dowChange, 2)
@@ -1290,7 +1358,7 @@ function analyzeWindow(history, stock, overnightContext = null, includeOvernight
     risks,
     plan: {
       horizon: holdPlan.horizon,
-      entry: `分批區間 NT$ ${entryLow.toFixed(2)} - ${entryHigh.toFixed(2)}。優先等回測 5 日線/20 日線或支撐區不破；若走突破，盤中突破近壓 ${priceAction.resistance ? `NT$ ${priceAction.resistance}` : '區間高點'} 後才觸發，且不要追超過突破價約 6%。本版回測以 5 個交易日節奏為主，不過早被 5 日線洗出。`,
+      entry: `${signal === '偏多觀察' ? '目前不是立即買進訊號；同市場、同族群、全球、亞洲與隔日開盤五項至少四項轉強才考慮，否則維持現金。' : signal === '買入候選' ? '買入候選仍需同市場、同族群、全球、亞洲與隔日開盤五項至少兩項確認，環境全面逆風時維持現金。' : ''}分批區間 NT$ ${entryLow.toFixed(2)} - ${entryHigh.toFixed(2)}。優先等回測 5 日線/20 日線或支撐區不破；若走突破，盤中突破近壓 ${priceAction.resistance ? `NT$ ${priceAction.resistance}` : '區間高點'} 後才觸發，且不要追超過突破價約 6%。本版回測以 5 個交易日節奏為主，不過早被 5 日線洗出。`,
       takeProfit: holdPlan.takeProfit,
       stopLoss: holdPlan.stopLoss,
       exitWarning: holdPlan.exitWarning,
@@ -1412,10 +1480,15 @@ async function main() {
     };
   });
 
-  const recommendations = analyzed
+  const ranked = analyzed.sort((a, b) => b.score - a.score || b.tradeValue - a.tradeValue);
+  const activeRecommendations = ranked
     .filter(item => item.signal !== '等待進場')
-    .sort((a, b) => b.score - a.score || b.tradeValue - a.tradeValue)
     .slice(0, RECOMMENDATION_LIMIT);
+  const activeCodes = new Set(activeRecommendations.map(item => item.code));
+  const recommendations = [
+    ...activeRecommendations,
+    ...ranked.filter(item => !activeCodes.has(item.code)).slice(0, RECOMMENDATION_LIMIT - activeRecommendations.length)
+  ];
 
   const data = {
     asOf: new Date().toISOString(),

@@ -8,21 +8,42 @@ const LOOP = process.argv.includes('--loop');
 const LOOP_MS = Number(process.env.PAPER_LOOP_MS || 15000);
 
 const INITIAL_CASH = Number(process.env.PAPER_INITIAL_CASH || 1000000);
-const MAX_POSITION_PCT = Number(process.env.PAPER_MAX_POSITION_PCT || 10);
+const STANDARD_POSITION_PCT = Number(process.env.PAPER_STANDARD_POSITION_PCT || 44);
+const DEFENSIVE_POSITION_PCT = Number(process.env.PAPER_DEFENSIVE_POSITION_PCT || 20);
+const EXPLORATORY_POSITION_PCT = Number(process.env.PAPER_EXPLORATORY_POSITION_PCT || 20);
+const ACCOUNT_RISK_CAP_PCT = Number(process.env.PAPER_ACCOUNT_RISK_CAP_PCT || 2);
 const MAX_DAILY_LOSS_PCT = Number(process.env.PAPER_MAX_DAILY_LOSS_PCT || 2);
 const BUY_SLIPPAGE_PCT = Number(process.env.PAPER_BUY_SLIPPAGE_PCT || 0.15);
 const SELL_SLIPPAGE_PCT = Number(process.env.PAPER_SELL_SLIPPAGE_PCT || 0.15);
 const BREAKOUT_BUFFER_PCT = Number(process.env.PAPER_BREAKOUT_BUFFER_PCT || 0.5);
 const MAX_GAP_UP_PCT = Number(process.env.PAPER_MAX_GAP_UP_PCT || 8);
 const MIN_STD20 = Number(process.env.PAPER_MIN_STD20 || 0.02);
+const MIN_AVG20_TRADE_VALUE = Number(process.env.PAPER_MIN_AVG20_TRADE_VALUE || 100000000);
+const TRAIL_TRIGGER_PCT = Number(process.env.PAPER_TRAIL_TRIGGER_PCT || 3);
+const TRAIL_GIVEBACK_PCT = Number(process.env.PAPER_TRAIL_GIVEBACK_PCT || 5);
+const TRAIL_LOCK_PCT = Number(process.env.PAPER_TRAIL_LOCK_PCT || 1);
 const MAX_EVENTS = Number(process.env.PAPER_MAX_EVENTS || 500);
+const MAX_OPEN_POSITIONS = Number(process.env.PAPER_MAX_OPEN_POSITIONS || 4);
+const MAX_QUOTE_AGE_MS = Number(process.env.PAPER_MAX_QUOTE_AGE_MS || 90000);
+const MARKET_SHOCK_PCT = Number(process.env.PAPER_MARKET_SHOCK_PCT || -4);
+const MAX_ACCOUNT_DRAWDOWN_PCT = Number(process.env.PAPER_MAX_ACCOUNT_DRAWDOWN_PCT || 10);
+const ALLOW_OUTSIDE_MARKET = process.env.PAPER_ALLOW_OUTSIDE_MARKET === 'true';
+const EMERGENCY_STOP = process.env.PAPER_EMERGENCY_STOP === 'true';
 
 const BUY_SIGNAL = '\u8cb7\u5165\u5019\u9078';
+const WATCH_SIGNAL = '\u504f\u591a\u89c0\u5bdf';
 const SELL_WARNING_NONE = '\u7121';
 const MARKET_OTC = '\u4e0a\u6ac3';
+const BUY_CONFIRMATIONS = Number(process.env.PAPER_BUY_CONFIRMATIONS || 2);
+const EXPLORATION_CONFIRMATIONS = Number(process.env.PAPER_EXPLORATION_CONFIRMATIONS || 4);
 
 function todayKey(date = new Date()) {
-  return date.toISOString().slice(0, 10);
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Taipei',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  }).format(date);
 }
 
 function round(value, digits = 2) {
@@ -76,6 +97,12 @@ function initialState() {
       startEquity: INITIAL_CASH,
       blocked: false
     },
+    system: {
+      degraded: false,
+      marketShock: false,
+      emergencyStop: false,
+      entryBlockedReason: null
+    },
     settings: settings()
   };
 }
@@ -84,13 +111,21 @@ function settings() {
   return {
     liveQuotesUrl: LIVE_QUOTES_URL,
     quoteSource: QUOTE_SOURCE,
-    maxPositionPct: MAX_POSITION_PCT,
+    standardPositionPct: STANDARD_POSITION_PCT,
+    defensivePositionPct: DEFENSIVE_POSITION_PCT,
+    exploratoryPositionPct: EXPLORATORY_POSITION_PCT,
+    accountRiskCapPct: ACCOUNT_RISK_CAP_PCT,
     maxDailyLossPct: MAX_DAILY_LOSS_PCT,
     buySlippagePct: BUY_SLIPPAGE_PCT,
     sellSlippagePct: SELL_SLIPPAGE_PCT,
     breakoutBufferPct: BREAKOUT_BUFFER_PCT,
     maxGapUpPct: MAX_GAP_UP_PCT,
     minStd20: MIN_STD20
+    ,
+    maxOpenPositions: MAX_OPEN_POSITIONS,
+    maxQuoteAgeMs: MAX_QUOTE_AGE_MS,
+    marketShockPct: MARKET_SHOCK_PCT,
+    maxAccountDrawdownPct: MAX_ACCOUNT_DRAWDOWN_PCT
   };
 }
 
@@ -146,13 +181,65 @@ function snapshotQuotes(recommendations) {
 }
 
 async function getQuotes(recommendations) {
-  if (QUOTE_SOURCE === 'snapshot') return snapshotQuotes(recommendations);
+  if (QUOTE_SOURCE === 'snapshot') {
+    return { quotes: snapshotQuotes(recommendations), degraded: true, source: 'snapshot' };
+  }
   try {
-    return await fetchLiveQuotes();
+    return { quotes: await fetchLiveQuotes(), degraded: false, source: 'live' };
   } catch (error) {
     if (QUOTE_SOURCE === 'live-only') throw error;
-    return snapshotQuotes(recommendations);
+    return {
+      quotes: snapshotQuotes(recommendations),
+      degraded: true,
+      source: 'snapshot-fallback',
+      error: error.message
+    };
   }
+}
+
+function isMarketSession(date = new Date()) {
+  if (ALLOW_OUTSIDE_MARKET) return true;
+  const parts = Object.fromEntries(new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Asia/Taipei',
+    weekday: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23'
+  }).formatToParts(date).map(part => [part.type, part.value]));
+  if (parts.weekday === 'Sat' || parts.weekday === 'Sun') return false;
+  const minutes = Number(parts.hour) * 60 + Number(parts.minute);
+  return minutes >= 9 * 60 && minutes <= 13 * 60 + 30;
+}
+
+function quoteIsFresh(quote) {
+  return Number.isFinite(Number(quote?.ts))
+    && Date.now() - Number(quote.ts) <= MAX_QUOTE_AGE_MS
+    && Number(quote.ts) <= Date.now() + 10000;
+}
+
+function updateSystemRisk(state, quotes, degraded, quotesBySymbol) {
+  const changes = quotes.map(quote => Number(quote.changePercent)).filter(Number.isFinite).sort((a, b) => a - b);
+  const middle = Math.floor(changes.length / 2);
+  const medianChange = changes.length
+    ? changes.length % 2 ? changes[middle] : (changes[middle - 1] + changes[middle]) / 2
+    : null;
+  const currentEquity = equity(state, quotesBySymbol);
+  const drawdownPct = (currentEquity / state.initialCash - 1) * 100;
+  const marketShock = medianChange !== null && medianChange <= MARKET_SHOCK_PCT;
+  const reasons = [];
+  if (EMERGENCY_STOP) reasons.push('人工緊急停止已啟用');
+  if (degraded) reasons.push('即時報價失敗，已降級為舊快照');
+  if (!isMarketSession()) reasons.push('目前不在台股交易時段');
+  if (marketShock) reasons.push(`候選股漲跌幅中位數 ${round(medianChange)}% 達市場急跌門檻`);
+  if (drawdownPct <= -MAX_ACCOUNT_DRAWDOWN_PCT) reasons.push(`帳戶回撤 ${round(drawdownPct)}% 達停止門檻`);
+  state.system = {
+    degraded,
+    marketShock,
+    emergencyStop: EMERGENCY_STOP,
+    medianChangePct: round(medianChange),
+    accountDrawdownPct: round(drawdownPct),
+    entryBlockedReason: reasons.join('；') || null
+  };
 }
 
 function equity(state, quotesBySymbol) {
@@ -195,17 +282,45 @@ function alreadyEnteredToday(state, symbol) {
   return state.orders.some(order => order.symbol === symbol && order.side === 'buy' && order.date === date);
 }
 
-function isCandidate(item) {
-  return item.signal === BUY_SIGNAL
+function explorationConfirmations(item, quote) {
+  const atLeast = (value, minimum) => Number.isFinite(Number(value))
+    && value !== null
+    && Number(value) >= minimum;
+  return [
+    atLeast(item.marketFlow?.marketMove, 0.25),
+    atLeast(item.marketFlow?.themeMove, 0.25),
+    atLeast(item.overnight?.globalComposite, 0),
+    atLeast(item.overnight?.asiaComposite, 0),
+    atLeast(quote?.changePercent, 0.5)
+  ].filter(Boolean).length;
+}
+
+function isCandidate(item, quote) {
+  const confirmations = explorationConfirmations(item, quote);
+  const signalPass = item.signal === BUY_SIGNAL
+    ? confirmations >= BUY_CONFIRMATIONS
+    : item.signal === WATCH_SIGNAL && confirmations >= EXPLORATION_CONFIRMATIONS;
+  return signalPass
     && item.sellWarning?.level === SELL_WARNING_NONE
     && Number(item.metrics?.resistance) > 0
-    && Number(item.metrics?.std20) >= MIN_STD20;
+    && Number(item.metrics?.std20) >= MIN_STD20
+    && Number(item.metrics?.avg20TradeValue) >= MIN_AVG20_TRADE_VALUE;
 }
 
 function canEnter(item, quote, state) {
-  if (!isCandidate(item)) return { ok: false, reason: '不是符合條件的買入候選。' };
+  if (!isCandidate(item, quote)) {
+    const confirmations = explorationConfirmations(item, quote);
+    const required = item.signal === BUY_SIGNAL ? BUY_CONFIRMATIONS : EXPLORATION_CONFIRMATIONS;
+    const reason = item.signal === WATCH_SIGNAL || item.signal === BUY_SIGNAL
+      ? `${item.signal}確認 ${confirmations}/5，未達 ${required} 項，維持現金。`
+      : '不是符合條件的買入候選。';
+    return { ok: false, reason };
+  }
   if (!quote?.price) return { ok: false, reason: '沒有即時價格。' };
+  if (state.system?.entryBlockedReason) return { ok: false, reason: state.system.entryBlockedReason };
+  if (!quoteIsFresh(quote)) return { ok: false, reason: '即時報價已過期或時間異常。' };
   if (state.daily?.blocked) return { ok: false, reason: '已觸發單日最大虧損限制。' };
+  if (state.positions.length >= MAX_OPEN_POSITIONS) return { ok: false, reason: '已達最大持倉檔數。' };
 
   const symbol = toSymbol(item);
   if (hasOpenPosition(state, symbol)) return { ok: false, reason: '已有持倉。' };
@@ -217,14 +332,31 @@ function canEnter(item, quote, state) {
   if (quote.changePercent !== null && quote.changePercent > MAX_GAP_UP_PCT) {
     return { ok: false, reason: `漲幅 ${quote.changePercent}% 超過追價上限。` };
   }
+  if (quote.changePercent !== null && quote.changePercent < 0) {
+    return { ok: false, reason: '隔日負跳空，缺乏突破確認，暫不進場。' };
+  }
 
   return { ok: true, trigger };
 }
 
-function buy(item, quote, state, trigger) {
+function plannedPositionPct(item) {
+  if (item.signal === WATCH_SIGNAL) return EXPLORATORY_POSITION_PCT;
+  if (item.metrics?.strictRisk) return DEFENSIVE_POSITION_PCT;
+  return STANDARD_POSITION_PCT;
+}
+
+function buy(item, quote, state, trigger, accountEquity) {
   const symbol = toSymbol(item);
   const entryPrice = quote.price * (1 + BUY_SLIPPAGE_PCT / 100);
-  const budget = Math.min(state.cash, state.initialCash * (MAX_POSITION_PCT / 100));
+  const stop = readStop(item);
+  const stopDistancePct = stop ? ((entryPrice - stop) / entryPrice) * 100 : null;
+  if (!Number.isFinite(stopDistancePct) || stopDistancePct <= 0) {
+    event(state, 'skip-buy', '停損價無效，無法計算單筆風險，因此維持現金。', { symbol });
+    return;
+  }
+  const plannedPct = plannedPositionPct(item);
+  const positionPct = Math.min(plannedPct, ACCOUNT_RISK_CAP_PCT * 100 / stopDistancePct);
+  const budget = Math.min(state.cash, accountEquity * (positionPct / 100));
   const quantity = Math.floor(budget / entryPrice);
   if (quantity <= 0) {
     event(state, 'skip-buy', '現金不足，無法建立模擬部位。', { symbol });
@@ -232,7 +364,6 @@ function buy(item, quote, state, trigger) {
   }
 
   const cost = quantity * entryPrice;
-  const stop = readStop(item);
   const holdDays = readHoldDays(item);
   state.cash = round(state.cash - cost, 2);
   state.positions.push({
@@ -249,9 +380,14 @@ function buy(item, quote, state, trigger) {
     resistance: item.metrics.resistance,
     trigger: round(trigger, 2),
     holdDays,
-    signalScore: item.score
+    signalScore: item.score,
+    plannedPositionPct: plannedPct,
+    positionPct: round(positionPct),
+    accountRiskPct: round(positionPct * stopDistancePct / 100),
+    peakReturnPct: 0
   });
   state.orders.push({
+    idempotencyKey: `buy:${todayKey()}:${symbol}`,
     date: todayKey(),
     at: new Date().toISOString(),
     side: 'buy',
@@ -260,7 +396,12 @@ function buy(item, quote, state, trigger) {
     price: round(entryPrice, 2),
     reason: '突破壓力進場'
   });
-  event(state, 'buy', `模擬買進 ${item.name} ${quantity} 股，價格 ${round(entryPrice, 2)}。`, { symbol });
+  event(
+    state,
+    'buy',
+    `模擬買進 ${item.name} ${quantity} 股，價格 ${round(entryPrice, 2)}，實際部位 ${round(positionPct)}%，停損風險不超過帳戶 ${ACCOUNT_RISK_CAP_PCT}%。`,
+    { symbol }
+  );
 }
 
 function daysHeld(position) {
@@ -276,6 +417,7 @@ function sell(position, quote, state, reason) {
   state.cash = round(state.cash + proceeds, 2);
   state.positions = state.positions.filter(item => item.symbol !== position.symbol);
   state.orders.push({
+    idempotencyKey: `sell:${todayKey()}:${position.symbol}:${reason}`,
     date: todayKey(),
     at: new Date().toISOString(),
     side: 'sell',
@@ -304,6 +446,14 @@ function manageExits(state, quotesBySymbol) {
       continue;
     }
 
+    const currentReturnPct = (currentPrice / position.entryPrice - 1) * 100;
+    position.peakReturnPct = Math.max(position.peakReturnPct || 0, currentReturnPct);
+    const trailFloorPct = Math.max(TRAIL_LOCK_PCT, position.peakReturnPct - TRAIL_GIVEBACK_PCT);
+    if (position.peakReturnPct >= TRAIL_TRIGGER_PCT && currentReturnPct <= trailFloorPct) {
+      sell(position, quote, state, '移動停利');
+      continue;
+    }
+
     if (daysHeld(position) >= position.holdDays) {
       sell(position, quote, state, '固定持有期到期');
     }
@@ -311,13 +461,19 @@ function manageExits(state, quotesBySymbol) {
 }
 
 function scanEntries(state, recommendations, quotesBySymbol) {
-  for (const item of recommendations) {
+  const ordered = [...recommendations].sort((a, b) => {
+    const quoteA = quotesBySymbol.get(toSymbol(a));
+    const quoteB = quotesBySymbol.get(toSymbol(b));
+    return (Number(quoteB?.changePercent) || 0) - (Number(quoteA?.changePercent) || 0)
+      || b.score - a.score;
+  });
+  for (const item of ordered) {
     const symbol = toSymbol(item);
     const quote = quotesBySymbol.get(symbol);
     const decision = canEnter(item, quote, state);
     if (decision.ok) {
-      buy(item, quote, state, decision.trigger);
-    } else if (isCandidate(item)) {
+      buy(item, quote, state, decision.trigger, equity(state, quotesBySymbol));
+    } else if (isCandidate(item, quote) || item.signal === WATCH_SIGNAL) {
       event(state, 'watch', `${item.name} 觀察中：${decision.reason}`, { symbol });
     }
   }
@@ -326,11 +482,13 @@ function scanEntries(state, recommendations, quotesBySymbol) {
 async function runOnce() {
   const recommendations = await loadRecommendations();
   const state = await loadState();
-  const quotes = await getQuotes(recommendations);
+  const quoteResult = await getQuotes(recommendations);
+  const quotes = quoteResult.quotes;
   const quotesBySymbol = quoteMap(quotes);
 
   resetDailyIfNeeded(state, quotesBySymbol);
-  manageExits(state, quotesBySymbol);
+  updateSystemRisk(state, quotes, quoteResult.degraded, quotesBySymbol);
+  if (!quoteResult.degraded) manageExits(state, quotesBySymbol);
   updateDailyLossBlock(state, quotesBySymbol);
   scanEntries(state, recommendations, quotesBySymbol);
   updateDailyLossBlock(state, quotesBySymbol);
@@ -338,7 +496,9 @@ async function runOnce() {
   state.updatedAt = new Date().toISOString();
   state.lastRun = {
     at: state.updatedAt,
-    quoteSource: QUOTE_SOURCE,
+    quoteSource: quoteResult.source,
+    degraded: quoteResult.degraded,
+    entryBlockedReason: state.system.entryBlockedReason,
     quoteCount: quotes.length,
     equity: round(equity(state, quotesBySymbol), 2),
     cash: state.cash,

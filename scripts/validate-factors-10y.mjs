@@ -1,4 +1,8 @@
 import fs from 'node:fs/promises';
+import {
+  buyExecution,
+  sellExecution
+} from './lib/execution-simulator.mjs';
 
 const INPUT = new URL('../data/tw-backtest-10y.json', import.meta.url);
 const OUTPUT = new URL('../data/factor-validation-10y.json', import.meta.url);
@@ -26,14 +30,18 @@ function median(values) {
 }
 
 function netReturnPct(entryPrice, exitPrice) {
-  const buyPrice = entryPrice * (1 + BUY_SLIPPAGE_PCT / 100);
-  const sellPrice = exitPrice * (1 - SELL_SLIPPAGE_PCT / 100);
-  const buyValue = buyPrice * QUANTITY;
-  const sellValue = sellPrice * QUANTITY;
-  const buyFee = Math.max(MIN_FEE, Math.ceil(buyValue * BUY_FEE_PCT / 100));
-  const sellFee = Math.max(MIN_FEE, Math.ceil(sellValue * SELL_FEE_PCT / 100));
-  const tax = Math.ceil(sellValue * SELL_TAX_PCT / 100);
-  return ((sellValue - sellFee - tax) / (buyValue + buyFee) - 1) * 100;
+  const buy = buyExecution(entryPrice, QUANTITY, {
+    buyFeePct: BUY_FEE_PCT,
+    buySlippagePct: BUY_SLIPPAGE_PCT,
+    minimumFee: MIN_FEE
+  });
+  const sell = sellExecution(exitPrice, QUANTITY, {
+    sellFeePct: SELL_FEE_PCT,
+    sellTaxPct: SELL_TAX_PCT,
+    sellSlippagePct: SELL_SLIPPAGE_PCT,
+    minimumFee: MIN_FEE
+  });
+  return (sell.net / buy.total - 1) * 100;
 }
 
 function outcome(trade, days) {

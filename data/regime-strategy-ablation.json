@@ -1,0 +1,595 @@
+{
+  "generatedAt": "2026-06-14T17:28:40.549Z",
+  "methodology": "same data and execution simulator; one strategy family enabled at a time",
+  "conclusion": "完整組合績效幾乎等於只跑突破策略。目前只能確認多策略架構已建立，不能宣稱其他策略已有顯著貢獻。",
+  "results": [
+    {
+      "id": "breakout_only",
+      "label": "只跑突破策略",
+      "config": {
+        "enabledStrategies": [
+          "breakoutMomentumStrategy"
+        ],
+        "allowOversold": false
+      },
+      "trades": 744,
+      "equityAverageMonthlyReturnPct": -2.03,
+      "negativeEquityMonths": 74,
+      "maxDrawdownPct": -92.4,
+      "profitFactor": 0.38,
+      "winRatePct": 36.29,
+      "tenPercentRealizedMonths": 0,
+      "candidateFunnel": {
+        "candidates": {
+          "byRegime": {
+            "BULL_TREND": 11523,
+            "THEME_MOMENTUM": 33807
+          },
+          "byStrategy": {
+            "breakoutMomentumStrategy": 45330
+          }
+        },
+        "entryTriggered": {
+          "byRegime": {
+            "BULL_TREND": 9023,
+            "THEME_MOMENTUM": 26188
+          },
+          "byStrategy": {
+            "breakoutMomentumStrategy": 35211
+          }
+        },
+        "entered": {
+          "byRegime": {
+            "THEME_MOMENTUM": 514,
+            "BULL_TREND": 230
+          },
+          "byStrategy": {
+            "breakoutMomentumStrategy": 744
+          }
+        },
+        "byStrategy": {
+          "breakoutMomentumStrategy": {
+            "candidates": 45330,
+            "entryTriggered": 35211,
+            "entered": 744,
+            "candidateToEntryPct": 1.64
+          },
+          "pullbackTrendStrategy": {
+            "candidates": 0,
+            "entryTriggered": 0,
+            "entered": 0,
+            "candidateToEntryPct": 0
+          },
+          "rangeReversionStrategy": {
+            "candidates": 0,
+            "entryTriggered": 0,
+            "entered": 0,
+            "candidateToEntryPct": 0
+          },
+          "oversoldReboundStrategy": {
+            "candidates": 0,
+            "entryTriggered": 0,
+            "entered": 0,
+            "candidateToEntryPct": 0
+          },
+          "cashDefenseStrategy": {
+            "candidates": 0,
+            "entryTriggered": 0,
+            "entered": 0,
+            "candidateToEntryPct": 0
+          }
+        },
+        "byRegime": {
+          "BULL_TREND": {
+            "candidates": 11523,
+            "entryTriggered": 9023,
+            "entered": 230,
+            "candidateToEntryPct": 2
+          },
+          "BULL_PULLBACK": {
+            "candidates": 0,
+            "entryTriggered": 0,
+            "entered": 0,
+            "candidateToEntryPct": 0
+          },
+          "RANGE_BOUND": {
+            "candidates": 0,
+            "entryTriggered": 0,
+            "entered": 0,
+            "candidateToEntryPct": 0
+          },
+          "BEAR_DEFENSE": {
+            "candidates": 0,
+            "entryTriggered": 0,
+            "entered": 0,
+            "candidateToEntryPct": 0
+          },
+          "HIGH_VOLATILITY": {
+            "candidates": 0,
+            "entryTriggered": 0,
+            "entered": 0,
+            "candidateToEntryPct": 0
+          },
+          "THEME_MOMENTUM": {
+            "candidates": 33807,
+            "entryTriggered": 26188,
+            "entered": 514,
+            "candidateToEntryPct": 1.52
+          }
+        }
+      }
+    },
+    {
+      "id": "pullback_only",
+      "label": "只跑拉回策略",
+      "config": {
+        "enabledStrategies": [
+          "pullbackTrendStrategy"
+        ],
+        "allowOversold": false
+      },
+      "trades": 531,
+      "equityAverageMonthlyReturnPct": -0.8,
+      "negativeEquityMonths": 48,
+      "maxDrawdownPct": -65.07,
+      "profitFactor": 0.42,
+      "winRatePct": 42.37,
+      "tenPercentRealizedMonths": 0,
+      "candidateFunnel": {
+        "candidates": {
+          "byRegime": {
+            "BULL_PULLBACK": 11526
+          },
+          "byStrategy": {
+            "pullbackTrendStrategy": 11526
+          }
+        },
+        "entryTriggered": {
+          "byRegime": {
+            "BULL_PULLBACK": 6558
+          },
+          "byStrategy": {
+            "pullbackTrendStrategy": 6558
+          }
+        },
+        "entered": {
+          "byRegime": {
+            "BULL_PULLBACK": 531
+          },
+          "byStrategy": {
+            "pullbackTrendStrategy": 531
+          }
+        },
+        "byStrategy": {
+          "breakoutMomentumStrategy": {
+            "candidates": 0,
+            "entryTriggered": 0,
+            "entered": 0,
+            "candidateToEntryPct": 0
+          },
+          "pullbackTrendStrategy": {
+            "candidates": 11526,
+            "entryTriggered": 6558,
+            "entered": 531,
+            "candidateToEntryPct": 4.61
+          },
+          "rangeReversionStrategy": {
+            "candidates": 0,
+            "entryTriggered": 0,
+            "entered": 0,
+            "candidateToEntryPct": 0
+          },
+          "oversoldReboundStrategy": {
+            "candidates": 0,
+            "entryTriggered": 0,
+            "entered": 0,
+            "candidateToEntryPct": 0
+          },
+          "cashDefenseStrategy": {
+            "candidates": 0,
+            "entryTriggered": 0,
+            "entered": 0,
+            "candidateToEntryPct": 0
+          }
+        },
+        "byRegime": {
+          "BULL_TREND": {
+            "candidates": 0,
+            "entryTriggered": 0,
+            "entered": 0,
+            "candidateToEntryPct": 0
+          },
+          "BULL_PULLBACK": {
+            "candidates": 11526,
+            "entryTriggered": 6558,
+            "entered": 531,
+            "candidateToEntryPct": 4.61
+          },
+          "RANGE_BOUND": {
+            "candidates": 0,
+            "entryTriggered": 0,
+            "entered": 0,
+            "candidateToEntryPct": 0
+          },
+          "BEAR_DEFENSE": {
+            "candidates": 0,
+            "entryTriggered": 0,
+            "entered": 0,
+            "candidateToEntryPct": 0
+          },
+          "HIGH_VOLATILITY": {
+            "candidates": 0,
+            "entryTriggered": 0,
+            "entered": 0,
+            "candidateToEntryPct": 0
+          },
+          "THEME_MOMENTUM": {
+            "candidates": 0,
+            "entryTriggered": 0,
+            "entered": 0,
+            "candidateToEntryPct": 0
+          }
+        }
+      }
+    },
+    {
+      "id": "range_only",
+      "label": "只跑區間策略",
+      "config": {
+        "enabledStrategies": [
+          "rangeReversionStrategy"
+        ],
+        "allowOversold": false
+      },
+      "trades": 1166,
+      "equityAverageMonthlyReturnPct": -1.01,
+      "negativeEquityMonths": 64,
+      "maxDrawdownPct": -73.8,
+      "profitFactor": 0.57,
+      "winRatePct": 35.16,
+      "tenPercentRealizedMonths": 0,
+      "candidateFunnel": {
+        "candidates": {
+          "byRegime": {
+            "RANGE_BOUND": 44995
+          },
+          "byStrategy": {
+            "rangeReversionStrategy": 44995
+          }
+        },
+        "entryTriggered": {
+          "byRegime": {
+            "RANGE_BOUND": 41355
+          },
+          "byStrategy": {
+            "rangeReversionStrategy": 41355
+          }
+        },
+        "entered": {
+          "byRegime": {
+            "RANGE_BOUND": 1166
+          },
+          "byStrategy": {
+            "rangeReversionStrategy": 1166
+          }
+        },
+        "byStrategy": {
+          "breakoutMomentumStrategy": {
+            "candidates": 0,
+            "entryTriggered": 0,
+            "entered": 0,
+            "candidateToEntryPct": 0
+          },
+          "pullbackTrendStrategy": {
+            "candidates": 0,
+            "entryTriggered": 0,
+            "entered": 0,
+            "candidateToEntryPct": 0
+          },
+          "rangeReversionStrategy": {
+            "candidates": 44995,
+            "entryTriggered": 41355,
+            "entered": 1166,
+            "candidateToEntryPct": 2.59
+          },
+          "oversoldReboundStrategy": {
+            "candidates": 0,
+            "entryTriggered": 0,
+            "entered": 0,
+            "candidateToEntryPct": 0
+          },
+          "cashDefenseStrategy": {
+            "candidates": 0,
+            "entryTriggered": 0,
+            "entered": 0,
+            "candidateToEntryPct": 0
+          }
+        },
+        "byRegime": {
+          "BULL_TREND": {
+            "candidates": 0,
+            "entryTriggered": 0,
+            "entered": 0,
+            "candidateToEntryPct": 0
+          },
+          "BULL_PULLBACK": {
+            "candidates": 0,
+            "entryTriggered": 0,
+            "entered": 0,
+            "candidateToEntryPct": 0
+          },
+          "RANGE_BOUND": {
+            "candidates": 44995,
+            "entryTriggered": 41355,
+            "entered": 1166,
+            "candidateToEntryPct": 2.59
+          },
+          "BEAR_DEFENSE": {
+            "candidates": 0,
+            "entryTriggered": 0,
+            "entered": 0,
+            "candidateToEntryPct": 0
+          },
+          "HIGH_VOLATILITY": {
+            "candidates": 0,
+            "entryTriggered": 0,
+            "entered": 0,
+            "candidateToEntryPct": 0
+          },
+          "THEME_MOMENTUM": {
+            "candidates": 0,
+            "entryTriggered": 0,
+            "entered": 0,
+            "candidateToEntryPct": 0
+          }
+        }
+      }
+    },
+    {
+      "id": "oversold_only",
+      "label": "只跑超跌反彈策略",
+      "config": {
+        "enabledStrategies": [
+          "oversoldReboundStrategy"
+        ],
+        "allowOversold": true,
+        "regimeStrategyMap": {
+          "BULL_PULLBACK": "oversoldReboundStrategy",
+          "RANGE_BOUND": "oversoldReboundStrategy"
+        }
+      },
+      "trades": 1181,
+      "equityAverageMonthlyReturnPct": -0.84,
+      "negativeEquityMonths": 69,
+      "maxDrawdownPct": -65,
+      "profitFactor": 0.49,
+      "winRatePct": 36.07,
+      "tenPercentRealizedMonths": 0,
+      "candidateFunnel": {
+        "candidates": {
+          "byRegime": {
+            "BULL_PULLBACK": 349,
+            "RANGE_BOUND": 1254
+          },
+          "byStrategy": {
+            "oversoldReboundStrategy": 1603
+          }
+        },
+        "entryTriggered": {
+          "byRegime": {
+            "BULL_PULLBACK": 346,
+            "RANGE_BOUND": 1218
+          },
+          "byStrategy": {
+            "oversoldReboundStrategy": 1564
+          }
+        },
+        "entered": {
+          "byRegime": {
+            "RANGE_BOUND": 902,
+            "BULL_PULLBACK": 279
+          },
+          "byStrategy": {
+            "oversoldReboundStrategy": 1181
+          }
+        },
+        "byStrategy": {
+          "breakoutMomentumStrategy": {
+            "candidates": 0,
+            "entryTriggered": 0,
+            "entered": 0,
+            "candidateToEntryPct": 0
+          },
+          "pullbackTrendStrategy": {
+            "candidates": 0,
+            "entryTriggered": 0,
+            "entered": 0,
+            "candidateToEntryPct": 0
+          },
+          "rangeReversionStrategy": {
+            "candidates": 0,
+            "entryTriggered": 0,
+            "entered": 0,
+            "candidateToEntryPct": 0
+          },
+          "oversoldReboundStrategy": {
+            "candidates": 1603,
+            "entryTriggered": 1564,
+            "entered": 1181,
+            "candidateToEntryPct": 73.67
+          },
+          "cashDefenseStrategy": {
+            "candidates": 0,
+            "entryTriggered": 0,
+            "entered": 0,
+            "candidateToEntryPct": 0
+          }
+        },
+        "byRegime": {
+          "BULL_TREND": {
+            "candidates": 0,
+            "entryTriggered": 0,
+            "entered": 0,
+            "candidateToEntryPct": 0
+          },
+          "BULL_PULLBACK": {
+            "candidates": 349,
+            "entryTriggered": 346,
+            "entered": 279,
+            "candidateToEntryPct": 79.94
+          },
+          "RANGE_BOUND": {
+            "candidates": 1254,
+            "entryTriggered": 1218,
+            "entered": 902,
+            "candidateToEntryPct": 71.93
+          },
+          "BEAR_DEFENSE": {
+            "candidates": 0,
+            "entryTriggered": 0,
+            "entered": 0,
+            "candidateToEntryPct": 0
+          },
+          "HIGH_VOLATILITY": {
+            "candidates": 0,
+            "entryTriggered": 0,
+            "entered": 0,
+            "candidateToEntryPct": 0
+          },
+          "THEME_MOMENTUM": {
+            "candidates": 0,
+            "entryTriggered": 0,
+            "entered": 0,
+            "candidateToEntryPct": 0
+          }
+        }
+      }
+    },
+    {
+      "id": "full_ensemble",
+      "label": "完整 regime ensemble",
+      "config": {},
+      "trades": 1066,
+      "equityAverageMonthlyReturnPct": -2.02,
+      "negativeEquityMonths": 58,
+      "maxDrawdownPct": -92.51,
+      "profitFactor": 0.45,
+      "winRatePct": 37.52,
+      "tenPercentRealizedMonths": 0,
+      "candidateFunnel": {
+        "candidates": {
+          "byRegime": {
+            "BULL_PULLBACK": 11875,
+            "RANGE_BOUND": 46249,
+            "BULL_TREND": 11523,
+            "THEME_MOMENTUM": 33807
+          },
+          "byStrategy": {
+            "pullbackTrendStrategy": 11526,
+            "rangeReversionStrategy": 44995,
+            "breakoutMomentumStrategy": 45330,
+            "oversoldReboundStrategy": 1603
+          }
+        },
+        "entryTriggered": {
+          "byRegime": {
+            "BULL_PULLBACK": 6904,
+            "RANGE_BOUND": 42573,
+            "BULL_TREND": 9023,
+            "THEME_MOMENTUM": 26188
+          },
+          "byStrategy": {
+            "pullbackTrendStrategy": 6558,
+            "rangeReversionStrategy": 41355,
+            "breakoutMomentumStrategy": 35211,
+            "oversoldReboundStrategy": 1564
+          }
+        },
+        "entered": {
+          "byRegime": {
+            "THEME_MOMENTUM": 355,
+            "RANGE_BOUND": 380,
+            "BULL_PULLBACK": 146,
+            "BULL_TREND": 185
+          },
+          "byStrategy": {
+            "breakoutMomentumStrategy": 540,
+            "rangeReversionStrategy": 367,
+            "pullbackTrendStrategy": 136,
+            "oversoldReboundStrategy": 23
+          }
+        },
+        "byStrategy": {
+          "breakoutMomentumStrategy": {
+            "candidates": 45330,
+            "entryTriggered": 35211,
+            "entered": 540,
+            "candidateToEntryPct": 1.19
+          },
+          "pullbackTrendStrategy": {
+            "candidates": 11526,
+            "entryTriggered": 6558,
+            "entered": 136,
+            "candidateToEntryPct": 1.18
+          },
+          "rangeReversionStrategy": {
+            "candidates": 44995,
+            "entryTriggered": 41355,
+            "entered": 367,
+            "candidateToEntryPct": 0.82
+          },
+          "oversoldReboundStrategy": {
+            "candidates": 1603,
+            "entryTriggered": 1564,
+            "entered": 23,
+            "candidateToEntryPct": 1.43
+          },
+          "cashDefenseStrategy": {
+            "candidates": 0,
+            "entryTriggered": 0,
+            "entered": 0,
+            "candidateToEntryPct": 0
+          }
+        },
+        "byRegime": {
+          "BULL_TREND": {
+            "candidates": 11523,
+            "entryTriggered": 9023,
+            "entered": 185,
+            "candidateToEntryPct": 1.61
+          },
+          "BULL_PULLBACK": {
+            "candidates": 11875,
+            "entryTriggered": 6904,
+            "entered": 146,
+            "candidateToEntryPct": 1.23
+          },
+          "RANGE_BOUND": {
+            "candidates": 46249,
+            "entryTriggered": 42573,
+            "entered": 380,
+            "candidateToEntryPct": 0.82
+          },
+          "BEAR_DEFENSE": {
+            "candidates": 0,
+            "entryTriggered": 0,
+            "entered": 0,
+            "candidateToEntryPct": 0
+          },
+          "HIGH_VOLATILITY": {
+            "candidates": 0,
+            "entryTriggered": 0,
+            "entered": 0,
+            "candidateToEntryPct": 0
+          },
+          "THEME_MOMENTUM": {
+            "candidates": 33807,
+            "entryTriggered": 26188,
+            "entered": 355,
+            "candidateToEntryPct": 1.05
+          }
+        }
+      }
+    }
+  ]
+}

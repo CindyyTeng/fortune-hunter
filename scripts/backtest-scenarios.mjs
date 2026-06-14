@@ -1,4 +1,9 @@
 import { readFile, writeFile } from 'node:fs/promises';
+import {
+  netReturnPct as sharedNetReturnPct,
+  simulateEntry,
+  simulateExit
+} from './lib/execution-simulator.mjs';
 
 const STRATEGY_FILE = new URL('./generate-data.mjs', import.meta.url);
 const OUTPUT_JSON = new URL('../data/scenario-backtest.json', import.meta.url);
@@ -257,20 +262,30 @@ function bucket(value, cuts, labels) {
 }
 
 function applyCosts(entryPrice, exitPrice) {
-  const netEntry = entryPrice * (1 + (BUY_FEE_PCT + BUY_SLIPPAGE_PCT) / 100);
-  const netExit = exitPrice * (1 - (SELL_FEE_PCT + SELL_SLIPPAGE_PCT + SELL_TAX_PCT) / 100);
-  return pct(netExit, netEntry);
+  return sharedNetReturnPct(entryPrice, exitPrice, {
+    buyFeePct: BUY_FEE_PCT,
+    sellFeePct: SELL_FEE_PCT,
+    sellTaxPct: SELL_TAX_PCT,
+    buySlippagePct: BUY_SLIPPAGE_PCT,
+    sellSlippagePct: SELL_SLIPPAGE_PCT
+  });
 }
 
 function exitTrade(history, entryIndex, entryPrice, stop, holdDays, stopMode) {
   const endIndex = Math.min(entryIndex + holdDays, history.length - 1);
   for (let i = entryIndex; i <= endIndex; i++) {
     const day = history[i];
-    if (stopMode === 'intraday_stop' && stop && day.low <= stop) {
-      return { exitIndex: i, exitDate: day.date, exitPrice: stop, exitReason: 'intraday_stop' };
+    if (stopMode === 'intraday_stop') {
+      const fill = simulateExit({ day, stopLoss: stop });
+      if (fill?.price) {
+        return { exitIndex: i, exitDate: day.date, exitPrice: fill.price, exitReason: 'intraday_stop' };
+      }
     }
-    if (stopMode === 'close_stop' && stop && day.close <= stop) {
-      return { exitIndex: i, exitDate: day.date, exitPrice: day.close, exitReason: 'close_stop' };
+    if (stopMode === 'close_stop') {
+      const fill = simulateExit({ day, stopLoss: stop, closeStop: true });
+      if (fill?.price) {
+        return { exitIndex: i, exitDate: day.date, exitPrice: fill.price, exitReason: 'close_stop' };
+      }
     }
   }
   const day = history[endIndex];
@@ -317,9 +332,9 @@ function simulateScenarioTrades(history, stock, analyzeWindow) {
       if (gapUpPct > params.maxGapUpPct) continue;
 
       const trigger = resistance * (1 + params.breakoutBufferPct / 100);
-      if (nextDay.high < trigger) continue;
-
-      const entryPriceBase = nextDay.open > trigger ? nextDay.open : trigger;
+      const entry = simulateEntry({ mode: 'resistance_breakout', signalDay, nextDay, triggerPrice: trigger });
+      if (!entry) continue;
+      const entryPriceBase = entry.price;
       const exit = exitTrade(history, i + 1, entryPriceBase, plan.stop, params.holdDays, rule.stopMode);
       const netReturnPct = applyCosts(entryPriceBase, exit.exitPrice);
       adaptiveTrades.push({
@@ -356,10 +371,11 @@ function simulateScenarioTrades(history, stock, analyzeWindow) {
 
     for (const bufferPct of BREAKOUT_BUFFERS) {
       const trigger = resistance * (1 + bufferPct / 100);
-      if (nextDay.high < trigger) continue;
+      const entry = simulateEntry({ mode: 'resistance_breakout', signalDay, nextDay, triggerPrice: trigger });
+      if (!entry) continue;
 
       const gapUpPct = pct(nextDay.open, signalDay.close) || 0;
-      const entryPriceBase = nextDay.open > trigger ? nextDay.open : trigger;
+      const entryPriceBase = entry.price;
 
       for (const maxGapUpPct of MAX_GAP_UPS) {
         if (maxGapUpPct < 99 && gapUpPct > maxGapUpPct) continue;

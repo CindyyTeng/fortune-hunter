@@ -1,4 +1,5 @@
 import fs from 'node:fs/promises';
+import { netReturnPct as sharedNetReturnPct } from './lib/execution-simulator.mjs';
 
 const INPUT = new URL('../data/tw-backtest-2y.json', import.meta.url);
 const OUTPUT = new URL('../data/risk-rule-comparison.json', import.meta.url);
@@ -45,11 +46,13 @@ function buildDays(trades) {
 }
 
 function netMarkedReturnPct(trade, price, assumptions) {
-  const entry = trade.entryPrice * (1 + (assumptions.buyFeePct + assumptions.buySlippagePct) / 100);
-  const exit = price * (1 - (
-    assumptions.sellFeePct + assumptions.sellTaxPct + assumptions.sellSlippagePct
-  ) / 100);
-  return (exit - entry) / entry * 100;
+  return sharedNetReturnPct(trade.entryPrice, price, {
+    buyFeePct: assumptions.buyFeePct,
+    sellFeePct: assumptions.sellFeePct,
+    sellTaxPct: assumptions.sellTaxPct,
+    buySlippagePct: assumptions.buySlippagePct,
+    sellSlippagePct: assumptions.sellSlippagePct
+  });
 }
 
 function applyExitRule(trades, assumptions, rule) {

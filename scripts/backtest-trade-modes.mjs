@@ -1,4 +1,9 @@
 import { readFile, writeFile } from 'node:fs/promises';
+import {
+  netReturnPct as sharedNetReturnPct,
+  simulateEntry,
+  simulateExit
+} from './lib/execution-simulator.mjs';
 
 const STRATEGY_FILE = new URL('./generate-data.mjs', import.meta.url);
 const OUTPUT = new URL('../data/trade-mode-backtest.json', import.meta.url);
@@ -218,34 +223,24 @@ function enrichUniverse(stocks, marketLabel, industryMap) {
 }
 
 function entryForMode(mode, signalDay, nextDay, plan, analysis) {
-  if (!nextDay) return null;
-  if (mode === 'next_open_market') return { price: nextDay.open, reason: LABELS.nextOpenMarket };
-
-  if (mode === 'next_open_limit') {
-    const limit = Math.min(plan.entryHigh, signalDay.close * 1.012);
-    if (nextDay.open <= limit && nextDay.open >= plan.entryLow) {
-      return { price: nextDay.open, reason: LABELS.nextOpenLimit };
-    }
-    if (nextDay.low <= limit && nextDay.high >= plan.entryLow) {
-      return { price: Math.max(plan.entryLow, Math.min(limit, nextDay.open)), reason: LABELS.nextOpenLimit };
-    }
-    return null;
-  }
-
-  if (mode === 'pullback_entry') {
-    if (nextDay.low <= plan.entryHigh && nextDay.high >= plan.entryLow) {
-      return { price: Math.min(plan.entryHigh, Math.max(plan.entryLow, nextDay.open)), reason: LABELS.pullbackEntry };
-    }
-    return null;
-  }
-
-  if (mode === 'resistance_breakout') {
-    const resistance = analysis.metrics?.resistance;
-    if (!resistance || nextDay.high < resistance * 1.005) return null;
-    return { price: round(resistance * 1.005), reason: LABELS.resistanceBreakout };
-  }
-
-  return null;
+  const fill = simulateEntry({
+    mode,
+    signalDay,
+    nextDay,
+    triggerPrice: Number(analysis.metrics?.resistance) * 1.005,
+    limitPrice: Math.min(plan.entryHigh, signalDay.close * 1.012),
+    limitFloor: plan.entryLow,
+    pullbackPrice: plan.entryHigh,
+    pullbackFloor: plan.entryLow
+  });
+  if (!fill) return null;
+  const labels = {
+    next_open_market: LABELS.nextOpenMarket,
+    next_open_limit: LABELS.nextOpenLimit,
+    pullback_entry: LABELS.pullbackEntry,
+    resistance_breakout: LABELS.resistanceBreakout
+  };
+  return { price: fill.price, reason: labels[mode] || fill.reason };
 }
 
 function exitFixedHold(history, entryIndex, entryPrice, plan) {
@@ -265,11 +260,16 @@ function exitStopTarget(history, entryIndex, entryPrice, plan) {
   const exitIndexEnd = Math.min(entryIndex + plan.holdDays, history.length - 1);
   for (let i = entryIndex; i <= exitIndexEnd; i++) {
     const day = history[i];
-    if (plan.stop && day.low <= plan.stop) {
-      return { exitDate: day.date, exitPrice: plan.stop, exitReason: LABELS.stopExit, returnPct: pct(plan.stop, entryPrice), holdingDays: i - entryIndex, exitIndex: i };
-    }
-    if (plan.targetFull && day.high >= plan.targetFull) {
-      return { exitDate: day.date, exitPrice: plan.targetFull, exitReason: LABELS.targetExit, returnPct: pct(plan.targetFull, entryPrice), holdingDays: i - entryIndex, exitIndex: i };
+    const fill = simulateExit({ day, stopLoss: plan.stop, takeProfit: plan.targetFull });
+    if (fill?.price) {
+      return {
+        exitDate: day.date,
+        exitPrice: fill.price,
+        exitReason: fill.type === 'stop_loss' ? LABELS.stopExit : LABELS.targetExit,
+        returnPct: pct(fill.price, entryPrice),
+        holdingDays: i - entryIndex,
+        exitIndex: i
+      };
     }
   }
   return exitFixedHold(history, entryIndex, entryPrice, plan);
@@ -287,20 +287,27 @@ function exitScaleTrail(history, entryIndex, entryPrice, plan) {
     closes.push(day.close);
     const ma5 = average(closes, 5);
 
-    if (plan.stop && day.low <= plan.stop) {
-      weightedReturn += pct(plan.stop, entryPrice) * remaining;
-      return { exitDate: day.date, exitPrice: plan.stop, exitReason: LABELS.stopExit, returnPct: weightedReturn, holdingDays: i - entryIndex, exitIndex: i };
+    const stopFill = simulateExit({ day, stopLoss: plan.stop });
+    if (stopFill?.price) {
+      weightedReturn += pct(stopFill.price, entryPrice) * remaining;
+      return { exitDate: day.date, exitPrice: stopFill.price, exitReason: LABELS.stopExit, returnPct: weightedReturn, holdingDays: i - entryIndex, exitIndex: i };
     }
 
-    if (!halfSold && plan.targetFast && day.high >= plan.targetFast) {
-      weightedReturn += pct(plan.targetFast, entryPrice) * 0.5;
+    const fastTarget = !halfSold
+      ? simulateExit({ day, takeProfit: plan.targetFast })
+      : null;
+    if (fastTarget?.type === 'take_profit') {
+      weightedReturn += pct(fastTarget.price, entryPrice) * 0.5;
       remaining = 0.5;
       halfSold = true;
     }
 
-    if (remaining > 0 && plan.targetFull && day.high >= plan.targetFull) {
-      weightedReturn += pct(plan.targetFull, entryPrice) * remaining;
-      return { exitDate: day.date, exitPrice: plan.targetFull, exitReason: LABELS.targetExit, returnPct: weightedReturn, holdingDays: i - entryIndex, exitIndex: i };
+    const fullTarget = remaining > 0
+      ? simulateExit({ day, takeProfit: plan.targetFull })
+      : null;
+    if (fullTarget?.type === 'take_profit') {
+      weightedReturn += pct(fullTarget.price, entryPrice) * remaining;
+      return { exitDate: day.date, exitPrice: fullTarget.price, exitReason: LABELS.targetExit, returnPct: weightedReturn, holdingDays: i - entryIndex, exitIndex: i };
     }
 
     if (halfSold && remaining > 0 && ma5 && day.close < ma5) {
@@ -332,9 +339,13 @@ function maxFavorableExcursion(history, entryIndex, exitIndex, entryPrice) {
 }
 
 function applyCosts(entryPrice, exitPrice) {
-  const netEntry = entryPrice * (1 + (BUY_FEE_PCT + BUY_SLIPPAGE_PCT) / 100);
-  const netExit = exitPrice * (1 - (SELL_FEE_PCT + SELL_SLIPPAGE_PCT + SELL_TAX_PCT) / 100);
-  return pct(netExit, netEntry);
+  return sharedNetReturnPct(entryPrice, exitPrice, {
+    buyFeePct: BUY_FEE_PCT,
+    sellFeePct: SELL_FEE_PCT,
+    sellTaxPct: SELL_TAX_PCT,
+    buySlippagePct: BUY_SLIPPAGE_PCT,
+    sellSlippagePct: SELL_SLIPPAGE_PCT
+  });
 }
 
 function riskStats(history, index) {

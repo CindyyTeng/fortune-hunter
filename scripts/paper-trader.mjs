@@ -1,4 +1,11 @@
 import { readFile, writeFile } from 'node:fs/promises';
+import {
+  buyExecution as sharedBuyExecution,
+  sellExecution as sharedSellExecution,
+  simulateEntry,
+  simulateExit,
+  trailingStopPrice
+} from './lib/execution-simulator.mjs';
 
 const DATA_FILE = new URL('../data/recommendations.json', import.meta.url);
 const STATE_FILE = new URL('../data/paper-trading-state.json', import.meta.url);
@@ -347,7 +354,18 @@ function plannedPositionPct(item) {
 
 function buy(item, quote, state, trigger, accountEquity) {
   const symbol = toSymbol(item);
-  const entryPrice = quote.price * (1 + BUY_SLIPPAGE_PCT / 100);
+  const fill = simulateEntry({
+    mode: 'resistance_breakout',
+    signalDay: { close: item.latestPrice },
+    nextDay: { open: quote.price, high: quote.price, low: quote.price, close: quote.price },
+    triggerPrice: trigger
+  });
+  if (!fill) return;
+  const entryPrice = sharedBuyExecution(fill.price, 1, {
+    buyFeePct: 0,
+    buySlippagePct: BUY_SLIPPAGE_PCT,
+    minimumFee: 0
+  }).fillPrice;
   const stop = readStop(item);
   const stopDistancePct = stop ? ((entryPrice - stop) / entryPrice) * 100 : null;
   if (!Number.isFinite(stopDistancePct) || stopDistancePct <= 0) {
@@ -411,7 +429,16 @@ function daysHeld(position) {
 }
 
 function sell(position, quote, state, reason) {
-  const exitPrice = (quote?.price || position.lastPrice || position.entryPrice) * (1 - SELL_SLIPPAGE_PCT / 100);
+  const exitPrice = sharedSellExecution(
+    quote?.price || position.lastPrice || position.entryPrice,
+    position.quantity,
+    {
+      sellFeePct: 0,
+      sellTaxPct: 0,
+      sellSlippagePct: SELL_SLIPPAGE_PCT,
+      minimumFee: 0
+    }
+  ).fillPrice;
   const proceeds = position.quantity * exitPrice;
   const pnl = (exitPrice - position.entryPrice) * position.quantity;
   state.cash = round(state.cash + proceeds, 2);
@@ -441,16 +468,29 @@ function manageExits(state, quotesBySymbol) {
     const currentPrice = quote?.price || position.lastPrice;
     if (!currentPrice) continue;
 
-    if (position.stop && currentPrice <= position.stop) {
-      sell(position, quote, state, '跌破停損');
+    const trailingStop = trailingStopPrice(
+      position.entryPrice,
+      position.entryPrice * (1 + (position.peakReturnPct || 0) / 100),
+      {
+        triggerPct: TRAIL_TRIGGER_PCT,
+        givebackPct: TRAIL_GIVEBACK_PCT,
+        lockPct: TRAIL_LOCK_PCT
+      }
+    );
+    const executionExit = simulateExit({
+      day: { open: currentPrice, high: currentPrice, low: currentPrice, close: currentPrice },
+      stopLoss: position.stop,
+      trailingStop
+    });
+    if (executionExit?.type === 'stop_loss') {
+      sell(position, { ...quote, price: executionExit.price }, state, '跌破停損');
       continue;
     }
 
     const currentReturnPct = (currentPrice / position.entryPrice - 1) * 100;
     position.peakReturnPct = Math.max(position.peakReturnPct || 0, currentReturnPct);
-    const trailFloorPct = Math.max(TRAIL_LOCK_PCT, position.peakReturnPct - TRAIL_GIVEBACK_PCT);
-    if (position.peakReturnPct >= TRAIL_TRIGGER_PCT && currentReturnPct <= trailFloorPct) {
-      sell(position, quote, state, '移動停利');
+    if (executionExit?.type === 'trailing_stop') {
+      sell(position, { ...quote, price: executionExit.price }, state, '移動停利');
       continue;
     }
 

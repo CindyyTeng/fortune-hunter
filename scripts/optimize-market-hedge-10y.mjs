@@ -1,4 +1,8 @@
 import fs from 'node:fs/promises';
+import {
+  buyExecution as sharedBuyExecution,
+  sellExecution as sharedSellExecution
+} from './lib/execution-simulator.mjs';
 
 const LONG_RESULT = new URL('../data/realized-strategy-diagnostics-10y.json', import.meta.url);
 const OUTPUT = new URL('../data/market-hedge-search-10y.json', import.meta.url);
@@ -24,17 +28,22 @@ function orderFee(price, quantity) {
 }
 
 function buyExecution(price, quantity) {
-  const fillPrice = price * (1 + SLIPPAGE_PCT / 100);
-  const value = fillPrice * quantity;
-  return { total: value + orderFee(fillPrice, quantity) };
+  return sharedBuyExecution(price, quantity, {
+    buyFeePct: FEE_PCT,
+    buySlippagePct: SLIPPAGE_PCT,
+    minimumFee: MIN_FEE,
+    boardLotShares: LOT
+  });
 }
 
 function sellExecution(price, quantity) {
-  const fillPrice = price * (1 - SLIPPAGE_PCT / 100);
-  const value = fillPrice * quantity;
-  return {
-    net: value - orderFee(fillPrice, quantity) - Math.ceil(value * TAX_PCT / 100)
-  };
+  return sharedSellExecution(price, quantity, {
+    sellFeePct: FEE_PCT,
+    sellTaxPct: TAX_PCT,
+    sellSlippagePct: SLIPPAGE_PCT,
+    minimumFee: MIN_FEE,
+    boardLotShares: LOT
+  });
 }
 
 function average(values, size) {

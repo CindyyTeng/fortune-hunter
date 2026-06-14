@@ -1,6 +1,13 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import {
+  buyExecution as sharedBuyExecution,
+  netReturnPct as sharedNetReturnPct,
+  sellExecution as sharedSellExecution,
+  simulateEntry,
+  simulateExit
+} from './lib/execution-simulator.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
@@ -364,9 +371,13 @@ function planFromAnalysis(analysis) {
 }
 
 function netReturnPct(entryPrice, exitPrice) {
-  const netEntry = entryPrice * (1 + (BUY_FEE_PCT + BUY_SLIPPAGE_PCT) / 100);
-  const netExit = exitPrice * (1 - (SELL_FEE_PCT + SELL_TAX_PCT + SELL_SLIPPAGE_PCT) / 100);
-  return pct(netExit, netEntry);
+  return sharedNetReturnPct(entryPrice, exitPrice, {
+    buyFeePct: BUY_FEE_PCT,
+    sellFeePct: SELL_FEE_PCT,
+    sellTaxPct: SELL_TAX_PCT,
+    buySlippagePct: BUY_SLIPPAGE_PCT,
+    sellSlippagePct: SELL_SLIPPAGE_PCT
+  });
 }
 
 function orderFee(price, quantity, feePct) {
@@ -379,29 +390,22 @@ function orderFee(price, quantity, feePct) {
 }
 
 function buyExecution(price, quantity) {
-  const fillPrice = price * (1 + BUY_SLIPPAGE_PCT / 100);
-  const tradeValue = fillPrice * quantity;
-  const fee = orderFee(fillPrice, quantity, BUY_FEE_PCT);
-  return {
-    fillPrice,
-    tradeValue,
-    fee,
-    total: tradeValue + fee
-  };
+  return sharedBuyExecution(price, quantity, {
+    buyFeePct: BUY_FEE_PCT,
+    buySlippagePct: BUY_SLIPPAGE_PCT,
+    minimumFee: MIN_BROKER_FEE,
+    boardLotShares: BOARD_LOT_SHARES
+  });
 }
 
 function sellExecution(price, quantity) {
-  const fillPrice = price * (1 - SELL_SLIPPAGE_PCT / 100);
-  const tradeValue = fillPrice * quantity;
-  const fee = orderFee(fillPrice, quantity, SELL_FEE_PCT);
-  const tax = Math.ceil(tradeValue * SELL_TAX_PCT / 100);
-  return {
-    fillPrice,
-    tradeValue,
-    fee,
-    tax,
-    net: tradeValue - fee - tax
-  };
+  return sharedSellExecution(price, quantity, {
+    sellFeePct: SELL_FEE_PCT,
+    sellTaxPct: SELL_TAX_PCT,
+    sellSlippagePct: SELL_SLIPPAGE_PCT,
+    minimumFee: MIN_BROKER_FEE,
+    boardLotShares: BOARD_LOT_SHARES
+  });
 }
 
 function affordableQuantity(entryPrice, stopPrice, cashBudget, riskBudget) {
@@ -689,15 +693,15 @@ function simulateTrade(history, stock, signalIndex, analysis, entryIndex, tailwi
     ));
   const trigger = plan.resistance ? plan.resistance * (1 + BREAKOUT_BUFFER_PCT / 100) : entryDay.open;
   const gapUpPct = pct(entryDay.open, signalDay.close) || 0;
-  const entryPrice = ENTRY_MODE === 'close_confirm'
-    ? entryDay.close
-    : ENTRY_MODE === 'next_open'
-      ? entryDay.open
-      : Math.max(entryDay.open, trigger);
+  const entryFill = simulateEntry({
+    mode: ENTRY_MODE,
+    signalDay,
+    nextDay: entryDay,
+    triggerPrice: trigger
+  });
+  if (!entryFill) return null;
+  const entryPrice = entryFill.price;
   const chasePct = pct(entryPrice, trigger) || 0;
-  if (ENTRY_MODE === 'close_confirm' && entryDay.close < trigger) return null;
-  if (ENTRY_MODE === 'close_confirm' && entryDay.close < entryDay.open) return null;
-  if (ENTRY_MODE === 'intraday_breakout' && entryDay.high < trigger) return null;
   if (gapUpPct > CANDIDATE_MAX_GAP_PCT) return null;
   const endIndex = Math.min(entryIndex + plan.holdDays, history.length - 1);
   if (EXIT_MODE === 'fixed_hold' || EXIT_MODE === 'fixed_hold_stop') {
@@ -706,7 +710,7 @@ function simulateTrade(history, stock, signalIndex, analysis, entryIndex, tailwi
     let peakCloseReturnPct = -Infinity;
     if (EXIT_MODE === 'fixed_hold_stop' && plan.stop) {
       for (let i = entryIndex; i <= endIndex; i += 1) {
-        if (history[i].low <= plan.stop) {
+        if (simulateExit({ day: history[i], stopLoss: plan.stop })?.type === 'stop_loss') {
           exitIndex = i;
           exitReason = '跌破停損提前出場';
           break;
@@ -723,7 +727,7 @@ function simulateTrade(history, stock, signalIndex, analysis, entryIndex, tailwi
     }
     const exitDay = history[exitIndex];
     const exitPrice = exitReason === '跌破停損提前出場'
-      ? Math.min(exitDay.open, plan.stop)
+      ? simulateExit({ day: exitDay, stopLoss: plan.stop }).price
       : exitDay.close;
     const future = history.slice(entryIndex, exitIndex + 1);
     const forward = history.slice(
@@ -827,15 +831,24 @@ function simulateTrade(history, stock, signalIndex, analysis, entryIndex, tailwi
     maxHigh = Math.max(maxHigh, day.high);
     minLow = Math.min(minLow, day.low);
 
-    if (remainingWeight > 0 && plan.stop && day.low <= plan.stop) {
-      sell(i, remainingWeight, Math.min(day.open, plan.stop), '停損');
+    const stopFill = remainingWeight > 0 && plan.stop
+      ? simulateExit({ day, stopLoss: plan.stop })
+      : null;
+    if (stopFill?.type === 'stop_loss') {
+      sell(i, remainingWeight, stopFill.price, '停損');
       break;
     }
-    if (remainingWeight === 1 && i - entryIndex + 1 >= plan.midDays && day.high >= plan.targetFast) {
-      sell(i, 0.5, plan.targetFast, '先停利一半');
+    const fastTarget = remainingWeight === 1 && i - entryIndex + 1 >= plan.midDays
+      ? simulateExit({ day, takeProfit: plan.targetFast })
+      : null;
+    if (fastTarget?.type === 'take_profit') {
+      sell(i, 0.5, fastTarget.price, '先停利一半');
     }
-    if (remainingWeight > 0 && day.high >= plan.targetFull) {
-      sell(i, remainingWeight, plan.targetFull, '全部停利');
+    const fullTarget = remainingWeight > 0
+      ? simulateExit({ day, takeProfit: plan.targetFull })
+      : null;
+    if (fullTarget?.type === 'take_profit') {
+      sell(i, remainingWeight, fullTarget.price, '全部停利');
       break;
     }
 

@@ -1,5 +1,11 @@
 import fs from 'node:fs/promises';
 import { createHash } from 'node:crypto';
+import {
+  buyExecution as sharedBuyExecution,
+  sellExecution as sharedSellExecution,
+  simulateExit,
+  trailingStopPrice
+} from './lib/execution-simulator.mjs';
 
 const INPUT = new URL('../data/tw-backtest-10y.json', import.meta.url);
 const OUTPUT = new URL('../data/realized-strategy-search-10y.json', import.meta.url);
@@ -72,18 +78,22 @@ function orderFee(price, quantity, rate) {
 }
 
 function buyExecution(price, quantity) {
-  const fillPrice = price * (1 + BUY_SLIPPAGE_PCT / 100);
-  const tradeValue = fillPrice * quantity;
-  const fee = orderFee(fillPrice, quantity, BUY_FEE_PCT);
-  return { tradeValue, fee, total: tradeValue + fee };
+  return sharedBuyExecution(price, quantity, {
+    buyFeePct: BUY_FEE_PCT,
+    buySlippagePct: BUY_SLIPPAGE_PCT,
+    minimumFee: MIN_FEE,
+    boardLotShares: LOT
+  });
 }
 
 function sellExecution(price, quantity) {
-  const fillPrice = price * (1 - SELL_SLIPPAGE_PCT / 100);
-  const tradeValue = fillPrice * quantity;
-  const fee = orderFee(fillPrice, quantity, SELL_FEE_PCT);
-  const tax = Math.ceil(tradeValue * SELL_TAX_PCT / 100);
-  return { net: tradeValue - fee - tax };
+  return sharedSellExecution(price, quantity, {
+    sellFeePct: SELL_FEE_PCT,
+    sellTaxPct: SELL_TAX_PCT,
+    sellSlippagePct: SELL_SLIPPAGE_PCT,
+    minimumFee: MIN_FEE,
+    boardLotShares: LOT
+  });
 }
 
 function affordableQuantity(trade, cashBudget, riskBudget) {
@@ -326,40 +336,30 @@ function applyExitRule(trade, rule) {
   let exitIndex = endIndex;
   let exitPrice = forward[endIndex].price;
   let exitReason = `固定持有 ${rule.holdDays} 天`;
-  let peakClosePct = -Infinity;
   let maxHigh = trade.entryPrice;
 
   for (let index = 0; index <= endIndex; index += 1) {
     const day = forward[index];
     maxHigh = Math.max(maxHigh, day.high ?? day.price);
-    const stopTriggered = rule.stopMode === 'close'
-      ? day.price <= stopLoss
-      : (day.low ?? day.price) <= stopLoss;
-    if (stopTriggered) {
+    const trailPrice = trailingStopPrice(trade.entryPrice, maxHigh, rule.trail);
+    const executionExit = simulateExit({
+      day,
+      stopLoss,
+      trailingStop: trailPrice,
+      closeStop: rule.stopMode === 'close'
+    });
+    if (executionExit?.price) {
       exitIndex = index;
-      exitPrice = rule.stopMode === 'close'
-        ? day.price
-        : (day.open ?? day.price) < stopLoss ? (day.open ?? day.price) : stopLoss;
+      exitPrice = executionExit.price;
       exitReason = '盤中停損';
       break;
     }
-    const closeReturnPct = (day.price / trade.entryPrice - 1) * 100;
-    peakClosePct = Math.max(peakClosePct, closeReturnPct);
     if (rule.noFollow && index >= 1) {
       const maxAdvancePct = (maxHigh / trade.entryPrice - 1) * 100;
       if (maxAdvancePct < 1.5) {
         exitIndex = index;
         exitPrice = day.price;
         exitReason = '兩日無續航';
-        break;
-      }
-    }
-    if (rule.trail && peakClosePct >= rule.trail.triggerPct) {
-      const floor = Math.max(rule.trail.lockPct, peakClosePct - rule.trail.givebackPct);
-      if (closeReturnPct <= floor) {
-        exitIndex = index;
-        exitPrice = day.price;
-        exitReason = '收盤移動停利';
         break;
       }
     }

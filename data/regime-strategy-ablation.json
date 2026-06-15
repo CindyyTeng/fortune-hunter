@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-06-14T17:28:40.549Z",
+  "generatedAt": "2026-06-15T00:29:12.661Z",
   "methodology": "same data and execution simulator; one strategy family enabled at a time",
-  "conclusion": "完整組合績效幾乎等於只跑突破策略。目前只能確認多策略架構已建立，不能宣稱其他策略已有顯著貢獻。",
+  "conclusion": "完整組合與只跑突破策略的績效存在差異；仍需搭配各策略交易數與風險指標判斷貢獻是否為正。",
   "results": [
     {
       "id": "breakout_only",
@@ -12,12 +12,12 @@
         ],
         "allowOversold": false
       },
-      "trades": 744,
-      "equityAverageMonthlyReturnPct": -2.03,
-      "negativeEquityMonths": 74,
-      "maxDrawdownPct": -92.4,
-      "profitFactor": 0.38,
-      "winRatePct": 36.29,
+      "trades": 373,
+      "equityAverageMonthlyReturnPct": -0.33,
+      "negativeEquityMonths": 47,
+      "maxDrawdownPct": -34.76,
+      "profitFactor": 0.46,
+      "winRatePct": 40.21,
       "tenPercentRealizedMonths": 0,
       "candidateFunnel": {
         "candidates": {
@@ -40,19 +40,19 @@
         },
         "entered": {
           "byRegime": {
-            "THEME_MOMENTUM": 514,
-            "BULL_TREND": 230
+            "THEME_MOMENTUM": 219,
+            "BULL_TREND": 154
           },
           "byStrategy": {
-            "breakoutMomentumStrategy": 744
+            "breakoutMomentumStrategy": 373
           }
         },
         "byStrategy": {
           "breakoutMomentumStrategy": {
             "candidates": 45330,
             "entryTriggered": 35211,
-            "entered": 744,
-            "candidateToEntryPct": 1.64
+            "entered": 373,
+            "candidateToEntryPct": 0.82
           },
           "pullbackTrendStrategy": {
             "candidates": 0,
@@ -83,8 +83,8 @@
           "BULL_TREND": {
             "candidates": 11523,
             "entryTriggered": 9023,
-            "entered": 230,
-            "candidateToEntryPct": 2
+            "entered": 154,
+            "candidateToEntryPct": 1.34
           },
           "BULL_PULLBACK": {
             "candidates": 0,
@@ -113,8 +113,8 @@
           "THEME_MOMENTUM": {
             "candidates": 33807,
             "entryTriggered": 26188,
-            "entered": 514,
-            "candidateToEntryPct": 1.52
+            "entered": 219,
+            "candidateToEntryPct": 0.65
           }
         }
       }
@@ -128,12 +128,12 @@
         ],
         "allowOversold": false
       },
-      "trades": 531,
-      "equityAverageMonthlyReturnPct": -0.8,
-      "negativeEquityMonths": 48,
-      "maxDrawdownPct": -65.07,
-      "profitFactor": 0.42,
-      "winRatePct": 42.37,
+      "trades": 178,
+      "equityAverageMonthlyReturnPct": -0.1,
+      "negativeEquityMonths": 18,
+      "maxDrawdownPct": -13.58,
+      "profitFactor": 0.46,
+      "winRatePct": 45.51,
       "tenPercentRealizedMonths": 0,
       "candidateFunnel": {
         "candidates": {
@@ -154,10 +154,10 @@
         },
         "entered": {
           "byRegime": {
-            "BULL_PULLBACK": 531
+            "BULL_PULLBACK": 178
           },
           "byStrategy": {
-            "pullbackTrendStrategy": 531
+            "pullbackTrendStrategy": 178
           }
         },
         "byStrategy": {
@@ -170,8 +170,8 @@
           "pullbackTrendStrategy": {
             "candidates": 11526,
             "entryTriggered": 6558,
-            "entered": 531,
-            "candidateToEntryPct": 4.61
+            "entered": 178,
+            "candidateToEntryPct": 1.54
           },
           "rangeReversionStrategy": {
             "candidates": 0,
@@ -202,8 +202,8 @@
           "BULL_PULLBACK": {
             "candidates": 11526,
             "entryTriggered": 6558,
-            "entered": 531,
-            "candidateToEntryPct": 4.61
+            "entered": 178,
+            "candidateToEntryPct": 1.54
           },
           "RANGE_BOUND": {
             "candidates": 0,
@@ -241,12 +241,12 @@
         ],
         "allowOversold": false
       },
-      "trades": 1166,
-      "equityAverageMonthlyReturnPct": -1.01,
-      "negativeEquityMonths": 64,
-      "maxDrawdownPct": -73.8,
-      "profitFactor": 0.57,
-      "winRatePct": 35.16,
+      "trades": 387,
+      "equityAverageMonthlyReturnPct": -0.09,
+      "negativeEquityMonths": 36,
+      "maxDrawdownPct": -13.34,
+      "profitFactor": 0.76,
+      "winRatePct": 40.05,
       "tenPercentRealizedMonths": 0,
       "candidateFunnel": {
         "candidates": {
@@ -267,10 +267,10 @@
         },
         "entered": {
           "byRegime": {
-            "RANGE_BOUND": 1166
+            "RANGE_BOUND": 387
           },
           "byStrategy": {
-            "rangeReversionStrategy": 1166
+            "rangeReversionStrategy": 387
           }
         },
         "byStrategy": {
@@ -289,8 +289,8 @@
           "rangeReversionStrategy": {
             "candidates": 44995,
             "entryTriggered": 41355,
-            "entered": 1166,
-            "candidateToEntryPct": 2.59
+            "entered": 387,
+            "candidateToEntryPct": 0.86
           },
           "oversoldReboundStrategy": {
             "candidates": 0,
@@ -321,8 +321,8 @@
           "RANGE_BOUND": {
             "candidates": 44995,
             "entryTriggered": 41355,
-            "entered": 1166,
-            "candidateToEntryPct": 2.59
+            "entered": 387,
+            "candidateToEntryPct": 0.86
           },
           "BEAR_DEFENSE": {
             "candidates": 0,
@@ -358,12 +358,12 @@
           "RANGE_BOUND": "oversoldReboundStrategy"
         }
       },
-      "trades": 1181,
-      "equityAverageMonthlyReturnPct": -0.84,
-      "negativeEquityMonths": 69,
-      "maxDrawdownPct": -65,
-      "profitFactor": 0.49,
-      "winRatePct": 36.07,
+      "trades": 152,
+      "equityAverageMonthlyReturnPct": -0.08,
+      "negativeEquityMonths": 24,
+      "maxDrawdownPct": -11.22,
+      "profitFactor": 0.54,
+      "winRatePct": 36.18,
       "tenPercentRealizedMonths": 0,
       "candidateFunnel": {
         "candidates": {
@@ -386,11 +386,11 @@
         },
         "entered": {
           "byRegime": {
-            "RANGE_BOUND": 902,
-            "BULL_PULLBACK": 279
+            "RANGE_BOUND": 107,
+            "BULL_PULLBACK": 45
           },
           "byStrategy": {
-            "oversoldReboundStrategy": 1181
+            "oversoldReboundStrategy": 152
           }
         },
         "byStrategy": {
@@ -415,8 +415,8 @@
           "oversoldReboundStrategy": {
             "candidates": 1603,
             "entryTriggered": 1564,
-            "entered": 1181,
-            "candidateToEntryPct": 73.67
+            "entered": 152,
+            "candidateToEntryPct": 9.48
           },
           "cashDefenseStrategy": {
             "candidates": 0,
@@ -435,14 +435,14 @@
           "BULL_PULLBACK": {
             "candidates": 349,
             "entryTriggered": 346,
-            "entered": 279,
-            "candidateToEntryPct": 79.94
+            "entered": 45,
+            "candidateToEntryPct": 12.89
           },
           "RANGE_BOUND": {
             "candidates": 1254,
             "entryTriggered": 1218,
-            "entered": 902,
-            "candidateToEntryPct": 71.93
+            "entered": 107,
+            "candidateToEntryPct": 8.53
           },
           "BEAR_DEFENSE": {
             "candidates": 0,
@@ -469,12 +469,12 @@
       "id": "full_ensemble",
       "label": "完整 regime ensemble",
       "config": {},
-      "trades": 1066,
-      "equityAverageMonthlyReturnPct": -2.02,
-      "negativeEquityMonths": 58,
-      "maxDrawdownPct": -92.51,
-      "profitFactor": 0.45,
-      "winRatePct": 37.52,
+      "trades": 575,
+      "equityAverageMonthlyReturnPct": -0.48,
+      "negativeEquityMonths": 68,
+      "maxDrawdownPct": -46.65,
+      "profitFactor": 0.44,
+      "winRatePct": 37.91,
       "tenPercentRealizedMonths": 0,
       "candidateFunnel": {
         "candidates": {
@@ -507,42 +507,42 @@
         },
         "entered": {
           "byRegime": {
-            "THEME_MOMENTUM": 355,
-            "RANGE_BOUND": 380,
-            "BULL_PULLBACK": 146,
-            "BULL_TREND": 185
+            "THEME_MOMENTUM": 224,
+            "RANGE_BOUND": 138,
+            "BULL_PULLBACK": 105,
+            "BULL_TREND": 108
           },
           "byStrategy": {
-            "breakoutMomentumStrategy": 540,
-            "rangeReversionStrategy": 367,
-            "pullbackTrendStrategy": 136,
-            "oversoldReboundStrategy": 23
+            "breakoutMomentumStrategy": 332,
+            "rangeReversionStrategy": 133,
+            "pullbackTrendStrategy": 101,
+            "oversoldReboundStrategy": 9
           }
         },
         "byStrategy": {
           "breakoutMomentumStrategy": {
             "candidates": 45330,
             "entryTriggered": 35211,
-            "entered": 540,
-            "candidateToEntryPct": 1.19
+            "entered": 332,
+            "candidateToEntryPct": 0.73
           },
           "pullbackTrendStrategy": {
             "candidates": 11526,
             "entryTriggered": 6558,
-            "entered": 136,
-            "candidateToEntryPct": 1.18
+            "entered": 101,
+            "candidateToEntryPct": 0.88
           },
           "rangeReversionStrategy": {
             "candidates": 44995,
             "entryTriggered": 41355,
-            "entered": 367,
-            "candidateToEntryPct": 0.82
+            "entered": 133,
+            "candidateToEntryPct": 0.3
           },
           "oversoldReboundStrategy": {
             "candidates": 1603,
             "entryTriggered": 1564,
-            "entered": 23,
-            "candidateToEntryPct": 1.43
+            "entered": 9,
+            "candidateToEntryPct": 0.56
           },
           "cashDefenseStrategy": {
             "candidates": 0,
@@ -555,20 +555,20 @@
           "BULL_TREND": {
             "candidates": 11523,
             "entryTriggered": 9023,
-            "entered": 185,
-            "candidateToEntryPct": 1.61
+            "entered": 108,
+            "candidateToEntryPct": 0.94
           },
           "BULL_PULLBACK": {
             "candidates": 11875,
             "entryTriggered": 6904,
-            "entered": 146,
-            "candidateToEntryPct": 1.23
+            "entered": 105,
+            "candidateToEntryPct": 0.88
           },
           "RANGE_BOUND": {
             "candidates": 46249,
             "entryTriggered": 42573,
-            "entered": 380,
-            "candidateToEntryPct": 0.82
+            "entered": 138,
+            "candidateToEntryPct": 0.3
           },
           "BEAR_DEFENSE": {
             "candidates": 0,
@@ -585,8 +585,8 @@
           "THEME_MOMENTUM": {
             "candidates": 33807,
             "entryTriggered": 26188,
-            "entered": 355,
-            "candidateToEntryPct": 1.05
+            "entered": 224,
+            "candidateToEntryPct": 0.66
           }
         }
       }

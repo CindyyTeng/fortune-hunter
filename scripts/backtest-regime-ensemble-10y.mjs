@@ -14,11 +14,13 @@ import {
   trailingStopPrice
 } from './lib/execution-simulator.mjs';
 import {
+  beginPortfolioDay,
   closePosition,
   createPortfolio,
   markPosition,
   openPosition,
   portfolioEquity,
+  portfolioExposure,
   recordEquity,
   settleCash
 } from './lib/portfolio-simulator.mjs';
@@ -99,12 +101,16 @@ function scanRawCandidates(stocks, regimes, startDate, endDate) {
       if (!regime) continue;
       for (const strategy of ACTIVE_STRATEGIES) {
         if (!strategy.regimes.includes(regime.regime)) continue;
+        const leadingTheme = themeByDate.get(day.date);
+        const belongsToLeadingTheme = leadingTheme?.theme
+          && (stock.themes || []).includes(leadingTheme.theme);
         const row = strategy.screen({
           history,
           index,
           stock,
           regime,
-          themeStrength: themeByDate.get(day.date)?.strength || 0
+          themeStrength: leadingTheme?.strength || 0,
+          themeStrengthRank: belongsToLeadingTheme ? 1 : 2
         });
         if (!row) continue;
         delete row.history;
@@ -166,6 +172,17 @@ function entryPlan(candidate, strategy) {
     entryDate: nextDay.date,
     entryPrice: fill.price,
     entryReason: fill.reason,
+    entryMode: entry.mode,
+    entryGapPct: round((nextDay.open / candidate.latest.close - 1) * 100, 4),
+    nearLimitUp: nextDay.open >= candidate.latest.close * 1.085
+      || fill.price >= candidate.latest.close * 1.085,
+    avgTradeValue20: candidate.avgTradeValue20,
+    atr14Pct: candidate.atr14Pct,
+    rsi14: candidate.rsi14,
+    distanceToMa20Pct: candidate.distanceToMa20Pct,
+    distanceToMa60Pct: candidate.distanceToMa60Pct,
+    themeStrength: candidate.themeStrength,
+    themeStrengthRank: candidate.themeStrengthRank,
     stopLoss,
     takeProfit: strategy.takeProfit({ ...candidate, entryPrice: fill.price }),
     maxHoldingDays: strategy.maxHoldingDays(candidate),
@@ -336,7 +353,9 @@ export async function runRegimeBacktest(dataset, config = {}) {
     initialCapital: config.initialCapital ?? 1_000_000,
     settlementDays: 2,
     maxOpenPositions: config.maxOpenPositions ?? 6,
-    executionCosts: config.executionCosts
+    executionCosts: config.executionCosts,
+    riskControls: config.riskControls !== false,
+    riskRules: config.riskRules
   });
   const entries = new Map();
   const candidateCounts = {};
@@ -383,6 +402,7 @@ export async function runRegimeBacktest(dataset, config = {}) {
     const date = dates[dayIndex];
     settleCash(portfolio, dayIndex);
     const regime = regimeByDate.get(date);
+    beginPortfolioDay(portfolio, date, dayIndex, regime?.regime);
     if (regime?.regime !== previousRegime) {
       switchLog.push({
         date,
@@ -399,13 +419,20 @@ export async function runRegimeBacktest(dataset, config = {}) {
       const bar = position.bars.find(item => item.date === date);
       if (!bar) continue;
       markPosition(portfolio, position.tradeId, bar.price);
-      const defensive = [MARKET_REGIMES.BEAR_DEFENSE, MARKET_REGIMES.HIGH_VOLATILITY]
-        .includes(regime?.regime);
-      if (defensive && heldDays > 1) {
+      const bearDefense = regime?.regime === MARKET_REGIMES.BEAR_DEFENSE;
+      const highVolatility = regime?.regime === MARKET_REGIMES.HIGH_VOLATILITY;
+      const mustReduceHighVolatility = highVolatility
+        && portfolio.riskControlsEnabled
+        && portfolioExposure(portfolio) > portfolioEquity(portfolio) * 0.2;
+      const legacyDefensiveExit = !portfolio.riskControlsEnabled
+        && (bearDefense || highVolatility)
+        && heldDays > 1;
+      if (bearDefense || mustReduceHighVolatility || legacyDefensiveExit) {
         closePosition(portfolio, position, {
           date,
           price: bar.open ?? bar.price,
-          reason: `市場切換為 ${regime.regime}，降低曝險`
+          reason: `市場防守降曝險：${regime.regime}`,
+          type: 'defense'
         }, dayIndex);
         continue;
       }
@@ -430,6 +457,21 @@ export async function runRegimeBacktest(dataset, config = {}) {
       }
     }
 
+    if (portfolio.riskControlsEnabled) {
+      const exposureLimitPct = portfolio.riskRules.exposureLimits[regime?.regime] ?? 0;
+      for (const position of [...portfolio.positions].sort((a, b) => b.markValue - a.markValue)) {
+        if (portfolioExposure(portfolio) <= portfolioEquity(portfolio) * exposureLimitPct / 100) break;
+        const bar = position.bars.find(item => item.date === date);
+        if (!bar) continue;
+        closePosition(portfolio, position, {
+          date,
+          price: bar.price,
+          reason: `總曝險超過 ${exposureLimitPct}% 上限`,
+          type: 'exposure_reduction'
+        }, dayIndex);
+      }
+    }
+
     const dayEntries = [...(entries.get(date) || [])].sort((a, b) => (
       b.candidate.signalScore - a.candidate.signalScore
       || (b.candidate.avg20TradeValue || 0) - (a.candidate.avg20TradeValue || 0)
@@ -437,11 +479,12 @@ export async function runRegimeBacktest(dataset, config = {}) {
     for (const plan of dayEntries) {
       const position = openPosition(portfolio, plan, dayIndex, {
         positionPct: plan.positionPct,
-        accountRiskPct: config.accountRiskPct ?? 1.5
+        accountRiskPct: config.accountRiskPct ?? 1.5,
+        regime: regime?.regime
       });
       if (position) increment(enteredCounts, plan.regime, plan.strategy);
     }
-    recordEquity(portfolio, date);
+    recordEquity(portfolio, date, { dayIndex, regime: regime?.regime });
   }
 
   const finalDate = dates.at(-1);
@@ -453,7 +496,12 @@ export async function runRegimeBacktest(dataset, config = {}) {
       reason: '回測區間結束'
     }, finalIndex);
   }
-  recordEquity(portfolio, finalDate);
+  portfolio.equityCurve.pop();
+  portfolio.previousEquity = portfolio.equityCurve.at(-1)?.equity ?? portfolio.initialCapital;
+  recordEquity(portfolio, finalDate, {
+    dayIndex: finalIndex,
+    regime: regimeByDate.get(finalDate)?.regime
+  });
 
   const monthly = monthlyReport(portfolio, startDate, endDate);
   const regimeDays = Object.fromEntries(Object.values(MARKET_REGIMES).map(key => [
@@ -554,16 +602,31 @@ export async function runRegimeBacktest(dataset, config = {}) {
       signalDate: trade.signalDate,
       entryDate: trade.entryDate,
       entryPrice: round(trade.buy.fillPrice),
+      entryMode: trade.entryMode,
+      entryGapPct: trade.entryGapPct,
+      nearLimitUp: trade.nearLimitUp,
+      avgTradeValue20: round(trade.avgTradeValue20, 0),
+      atr14Pct: round(trade.atr14Pct, 4),
+      rsi14: round(trade.rsi14, 2),
+      distanceToMa20Pct: round(trade.distanceToMa20Pct, 4),
+      distanceToMa60Pct: round(trade.distanceToMa60Pct, 4),
+      themeStrength: round(trade.themeStrength, 4),
+      themeStrengthRank: trade.themeStrengthRank,
       exitDate: trade.exitDate,
       exitPrice: trade.exitPrice,
       exitReason: trade.exitReason,
+      exitType: trade.exitType,
+      holdingDays: trade.holdingDays,
       quantity: trade.quantity,
       realizedPnl: trade.realizedPnl,
       tradeReturnPct: trade.tradeReturnPct,
       accountReturnPct: trade.accountReturnPct
     })),
     regimeHistory: regimes.filter(row => row.date >= startDate && row.date <= endDate),
-    equityCurve: portfolio.equityCurve
+    equityCurve: portfolio.equityCurve,
+    riskRules: portfolio.riskRules,
+    riskEvents: portfolio.riskEvents,
+    rejectedEntries: portfolio.rejectedEntries
   };
 }
 

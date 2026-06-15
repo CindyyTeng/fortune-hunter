@@ -76,7 +76,7 @@ export function simulateEntry({
   if (![open, high, low, close].every(Number.isFinite)) return null;
 
   if (mode === 'next_open_market' || mode === 'next_open') {
-    return { price: open, referencePrice: open, mode, reason: '隔日開盤市價' };
+    return { price: open, referencePrice: open, mode, reason: '次日開盤市價' };
   }
   if (mode === 'close_confirm') {
     const trigger = number(triggerPrice);
@@ -88,23 +88,23 @@ export function simulateEntry({
     const floor = number(limitFloor) ?? 0;
     if (!limit || low > limit || high < floor) return null;
     const price = open <= limit && open >= floor ? open : Math.max(floor, limit);
-    return { price, referencePrice: limit, mode, reason: '隔日限價' };
+    return { price, referencePrice: limit, mode, reason: '次日限價' };
   }
   if (mode === 'pullback_entry') {
     const target = number(pullbackPrice);
     const floor = number(pullbackFloor) ?? 0;
     if (!target || low > target || high < floor) return null;
     const price = open <= target && open >= floor ? open : Math.max(floor, target);
-    return { price, referencePrice: target, mode, reason: '回測承接' };
+    return { price, referencePrice: target, mode, reason: '回檔承接' };
   }
   if (mode === 'resistance_breakout' || mode === 'intraday_breakout') {
     const trigger = number(triggerPrice);
     if (!trigger || high < trigger) return null;
-    // A gap above the trigger cannot be filled at the lower trigger price.
+    // 跳空突破時，不可用低於開盤價的觸發價假設成交。
     const price = Math.max(open, trigger);
     return { price, referencePrice: trigger, mode, reason: '壓力突破' };
   }
-  throw new Error(`Unsupported entry mode: ${mode}`);
+  throw new Error(`不支援的進場模式：${mode}`);
 }
 
 export function simulateExit({
@@ -148,10 +148,10 @@ export function simulateExit({
   const target = number(takeProfit);
   if (target) {
     if (open >= target) {
-      return { price: open, referencePrice: target, type: 'take_profit', reason: '跳空越過停利' };
+      return { price: open, referencePrice: target, type: 'take_profit', reason: '跳空達到停利' };
     }
     if (high >= target) {
-      return { price: target, referencePrice: target, type: 'take_profit', reason: '觸發停利' };
+      return { price: target, referencePrice: target, type: 'take_profit', reason: '盤中達到停利' };
     }
   }
 

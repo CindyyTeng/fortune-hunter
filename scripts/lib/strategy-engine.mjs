@@ -29,7 +29,7 @@ function rsi(closes, period = 14) {
   return 100 - 100 / (1 + relativeStrength);
 }
 
-function snapshot({ history, index, stock, regime, themeStrength = 0 }) {
+function snapshot({ history, index, stock, regime, themeStrength = 0, themeStrengthRank = null }) {
   if (index < 200 || index >= history.length - 1) return null;
   const visible = history.slice(0, index + 1);
   const latest = visible.at(-1);
@@ -45,6 +45,7 @@ function snapshot({ history, index, stock, regime, themeStrength = 0 }) {
   const ma60 = average(recent60.map(day => day.close));
   const priorMa20 = average(visible.slice(-25, -5).map(day => day.close));
   const avgVolume20 = average(recent20.map(day => day.volume));
+  const avgTradeValue20 = average(recent20.map(day => day.close * day.volume));
   const resistance = Math.max(...visible.slice(-21, -1).map(day => day.high));
   const support = Math.min(...visible.slice(-21, -1).map(day => day.low));
   const range = Math.max(resistance - support, latest.close * 0.01);
@@ -75,11 +76,13 @@ function snapshot({ history, index, stock, regime, themeStrength = 0 }) {
     std20Pct: stddev(returns20),
     rsi14: rsi(closes),
     avgVolume20,
+    avgTradeValue20,
     volumeRatio: avgVolume20 ? latest.volume / avgVolume20 : null,
     resistance,
     support,
     rangePosition: (latest.close - support) / range,
     distanceToMa20Pct: pct(latest.close, ma20),
+    distanceToMa60Pct: pct(latest.close, ma60),
     lowerWickRatio: (bodyLow - latest.low) / dayRange,
     upperWickRatio: (latest.high - bodyHigh) / dayRange,
     atr14Pct: atr14 ? atr14 / latest.close * 100 : null,
@@ -87,6 +90,7 @@ function snapshot({ history, index, stock, regime, themeStrength = 0 }) {
     marketMom20: regime?.mom20 ?? 0,
     relativeStrength20: (pct(latest.close, visible.at(-21)?.close) ?? 0) - (regime?.mom20 ?? 0),
     themeStrength,
+    themeStrengthRank,
     history,
     index
   };

@@ -208,11 +208,12 @@ function buildObservation(context, stockRow, rolling, index) {
     forwardReturns[horizon] = pct(futureClose, day.close);
     forwardNetReturns[horizon] = transactionCostAdjustedReturn(day.close, futureClose);
   }
-  const futureBars = history.slice(index + 1, index + 11).map(row => ({
+  const futureBars = history.slice(index + 1, index + 21).map(row => ({
     date: row.date,
     open: row.open,
     high: row.high,
     low: row.low,
+    close: row.close,
     price: row.close
   }));
   return {
@@ -225,6 +226,15 @@ function buildObservation(context, stockRow, rolling, index) {
     nextOpen: history[index + 1].open,
     nextDate: history[index + 1].date,
     futureBars,
+    day,
+    prior,
+    history,
+    historyIndex: index,
+    ma20,
+    ma60,
+    averageVolume20,
+    priorHigh20: high20,
+    priorLow20: low20,
     factors: {
       return5: pct(day.close, history[index - 5].close),
       return20,

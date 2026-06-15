@@ -1,0 +1,60 @@
+{
+  "branch": "institutional-alpha-pipeline-v1",
+  "generatedAt": "2026-06-15T14:55:34.100Z",
+  "strategyId": "trust_accumulation_pullback",
+  "strategyName": "投信連買強勢股回檔策略",
+  "sourceStatus": "待確認",
+  "survivorshipBiasWarning": true,
+  "parameterGridCount": 324,
+  "walkForwardConfiguration": {
+    "trainMonths": 36,
+    "validationMonths": 12,
+    "stepMonths": 12,
+    "trainOnlyParameterSelection": true
+  },
+  "dataAssessment": {
+    "records": 0,
+    "distinctDates": 0,
+    "distinctSymbols": 0,
+    "dateRange": null,
+    "readyForWalkForward": false,
+    "missing": [
+      "真實法人買賣超檔案",
+      "point-in-time 安全紀錄至少 50000 筆",
+      "至少 1000 個交易日",
+      "至少 100 檔股票",
+      "修正所有法人資料驗證錯誤"
+    ]
+  },
+  "executionDataGaps": [
+    "注意股／處置股歷史資料",
+    "除權息、減資與分割 point-in-time 資料",
+    "歷史下市股票池"
+  ],
+  "mockIntegration": {
+    "mode": "MOCK_ONLY",
+    "decisions": {
+      "BUY": 1,
+      "SELL": 1,
+      "HOLD": 1,
+      "SKIP": 1
+    },
+    "orderIntents": 2,
+    "realOrdersSubmitted": 0,
+    "brokerStatuses": [
+      "FILLED"
+    ]
+  },
+  "walkForward": null,
+  "qualification": {
+    "researchMinimumCandidatePassed": false,
+    "researchHighProfitCandidatePassed": false,
+    "executableCandidatePassed": false,
+    "blockedByExecutionDataGaps": [
+      "注意股／處置股歷史資料",
+      "除權息、減資與分割 point-in-time 資料",
+      "歷史下市股票池"
+    ]
+  },
+  "conclusion": "因資料缺口尚無法完成真實驗證"
+}

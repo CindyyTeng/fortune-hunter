@@ -17,30 +17,61 @@
       "requiredData": [
         "daily_ohlcv",
         "institutional_trust",
+        "institutional_foreign",
         "industry_classification",
         "theme_classification",
         "market_regime",
         "attention_disposition",
+        "corporate_actions",
         "price_limit"
       ],
       "setupRules": [
-        { "field": "institutional.trustNetBuyDays", "operator": "gte", "value": 3, "reason": "投信至少連續買超三日" },
+        {
+          "any": [
+            { "field": "institutional.trustNetBuyDays", "operator": "gte", "value": 3, "reason": "投信至少連續買超三日" },
+            { "field": "institutional.trustNetBuySumN", "operator": "gt", "value": 0, "reason": "投信近 N 日累計買超為正" }
+          ]
+        },
         { "field": "institutional.trustNetBuyValue20Rank", "operator": "gte", "value": 0.8, "reason": "投信二十日買超金額位於市場前二成" },
+        { "field": "institutional.foreignLargeSellStreak", "operator": "lte", "value": 1, "reason": "外資沒有連續大賣" },
         { "field": "technical.relativeMarket20", "operator": "gte", "value": 3, "reason": "個股二十日相對大盤強度至少三個百分點" },
-        { "field": "technical.ma20AboveMa60", "operator": "eq", "value": true, "reason": "中短期趨勢維持多頭" }
+        { "field": "technical.closeAboveMa60", "operator": "eq", "value": true, "reason": "股價位於 MA60 之上" },
+        {
+          "any": [
+            { "field": "technical.ma20Slope", "operator": "gt", "value": 0, "reason": "MA20 向上" },
+            { "field": "technical.ma60Slope", "operator": "gt", "value": 0, "reason": "MA60 向上" }
+          ]
+        },
+        { "field": "technical.transactionValue", "operator": "gte", "value": 30000000, "reason": "成交值具可執行性" }
       ],
       "triggerRules": [
-        { "field": "technical.pullbackHeldMa20", "operator": "eq", "value": true, "reason": "回測 MA20 後未有效跌破" },
-        { "field": "technical.closeAbovePriorHigh", "operator": "eq", "value": true, "reason": "收盤重新站上前一日高點" },
-        { "field": "technical.pullbackVolumeContraction", "operator": "eq", "value": true, "reason": "回檔量縮" }
+        {
+          "any": [
+            { "field": "technical.pullbackHeldMa20", "operator": "eq", "value": true, "reason": "回測 MA20 後未有效跌破" },
+            { "field": "technical.pullbackHeldPriorHigh", "operator": "eq", "value": true, "reason": "回測前高轉支撐後未跌破" }
+          ]
+        },
+        {
+          "any": [
+            { "field": "technical.closeUp", "operator": "eq", "value": true, "reason": "回檔後收紅" },
+            { "field": "technical.closeAbovePriorHigh", "operator": "eq", "value": true, "reason": "突破前一日高點" }
+          ]
+        },
+        { "field": "technical.distanceMa20", "operator": "lte", "value": 8, "reason": "不在急拉過高當天追價" }
       ],
       "invalidationRules": [
+        { "field": "technical.closeBelowPullbackLow", "operator": "eq", "value": true, "reason": "跌破回測低點" },
         { "field": "technical.closeBelowMa20", "operator": "eq", "value": true, "reason": "收盤跌破 MA20" },
-        { "field": "institutional.trustNetBuyDays", "operator": "lte", "value": -2, "reason": "投信轉為連續賣超" }
+        { "field": "institutional.trustStoppedAndPriceWeak", "operator": "eq", "value": true, "reason": "投信停止買超且股價轉弱" },
+        { "field": "market.riskOff", "operator": "eq", "value": true, "reason": "大盤跌破風控條件" }
       ],
       "exitRules": [
+        { "type": "take_profit_r", "value": 1.5 },
+        { "type": "take_profit_r", "value": 2 },
         { "type": "trailing_stop", "triggerR": 1.5, "givebackR": 0.75 },
-        { "type": "support_break", "field": "technical.ma20" },
+        { "type": "ma20_break" },
+        { "type": "prior_high_rejection_with_volume_contraction" },
+        { "type": "market_weak" },
         { "type": "institutional_reversal", "field": "institutional.trustNetBuyDays", "operator": "lte", "value": -2 },
         { "type": "maximum_holding_days", "value": 15 }
       ],
@@ -55,8 +86,14 @@
       "blockedWhen": [
         { "field": "risk.isAttention", "operator": "eq", "value": true, "reason": "注意股" },
         { "field": "risk.isDisposition", "operator": "eq", "value": true, "reason": "處置股" },
+        { "field": "risk.attentionDispositionDataMissing", "operator": "eq", "value": true, "reason": "注意股／處置股資料缺少，策略未啟用" },
+        { "field": "risk.corporateActionDataMissing", "operator": "eq", "value": true, "reason": "除權息、減資或分割資料缺少" },
         { "field": "market.regime", "operator": "in", "value": ["BEAR_DEFENSE", "HIGH_VOLATILITY"], "reason": "市場處於空頭或高波動防守狀態" },
-        { "field": "technical.gapPct", "operator": "gt", "value": 4, "reason": "隔日跳空過高不追價" }
+        { "field": "technical.gapPct", "operator": "gt", "value": 4, "reason": "隔日跳空過高不追價" },
+        { "field": "technical.distanceMa20", "operator": "gt", "value": 8, "reason": "離 MA20 太遠" },
+        { "field": "technical.transactionValue", "operator": "lt", "value": 30000000, "reason": "成交值太低" },
+        { "field": "technical.atrPct", "operator": "gt", "value": 6, "reason": "ATR 過高" },
+        { "field": "technical.longUpperWick", "operator": "eq", "value": true, "reason": "出現長上影線" }
       ],
       "orderIntentTemplate": {
         "side": "BUY",

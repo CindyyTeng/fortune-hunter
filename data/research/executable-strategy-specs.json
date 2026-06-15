@@ -1,0 +1,358 @@
+{
+  "version": "1.0.0",
+  "purpose": "高報酬可執行策略的機器可讀規格。資料不完整或未通過 Validation 時，策略只能輸出 SKIP。",
+  "defaultRiskRules": {
+    "maxAccountRiskPct": 0.5,
+    "maxPositionPct": 10,
+    "minimumRiskRewardRatio": 2,
+    "maximumOpenPositions": 6,
+    "allowLeverage": false,
+    "allowShortSelling": false
+  },
+  "strategies": [
+    {
+      "strategyId": "trust_accumulation_pullback",
+      "name": "投信連買強勢股回檔策略",
+      "activationStatus": "DATA_GAP",
+      "requiredData": [
+        "daily_ohlcv",
+        "institutional_trust",
+        "industry_classification",
+        "theme_classification",
+        "market_regime",
+        "attention_disposition",
+        "price_limit"
+      ],
+      "setupRules": [
+        { "field": "institutional.trustNetBuyDays", "operator": "gte", "value": 3, "reason": "投信至少連續買超三日" },
+        { "field": "institutional.trustNetBuyValue20Rank", "operator": "gte", "value": 0.8, "reason": "投信二十日買超金額位於市場前二成" },
+        { "field": "technical.relativeMarket20", "operator": "gte", "value": 3, "reason": "個股二十日相對大盤強度至少三個百分點" },
+        { "field": "technical.ma20AboveMa60", "operator": "eq", "value": true, "reason": "中短期趨勢維持多頭" }
+      ],
+      "triggerRules": [
+        { "field": "technical.pullbackHeldMa20", "operator": "eq", "value": true, "reason": "回測 MA20 後未有效跌破" },
+        { "field": "technical.closeAbovePriorHigh", "operator": "eq", "value": true, "reason": "收盤重新站上前一日高點" },
+        { "field": "technical.pullbackVolumeContraction", "operator": "eq", "value": true, "reason": "回檔量縮" }
+      ],
+      "invalidationRules": [
+        { "field": "technical.closeBelowMa20", "operator": "eq", "value": true, "reason": "收盤跌破 MA20" },
+        { "field": "institutional.trustNetBuyDays", "operator": "lte", "value": -2, "reason": "投信轉為連續賣超" }
+      ],
+      "exitRules": [
+        { "type": "trailing_stop", "triggerR": 1.5, "givebackR": 0.75 },
+        { "type": "support_break", "field": "technical.ma20" },
+        { "type": "institutional_reversal", "field": "institutional.trustNetBuyDays", "operator": "lte", "value": -2 },
+        { "type": "maximum_holding_days", "value": 15 }
+      ],
+      "riskRules": {
+        "stopType": "below_support_or_atr",
+        "atrMultiple": 1.5,
+        "maximumStopPct": 7,
+        "minimumRiskRewardRatio": 2,
+        "maxAccountRiskPct": 0.5,
+        "maxPositionPct": 10
+      },
+      "blockedWhen": [
+        { "field": "risk.isAttention", "operator": "eq", "value": true, "reason": "注意股" },
+        { "field": "risk.isDisposition", "operator": "eq", "value": true, "reason": "處置股" },
+        { "field": "market.regime", "operator": "in", "value": ["BEAR_DEFENSE", "HIGH_VOLATILITY"], "reason": "市場處於空頭或高波動防守狀態" },
+        { "field": "technical.gapPct", "operator": "gt", "value": 4, "reason": "隔日跳空過高不追價" }
+      ],
+      "orderIntentTemplate": {
+        "side": "BUY",
+        "orderType": "LIMIT",
+        "priceSource": "triggerPrice",
+        "timeInForce": "ROD",
+        "session": "REGULAR",
+        "allowOddLot": true
+      }
+    },
+    {
+      "strategyId": "foreign_trust_breakout_confirmation",
+      "name": "外資與投信同步買超突破確認策略",
+      "activationStatus": "DATA_GAP",
+      "requiredData": [
+        "daily_ohlcv",
+        "institutional_foreign",
+        "institutional_trust",
+        "industry_classification",
+        "market_regime",
+        "attention_disposition",
+        "price_limit"
+      ],
+      "setupRules": [
+        { "field": "institutional.foreignNetBuyDays", "operator": "gte", "value": 3, "reason": "外資連續買超" },
+        { "field": "institutional.trustNetBuyDays", "operator": "gte", "value": 2, "reason": "投信連續買超" },
+        { "field": "technical.relativeMarket20", "operator": "gte", "value": 4, "reason": "相對大盤維持強勢" },
+        { "field": "technical.volumeRatio20", "operator": "gte", "value": 1.3, "reason": "突破準備期量能放大" }
+      ],
+      "triggerRules": [
+        { "field": "technical.breakout20Confirmed", "operator": "eq", "value": true, "reason": "收盤確認突破二十日壓力" },
+        { "field": "technical.breakoutCloseStrength", "operator": "gte", "value": 0.7, "reason": "收盤位於當日區間上方" }
+      ],
+      "invalidationRules": [
+        { "field": "technical.failedBreakout", "operator": "eq", "value": true, "reason": "突破後跌回壓力下方" },
+        { "field": "institutional.foreignTrustBothSell", "operator": "eq", "value": true, "reason": "外資與投信同步轉賣" }
+      ],
+      "exitRules": [
+        { "type": "trailing_stop", "triggerR": 2, "givebackR": 1 },
+        { "type": "breakout_support_break" },
+        { "type": "market_weak" },
+        { "type": "maximum_holding_days", "value": 20 }
+      ],
+      "riskRules": {
+        "stopType": "below_breakout_support",
+        "atrMultiple": 1.5,
+        "maximumStopPct": 6,
+        "minimumRiskRewardRatio": 2.2,
+        "maxAccountRiskPct": 0.5,
+        "maxPositionPct": 10
+      },
+      "blockedWhen": [
+        { "field": "risk.isAttention", "operator": "eq", "value": true, "reason": "注意股" },
+        { "field": "risk.isDisposition", "operator": "eq", "value": true, "reason": "處置股" },
+        { "field": "technical.distanceMa20", "operator": "gt", "value": 12, "reason": "離 MA20 過遠" },
+        { "field": "technical.openGapPct", "operator": "gt", "value": 4, "reason": "開盤跳空過大" }
+      ],
+      "orderIntentTemplate": {
+        "side": "BUY",
+        "orderType": "STOP_LIMIT",
+        "priceSource": "breakoutTrigger",
+        "limitBufferPct": 0.5,
+        "timeInForce": "ROD",
+        "session": "REGULAR",
+        "allowOddLot": true
+      }
+    },
+    {
+      "strategyId": "revenue_growth_technical_turn",
+      "name": "月營收成長加技術轉強策略",
+      "activationStatus": "DATA_GAP",
+      "requiredData": [
+        "daily_ohlcv",
+        "monthly_revenue",
+        "monthly_revenue_release_date",
+        "eps",
+        "gross_margin",
+        "operating_margin",
+        "financial_release_date",
+        "industry_classification",
+        "market_regime",
+        "attention_disposition"
+      ],
+      "setupRules": [
+        { "field": "fundamental.revenueYoY", "operator": "gte", "value": 20, "reason": "月營收年增至少二成" },
+        { "field": "fundamental.revenueMoM", "operator": "gte", "value": 0, "reason": "月營收月增非負" },
+        { "field": "fundamental.grossMarginTrend", "operator": "gte", "value": 0, "reason": "毛利率沒有惡化" },
+        { "field": "fundamental.operatingMarginTrend", "operator": "gte", "value": 0, "reason": "營益率沒有惡化" }
+      ],
+      "triggerRules": [
+        { "field": "technical.closeAboveMa20", "operator": "eq", "value": true, "reason": "股價站回 MA20" },
+        { "field": "technical.ma20Slope", "operator": "gt", "value": 0, "reason": "MA20 轉為上彎" },
+        { "field": "technical.volumeRatio20", "operator": "gte", "value": 1.2, "reason": "轉強日量能確認" }
+      ],
+      "invalidationRules": [
+        { "field": "fundamental.revenueYoY", "operator": "lt", "value": 10, "reason": "營收成長明顯降溫" },
+        { "field": "technical.closeBelowMa60", "operator": "eq", "value": true, "reason": "收盤跌破 MA60" }
+      ],
+      "exitRules": [
+        { "type": "trailing_stop", "triggerR": 2, "givebackR": 0.8 },
+        { "type": "fundamental_deterioration" },
+        { "type": "ma20_break" },
+        { "type": "maximum_holding_days", "value": 30 }
+      ],
+      "riskRules": {
+        "stopType": "below_ma60_or_swing_low",
+        "atrMultiple": 1.5,
+        "maximumStopPct": 8,
+        "minimumRiskRewardRatio": 2,
+        "maxAccountRiskPct": 0.5,
+        "maxPositionPct": 10
+      },
+      "blockedWhen": [
+        { "field": "risk.isAttention", "operator": "eq", "value": true, "reason": "注意股" },
+        { "field": "risk.isDisposition", "operator": "eq", "value": true, "reason": "處置股" },
+        { "field": "fundamental.announcementKnownAtSignal", "operator": "neq", "value": true, "reason": "財務資料在訊號日尚未公開" },
+        { "field": "market.regime", "operator": "eq", "value": "BEAR_DEFENSE", "reason": "空頭防守狀態" }
+      ],
+      "orderIntentTemplate": {
+        "side": "BUY",
+        "orderType": "LIMIT",
+        "priceSource": "nextOpenWithCap",
+        "maximumGapPct": 3,
+        "timeInForce": "ROD",
+        "session": "REGULAR",
+        "allowOddLot": true
+      }
+    },
+    {
+      "strategyId": "high_volatility_stabilized_reversal",
+      "name": "高波動急跌後止穩反轉策略",
+      "activationStatus": "RESEARCH_ONLY",
+      "requiredData": [
+        "daily_ohlcv",
+        "market_regime",
+        "price_limit",
+        "corporate_actions"
+      ],
+      "setupRules": [
+        { "field": "technical.selloff3DayPct", "operator": "lte", "value": -8, "reason": "三日內出現明顯急跌" },
+        { "field": "technical.stabilizationDays", "operator": "between", "value": [1, 3], "reason": "急跌後已等待一至三天" },
+        { "field": "technical.newLowAfterSelloff", "operator": "eq", "value": false, "reason": "止穩期間沒有再破低" }
+      ],
+      "triggerRules": [
+        {
+          "any": [
+            { "field": "technical.longLowerWick", "operator": "eq", "value": true, "reason": "長下影線止穩" },
+            { "field": "technical.closeAbovePriorHigh", "operator": "eq", "value": true, "reason": "站回前一日高點" }
+          ]
+        },
+        { "field": "technical.closeUp", "operator": "eq", "value": true, "reason": "確認日收紅" }
+      ],
+      "invalidationRules": [
+        { "field": "technical.closeBelowStabilizationLow", "operator": "eq", "value": true, "reason": "跌破止穩區低點" },
+        { "field": "market.regime", "operator": "eq", "value": "BEAR_DEFENSE", "reason": "市場轉入空頭防守" }
+      ],
+      "exitRules": [
+        { "type": "take_profit_r", "value": 1.5 },
+        { "type": "ma20_target" },
+        { "type": "stabilization_low_break" },
+        { "type": "maximum_holding_days", "value": 7 }
+      ],
+      "riskRules": {
+        "stopType": "below_stabilization_low",
+        "atrMultiple": 1,
+        "maximumStopPct": 6,
+        "minimumRiskRewardRatio": 1.8,
+        "maxAccountRiskPct": 0.35,
+        "maxPositionPct": 6
+      },
+      "blockedWhen": [
+        { "field": "risk.corporateActionUnadjusted", "operator": "eq", "value": true, "reason": "價格可能受公司行動影響" },
+        { "field": "market.regime", "operator": "eq", "value": "BEAR_DEFENSE", "reason": "空頭中不接刀" },
+        { "field": "technical.openGapPct", "operator": "lt", "value": -4, "reason": "隔日再度大幅跳空下跌" }
+      ],
+      "orderIntentTemplate": {
+        "side": "BUY",
+        "orderType": "STOP_LIMIT",
+        "priceSource": "stabilizationConfirmationHigh",
+        "limitBufferPct": 0.5,
+        "timeInForce": "ROD",
+        "session": "REGULAR",
+        "allowOddLot": true
+      }
+    },
+    {
+      "strategyId": "margin_heat_exclusion_strength",
+      "name": "融資過熱排除加強勢股風控策略",
+      "activationStatus": "DATA_GAP",
+      "requiredData": [
+        "daily_ohlcv",
+        "margin_short",
+        "securities_lending",
+        "market_regime",
+        "attention_disposition",
+        "price_limit"
+      ],
+      "setupRules": [
+        { "field": "technical.relativeMarket20", "operator": "gte", "value": 5, "reason": "個股相對大盤強勢" },
+        { "field": "technical.ma20AboveMa60", "operator": "eq", "value": true, "reason": "趨勢維持多頭" },
+        { "field": "financing.marginBalance20ChangePct", "operator": "lte", "value": 15, "reason": "融資增幅未過熱" },
+        { "field": "financing.marginUtilizationPercentile", "operator": "lte", "value": 0.8, "reason": "融資使用率未進入最高二成" }
+      ],
+      "triggerRules": [
+        { "field": "technical.pullbackHeldMa20", "operator": "eq", "value": true, "reason": "回測 MA20 守穩" },
+        { "field": "technical.closeAbovePriorHigh", "operator": "eq", "value": true, "reason": "重新轉強" }
+      ],
+      "invalidationRules": [
+        { "field": "financing.marginBalance20ChangePct", "operator": "gt", "value": 25, "reason": "融資快速增加" },
+        { "field": "technical.closeBelowMa20", "operator": "eq", "value": true, "reason": "跌破 MA20" }
+      ],
+      "exitRules": [
+        { "type": "trailing_stop", "triggerR": 1.5, "givebackR": 0.75 },
+        { "type": "financing_overheat" },
+        { "type": "ma20_break" },
+        { "type": "maximum_holding_days", "value": 15 }
+      ],
+      "riskRules": {
+        "stopType": "below_ma20_or_swing_low",
+        "atrMultiple": 1.5,
+        "maximumStopPct": 6,
+        "minimumRiskRewardRatio": 2,
+        "maxAccountRiskPct": 0.5,
+        "maxPositionPct": 9
+      },
+      "blockedWhen": [
+        { "field": "risk.isAttention", "operator": "eq", "value": true, "reason": "注意股" },
+        { "field": "risk.isDisposition", "operator": "eq", "value": true, "reason": "處置股" },
+        { "field": "financing.marginUtilizationPercentile", "operator": "gt", "value": 0.8, "reason": "融資過熱" },
+        { "field": "financing.shortBorrowStress", "operator": "eq", "value": true, "reason": "券資或借券結構異常" }
+      ],
+      "orderIntentTemplate": {
+        "side": "BUY",
+        "orderType": "LIMIT",
+        "priceSource": "triggerPrice",
+        "timeInForce": "ROD",
+        "session": "REGULAR",
+        "allowOddLot": true
+      }
+    },
+    {
+      "strategyId": "theme_relative_strength_leader",
+      "name": "強勢族群內相對強勢股策略",
+      "activationStatus": "DATA_GAP",
+      "requiredData": [
+        "daily_ohlcv",
+        "industry_classification",
+        "theme_classification",
+        "theme_strength",
+        "market_regime",
+        "attention_disposition",
+        "price_limit"
+      ],
+      "setupRules": [
+        { "field": "theme.strengthRank", "operator": "lte", "value": 3, "reason": "所屬族群強度位於市場前三名" },
+        { "field": "theme.positiveBreadthPct", "operator": "gte", "value": 60, "reason": "族群多數成分股同步上漲" },
+        { "field": "technical.relativeTheme20", "operator": "gte", "value": 3, "reason": "個股在強勢族群內仍領先" },
+        { "field": "technical.transactionValuePercentile", "operator": "gte", "value": 0.7, "reason": "成交值具可執行性" }
+      ],
+      "triggerRules": [
+        { "field": "technical.breakout20Confirmed", "operator": "eq", "value": true, "reason": "確認突破近二十日壓力" },
+        { "field": "theme.accelerationPositive", "operator": "eq", "value": true, "reason": "族群強度仍在加速" }
+      ],
+      "invalidationRules": [
+        { "field": "theme.strengthRank", "operator": "gt", "value": 8, "reason": "族群強度掉出前八名" },
+        { "field": "technical.failedBreakout", "operator": "eq", "value": true, "reason": "個股突破失敗" }
+      ],
+      "exitRules": [
+        { "type": "trailing_stop", "triggerR": 2, "givebackR": 1 },
+        { "type": "theme_weak" },
+        { "type": "breakout_support_break" },
+        { "type": "maximum_holding_days", "value": 20 }
+      ],
+      "riskRules": {
+        "stopType": "below_breakout_support",
+        "atrMultiple": 1.5,
+        "maximumStopPct": 6,
+        "minimumRiskRewardRatio": 2.2,
+        "maxAccountRiskPct": 0.5,
+        "maxPositionPct": 10
+      },
+      "blockedWhen": [
+        { "field": "risk.isAttention", "operator": "eq", "value": true, "reason": "注意股" },
+        { "field": "risk.isDisposition", "operator": "eq", "value": true, "reason": "處置股" },
+        { "field": "market.regime", "operator": "in", "value": ["BEAR_DEFENSE", "HIGH_VOLATILITY"], "reason": "市場不允許追逐族群動能" },
+        { "field": "theme.positiveBreadthPct", "operator": "lt", "value": 60, "reason": "族群不同步" }
+      ],
+      "orderIntentTemplate": {
+        "side": "BUY",
+        "orderType": "STOP_LIMIT",
+        "priceSource": "breakoutTrigger",
+        "limitBufferPct": 0.5,
+        "timeInForce": "ROD",
+        "session": "REGULAR",
+        "allowOddLot": true
+      }
+    }
+  ]
+}

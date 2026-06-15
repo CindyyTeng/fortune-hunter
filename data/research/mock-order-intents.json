@@ -1,0 +1,363 @@
+{
+  "generatedAt": "2026-06-15T14:18:21.406Z",
+  "branch": "high-profit-executable-strategy-v1",
+  "mode": "MOCK_ONLY",
+  "realBrokerConnected": false,
+  "realOrdersSubmitted": false,
+  "availableData": [
+    "daily_ohlcv",
+    "market_regime",
+    "price_limit",
+    "corporate_actions"
+  ],
+  "approvedStrategyIds": [
+    "high_volatility_stabilized_reversal"
+  ],
+  "signalCount": 4,
+  "decisionSummary": {
+    "BUY": 1,
+    "SELL": 1,
+    "HOLD": 1,
+    "SKIP": 1
+  },
+  "decisions": [
+    {
+      "date": "2026-06-15",
+      "symbol": "MOCK-BUY",
+      "action": "BUY",
+      "strategyId": "high_volatility_stabilized_reversal",
+      "setup": [
+        "三日內出現明顯急跌",
+        "急跌後已等待一至三天",
+        "止穩期間沒有再破低"
+      ],
+      "trigger": [
+        "長下影線止穩",
+        "站回前一日高點",
+        "確認日收紅"
+      ],
+      "invalidation": [
+        "跌破止穩區低點",
+        "市場轉入空頭防守"
+      ],
+      "entryPlan": {
+        "referencePrice": 100,
+        "maximumAcceptablePrice": 100.5,
+        "orderType": "STOP_LIMIT",
+        "timeInForce": "ROD",
+        "session": "REGULAR",
+        "priceSource": "stabilizationConfirmationHigh"
+      },
+      "riskPlan": {
+        "stopPrice": 96,
+        "targetPrice": 107.2,
+        "riskPerShare": 4,
+        "rewardPerShare": 7.2,
+        "riskRewardRatio": 1.8,
+        "accountRiskPct": 0.35,
+        "riskBudget": 3500,
+        "maxPositionPct": 6,
+        "positionBudget": 60000,
+        "allowLeverage": false,
+        "allowShortSelling": false
+      },
+      "reason": "高波動急跌後止穩反轉策略 的 Setup 與 Trigger 均成立",
+      "warnings": [
+        "策略狀態：RESEARCH_ONLY",
+        "此決策只允許 mock 或紙上交易"
+      ],
+      "signalStatus": "READY"
+    },
+    {
+      "date": "2026-06-15",
+      "symbol": "MOCK-SELL",
+      "action": "SELL",
+      "strategyId": "high_volatility_stabilized_reversal",
+      "setup": [
+        "三日內出現明顯急跌",
+        "急跌後已等待一至三天",
+        "止穩期間沒有再破低"
+      ],
+      "trigger": [
+        "長下影線止穩",
+        "站回前一日高點",
+        "確認日收紅"
+      ],
+      "invalidation": [
+        "跌破止穩區低點"
+      ],
+      "entryPlan": null,
+      "riskPlan": {
+        "currentQuantity": 1000,
+        "currentStopPrice": 90
+      },
+      "reason": "跌破止穩區低點",
+      "warnings": [
+        "策略狀態：RESEARCH_ONLY",
+        "此決策只允許 mock 或紙上交易"
+      ],
+      "signalStatus": "INVALIDATED"
+    },
+    {
+      "date": "2026-06-15",
+      "symbol": "MOCK-HOLD",
+      "action": "HOLD",
+      "strategyId": "high_volatility_stabilized_reversal",
+      "setup": [
+        "三日內出現明顯急跌",
+        "急跌後已等待一至三天",
+        "止穩期間沒有再破低"
+      ],
+      "trigger": [],
+      "invalidation": [],
+      "entryPlan": null,
+      "riskPlan": {
+        "currentQuantity": 500,
+        "currentStopPrice": 94,
+        "currentTargetPrice": 112
+      },
+      "reason": "持倉仍未觸發失效或出場條件",
+      "warnings": [
+        "策略狀態：RESEARCH_ONLY",
+        "此決策只允許 mock 或紙上交易"
+      ],
+      "signalStatus": "WAIT_TRIGGER"
+    },
+    {
+      "date": "2026-06-15",
+      "symbol": "MOCK-SKIP",
+      "action": "SKIP",
+      "strategyId": "high_volatility_stabilized_reversal",
+      "setup": [
+        "急跌後已等待一至三天",
+        "止穩期間沒有再破低"
+      ],
+      "trigger": [
+        "長下影線止穩",
+        "站回前一日高點",
+        "確認日收紅"
+      ],
+      "invalidation": [],
+      "entryPlan": null,
+      "riskPlan": null,
+      "reason": "Setup 尚未成立",
+      "warnings": [
+        "策略狀態：RESEARCH_ONLY",
+        "此決策只允許 mock 或紙上交易"
+      ],
+      "signalStatus": "NO_SETUP"
+    }
+  ],
+  "orderIntents": [
+    {
+      "intentId": "b26151891aa0ab036dc5",
+      "createdAt": "2026-06-15T14:18:21.405Z",
+      "tradeDate": "2026-06-15",
+      "symbol": "MOCK-BUY",
+      "strategyId": "high_volatility_stabilized_reversal",
+      "action": "BUY",
+      "status": "PENDING_REVIEW",
+      "submitToRealBroker": false,
+      "reason": "高波動急跌後止穩反轉策略 的 Setup 與 Trigger 均成立",
+      "warnings": [
+        "策略狀態：RESEARCH_ONLY",
+        "此決策只允許 mock 或紙上交易"
+      ],
+      "audit": {
+        "setup": [
+          "三日內出現明顯急跌",
+          "急跌後已等待一至三天",
+          "止穩期間沒有再破低"
+        ],
+        "trigger": [
+          "長下影線止穩",
+          "站回前一日高點",
+          "確認日收紅"
+        ],
+        "invalidation": [
+          "跌破止穩區低點",
+          "市場轉入空頭防守"
+        ],
+        "noFutureDataAttestation": true,
+        "humanApprovalRequired": true
+      },
+      "side": "BUY",
+      "quantity": 598,
+      "boardLotQuantity": 0,
+      "oddLotQuantity": 598,
+      "orderType": "STOP_LIMIT",
+      "limitPrice": 100.5,
+      "stopPrice": 96,
+      "targetPrice": 107.2,
+      "riskRewardRatio": 1.8,
+      "timeInForce": "ROD",
+      "session": "REGULAR",
+      "brokerPayload": {
+        "symbol": "MOCK-BUY",
+        "side": "BUY",
+        "quantity": 598,
+        "orderType": "STOP_LIMIT",
+        "price": 100.5,
+        "triggerPrice": 100,
+        "timeInForce": "ROD"
+      }
+    },
+    {
+      "intentId": "e5a227cec9886f644bd8",
+      "createdAt": "2026-06-15T14:18:21.405Z",
+      "tradeDate": "2026-06-15",
+      "symbol": "MOCK-SELL",
+      "strategyId": "high_volatility_stabilized_reversal",
+      "action": "SELL",
+      "status": "PENDING_REVIEW",
+      "submitToRealBroker": false,
+      "reason": "跌破止穩區低點",
+      "warnings": [
+        "策略狀態：RESEARCH_ONLY",
+        "此決策只允許 mock 或紙上交易"
+      ],
+      "audit": {
+        "setup": [
+          "三日內出現明顯急跌",
+          "急跌後已等待一至三天",
+          "止穩期間沒有再破低"
+        ],
+        "trigger": [
+          "長下影線止穩",
+          "站回前一日高點",
+          "確認日收紅"
+        ],
+        "invalidation": [
+          "跌破止穩區低點"
+        ],
+        "noFutureDataAttestation": true,
+        "humanApprovalRequired": true
+      },
+      "side": "SELL",
+      "quantity": 1000,
+      "orderType": "MARKETABLE_LIMIT",
+      "limitPrice": 85,
+      "timeInForce": "ROD",
+      "session": "REGULAR",
+      "brokerPayload": {
+        "symbol": "MOCK-SELL",
+        "side": "SELL",
+        "quantity": 1000,
+        "orderType": "MARKETABLE_LIMIT",
+        "price": 85,
+        "timeInForce": "ROD"
+      }
+    }
+  ],
+  "brokerResults": [
+    {
+      "orderId": "MOCK-b26151891aa0ab036dc5-SUCCESS",
+      "intentId": "b26151891aa0ab036dc5-SUCCESS",
+      "symbol": "MOCK-BUY",
+      "side": "BUY",
+      "requestedQuantity": 598,
+      "submittedAt": "2026-06-15T14:18:21.406Z",
+      "isMock": true,
+      "status": "FILLED",
+      "filledQuantity": 598,
+      "remainingQuantity": 0,
+      "fillPrice": 100.15,
+      "fee": 86,
+      "tax": 0,
+      "cashImpact": -59975.700000000004,
+      "reason": "模擬全部成交"
+    },
+    {
+      "orderId": "MOCK-b26151891aa0ab036dc5-PARTIAL",
+      "intentId": "b26151891aa0ab036dc5-PARTIAL",
+      "symbol": "MOCK-BUY",
+      "side": "BUY",
+      "requestedQuantity": 598,
+      "submittedAt": "2026-06-15T14:18:21.406Z",
+      "isMock": true,
+      "status": "PARTIALLY_FILLED",
+      "filledQuantity": 299,
+      "remainingQuantity": 299,
+      "fillPrice": 100.15,
+      "fee": 43,
+      "tax": 0,
+      "cashImpact": -29987.850000000002,
+      "reason": "模擬部分成交"
+    },
+    {
+      "orderId": "MOCK-b26151891aa0ab036dc5-FAIL",
+      "intentId": "b26151891aa0ab036dc5-FAIL",
+      "symbol": "MOCK-BUY",
+      "side": "BUY",
+      "requestedQuantity": 598,
+      "submittedAt": "2026-06-15T14:18:21.406Z",
+      "isMock": true,
+      "status": "REJECTED",
+      "filledQuantity": 0,
+      "reason": "模擬券商拒絕委託"
+    },
+    {
+      "orderId": "MOCK-b26151891aa0ab036dc5-LIMIT",
+      "intentId": "b26151891aa0ab036dc5-LIMIT",
+      "symbol": "MOCK-BUY",
+      "side": "BUY",
+      "requestedQuantity": 598,
+      "submittedAt": "2026-06-15T14:18:21.406Z",
+      "isMock": true,
+      "status": "UNFILLED",
+      "filledQuantity": 0,
+      "reason": "漲停無賣單，無法成交"
+    },
+    {
+      "orderId": "MOCK-b26151891aa0ab036dc5-CASH",
+      "intentId": "b26151891aa0ab036dc5-CASH",
+      "symbol": "MOCK-BUY",
+      "side": "BUY",
+      "requestedQuantity": 598,
+      "submittedAt": "2026-06-15T14:18:21.406Z",
+      "isMock": true,
+      "status": "REJECTED",
+      "filledQuantity": 0,
+      "reason": "可用資金不足",
+      "requiredCash": 59975.700000000004,
+      "availableCash": 800000
+    },
+    {
+      "orderId": "MOCK-e5a227cec9886f644bd8-SELL",
+      "intentId": "e5a227cec9886f644bd8-SELL",
+      "symbol": "MOCK-SELL",
+      "side": "SELL",
+      "requestedQuantity": 1000,
+      "submittedAt": "2026-06-15T14:18:21.406Z",
+      "isMock": true,
+      "status": "FILLED",
+      "filledQuantity": 1000,
+      "remainingQuantity": 0,
+      "fillPrice": 85.87100000000001,
+      "fee": 123,
+      "tax": 258,
+      "cashImpact": 85490.00000000001,
+      "reason": "模擬全部成交"
+    },
+    {
+      "orderId": "MOCK-b26151891aa0ab036dc5-PRICE-MISS",
+      "intentId": "b26151891aa0ab036dc5-PRICE-MISS",
+      "symbol": "MOCK-BUY",
+      "side": "BUY",
+      "requestedQuantity": 598,
+      "submittedAt": "2026-06-15T14:18:21.406Z",
+      "isMock": true,
+      "status": "UNFILLED",
+      "filledQuantity": 0,
+      "reason": "市價高於買進限價"
+    }
+  ],
+  "verifiedScenarios": [
+    "委託成功",
+    "部分成交",
+    "委託失敗",
+    "漲跌停無法成交",
+    "資金不足",
+    "限價未觸及"
+  ]
+}

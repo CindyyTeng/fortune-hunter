@@ -1,0 +1,758 @@
+{
+  "version": "1.0.0",
+  "policy": {
+    "automationRule": "只有確認官方 API、開放資料授權或正式商用授權後，才可標示為可自動化。未確認者不得以網頁爬取替代正式資料授權。",
+    "pointInTimeRule": "所有資料必須保存 publishedAt、availableAt 與 ingestedAt；回測只能使用 signalDate 當時 availableAt 已發生的版本。",
+    "sourceNote": "TWSE 與 TPEx 均有官方 OpenAPI 入口；MOPS 為公司公告官方來源。實際欄位、頻率、歷史深度與自動化授權仍須逐項確認。"
+  },
+  "requirements": [
+    {
+      "dataId": "institutional_total",
+      "name": "法人買賣超",
+      "supportsStrategies": [
+        "foreign_trust_breakout_confirmation",
+        "trust_accumulation_pullback"
+      ],
+      "automationStatus": "CONDITIONAL",
+      "manualImportRequired": false,
+      "sourceConfirmation": "REQUIRED",
+      "candidateSources": [
+        "TWSE OpenAPI",
+        "TPEx OpenAPI",
+        "授權資料商"
+      ],
+      "schema": [
+        "date",
+        "symbol",
+        "foreignNetShares",
+        "trustNetShares",
+        "dealerNetShares",
+        "publishedAt",
+        "availableAt"
+      ],
+      "noFutureDataControl": "使用交易所實際公告時間；公告前不得回填到當日盤中訊號。",
+      "priority": 1
+    },
+    {
+      "dataId": "institutional_trust",
+      "name": "投信買賣超",
+      "supportsStrategies": [
+        "trust_accumulation_pullback",
+        "foreign_trust_breakout_confirmation"
+      ],
+      "automationStatus": "CONDITIONAL",
+      "manualImportRequired": false,
+      "sourceConfirmation": "REQUIRED",
+      "candidateSources": [
+        "TWSE OpenAPI",
+        "TPEx OpenAPI",
+        "授權資料商"
+      ],
+      "schema": [
+        "date",
+        "symbol",
+        "buyShares",
+        "sellShares",
+        "netShares",
+        "netValue",
+        "publishedAt",
+        "availableAt"
+      ],
+      "noFutureDataControl": "連買日數只由 availableAt 不晚於訊號時間的紀錄計算。",
+      "priority": 1
+    },
+    {
+      "dataId": "institutional_foreign",
+      "name": "外資買賣超",
+      "supportsStrategies": [
+        "foreign_trust_breakout_confirmation"
+      ],
+      "automationStatus": "CONDITIONAL",
+      "manualImportRequired": false,
+      "sourceConfirmation": "REQUIRED",
+      "candidateSources": [
+        "TWSE OpenAPI",
+        "TPEx OpenAPI",
+        "授權資料商"
+      ],
+      "schema": [
+        "date",
+        "symbol",
+        "buyShares",
+        "sellShares",
+        "netShares",
+        "netValue",
+        "publishedAt",
+        "availableAt"
+      ],
+      "noFutureDataControl": "不得把收盤後公告的外資資料用於同日盤中下單。",
+      "priority": 1
+    },
+    {
+      "dataId": "institutional_dealer",
+      "name": "自營商買賣超",
+      "supportsStrategies": [
+        "foreign_trust_breakout_confirmation",
+        "theme_relative_strength_leader"
+      ],
+      "automationStatus": "CONDITIONAL",
+      "manualImportRequired": false,
+      "sourceConfirmation": "REQUIRED",
+      "candidateSources": [
+        "TWSE OpenAPI",
+        "TPEx OpenAPI",
+        "授權資料商"
+      ],
+      "schema": [
+        "date",
+        "symbol",
+        "proprietaryNetShares",
+        "hedgeNetShares",
+        "netValue",
+        "publishedAt",
+        "availableAt"
+      ],
+      "noFutureDataControl": "分開保存自行買賣與避險部位，依公告時間生效。",
+      "priority": 2
+    },
+    {
+      "dataId": "margin_short",
+      "name": "融資融券",
+      "supportsStrategies": [
+        "margin_heat_exclusion_strength"
+      ],
+      "automationStatus": "CONDITIONAL",
+      "manualImportRequired": false,
+      "sourceConfirmation": "REQUIRED",
+      "candidateSources": [
+        "TWSE OpenAPI",
+        "TPEx OpenAPI",
+        "授權資料商"
+      ],
+      "schema": [
+        "date",
+        "symbol",
+        "marginBalance",
+        "marginBuy",
+        "marginSell",
+        "shortBalance",
+        "shortSell",
+        "shortCover",
+        "availableAt"
+      ],
+      "noFutureDataControl": "以公告後下一個可交易時點開始使用。",
+      "priority": 1
+    },
+    {
+      "dataId": "securities_lending",
+      "name": "借券與券資比",
+      "supportsStrategies": [
+        "margin_heat_exclusion_strength"
+      ],
+      "automationStatus": "CONDITIONAL",
+      "manualImportRequired": false,
+      "sourceConfirmation": "REQUIRED",
+      "candidateSources": [
+        "TWSE",
+        "TPEx",
+        "授權資料商"
+      ],
+      "schema": [
+        "date",
+        "symbol",
+        "borrowBalance",
+        "borrowSell",
+        "shortMarginRatio",
+        "publishedAt",
+        "availableAt"
+      ],
+      "noFutureDataControl": "使用原始公告版本，不用事後修訂值覆蓋歷史。",
+      "priority": 2
+    },
+    {
+      "dataId": "monthly_revenue",
+      "name": "月營收",
+      "supportsStrategies": [
+        "revenue_growth_technical_turn"
+      ],
+      "automationStatus": "CONDITIONAL",
+      "manualImportRequired": false,
+      "sourceConfirmation": "REQUIRED",
+      "candidateSources": [
+        "MOPS",
+        "政府資料開放平台",
+        "授權資料商"
+      ],
+      "schema": [
+        "yearMonth",
+        "symbol",
+        "revenue",
+        "revenueYoY",
+        "revenueMoM",
+        "publishedAt",
+        "availableAt",
+        "revision"
+      ],
+      "noFutureDataControl": "以公司實際上傳時間 availableAt 生效，不以營收月份月底回填。",
+      "priority": 1
+    },
+    {
+      "dataId": "eps",
+      "name": "EPS",
+      "supportsStrategies": [
+        "revenue_growth_technical_turn"
+      ],
+      "automationStatus": "CONDITIONAL",
+      "manualImportRequired": false,
+      "sourceConfirmation": "REQUIRED",
+      "candidateSources": [
+        "MOPS",
+        "授權資料商"
+      ],
+      "schema": [
+        "period",
+        "symbol",
+        "eps",
+        "cumulativeEps",
+        "publishedAt",
+        "availableAt",
+        "revision"
+      ],
+      "noFutureDataControl": "依財報公布時間生效，保留更正前後版本。",
+      "priority": 2
+    },
+    {
+      "dataId": "gross_margin",
+      "name": "毛利率",
+      "supportsStrategies": [
+        "revenue_growth_technical_turn"
+      ],
+      "automationStatus": "CONDITIONAL",
+      "manualImportRequired": false,
+      "sourceConfirmation": "REQUIRED",
+      "candidateSources": [
+        "MOPS",
+        "授權資料商"
+      ],
+      "schema": [
+        "period",
+        "symbol",
+        "grossMarginPct",
+        "publishedAt",
+        "availableAt",
+        "revision"
+      ],
+      "noFutureDataControl": "只能在財報 availableAt 後使用。",
+      "priority": 2
+    },
+    {
+      "dataId": "operating_margin",
+      "name": "營益率",
+      "supportsStrategies": [
+        "revenue_growth_technical_turn"
+      ],
+      "automationStatus": "CONDITIONAL",
+      "manualImportRequired": false,
+      "sourceConfirmation": "REQUIRED",
+      "candidateSources": [
+        "MOPS",
+        "授權資料商"
+      ],
+      "schema": [
+        "period",
+        "symbol",
+        "operatingMarginPct",
+        "publishedAt",
+        "availableAt",
+        "revision"
+      ],
+      "noFutureDataControl": "只能在財報 availableAt 後使用。",
+      "priority": 2
+    },
+    {
+      "dataId": "revenue_yoy",
+      "name": "營收年增率",
+      "supportsStrategies": [
+        "revenue_growth_technical_turn"
+      ],
+      "automationStatus": "DERIVED",
+      "manualImportRequired": false,
+      "sourceConfirmation": "DEPENDS_ON_MONTHLY_REVENUE",
+      "candidateSources": [
+        "由月營收原始值計算"
+      ],
+      "schema": [
+        "yearMonth",
+        "symbol",
+        "revenueYoY",
+        "sourcePeriods",
+        "availableAt"
+      ],
+      "noFutureDataControl": "兩期營收均已公布後才計算。",
+      "priority": 1
+    },
+    {
+      "dataId": "revenue_mom",
+      "name": "營收月增率",
+      "supportsStrategies": [
+        "revenue_growth_technical_turn"
+      ],
+      "automationStatus": "DERIVED",
+      "manualImportRequired": false,
+      "sourceConfirmation": "DEPENDS_ON_MONTHLY_REVENUE",
+      "candidateSources": [
+        "由月營收原始值計算"
+      ],
+      "schema": [
+        "yearMonth",
+        "symbol",
+        "revenueMoM",
+        "sourcePeriods",
+        "availableAt"
+      ],
+      "noFutureDataControl": "兩期營收均已公布後才計算。",
+      "priority": 1
+    },
+    {
+      "dataId": "financial_release_date",
+      "name": "財報公布日期",
+      "supportsStrategies": [
+        "revenue_growth_technical_turn"
+      ],
+      "automationStatus": "CONDITIONAL",
+      "manualImportRequired": false,
+      "sourceConfirmation": "REQUIRED",
+      "candidateSources": [
+        "MOPS",
+        "授權資料商"
+      ],
+      "schema": [
+        "symbol",
+        "period",
+        "publishedAt",
+        "availableAt",
+        "documentId"
+      ],
+      "noFutureDataControl": "作為所有財報欄位的時間閘門。",
+      "priority": 1
+    },
+    {
+      "dataId": "monthly_revenue_release_date",
+      "name": "月營收公布日期",
+      "supportsStrategies": [
+        "revenue_growth_technical_turn"
+      ],
+      "automationStatus": "CONDITIONAL",
+      "manualImportRequired": false,
+      "sourceConfirmation": "REQUIRED",
+      "candidateSources": [
+        "MOPS",
+        "政府資料開放平台",
+        "授權資料商"
+      ],
+      "schema": [
+        "symbol",
+        "yearMonth",
+        "publishedAt",
+        "availableAt",
+        "documentId"
+      ],
+      "noFutureDataControl": "作為月營收與成長率的時間閘門。",
+      "priority": 1
+    },
+    {
+      "dataId": "industry_classification",
+      "name": "產業分類",
+      "supportsStrategies": [
+        "trust_accumulation_pullback",
+        "foreign_trust_breakout_confirmation",
+        "revenue_growth_technical_turn",
+        "theme_relative_strength_leader"
+      ],
+      "automationStatus": "CONDITIONAL",
+      "manualImportRequired": false,
+      "sourceConfirmation": "REQUIRED",
+      "candidateSources": [
+        "TWSE",
+        "TPEx",
+        "授權資料商"
+      ],
+      "schema": [
+        "symbol",
+        "industryCode",
+        "industryName",
+        "effectiveFrom",
+        "effectiveTo",
+        "availableAt"
+      ],
+      "noFutureDataControl": "保存分類生效區間，不能用目前分類回填十年前。",
+      "priority": 1
+    },
+    {
+      "dataId": "theme_classification",
+      "name": "題材分類",
+      "supportsStrategies": [
+        "trust_accumulation_pullback",
+        "theme_relative_strength_leader"
+      ],
+      "automationStatus": "SOURCE_PENDING",
+      "manualImportRequired": true,
+      "sourceConfirmation": "REQUIRED",
+      "candidateSources": [
+        "人工維護",
+        "具授權的新聞或題材資料商"
+      ],
+      "schema": [
+        "symbol",
+        "themeId",
+        "themeName",
+        "effectiveFrom",
+        "effectiveTo",
+        "evidence",
+        "availableAt"
+      ],
+      "noFutureDataControl": "題材只能從當時已公開資訊建立，保留加入與移除時間。",
+      "priority": 2
+    },
+    {
+      "dataId": "theme_strength",
+      "name": "族群分類與強度",
+      "supportsStrategies": [
+        "theme_relative_strength_leader",
+        "trust_accumulation_pullback"
+      ],
+      "automationStatus": "DERIVED",
+      "manualImportRequired": false,
+      "sourceConfirmation": "DEPENDS_ON_CLASSIFICATION",
+      "candidateSources": [
+        "由歷史分類與成分股行情計算"
+      ],
+      "schema": [
+        "date",
+        "themeId",
+        "return5",
+        "return20",
+        "positiveBreadthPct",
+        "volumeBreadthPct",
+        "strengthRank",
+        "availableAt"
+      ],
+      "noFutureDataControl": "只使用當日已存在的成分股與當日收盤前資料。",
+      "priority": 1
+    },
+    {
+      "dataId": "attention_disposition",
+      "name": "注意股與處置股",
+      "supportsStrategies": [
+        "trust_accumulation_pullback",
+        "foreign_trust_breakout_confirmation",
+        "revenue_growth_technical_turn",
+        "margin_heat_exclusion_strength",
+        "theme_relative_strength_leader"
+      ],
+      "automationStatus": "CONDITIONAL",
+      "manualImportRequired": false,
+      "sourceConfirmation": "REQUIRED",
+      "candidateSources": [
+        "TWSE",
+        "TPEx"
+      ],
+      "schema": [
+        "date",
+        "symbol",
+        "status",
+        "reason",
+        "effectiveFrom",
+        "effectiveTo",
+        "publishedAt",
+        "availableAt"
+      ],
+      "noFutureDataControl": "依公告生效時間阻擋下單，保存歷史狀態。",
+      "priority": 1
+    },
+    {
+      "dataId": "dividend_events",
+      "name": "除權息",
+      "supportsStrategies": [
+        "全部策略"
+      ],
+      "automationStatus": "CONDITIONAL",
+      "manualImportRequired": false,
+      "sourceConfirmation": "REQUIRED",
+      "candidateSources": [
+        "TWSE",
+        "TPEx",
+        "MOPS",
+        "授權資料商"
+      ],
+      "schema": [
+        "symbol",
+        "exDate",
+        "cashDividend",
+        "stockDividend",
+        "referencePrice",
+        "publishedAt",
+        "availableAt"
+      ],
+      "noFutureDataControl": "行情還原與事件排除只能使用當時已公告資訊。",
+      "priority": 1
+    },
+    {
+      "dataId": "corporate_actions",
+      "name": "減資與分割",
+      "supportsStrategies": [
+        "全部策略"
+      ],
+      "automationStatus": "CONDITIONAL",
+      "manualImportRequired": false,
+      "sourceConfirmation": "REQUIRED",
+      "candidateSources": [
+        "TWSE",
+        "TPEx",
+        "MOPS",
+        "授權資料商"
+      ],
+      "schema": [
+        "symbol",
+        "eventType",
+        "effectiveDate",
+        "ratio",
+        "referencePrice",
+        "publishedAt",
+        "availableAt"
+      ],
+      "noFutureDataControl": "保存原始價與還原因子版本，事件生效前不可套用。",
+      "priority": 1
+    },
+    {
+      "dataId": "intraday_minutes",
+      "name": "分鐘資料",
+      "supportsStrategies": [
+        "全部策略"
+      ],
+      "automationStatus": "LICENSE_REQUIRED",
+      "manualImportRequired": false,
+      "sourceConfirmation": "REQUIRED",
+      "candidateSources": [
+        "券商行情 API",
+        "交易所授權行情",
+        "授權資料商"
+      ],
+      "schema": [
+        "timestamp",
+        "symbol",
+        "open",
+        "high",
+        "low",
+        "close",
+        "volume",
+        "tradeValue",
+        "session"
+      ],
+      "noFutureDataControl": "事件驅動回放必須依 timestamp 順序，不得用整根 K 棒同時知道高低價。",
+      "priority": 1
+    },
+    {
+      "dataId": "historical_universe",
+      "name": "歷史下市股票池",
+      "supportsStrategies": [
+        "全部策略"
+      ],
+      "automationStatus": "SOURCE_PENDING",
+      "manualImportRequired": true,
+      "sourceConfirmation": "REQUIRED",
+      "candidateSources": [
+        "交易所歷史名錄",
+        "授權資料商",
+        "人工整理"
+      ],
+      "schema": [
+        "symbol",
+        "market",
+        "listedAt",
+        "delistedAt",
+        "suspensions",
+        "securityType",
+        "availableAt"
+      ],
+      "noFutureDataControl": "每天只允許使用當時已上市且可交易股票，避免倖存者偏差。",
+      "priority": 1
+    },
+    {
+      "dataId": "price_limit",
+      "name": "漲跌停資料",
+      "supportsStrategies": [
+        "全部策略"
+      ],
+      "automationStatus": "CONDITIONAL",
+      "manualImportRequired": false,
+      "sourceConfirmation": "REQUIRED",
+      "candidateSources": [
+        "TWSE",
+        "TPEx",
+        "券商行情 API"
+      ],
+      "schema": [
+        "date",
+        "symbol",
+        "referencePrice",
+        "upperLimit",
+        "lowerLimit",
+        "tickSize",
+        "availableAt"
+      ],
+      "noFutureDataControl": "每日開盤前由已知參考價與交易規則產生，成交模擬不得穿越漲跌停。",
+      "priority": 1
+    },
+    {
+      "dataId": "daily_ohlcv",
+      "name": "日線 OHLCV 與成交值",
+      "supportsStrategies": [
+        "全部策略"
+      ],
+      "automationStatus": "AVAILABLE_WITH_SOURCE_RISK",
+      "manualImportRequired": false,
+      "sourceConfirmation": "PARTIAL",
+      "candidateSources": [
+        "TWSE OpenAPI",
+        "TPEx OpenAPI",
+        "券商 API",
+        "授權資料商"
+      ],
+      "schema": [
+        "date",
+        "symbol",
+        "open",
+        "high",
+        "low",
+        "close",
+        "volume",
+        "tradeValue",
+        "publishedAt",
+        "availableAt"
+      ],
+      "noFutureDataControl": "收盤策略只能在收盤資料 availableAt 後執行；盤中策略使用即時或分鐘資料。",
+      "priority": 1
+    },
+    {
+      "dataId": "market_regime",
+      "name": "市場狀態",
+      "supportsStrategies": [
+        "全部策略"
+      ],
+      "automationStatus": "DERIVED",
+      "manualImportRequired": false,
+      "sourceConfirmation": "DEPENDS_ON_MARKET_DATA",
+      "candidateSources": [
+        "由大盤行情與市場廣度計算"
+      ],
+      "schema": [
+        "date",
+        "regime",
+        "ma20",
+        "ma60",
+        "ma200",
+        "volatility",
+        "breadth",
+        "availableAt"
+      ],
+      "noFutureDataControl": "僅用 signalDate 收盤前資料分類。",
+      "priority": 1
+    }
+  ],
+  "audit": {
+    "generatedAt": "2026-06-15T14:16:52.472Z",
+    "currentlyAvailableData": [
+      "daily_ohlcv",
+      "market_regime"
+    ],
+    "requirementCount": 25,
+    "invalidRequirementCount": 0,
+    "readyStrategyCount": 0,
+    "strategyAudits": [
+      {
+        "strategyId": "trust_accumulation_pullback",
+        "name": "投信連買強勢股回檔策略",
+        "activationStatus": "DATA_GAP",
+        "readyForValidation": false,
+        "missingData": [
+          "institutional_trust",
+          "industry_classification",
+          "theme_classification",
+          "attention_disposition",
+          "price_limit"
+        ],
+        "conclusion": "資料尚未齊備，不可啟用或宣稱已完成"
+      },
+      {
+        "strategyId": "foreign_trust_breakout_confirmation",
+        "name": "外資與投信同步買超突破確認策略",
+        "activationStatus": "DATA_GAP",
+        "readyForValidation": false,
+        "missingData": [
+          "institutional_foreign",
+          "institutional_trust",
+          "industry_classification",
+          "attention_disposition",
+          "price_limit"
+        ],
+        "conclusion": "資料尚未齊備，不可啟用或宣稱已完成"
+      },
+      {
+        "strategyId": "revenue_growth_technical_turn",
+        "name": "月營收成長加技術轉強策略",
+        "activationStatus": "DATA_GAP",
+        "readyForValidation": false,
+        "missingData": [
+          "monthly_revenue",
+          "monthly_revenue_release_date",
+          "eps",
+          "gross_margin",
+          "operating_margin",
+          "financial_release_date",
+          "industry_classification",
+          "attention_disposition"
+        ],
+        "conclusion": "資料尚未齊備，不可啟用或宣稱已完成"
+      },
+      {
+        "strategyId": "high_volatility_stabilized_reversal",
+        "name": "高波動急跌後止穩反轉策略",
+        "activationStatus": "RESEARCH_ONLY",
+        "readyForValidation": false,
+        "missingData": [
+          "price_limit",
+          "corporate_actions"
+        ],
+        "conclusion": "資料尚未齊備，不可啟用或宣稱已完成"
+      },
+      {
+        "strategyId": "margin_heat_exclusion_strength",
+        "name": "融資過熱排除加強勢股風控策略",
+        "activationStatus": "DATA_GAP",
+        "readyForValidation": false,
+        "missingData": [
+          "margin_short",
+          "securities_lending",
+          "attention_disposition",
+          "price_limit"
+        ],
+        "conclusion": "資料尚未齊備，不可啟用或宣稱已完成"
+      },
+      {
+        "strategyId": "theme_relative_strength_leader",
+        "name": "強勢族群內相對強勢股策略",
+        "activationStatus": "DATA_GAP",
+        "readyForValidation": false,
+        "missingData": [
+          "industry_classification",
+          "theme_classification",
+          "theme_strength",
+          "attention_disposition",
+          "price_limit"
+        ],
+        "conclusion": "資料尚未齊備，不可啟用或宣稱已完成"
+      }
+    ]
+  }
+}

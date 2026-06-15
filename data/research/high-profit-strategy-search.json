@@ -1,0 +1,228 @@
+{
+  "branch": "high-profit-executable-strategy-v1",
+  "generatedAt": "2026-06-15T14:18:21.424Z",
+  "objective": "建立可每日產生決策與下單意圖、且必須先通過 validation 的高報酬策略搜尋系統",
+  "stoppedObjectives": [
+    "不再最佳化 profit-edge-search-v1 的 OHLCV 參數",
+    "不再追求每月固定 10%",
+    "不把負期望或輸給大盤的策略包裝成成功"
+  ],
+  "qualificationStandards": {
+    "minimumCandidate": [
+      "Validation 月均總資產報酬高於同期 0050 或大盤",
+      "Validation Profit Factor 大於 1.15",
+      "Validation 最大回撤小於 20%",
+      "Validation 交易樣本數大於 300",
+      "贏過公平隨機策略",
+      "不依賴少數飆股",
+      "扣除交易成本後仍為正",
+      "可每日產生訊號與 order intent"
+    ],
+    "highProfitCandidate": [
+      "Validation 年化報酬大於 30% 或明顯高於大盤",
+      "Validation 月均總資產報酬大於 2%",
+      "Profit Factor 大於 1.3",
+      "最大回撤小於 20%",
+      "不同年份與市場狀態不會完全失效",
+      "報酬不依賴少數極端交易"
+    ]
+  },
+  "legacyOhlcvBaseline": {
+    "metrics": {
+      "validationAverageMonthlyEquityReturnPct": 0.3285,
+      "validationProfitFactor": 1.2198,
+      "validationMaxDrawdownPct": -13.2172,
+      "validationTrades": 534,
+      "marketAverageMonthlyReturnPct": 2.1784,
+      "randomAverageMonthlyReturnPct": -0.2878,
+      "annualizedReturnPct": 4.014
+    },
+    "minimumChecks": {
+      "beatsMarket": false,
+      "profitFactorAbove115": true,
+      "maxDrawdownBelow20": true,
+      "moreThan300Trades": true,
+      "beatsRandom": true,
+      "afterCostsPositive": true,
+      "notConcentratedInFewWinners": true,
+      "dailyExecutable": false
+    },
+    "minimumPassed": false,
+    "highProfitChecks": {
+      "annualizedAbove30OrClearlyBeatsMarket": false,
+      "averageMonthlyAbove2": false,
+      "profitFactorAbove13": false,
+      "maxDrawdownBelow20": true,
+      "stableAcrossYearsAndRegimes": false,
+      "notConcentratedInFewWinners": true
+    },
+    "highProfitPassed": false,
+    "conclusion": "舊 OHLCV 研究雖有正報酬與 Profit Factor 大於 1，但輸給同期大盤，且尚未證明報酬分散性與每日可執行性。"
+  },
+  "strategyAssessments": [
+    {
+      "strategyId": "trust_accumulation_pullback",
+      "name": "投信連買強勢股回檔策略",
+      "activationStatus": "DATA_GAP",
+      "requiredData": [
+        "daily_ohlcv",
+        "institutional_trust",
+        "industry_classification",
+        "theme_classification",
+        "market_regime",
+        "attention_disposition",
+        "price_limit"
+      ],
+      "missingData": [
+        "institutional_trust",
+        "industry_classification",
+        "theme_classification",
+        "attention_disposition",
+        "price_limit"
+      ],
+      "canGenerateDailyDecisions": true,
+      "canGenerateRealOrderIntent": false,
+      "validationStatus": "NOT_TESTABLE_DATA_GAP",
+      "qualified": false,
+      "reason": "必要資料尚未齊備，不能執行可信的歷史驗證"
+    },
+    {
+      "strategyId": "foreign_trust_breakout_confirmation",
+      "name": "外資與投信同步買超突破確認策略",
+      "activationStatus": "DATA_GAP",
+      "requiredData": [
+        "daily_ohlcv",
+        "institutional_foreign",
+        "institutional_trust",
+        "industry_classification",
+        "market_regime",
+        "attention_disposition",
+        "price_limit"
+      ],
+      "missingData": [
+        "institutional_foreign",
+        "institutional_trust",
+        "industry_classification",
+        "attention_disposition",
+        "price_limit"
+      ],
+      "canGenerateDailyDecisions": true,
+      "canGenerateRealOrderIntent": false,
+      "validationStatus": "NOT_TESTABLE_DATA_GAP",
+      "qualified": false,
+      "reason": "必要資料尚未齊備，不能執行可信的歷史驗證"
+    },
+    {
+      "strategyId": "revenue_growth_technical_turn",
+      "name": "月營收成長加技術轉強策略",
+      "activationStatus": "DATA_GAP",
+      "requiredData": [
+        "daily_ohlcv",
+        "monthly_revenue",
+        "monthly_revenue_release_date",
+        "eps",
+        "gross_margin",
+        "operating_margin",
+        "financial_release_date",
+        "industry_classification",
+        "market_regime",
+        "attention_disposition"
+      ],
+      "missingData": [
+        "monthly_revenue",
+        "monthly_revenue_release_date",
+        "eps",
+        "gross_margin",
+        "operating_margin",
+        "financial_release_date",
+        "industry_classification",
+        "attention_disposition"
+      ],
+      "canGenerateDailyDecisions": true,
+      "canGenerateRealOrderIntent": false,
+      "validationStatus": "NOT_TESTABLE_DATA_GAP",
+      "qualified": false,
+      "reason": "必要資料尚未齊備，不能執行可信的歷史驗證"
+    },
+    {
+      "strategyId": "high_volatility_stabilized_reversal",
+      "name": "高波動急跌後止穩反轉策略",
+      "activationStatus": "RESEARCH_ONLY",
+      "requiredData": [
+        "daily_ohlcv",
+        "market_regime",
+        "price_limit",
+        "corporate_actions"
+      ],
+      "missingData": [
+        "price_limit",
+        "corporate_actions"
+      ],
+      "canGenerateDailyDecisions": true,
+      "canGenerateRealOrderIntent": false,
+      "validationStatus": "NOT_TESTABLE_DATA_GAP",
+      "qualified": false,
+      "reason": "必要資料尚未齊備，不能執行可信的歷史驗證"
+    },
+    {
+      "strategyId": "margin_heat_exclusion_strength",
+      "name": "融資過熱排除加強勢股風控策略",
+      "activationStatus": "DATA_GAP",
+      "requiredData": [
+        "daily_ohlcv",
+        "margin_short",
+        "securities_lending",
+        "market_regime",
+        "attention_disposition",
+        "price_limit"
+      ],
+      "missingData": [
+        "margin_short",
+        "securities_lending",
+        "attention_disposition",
+        "price_limit"
+      ],
+      "canGenerateDailyDecisions": true,
+      "canGenerateRealOrderIntent": false,
+      "validationStatus": "NOT_TESTABLE_DATA_GAP",
+      "qualified": false,
+      "reason": "必要資料尚未齊備，不能執行可信的歷史驗證"
+    },
+    {
+      "strategyId": "theme_relative_strength_leader",
+      "name": "強勢族群內相對強勢股策略",
+      "activationStatus": "DATA_GAP",
+      "requiredData": [
+        "daily_ohlcv",
+        "industry_classification",
+        "theme_classification",
+        "theme_strength",
+        "market_regime",
+        "attention_disposition",
+        "price_limit"
+      ],
+      "missingData": [
+        "industry_classification",
+        "theme_classification",
+        "theme_strength",
+        "attention_disposition",
+        "price_limit"
+      ],
+      "canGenerateDailyDecisions": true,
+      "canGenerateRealOrderIntent": false,
+      "validationStatus": "NOT_TESTABLE_DATA_GAP",
+      "qualified": false,
+      "reason": "必要資料尚未齊備，不能執行可信的歷史驗證"
+    }
+  ],
+  "executableArchitecture": {
+    "signalEngine": "scripts/lib/strategy-signal-engine.mjs",
+    "decisionEngine": "scripts/lib/trading-decision-engine.mjs",
+    "orderIntentGenerator": "scripts/lib/order-intent-generator.mjs",
+    "mockBroker": "scripts/lib/broker-adapter.mock.mjs",
+    "realBrokerConnected": false,
+    "realOrdersAllowed": false
+  },
+  "qualifiedStrategies": [],
+  "conclusion": "找不到符合條件的高報酬可執行策略"
+}

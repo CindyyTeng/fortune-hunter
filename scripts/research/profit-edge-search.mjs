@@ -70,6 +70,15 @@ const EXIT_TYPES = Object.freeze([
   'market_weak',
   'theme_weak'
 ]);
+const CASH_VARIANT = Object.freeze({
+  id: 'cash_defense',
+  scenarioId: 'cash_defense',
+  scenarioLabel: '空手防守',
+  entryMode: 'none',
+  stopType: 'none',
+  exitType: 'none',
+  filterId: 'none'
+});
 
 const average = values => values.length
   ? values.reduce((sum, value) => sum + value, 0) / values.length
@@ -764,8 +773,35 @@ function summarizeOutcomes(outcomes) {
   };
 }
 
+function addMonths(dateText, count) {
+  const date = new Date(`${dateText.slice(0, 7)}-01T00:00:00Z`);
+  date.setUTCMonth(date.getUTCMonth() + count);
+  return date.toISOString().slice(0, 10);
+}
+
+function dayBefore(dateText) {
+  const date = new Date(`${dateText}T00:00:00Z`);
+  date.setUTCDate(date.getUTCDate() - 1);
+  return date.toISOString().slice(0, 10);
+}
+
+function trainingSlices(startDate, endDate) {
+  const slices = [];
+  for (let offset = 0; offset < 36; offset += 12) {
+    const sliceStart = addMonths(startDate, offset);
+    if (sliceStart > endDate) break;
+    const sliceEnd = dayBefore(addMonths(sliceStart, 12));
+    slices.push({
+      startDate: sliceStart,
+      endDate: sliceEnd > endDate ? endDate : sliceEnd
+    });
+  }
+  return slices;
+}
+
 function selectVariant(context, events, allVariants, startDate, endDate) {
   let best = null;
+  const slices = trainingSlices(startDate, endDate);
   for (const variant of allVariants) {
     const outcomes = events
       .filter(event => event.scenarioId === variant.scenarioId
@@ -774,15 +810,45 @@ function selectVariant(context, events, allVariants, startDate, endDate) {
       .map(event => simulateOutcome(event, variant, context))
       .filter(Boolean);
     const summary = summarizeOutcomes(outcomes);
-    if (!summary || summary.sampleSize < 80) continue;
+    if (!summary || summary.sampleSize < 100) continue;
+    const sliceSummaries = slices.map(slice => summarizeOutcomes(outcomes.filter(outcome => (
+      outcome.event.signalDate >= slice.startDate
+      && outcome.event.signalDate <= slice.endDate
+    ))));
+    const testedSlices = sliceSummaries.filter(slice => slice?.sampleSize >= 20);
+    const positiveSlices = testedSlices.filter(slice => (
+      slice.costAdjustedAverageReturnPct > 0
+      && (slice.profitFactor ?? 0) > 1
+    ));
+    const robust = summary.costAdjustedAverageReturnPct > 0
+      && (summary.profitFactor ?? 0) >= 1.05
+      && summary.topFivePercentProfitContributionPct < 55
+      && testedSlices.length >= 2
+      && positiveSlices.length >= 2
+      && Math.min(...testedSlices.map(slice => slice.costAdjustedAverageReturnPct)) > -1.5;
+    if (!robust) continue;
     const concentrationPenalty = Math.max(0, summary.topFivePercentProfitContributionPct - 55) / 20;
+    const worstSliceReturn = Math.min(
+      ...testedSlices.map(slice => slice.costAdjustedAverageReturnPct)
+    );
     const score = summary.costAdjustedAverageReturnPct * 3
       + summary.costAdjustedMedianReturnPct
       + ((summary.profitFactor ?? 0) - 1) * 2
-      + summary.positiveYears / Math.max(1, summary.testedYears)
+      + positiveSlices.length / testedSlices.length
+      + worstSliceReturn
       - concentrationPenalty
       + summary.maximumLossPct / 20;
-    if (!best || score > best.score) best = { variant, summary, score: round(score) };
+    if (!best || score > best.score) {
+      best = {
+        variant,
+        summary,
+        sliceSummaries: slices.map((slice, index) => ({
+          ...slice,
+          summary: sliceSummaries[index]
+        })),
+        score: round(score)
+      };
+    }
   }
   return best;
 }
@@ -1002,6 +1068,61 @@ function combinedValidation(folds) {
   };
 }
 
+function performanceDiagnostics(folds) {
+  const months = folds.flatMap(fold => fold.validation.summary.monthly.map(month => ({
+    ...month,
+    fold: fold.index,
+    strategy: fold.selectedVariant.scenarioLabel
+  })));
+  const trades = folds.flatMap(fold => fold.validation.trades.map(trade => ({
+    ...trade,
+    fold: fold.index,
+    selectedVariant: fold.selectedVariant.id
+  })));
+  const exitGroups = new Map();
+  for (const trade of trades) {
+    const rows = exitGroups.get(trade.exitReason) || [];
+    rows.push(trade.tradeReturnPct);
+    exitGroups.set(trade.exitReason, rows);
+  }
+  const exits = [...exitGroups].map(([reason, returns]) => {
+    const gains = returns.filter(value => value > 0).reduce((sum, value) => sum + value, 0);
+    const losses = Math.abs(
+      returns.filter(value => value <= 0).reduce((sum, value) => sum + value, 0)
+    );
+    return {
+      reason,
+      trades: returns.length,
+      averageTradeReturnPct: round(mean(returns) || 0),
+      winRatePct: round(returns.filter(value => value > 0).length / returns.length * 100),
+      profitFactor: losses ? round(gains / losses) : gains > 0 ? null : 0
+    };
+  }).sort((left, right) => right.trades - left.trades);
+  return {
+    totalMonths: months.length,
+    profitableMonths: months.filter(month => month.equityReturnPct > 0).length,
+    negativeMonths: months.filter(month => month.equityReturnPct < 0).length,
+    flatMonths: months.filter(month => month.equityReturnPct === 0).length,
+    monthsAtLeastTenPercent: months.filter(month => month.equityReturnPct >= 10).length,
+    averageTradesPerMonth: round(mean(months.map(month => month.trades)) || 0),
+    worstMonths: [...months]
+      .sort((left, right) => left.equityReturnPct - right.equityReturnPct)
+      .slice(0, 12),
+    bestMonths: [...months]
+      .sort((left, right) => right.equityReturnPct - left.equityReturnPct)
+      .slice(0, 12),
+    zeroTradeMonths: months.filter(month => month.trades === 0),
+    exitPerformance: exits,
+    causes: [
+      '單月 10% 需要非常高的資金周轉與風險承擔；目前單筆帳戶風險上限 0.5%、單檔上限 10%，不可能由少量交易穩定堆出每月 10%。',
+      '負月份主要來自停損密集發生與市場狀態快速切換，尤其跳空跌破停損會以較差價格成交。',
+      '部分規則訓練期平均為正但中位數為負，顯示趨勢策略仍仰賴少數較大的獲利交易。',
+      '零交易月份反映訓練規則或市場條件沒有提供足夠訊號；空手可避免虧損，但也不可能產生 10% 已實現報酬。',
+      '僅靠日線 OHLCV 無法精確辨識盤中訊號先後、法人資金流與基本面催化，限制了可驗證的優勢來源。'
+    ]
+  };
+}
+
 function markdown(report) {
   const scenarioRows = report.forwardAnalysis.map(scenario => {
     const nextOpen = scenario.entryModes.find(row => row.id === 'next_open');
@@ -1009,7 +1130,7 @@ function markdown(report) {
     return `| ${scenario.label} | ${scenario.detectedSamples} | ${horizon?.averageReturnPct ?? '-'}% | ${horizon?.medianReturnPct ?? '-'}% | ${horizon?.costAdjustedAverageReturnPct ?? '-'}% | ${horizon?.profitFactor ?? '-'} | ${horizon?.positiveAfterCosts ? '是' : '否'} | ${horizon?.beatsMarket ? '是' : '否'} | ${horizon?.beatsRandom ? '是' : '否'} | ${horizon?.warning ?? '-'} |`;
   }).join('\n');
   const foldRows = report.walkForward.folds.map(fold => (
-    `| ${fold.index} | ${fold.trainStart} 至 ${fold.trainEnd} | ${fold.validationStart} 至 ${fold.validationEnd} | ${fold.selectedVariant.scenarioLabel} | ${fold.selectedVariant.entryMode} / ${fold.selectedVariant.stopType} / ${fold.selectedVariant.exitType} / ${fold.selectedVariant.filterId} | ${fold.validation.summary.trades} | ${fold.validation.summary.averageMonthlyEquityReturnPct}% | ${fold.validation.summary.profitFactor ?? '-'} | ${fold.validation.summary.maximumDrawdownPct}% |`
+    `| ${fold.index} | ${fold.trainStart} 至 ${fold.trainEnd} | ${fold.validationStart} 至 ${fold.validationEnd} | ${fold.selectedVariant.scenarioLabel} | ${fold.selectedVariant.id === 'cash_defense' ? '訓練期沒有通過穩健門檻的規則' : `${fold.selectedVariant.entryMode} / ${fold.selectedVariant.stopType} / ${fold.selectedVariant.exitType} / ${fold.selectedVariant.filterId}`} | ${fold.validation.summary.trades} | ${fold.validation.summary.averageMonthlyEquityReturnPct}% | ${fold.validation.summary.profitFactor ?? '-'} | ${fold.validation.summary.maximumDrawdownPct}% |`
   )).join('\n');
   const passed = report.walkForward.combined.qualifies
     ? '找到符合條件、可進入紙上交易驗證的候選策略。'
@@ -1030,6 +1151,23 @@ function markdown(report) {
 - 最大回撤：${report.walkForward.combined.validationMaximumDrawdownPct}%
 - 前 5% 獲利交易貢獻：${report.walkForward.combined.topFivePercentProfitContributionPct}%
 
+## 未達每月 10% 與負月份診斷
+
+- Validation 月份：${report.performanceDiagnostics.totalMonths}
+- 正報酬月份：${report.performanceDiagnostics.profitableMonths}
+- 負報酬月份：${report.performanceDiagnostics.negativeMonths}
+- 零報酬月份：${report.performanceDiagnostics.flatMonths}
+- 達到 10% 月份：${report.performanceDiagnostics.monthsAtLeastTenPercent}
+- 每月平均完成交易：${report.performanceDiagnostics.averageTradesPerMonth} 筆
+
+最差月份：
+
+${report.performanceDiagnostics.worstMonths.map(month => `- ${month.month}：${month.equityReturnPct}%（${month.strategy}，${month.trades} 筆出場）`).join('\n')}
+
+主要原因：
+
+${report.performanceDiagnostics.causes.map(cause => `- ${cause}`).join('\n')}
+
 ## 八種交易情境
 
 | 情境 | 樣本數 | 5 日毛報酬平均 | 5 日毛報酬中位數 | 5 日成本後平均 | PF | 成本後為正 | 優於大盤 | 優於公平隨機 | 警告 |
@@ -1040,7 +1178,7 @@ ${scenarioRows}
 
 ## Walk-Forward
 
-訓練 36 個月、驗證 12 個月，每次前進 12 個月。每段只在訓練期挑選情境、進場、停損、出場與排除條件，驗證期固定不變。
+訓練 36 個月、驗證 12 個月，每次前進 12 個月。每段只在訓練期挑選情境、進場、停損、出場與排除條件，驗證期固定不變。36 個月訓練期另拆成三個年度子區段；至少兩個有足夠樣本的子區段成本後為正、整體 Profit Factor 至少 1.05、獲利集中度小於 55%，才允許下一年開倉，否則空手。
 
 | 段 | 訓練區間 | 驗證區間 | 訓練選中情境 | 固定規則 | 驗證交易 | 月均報酬 | PF | 最大回撤 |
 |---:|---|---|---|---|---:|---:|---:|---:|
@@ -1116,19 +1254,21 @@ async function main() {
       window.trainStart,
       window.trainEnd
     );
-    if (!selected) continue;
-    const validationEvents = events.filter(event => event.scenarioId === selected.variant.scenarioId);
+    const selectedVariant = selected?.variant ?? CASH_VARIANT;
+    const validationEvents = selected
+      ? events.filter(event => event.scenarioId === selected.variant.scenarioId)
+      : [];
     const validation = simulatePortfolio(
       context,
       validationEvents,
-      selected.variant,
+      selectedVariant,
       window.validationStart,
       window.validationEnd
     );
     const randomValidation = simulatePortfolio(
       context,
       validationEvents,
-      selected.variant,
+      selectedVariant,
       window.validationStart,
       window.validationEnd,
       { randomByEvent }
@@ -1141,9 +1281,13 @@ async function main() {
     folds.push({
       index: index + 1,
       ...window,
-      selectedVariant: selected.variant,
-      trainSummary: selected.summary,
-      trainScore: selected.score,
+      selectedVariant,
+      trainSummary: selected?.summary ?? null,
+      trainSliceSummaries: selected?.sliceSummaries ?? [],
+      trainScore: selected?.score ?? null,
+      cashDefenseReason: selected
+        ? null
+        : '訓練期沒有策略同時通過樣本、Profit Factor、年度穩定性與獲利集中度門檻',
       validation,
       randomValidation,
       marketMonthlyReturns: marketMonthly,
@@ -1151,12 +1295,13 @@ async function main() {
       validationParametersFixed: true
     });
     console.log(
-      `第 ${index + 1} 段：${selected.variant.scenarioLabel}，`
+      `第 ${index + 1} 段：${selectedVariant.scenarioLabel}，`
       + `Validation ${validation.summary.trades} 筆，月均 ${validation.summary.averageMonthlyEquityReturnPct}%`
     );
   }
 
   const combined = combinedValidation(folds);
+  const diagnostics = performanceDiagnostics(folds);
   const report = {
     generatedAt: new Date().toISOString(),
     branch: 'profit-edge-search-v1',
@@ -1171,6 +1316,15 @@ async function main() {
       validationMonths: 12,
       rollMonths: 12,
       validationParametersFixed: true,
+      nestedRobustSelection: {
+        yearlySlices: 3,
+        minimumTotalSamples: 100,
+        minimumSliceSamples: 20,
+        minimumPositiveSlices: 2,
+        minimumProfitFactor: 1.05,
+        maximumTopFivePercentProfitContributionPct: 55,
+        cashWhenNoRulePasses: true
+      },
       transactionCostsIncluded: true,
       slippageIncluded: true,
       settlementDays: 2,
@@ -1192,6 +1346,7 @@ async function main() {
     },
     testedVariants: allVariants,
     forwardAnalysis: forward,
+    performanceDiagnostics: diagnostics,
     walkForward: {
       folds: folds.map(fold => ({
         ...fold,

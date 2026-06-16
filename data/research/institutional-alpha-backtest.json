@@ -1,9 +1,9 @@
 {
-  "branch": "institutional-alpha-pipeline-v1",
-  "generatedAt": "2026-06-16T16:13:35.210Z",
+  "branch": "institutional-data-fetcher-v1",
+  "generatedAt": "2026-06-16T16:36:52.341Z",
   "strategyId": "trust_accumulation_pullback",
   "strategyName": "投信連買強勢股回檔策略",
-  "sourceStatus": "需人工匯入",
+  "sourceStatus": "保守 point-in-time 假設",
   "survivorshipBiasWarning": true,
   "parameterGridCount": 324,
   "walkForwardConfiguration": {
@@ -13,25 +13,19 @@
     "trainOnlyParameterSelection": true
   },
   "dataAssessment": {
-    "records": 0,
-    "distinctDates": 0,
-    "distinctSymbols": 0,
-    "dateRange": null,
+    "records": 130944,
+    "distinctDates": 10,
+    "distinctSymbols": 30873,
+    "dateRange": {
+      "start": "2026-04-28",
+      "end": "2026-06-16"
+    },
     "readyForWalkForward": false,
     "missing": [
-      "point-in-time 安全紀錄至少 50000 筆",
-      "至少 1000 個交易日",
-      "至少 100 檔股票",
-      "修正所有法人資料驗證錯誤"
+      "至少 1000 個交易日"
     ]
   },
-  "executionDataGaps": [
-    "注意股／處置股歷史資料",
-    "除權息、減資與分割 point-in-time 資料",
-    "歷史下市股票池"
-  ],
   "mockIntegration": {
-    "mode": "MOCK_ONLY",
     "decisions": {
       "BUY": 1,
       "SELL": 1,
@@ -39,14 +33,11 @@
       "SKIP": 1
     },
     "orderIntents": 2,
-    "realOrdersSubmitted": 0,
-    "brokerStatuses": [
-      "FILLED"
-    ]
+    "realOrdersSubmitted": 0
   },
   "registry": {
-    "experimentHash": "34c09c70c6e431c376e2c747",
-    "strategyFamilyId": "trust_accumulation_pullback:6a77ededefdb3fa0ff59b979",
+    "experimentHash": "d8c22ceed3a7020bb1f90cd7",
+    "strategyFamilyId": "trust_accumulation_pullback:606784dbff2763f62dadf108",
     "precheck": {
       "skip": false,
       "reason": "未找到需跳過的既有實驗"
@@ -60,12 +51,7 @@
   "qualification": {
     "researchMinimumCandidatePassed": false,
     "researchHighProfitCandidatePassed": false,
-    "executableCandidatePassed": false,
-    "blockedByExecutionDataGaps": [
-      "注意股／處置股歷史資料",
-      "除權息、減資與分割 point-in-time 資料",
-      "歷史下市股票池"
-    ]
+    "executableCandidatePassed": false
   },
-  "conclusion": "因資料缺口尚無法完成真實驗證"
+  "conclusion": "法人歷史資料不足，尚無法完成真實 walk-forward 驗證"
 }

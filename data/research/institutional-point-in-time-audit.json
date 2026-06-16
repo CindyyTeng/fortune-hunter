@@ -1,0 +1,27 @@
+{
+  "generatedAt": "2026-06-16T16:36:16.123Z",
+  "status": "CONSERVATIVE_ASSUMPTION_APPLIED",
+  "totalRecords": 130944,
+  "fullyVerifiedPointInTimeRecords": 0,
+  "conservativeAssumptionRecords": 130944,
+  "unsafeRecords": 0,
+  "recordsBySource": {
+    "TWSE T86": 130015,
+    "TPEx OpenAPI": 929
+  },
+  "distinctDates": 10,
+  "fallbackEffectiveDateRecords": 15320,
+  "publishedAtSource": "逐筆歷史 publishedAt 待確認",
+  "policy": {
+    "publishedAtAssumption": "market_close_after_report",
+    "effectiveDateRule": "T 日法人資料只允許 T+1 交易日使用",
+    "intradayUseAllowed": false,
+    "sameDayUseAllowed": false,
+    "fullyVerifiedPointInTime": false
+  },
+  "warnings": [
+    "此政策是保守假設，不是官方逐筆 publishedAt 驗證。",
+    "使用交易日曆找不到下一交易日時，會退回下一個工作日並記錄 fallbackEffectiveDateRecords。",
+    "未來若取得官方逐筆 publishedAt，必須重新標記 fullyVerifiedPointInTime。"
+  ]
+}

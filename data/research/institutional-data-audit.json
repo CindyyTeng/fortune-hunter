@@ -97,6 +97,168 @@
       "failedDates": 0,
       "historicalBackfillStatus": "OpenAPI 未確認日期參數，本腳本目前只能保存最新可取得資料",
       "rows": 929
+    },
+    {
+      "generatedAt": "2026-06-16T16:20:57.605Z",
+      "market": "上市",
+      "plannedDates": 30,
+      "downloadedDates": 22,
+      "cachedDates": 5,
+      "noDataDates": 3,
+      "failedDates": 0,
+      "defaultSafetyLimit": 30,
+      "results": [
+        {
+          "date": "2026-04-28",
+          "status": "downloaded",
+          "rows": 14858
+        },
+        {
+          "date": "2026-04-29",
+          "status": "downloaded",
+          "rows": 8026
+        },
+        {
+          "date": "2026-04-30",
+          "status": "no_data",
+          "rows": 0
+        },
+        {
+          "date": "2026-05-04",
+          "status": "downloaded",
+          "rows": 15713
+        },
+        {
+          "date": "2026-05-05",
+          "status": "downloaded",
+          "rows": 15753
+        },
+        {
+          "date": "2026-05-06",
+          "status": "downloaded",
+          "rows": 16660
+        },
+        {
+          "date": "2026-05-07",
+          "status": "downloaded",
+          "rows": 14635
+        },
+        {
+          "date": "2026-05-08",
+          "status": "no_data",
+          "rows": 0
+        },
+        {
+          "date": "2026-05-11",
+          "status": "downloaded",
+          "rows": 16016
+        },
+        {
+          "date": "2026-05-12",
+          "status": "downloaded",
+          "rows": 15983
+        },
+        {
+          "date": "2026-05-13",
+          "status": "downloaded",
+          "rows": 15006
+        },
+        {
+          "date": "2026-05-14",
+          "status": "downloaded",
+          "rows": 15057
+        },
+        {
+          "date": "2026-05-15",
+          "status": "downloaded",
+          "rows": 15398
+        },
+        {
+          "date": "2026-05-18",
+          "status": "downloaded",
+          "rows": 8026
+        },
+        {
+          "date": "2026-05-19",
+          "status": "downloaded",
+          "rows": 14636
+        },
+        {
+          "date": "2026-05-20",
+          "status": "downloaded",
+          "rows": 8026
+        },
+        {
+          "date": "2026-05-21",
+          "status": "downloaded",
+          "rows": 15302
+        },
+        {
+          "date": "2026-05-22",
+          "status": "downloaded",
+          "rows": 16063
+        },
+        {
+          "date": "2026-05-25",
+          "status": "downloaded",
+          "rows": 16803
+        },
+        {
+          "date": "2026-05-26",
+          "status": "downloaded",
+          "rows": 16296
+        },
+        {
+          "date": "2026-05-27",
+          "status": "no_data",
+          "rows": 0
+        },
+        {
+          "date": "2026-05-28",
+          "status": "downloaded",
+          "rows": 16176
+        },
+        {
+          "date": "2026-05-29",
+          "status": "downloaded",
+          "rows": 15760
+        },
+        {
+          "date": "2026-06-01",
+          "status": "downloaded",
+          "rows": 16059
+        },
+        {
+          "date": "2026-06-02",
+          "status": "downloaded",
+          "rows": 15625
+        },
+        {
+          "date": "2026-06-03",
+          "status": "cached",
+          "rows": null
+        },
+        {
+          "date": "2026-06-04",
+          "status": "cached",
+          "rows": null
+        },
+        {
+          "date": "2026-06-05",
+          "status": "cached",
+          "rows": null
+        },
+        {
+          "date": "2026-06-08",
+          "status": "cached",
+          "rows": null
+        },
+        {
+          "date": "2026-06-09",
+          "status": "cached",
+          "rows": null
+        }
+      ]
     }
   ],
   "build": {
@@ -110,21 +272,29 @@
     "assumePublishedAtRule": false
   },
   "summary": {
-    "generatedAt": "2026-06-16T16:11:39.391Z",
+    "generatedAt": "2026-06-16T16:36:38.700Z",
     "totalRecords": 130944,
-    "pointInTimeSafeRecords": 0,
+    "fullyVerifiedPointInTimeRecords": 0,
+    "conservativeAssumptionRecords": 130944,
+    "pointInTimeSafeRecords": 130944,
+    "unsafeRecords": 0,
     "distinctDates": 10,
     "distinctSymbols": 30873,
     "recordsBySource": {
       "TWSE T86": 130015,
       "TPEx OpenAPI": 929
     },
-    "validationStatus": "INVALID_OR_INELIGIBLE",
+    "validationStatus": "VALID",
+    "validationErrorCount": 0,
+    "validationWarningCount": 3727,
     "enoughForWalkForward": false,
     "missing": [
-      "目前沒有可供 point-in-time 回測的安全資料。",
-      "有效交易日不足 1000 天，尚不足以做 36/12 個月 walk-forward。",
-      "法人資料驗證尚未通過。"
+      "交易日不足 1000 天，尚不足以做 36/12 個月 walk-forward。"
+    ],
+    "warnings": [
+      "目前沒有逐筆 fully verified publishedAt。",
+      "保守假設僅允許 T 日資料於 T+1 交易日使用。",
+      "資料日期不足時不得宣稱完成 walk-forward。"
     ]
   }
 }

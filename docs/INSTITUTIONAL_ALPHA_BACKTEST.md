@@ -1,27 +1,28 @@
-# 投信連買強勢股回檔策略回測
+# 投信連買強勢股回檔策略驗證
 
-產生時間：2026-06-16T16:13:35.210Z
+產生時間：2026-06-16T16:36:52.341Z
 
 ## 結論
 
-**因資料缺口尚無法完成真實驗證**
+**法人歷史資料不足，尚無法完成真實 walk-forward 驗證**
 
-目前法人資料紀錄 0 筆、交易日 0 日、股票 0 檔。資料未達到真實 walk-forward 的最低覆蓋要求，因此沒有產生假績效。
+## 資料狀態
+
+- point-in-time 安全筆數：130944
+- 交易日數：10
+- 股票檔數：30873
+- 是否足夠 walk-forward：否
 
 ## 資料缺口
 
-- point-in-time 安全紀錄至少 50000 筆
 - 至少 1000 個交易日
-- 至少 100 檔股票
-- 修正所有法人資料驗證錯誤
 
-## Point-in-time 規則
+## Registry
 
-1. 法人資料交易日為 `date`，只能在 `publishedAt` 後得知。
-2. 實際交易日使用 `effectiveDate`，且必須晚於 `date`。
-3. 回測只使用 `isPointInTimeSafe: true` 的版本。
-4. 同一交易日與股票若有修訂版本，不用後來版本覆蓋當時決策。
-5. 下一交易日若跳空超過限價，視為未成交。
+- experimentHash：d8c22ceed3a7020bb1f90cd7
+- strategyFamilyId：trust_accumulation_pullback:606784dbff2763f62dadf108
+- 是否跳過既有實驗：否
+- 跳過原因：未找到需跳過的既有實驗
 
 ## Walk-forward
 
@@ -29,27 +30,14 @@
 - 驗證：12 個月
 - 每次前進：12 個月
 - 參數組合：324
-- 完成區段：0
-- Validation 交易數：無資料
-- Validation 月均總資產報酬：無資料
-- Validation 平均年化報酬：無資料
-- Validation 平均已實現報酬：無資料
-- 同期大盤月均報酬：無資料
-- 公平隨機策略月均報酬：無資料
-- Profit Factor：無資料
-- 最大回撤：無資料
-- 通過 Validation 標準的策略：0
+- 交易次數：未產生
+- 月均總資產報酬：未產生
+- 年化報酬：未產生
+- Profit Factor：未產生
+- 最大回撤：未產生
 
-## 可執行接線
+## 風險警告
 
-- BUY／SELL／HOLD／SKIP：{"BUY":1,"SELL":1,"HOLD":1,"SKIP":1}
-- Order intent：2 筆
-- 真實下單：0 筆
-- Mock broker 狀態：FILLED
-
-## 尚未解決的實盤風險
-
-1. 注意股與處置股歷史資料尚未匯入。
-2. 除權息、減資與分割 point-in-time 資料尚未匯入。
-3. 歷史下市股票池仍不完整，存在倖存者偏差。
-4. 官方法人端點的歷史深度、實際公布時間與自動化使用條款仍待確認。
+- 本資料採用 conservative point-in-time assumption，不是逐筆 fully verified publishedAt。
+- T 日法人資料只允許 T+1 交易日使用，不允許 T 日盤中或收盤前使用。
+- 注意股、處置股、除權息、減資、分割資料尚未完整介接。

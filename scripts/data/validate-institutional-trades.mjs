@@ -70,7 +70,9 @@ function validateRecord(row, index, duplicateKeys) {
 
   for (const field of REQUIRED_FIELDS.filter(field => /(?:Buy|Sell)$/.test(field))) {
     if (!Number.isFinite(row[field])) errors.push(`${field} 必須是數字`);
-    if (!field.includes('Net') && Number.isFinite(row[field]) && row[field] < 0) errors.push(`${field} 不可為負數`);
+    if (!field.includes('Net') && Number.isFinite(row[field]) && row[field] < 0) {
+      warnings.push(`${field} 為負數，需確認官方欄位定義或特殊商品資料`);
+    }
   }
   if (typeof row.isPointInTimeSafe !== 'boolean') errors.push('isPointInTimeSafe 必須是布林值');
   for (const [label, buy, sell, net] of [
@@ -79,7 +81,7 @@ function validateRecord(row, index, duplicateKeys) {
     ['自營商', row.dealerBuy, row.dealerSell, row.dealerNetBuy]
   ]) {
     if ([buy, sell, net].every(Number.isFinite) && Math.abs((buy - sell) - net) > 1) {
-      errors.push(`${label}買賣超與買進減賣出不一致`);
+      warnings.push(`${label}買賣超與買進減賣出不一致，需回頭確認官方欄位定義`);
     }
   }
 

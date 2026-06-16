@@ -42,8 +42,8 @@ function pointInTime(date, source, fetchedAt) {
     publishedAt: assume ? `${date}T18:00:00+08:00` : fetchedAt,
     isPointInTimeSafe: assume,
     notes: assume
-      ? `${source}；publishedAt 採收盤後 18:00 推定規則，仍需日後以官方或留存檔案佐證`
-      : `${source}；官方原始資料未提供逐筆 publishedAt，歷史回填預設不可進入 point-in-time 回測`
+      ? `${source}：採用收盤後 18:00 公布、下一交易日才可使用的保守假設。`
+      : `${source}：尚未找到逐筆歷史 publishedAt，預設不可用於 point-in-time 回測。`
   };
 }
 
@@ -105,6 +105,7 @@ function tpexRecords(raw, nextMap) {
 const nextMap = await nextTradeDateMap();
 const records = [];
 const rawSummary = { twseFiles: 0, tpexFiles: 0, twseRecords: 0, tpexRecords: 0 };
+
 for (const file of await rawFiles(RAW_TWSE)) {
   const raw = await readJson(file, null);
   if (!raw) continue;
@@ -113,6 +114,7 @@ for (const file of await rawFiles(RAW_TWSE)) {
   rawSummary.twseRecords += rows.length;
   records.push(...rows);
 }
+
 for (const file of await rawFiles(RAW_TPEX)) {
   const raw = await readJson(file, null);
   if (!raw) continue;
@@ -121,10 +123,13 @@ for (const file of await rawFiles(RAW_TPEX)) {
   rawSummary.tpexRecords += rows.length;
   records.push(...rows);
 }
+
 records.sort((a, b) => a.date.localeCompare(b.date) || a.symbol.localeCompare(b.symbol));
 await fs.writeFile(OUTPUT, `${JSON.stringify({
   version: '1.0.0',
-  sourceStatus: process.env.INSTITUTIONAL_ASSUME_PUBLISHED_AT === '1' ? '待確認' : '需人工匯入',
+  sourceStatus: process.env.INSTITUTIONAL_ASSUME_PUBLISHED_AT === '1'
+    ? '保守 point-in-time 假設'
+    : '官方來源，publishedAt 待確認',
   generatedAt: new Date().toISOString(),
   records
 }, null, 2)}\n`, 'utf8');
@@ -138,5 +143,6 @@ audit.build = {
   assumePublishedAtRule: process.env.INSTITUTIONAL_ASSUME_PUBLISHED_AT === '1'
 };
 await fs.writeFile(AUDIT, `${JSON.stringify(audit, null, 2)}\n`, 'utf8');
+
 console.log(`institutional records=${records.length}, safe=${audit.build.pointInTimeSafeRecords}`);
 console.log(`raw twse=${rawSummary.twseFiles} files, tpex=${rawSummary.tpexFiles} files`);

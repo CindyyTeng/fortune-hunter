@@ -1,6 +1,6 @@
 # 投信連買強勢股回檔策略驗證
 
-產生時間：2026-06-16T16:36:52.341Z
+產生時間：2026-06-16T16:54:46.003Z
 
 ## 結論
 
@@ -8,9 +8,9 @@
 
 ## 資料狀態
 
-- point-in-time 安全筆數：130944
-- 交易日數：10
-- 股票檔數：30873
+- point-in-time 安全筆數：367176
+- 交易日數：26
+- 股票檔數：32873
 - 是否足夠 walk-forward：否
 
 ## 資料缺口
@@ -21,8 +21,8 @@
 
 - experimentHash：d8c22ceed3a7020bb1f90cd7
 - strategyFamilyId：trust_accumulation_pullback:606784dbff2763f62dadf108
-- 是否跳過既有實驗：否
-- 跳過原因：未找到需跳過的既有實驗
+- 是否跳過既有實驗：是
+- 跳過原因：相同 experimentHash 已存在，不重複回測
 
 ## Walk-forward
 

@@ -1,6 +1,6 @@
 {
   "branch": "institutional-data-fetcher-v1",
-  "generatedAt": "2026-06-16T16:36:52.341Z",
+  "generatedAt": "2026-06-16T16:54:46.003Z",
   "strategyId": "trust_accumulation_pullback",
   "strategyName": "投信連買強勢股回檔策略",
   "sourceStatus": "保守 point-in-time 假設",
@@ -13,9 +13,9 @@
     "trainOnlyParameterSelection": true
   },
   "dataAssessment": {
-    "records": 130944,
-    "distinctDates": 10,
-    "distinctSymbols": 30873,
+    "records": 367176,
+    "distinctDates": 26,
+    "distinctSymbols": 32873,
     "dateRange": {
       "start": "2026-04-28",
       "end": "2026-06-16"
@@ -39,12 +39,15 @@
     "experimentHash": "d8c22ceed3a7020bb1f90cd7",
     "strategyFamilyId": "trust_accumulation_pullback:606784dbff2763f62dadf108",
     "precheck": {
-      "skip": false,
-      "reason": "未找到需跳過的既有實驗"
+      "skip": true,
+      "reason": "相同 experimentHash 已存在，不重複回測",
+      "matchedExperimentId": "EXP-20260616163652-d8c22cee"
     },
-    "appended": true,
+    "appended": false,
     "skip": {
-      "skip": false
+      "skip": true,
+      "reason": "相同 experimentHash 已存在，不重複回測",
+      "matchedExperimentId": "EXP-20260616163652-d8c22cee"
     }
   },
   "walkForward": null,

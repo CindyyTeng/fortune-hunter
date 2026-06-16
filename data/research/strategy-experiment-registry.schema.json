@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "策略實驗紀錄",
+  "type": "object",
+  "required": ["version", "experiments"],
+  "properties": {
+    "version": { "type": "string" },
+    "generatedAt": { "type": "string" },
+    "updatedAt": { "type": "string" },
+    "experiments": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["experimentId", "experimentHash", "strategyFamilyId", "strategyId", "resultStatus"],
+        "properties": {
+          "experimentId": { "type": "string" },
+          "experimentHash": { "type": "string" },
+          "strategyFamilyId": { "type": "string" },
+          "strategyId": { "type": "string" },
+          "resultStatus": {
+            "type": "string",
+            "enum": ["passed", "failed", "overfit", "inconclusive", "data_missing", "skipped"]
+          }
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": true
+}

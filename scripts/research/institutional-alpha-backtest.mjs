@@ -26,6 +26,7 @@ import {
 } from '../lib/trading-decision-engine.mjs';
 import { generateOrderIntents } from '../lib/order-intent-generator.mjs';
 import { createMockBroker } from '../lib/broker-adapter.mock.mjs';
+import { appendExperiment, buildExperimentIdentity, loadRegistry, shouldSkipExperiment } from './strategy-experiment-registry.mjs';
 import {
   foldWindows,
   iterateObservations,
@@ -731,6 +732,54 @@ async function mockIntegration() {
   };
 }
 
+async function registryInput(dataAssessment, walkForward) {
+  const specs = await loadStrategySpecs();
+  const strategy = specs.strategies.find(row => row.strategyId === STRATEGY_ID);
+  return {
+    strategyId: STRATEGY_ID,
+    dataSources: ['daily_ohlcv', 'market_regime', 'institutional_trust', 'institutional_foreign'],
+    setupRules: strategy.setupRules,
+    triggerRules: strategy.triggerRules,
+    invalidationRules: strategy.invalidationRules,
+    exitRules: strategy.exitRules,
+    riskRules: strategy.riskRules,
+    blockedWhen: strategy.blockedWhen,
+    parameters: {
+      grid: 'trustDays=3/5/10; trustPercentile=0.5/0.7/0.9; foreignMode=2; support=2; stop=3; exit=3',
+      parameterGridCount: parameterGrid().length
+    },
+    trainPeriod: { months: 36 },
+    validationPeriod: { months: 12, stepMonths: 12 },
+    costModel: {
+      buyFeePct: 0.1425,
+      sellFeePct: 0.1425,
+      sellTaxPct: 0.3,
+      slippagePct: 0.15
+    },
+    executionModel: {
+      entry: 'next_open_limit',
+      exit: 'shared execution-simulator',
+      settlement: 'T+2'
+    },
+    metrics: walkForward?.combined || {
+      records: dataAssessment.records,
+      distinctDates: dataAssessment.distinctDates,
+      distinctSymbols: dataAssessment.distinctSymbols
+    },
+    resultStatus: walkForward
+      ? walkForward.combined?.minimumCandidatePassed ? 'passed' : 'failed'
+      : 'data_missing',
+    failureReason: walkForward ? null : dataAssessment.missing.join('；'),
+    overfitFlag: false,
+    passedMinimum: walkForward?.combined?.minimumCandidatePassed === true,
+    passedHighProfit: walkForward?.combined?.highProfitCandidatePassed === true,
+    allowRetest: !walkForward,
+    notes: walkForward
+      ? '完成投信連買強勢股回檔策略 walk-forward'
+      : '資料不足，未執行大型 walk-forward'
+  };
+}
+
 function markdown(report) {
   const walkForward = report.walkForward?.combined;
   const metric = (value, suffix = '') => value == null ? '無資料' : `${value}${suffix}`;
@@ -799,8 +848,12 @@ const [payload, validation] = await Promise.all([
 ]);
 const assessment = dataAssessment(payload, validation);
 const mock = await mockIntegration();
+const preliminaryRegistryInput = await registryInput(assessment, null);
+const identity = buildExperimentIdentity(preliminaryRegistryInput);
+const registry = await loadRegistry();
+const registryPrecheck = shouldSkipExperiment(registry, identity, preliminaryRegistryInput);
 let walkForward = null;
-if (assessment.readyForWalkForward) {
+if (assessment.readyForWalkForward && !registryPrecheck.skip) {
   walkForward = await runWalkForward(payload.records.filter(row =>
     row.isPointInTimeSafe === true
     && row.effectiveDate > row.date
@@ -824,6 +877,11 @@ const report = {
   dataAssessment: assessment,
   executionDataGaps: EXECUTION_DATA_GAPS,
   mockIntegration: mock,
+  registry: {
+    experimentHash: identity.experimentHash,
+    strategyFamilyId: identity.strategyFamilyId,
+    precheck: registryPrecheck
+  },
   walkForward,
   qualification: walkForward ? {
     researchMinimumCandidatePassed: walkForward.combined?.minimumCandidatePassed === true,
@@ -844,6 +902,9 @@ const report = {
         : '沒有任何 validation 策略通過標準'
     : '因資料缺口尚無法完成真實驗證'
 };
+const registryResult = await appendExperiment(await registryInput(assessment, walkForward));
+report.registry.appended = registryResult.appended;
+report.registry.skip = registryResult.skip;
 await fs.writeFile(OUTPUT, `${JSON.stringify(report, null, 2)}\n`, 'utf8');
 await fs.writeFile(DOCUMENT, markdown(report), 'utf8');
 

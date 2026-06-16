@@ -1,0 +1,54 @@
+{
+  "version": "1.0.0",
+  "generatedAt": "2026-06-16T16:13:34.718Z",
+  "updatedAt": "2026-06-16T16:13:35.212Z",
+  "experiments": [
+    {
+      "experimentId": "EXP-20260616161335-34c09c70",
+      "createdAt": "2026-06-16T16:13:35.212Z",
+      "strategyId": "trust_accumulation_pullback",
+      "strategyFamilyId": "trust_accumulation_pullback:6a77ededefdb3fa0ff59b979",
+      "experimentHash": "34c09c70c6e431c376e2c747",
+      "dataSources": [
+        "daily_ohlcv",
+        "market_regime",
+        "institutional_trust",
+        "institutional_foreign"
+      ],
+      "parameters": {
+        "grid": "trustDays=3/5/10; trustPercentile=0.5/0.7/0.9; foreignMode=2; support=2; stop=3; exit=3",
+        "parameterGridCount": 324
+      },
+      "trainPeriod": {
+        "months": 36
+      },
+      "validationPeriod": {
+        "months": 12,
+        "stepMonths": 12
+      },
+      "costModel": {
+        "buyFeePct": 0.1425,
+        "sellFeePct": 0.1425,
+        "sellTaxPct": 0.3,
+        "slippagePct": 0.15
+      },
+      "executionModel": {
+        "entry": "next_open_limit",
+        "exit": "shared execution-simulator",
+        "settlement": "T+2"
+      },
+      "metrics": {
+        "records": 0,
+        "distinctDates": 0,
+        "distinctSymbols": 0
+      },
+      "resultStatus": "data_missing",
+      "failureReason": "point-in-time 安全紀錄至少 50000 筆；至少 1000 個交易日；至少 100 檔股票；修正所有法人資料驗證錯誤",
+      "overfitFlag": false,
+      "passedMinimum": false,
+      "passedHighProfit": false,
+      "allowRetest": true,
+      "notes": "資料不足，未執行大型 walk-forward"
+    }
+  ]
+}

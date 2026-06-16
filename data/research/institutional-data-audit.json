@@ -1,0 +1,130 @@
+{
+  "generatedAt": "2026-06-16T16:10:18.440Z",
+  "sources": {
+    "twseT86": {
+      "status": "待確認",
+      "recentDate": "2026-06-12",
+      "recentRows": 14065,
+      "oldDate": "2022-06-16",
+      "oldRows": 0,
+      "endpoint": "https://www.twse.com.tw/rwd/zh/fund/T86"
+    },
+    "twseOpenApi": {
+      "status": "可取得 Swagger",
+      "endpoint": "https://openapi.twse.com.tw/swagger.json"
+    },
+    "tpexOpenApi": {
+      "status": "可取得最近資料；歷史日期參數待確認",
+      "currentRows": 929,
+      "endpoint": "https://www.tpex.org.tw/openapi/v1/tpex_3insti_daily_trading"
+    }
+  },
+  "probes": {
+    "twseRecent": {
+      "ok": true,
+      "status": 200,
+      "rows": 14065
+    },
+    "twseOld": {
+      "ok": false,
+      "rows": 0
+    },
+    "twseSwagger": {
+      "ok": true,
+      "status": 200
+    },
+    "tpexSwagger": {
+      "ok": true,
+      "status": 200
+    },
+    "tpexCurrent": {
+      "ok": true,
+      "status": 200,
+      "rows": 929
+    }
+  },
+  "limitations": [
+    "官方歷史資料未逐筆提供 publishedAt，預設不可視為 point-in-time safe。",
+    "櫃買中心 OpenAPI 目前僅確認最新資料可取得，歷史日期參數仍待確認。",
+    "大量回填需要分批、快取、重試與速率限制，避免對官方網站造成壓力。"
+  ],
+  "fetchRuns": [
+    {
+      "runId": "twse-current-batch",
+      "generatedAt": "2026-06-16T16:10:30.029Z",
+      "market": "上市",
+      "plannedDates": 5,
+      "downloadedDates": 0,
+      "cachedDates": 5,
+      "noDataDates": 0,
+      "failedDates": 0,
+      "defaultSafetyLimit": 5,
+      "results": [
+        {
+          "date": "2026-06-03",
+          "status": "cached",
+          "rows": null
+        },
+        {
+          "date": "2026-06-04",
+          "status": "cached",
+          "rows": null
+        },
+        {
+          "date": "2026-06-05",
+          "status": "cached",
+          "rows": null
+        },
+        {
+          "date": "2026-06-08",
+          "status": "cached",
+          "rows": null
+        },
+        {
+          "date": "2026-06-09",
+          "status": "cached",
+          "rows": null
+        }
+      ]
+    },
+    {
+      "generatedAt": "2026-06-16T16:10:39.899Z",
+      "market": "上櫃",
+      "plannedDates": 1,
+      "downloadedDates": 1,
+      "cachedDates": 0,
+      "noDataDates": 0,
+      "failedDates": 0,
+      "historicalBackfillStatus": "OpenAPI 未確認日期參數，本腳本目前只能保存最新可取得資料",
+      "rows": 929
+    }
+  ],
+  "build": {
+    "generatedAt": "2026-06-16T16:11:13.150Z",
+    "twseFiles": 12,
+    "tpexFiles": 1,
+    "twseRecords": 130015,
+    "tpexRecords": 929,
+    "outputRecords": 130944,
+    "pointInTimeSafeRecords": 0,
+    "assumePublishedAtRule": false
+  },
+  "summary": {
+    "generatedAt": "2026-06-16T16:11:39.391Z",
+    "totalRecords": 130944,
+    "pointInTimeSafeRecords": 0,
+    "distinctDates": 10,
+    "distinctSymbols": 30873,
+    "recordsBySource": {
+      "TWSE T86": 130015,
+      "TPEx OpenAPI": 929
+    },
+    "validationStatus": "INVALID_OR_INELIGIBLE",
+    "enoughForWalkForward": false,
+    "missing": [
+      "目前沒有可供 point-in-time 回測的安全資料。",
+      "有效交易日不足 1000 天，尚不足以做 36/12 個月 walk-forward。",
+      "法人資料驗證尚未通過。"
+    ]
+  }
+}

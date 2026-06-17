@@ -31,7 +31,9 @@ const dates = new Set(records.map(row => row.date).filter(Boolean));
 const symbols = new Set(records.map(row => row.symbol).filter(Boolean));
 const safe = records.filter(row => row.isPointInTimeSafe);
 const fullyVerified = records.filter(row => row.fullyVerifiedPointInTime === true);
-const conservative = records.filter(row => row.conservativePointInTimeAssumption === true && row.isPointInTimeSafe);
+const rowLevelConservative = records.filter(row => row.conservativePointInTimeAssumption === true && row.isPointInTimeSafe);
+const policyLevelConservative = data.pointInTimePolicy?.conservativePointInTimeAssumption === true ? safe.length : 0;
+const conservativeCount = rowLevelConservative.length || policyLevelConservative;
 const bySource = countBy(records, 'source');
 const missing = [];
 
@@ -44,7 +46,7 @@ audit.summary = {
   generatedAt: new Date().toISOString(),
   totalRecords: records.length,
   fullyVerifiedPointInTimeRecords: fullyVerified.length,
-  conservativeAssumptionRecords: conservative.length,
+  conservativeAssumptionRecords: conservativeCount,
   pointInTimeSafeRecords: safe.length,
   unsafeRecords: records.length - safe.length,
   distinctDates: dates.size,

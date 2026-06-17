@@ -88,7 +88,7 @@ function validateRecord(row, index, duplicateKeys) {
   if (row.isPointInTimeSafe !== true) warnings.push('isPointInTimeSafe 不是 true，不可用於真實 point-in-time 回測');
   if (/待確認/.test(row.source || '')) warnings.push('資料來源仍待確認');
 
-  const duplicateKey = `${row.date}|${row.symbol}|${row.publishedAt}`;
+  const duplicateKey = `${row.date}|${row.symbol}|${row.market || ''}|${row.source || ''}|${row.publishedAt}`;
   if (duplicateKeys.has(duplicateKey)) errors.push('date、symbol、publishedAt 重複');
   duplicateKeys.add(duplicateKey);
 

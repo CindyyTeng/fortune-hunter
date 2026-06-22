@@ -262,37 +262,38 @@
     }
   ],
   "build": {
-    "generatedAt": "2026-06-17T16:33:16.571Z",
-    "twseFiles": 971,
-    "tpexFiles": 972,
-    "twseRecords": 242939,
-    "tpexRecords": 56477,
-    "outputRecords": 299416,
-    "pointInTimeSafeRecords": 299416,
+    "generatedAt": "2026-06-22T11:58:07.019Z",
+    "twseFiles": 1033,
+    "tpexFiles": 1034,
+    "twseRawRows": 14024178,
+    "tpexRawRows": 834924,
+    "twseRecords": 255418,
+    "tpexRecords": 59250,
+    "outputRecords": 314668,
+    "filteredOutRecords": 14544434,
+    "pointInTimeSafeRecords": 314668,
     "assumePublishedAtRule": true,
     "writer": "streaming_compact_json",
     "defaultFlowFilter": "投信任一買賣活動"
   },
   "summary": {
-    "generatedAt": "2026-06-17T16:36:51.956Z",
-    "totalRecords": 299416,
+    "generatedAt": "2026-06-22T12:20:31.779Z",
+    "totalRecords": 314668,
     "fullyVerifiedPointInTimeRecords": 0,
-    "conservativeAssumptionRecords": 299416,
-    "pointInTimeSafeRecords": 299416,
+    "conservativeAssumptionRecords": 314668,
+    "pointInTimeSafeRecords": 314668,
     "unsafeRecords": 0,
-    "distinctDates": 972,
-    "distinctSymbols": 1326,
+    "distinctDates": 1034,
+    "distinctSymbols": 1334,
     "recordsBySource": {
-      "TWSE": 242939,
-      "TPEX": 56477
+      "TWSE": 255418,
+      "TPEX": 59250
     },
     "validationStatus": "VALID",
     "validationErrorCount": 0,
-    "validationWarningCount": 8140,
-    "enoughForWalkForward": false,
-    "missing": [
-      "交易日不足 1000 天，尚不足以做 36/12 個月 walk-forward。"
-    ],
+    "validationWarningCount": 8335,
+    "enoughForWalkForward": true,
+    "missing": [],
     "warnings": [
       "目前沒有逐筆 fully verified publishedAt。",
       "保守假設僅允許 T 日資料於 T+1 交易日使用。",

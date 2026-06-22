@@ -4,6 +4,7 @@ const AUDIT = new URL('../../data/research/institutional-data-audit.json', impor
 const DATA = new URL('../../data/institutional/institutional-trades.json', import.meta.url);
 const VALIDATION = new URL('../../data/institutional/validation-report.json', import.meta.url);
 const DOC = new URL('../../docs/INSTITUTIONAL_DATA_PIPELINE.md', import.meta.url);
+const PIT_AUDIT = new URL('../../data/research/institutional-point-in-time-audit.json', import.meta.url);
 
 async function readJson(url, fallback) {
   try {
@@ -93,6 +94,20 @@ ${audit.summary.warnings.map(item => `- ${item}`).join('\n')}
 `;
 
 await fs.writeFile(AUDIT, `${JSON.stringify(audit, null, 2)}\n`, 'utf8');
+await fs.writeFile(PIT_AUDIT, `${JSON.stringify({
+  generatedAt: audit.summary.generatedAt,
+  status: safe.length === records.length && validation?.status === 'VALID' ? 'VALID' : 'INVALID',
+  totalRecords: records.length,
+  fullyVerifiedPointInTimeRecords: fullyVerified.length,
+  conservativeAssumptionRecords: conservativeCount,
+  pointInTimeSafeRecords: safe.length,
+  unsafeRecords: records.length - safe.length,
+  distinctDates: dates.size,
+  effectiveDateRule: 'T 日法人資料只允許 T+1 交易日使用',
+  intradayUseAllowed: false,
+  sameDayUseAllowed: false,
+  warning: '逐筆歷史 publishedAt 待確認；目前採用官方日報收盤後公布的保守假設。'
+}, null, 2)}\n`, 'utf8');
 await fs.writeFile(DOC, md, 'utf8');
 
 console.log(`institutional audit: records=${records.length}, safe=${safe.length}, validation=${audit.summary.validationStatus}`);

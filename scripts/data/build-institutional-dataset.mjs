@@ -158,7 +158,14 @@ function tpexRecords(raw, nextMap) {
 }
 
 const nextMap = await nextTradeDateMap();
-const rawSummary = { twseFiles: 0, tpexFiles: 0, twseRecords: 0, tpexRecords: 0 };
+const rawSummary = {
+  twseFiles: 0,
+  tpexFiles: 0,
+  twseRawRows: 0,
+  tpexRawRows: 0,
+  twseRecords: 0,
+  tpexRecords: 0
+};
 let outputRecords = 0;
 let pointInTimeSafeRecords = 0;
 
@@ -181,6 +188,7 @@ for (const file of await rawFiles(RAW_TWSE)) {
   const raw = await readJson(file, null);
   if (!raw) continue;
   rawSummary.twseFiles += 1;
+  rawSummary.twseRawRows += raw.payload?.data?.length || 0;
   const rows = twseRecords(raw, nextMap);
   rawSummary.twseRecords += rows.length;
   await writeRows(rows);
@@ -190,6 +198,7 @@ for (const file of await rawFiles(RAW_TPEX)) {
   const raw = await readJson(file, null);
   if (!raw) continue;
   rawSummary.tpexFiles += 1;
+  rawSummary.tpexRawRows += tableRows(raw).rows.length;
   const rows = tpexRecords(raw, nextMap);
   rawSummary.tpexRecords += rows.length;
   await writeRows(rows);
@@ -203,6 +212,7 @@ audit.build = {
   generatedAt: new Date().toISOString(),
   ...rawSummary,
   outputRecords,
+  filteredOutRecords: rawSummary.twseRawRows + rawSummary.tpexRawRows - outputRecords,
   pointInTimeSafeRecords,
   assumePublishedAtRule: true,
   writer: 'streaming_compact_json',

@@ -1,43 +1,39 @@
 # 投信連買強勢股回檔策略驗證
 
-產生時間：2026-06-16T16:54:46.003Z
+產生時間：2026-06-22T12:17:52.498Z
 
 ## 結論
 
-**法人歷史資料不足，尚無法完成真實 walk-forward 驗證**
+**沒有策略通過最低候選標準，也沒有策略通過高報酬候選標準**
 
 ## 資料狀態
 
-- point-in-time 安全筆數：367176
-- 交易日數：26
-- 股票檔數：32873
-- 是否足夠 walk-forward：否
-
-## 資料缺口
-
-- 至少 1000 個交易日
-
-## Registry
-
-- experimentHash：d8c22ceed3a7020bb1f90cd7
-- strategyFamilyId：trust_accumulation_pullback:606784dbff2763f62dadf108
-- 是否跳過既有實驗：是
-- 跳過原因：相同 experimentHash 已存在，不重複回測
+- point-in-time 安全筆數：314668
+- 交易日數：1034
+- 股票檔數：1334
+- 是否足夠 walk-forward：是
+- 倖存者偏差警告：有，OHLCV 股票池來自現有研究候選歷史
 
 ## Walk-forward
 
 - 訓練：36 個月
 - 驗證：12 個月
 - 每次前進：12 個月
-- 參數組合：324
-- 交易次數：未產生
-- 月均總資產報酬：未產生
-- 年化報酬：未產生
-- Profit Factor：未產生
-- 最大回撤：未產生
+- 測試參數組合：648
+- Fold 數：2
+- Validation 交易次數：35
+- 月均總資產報酬：-0.1003%
+- 年化報酬：-1.2054%
+- Profit Factor：0.6338
+- 最大回撤：-2.449%
+- 勝率：40%
+- 大盤同期月均：5.3115%
+- 公平隨機月均：-0.4542%
+- 通過最低候選標準：否
+- 通過高報酬候選標準：否
 
 ## 風險警告
 
-- 本資料採用 conservative point-in-time assumption，不是逐筆 fully verified publishedAt。
-- T 日法人資料只允許 T+1 交易日使用，不允許 T 日盤中或收盤前使用。
+- 法人資料採 conservative point-in-time assumption，不是逐筆 fully verified publishedAt。
+- T 日法人資料只允許 T+1 交易日使用；本回測使用 T+1 收盤確認、下一交易日開盤進場，較規則更保守。
 - 注意股、處置股、除權息、減資、分割資料尚未完整介接。

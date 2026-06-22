@@ -3,7 +3,8 @@ import { buildMarketRegimes } from '../lib/market-regime.mjs';
 import { loadOhlcvDataset } from '../lib/ohlcv-dataset.mjs';
 import {
   simulateEntry,
-  simulateExit
+  simulateExit,
+  trailingStopPrice
 } from '../lib/execution-simulator.mjs';
 import {
   beginPortfolioDay,
@@ -647,14 +648,21 @@ export function simulateSignalMap(context, signalMap, options = {}) {
       if (!bar) continue;
       markPosition(portfolio, position.tradeId, bar.price);
       const heldDays = dayIndex - position.entryDayIndex + 1;
+      const trailingStop = trailingStopPrice(
+        position.entryPrice,
+        Math.max(position.peakPrice, bar.high ?? bar.price),
+        position.trailingStopRule
+      );
       const exit = simulateExit({
         day: bar,
         stopLoss: position.stopLoss,
-        takeProfit: position.takeProfit
+        takeProfit: position.takeProfit,
+        trailingStop,
+        peakPrice: position.peakPrice
       });
       if (exit?.price) {
         closePosition(portfolio, position, { ...exit, date }, dayIndex);
-      } else if (heldDays >= (options.holdingDays ?? 5) || bar === position.bars.at(-1)) {
+      } else if (heldDays >= (position.maxHoldingDays ?? options.holdingDays ?? 5) || bar === position.bars.at(-1)) {
         closePosition(portfolio, position, {
           date,
           price: bar.price,
@@ -680,7 +688,9 @@ export function simulateSignalMap(context, signalMap, options = {}) {
       const nextDay = candidate.futureBars[0];
       const fill = simulateEntry({ mode: 'next_open_market', nextDay });
       if (!fill) continue;
-      const stopDistancePct = Math.min(8, Math.max(3, candidate.atrPct * 2));
+      const stopDistancePct = candidate.stopDistancePct
+        ?? Math.min(8, Math.max(3, candidate.atrPct * 2));
+      const rewardRisk = candidate.rewardRisk ?? 2;
       openPosition(portfolio, {
         tradeId: `${candidate.symbol}-${candidate.signalDate}-${options.strategyId || '研究'}`,
         symbol: candidate.symbol,
@@ -689,11 +699,19 @@ export function simulateSignalMap(context, signalMap, options = {}) {
         entryDate: candidate.entryDate,
         entryPrice: fill.price,
         stopLoss: fill.price * (1 - stopDistancePct / 100),
-        takeProfit: fill.price * (1 + stopDistancePct * 2 / 100),
+        takeProfit: rewardRisk ? fill.price * (1 + stopDistancePct * rewardRisk / 100) : null,
         positionPct: 9,
         strategy: options.strategyId || '研究策略',
         regime,
-        bars: candidate.futureBars
+        bars: candidate.futureBars,
+        maxHoldingDays: candidate.maxHoldingDays,
+        trailingStopRule: candidate.trailingStopRule,
+        setup: candidate.setup,
+        trigger: candidate.trigger,
+        invalidation: candidate.invalidation,
+        exitPlan: candidate.exitPlan,
+        reason: candidate.reason,
+        orderIntent: candidate.orderIntent
       }, dayIndex, {
         positionPct: 9,
         accountRiskPct: 0.5,

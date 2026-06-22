@@ -1,11 +1,11 @@
 {
   "branch": "institutional-data-fetcher-v1",
-  "generatedAt": "2026-06-16T16:54:46.003Z",
+  "generatedAt": "2026-06-22T12:17:52.498Z",
   "strategyId": "trust_accumulation_pullback",
   "strategyName": "投信連買強勢股回檔策略",
   "sourceStatus": "保守 point-in-time 假設",
   "survivorshipBiasWarning": true,
-  "parameterGridCount": 324,
+  "parameterGridCount": 648,
   "walkForwardConfiguration": {
     "trainMonths": 36,
     "validationMonths": 12,
@@ -13,48 +13,3397 @@
     "trainOnlyParameterSelection": true
   },
   "dataAssessment": {
-    "records": 367176,
-    "distinctDates": 26,
-    "distinctSymbols": 32873,
+    "records": 314668,
+    "distinctDates": 1034,
+    "distinctSymbols": 1334,
     "dateRange": {
-      "start": "2026-04-28",
+      "start": "2022-03-09",
       "end": "2026-06-16"
     },
-    "readyForWalkForward": false,
-    "missing": [
-      "至少 1000 個交易日"
-    ]
-  },
-  "mockIntegration": {
-    "decisions": {
-      "BUY": 1,
-      "SELL": 1,
-      "HOLD": 1,
-      "SKIP": 1
-    },
-    "orderIntents": 2,
-    "realOrdersSubmitted": 0
+    "readyForWalkForward": true,
+    "missing": []
   },
   "registry": {
-    "experimentHash": "d8c22ceed3a7020bb1f90cd7",
-    "strategyFamilyId": "trust_accumulation_pullback:606784dbff2763f62dadf108",
+    "experimentHash": "53de4c13658e4bd3b2b27c29",
+    "strategyFamilyId": "trust_accumulation_pullback:2a45c687aa6026f55ff8256e",
     "precheck": {
-      "skip": true,
-      "reason": "相同 experimentHash 已存在，不重複回測",
-      "matchedExperimentId": "EXP-20260616163652-d8c22cee"
+      "skip": false,
+      "reason": "未找到需跳過的既有實驗"
     },
-    "appended": false,
+    "appended": true,
     "skip": {
-      "skip": true,
-      "reason": "相同 experimentHash 已存在，不重複回測",
-      "matchedExperimentId": "EXP-20260616163652-d8c22cee"
+      "skip": false
     }
   },
-  "walkForward": null,
+  "walkForward": {
+    "overlapDateRange": {
+      "start": "2022-03-09",
+      "end": "2026-06-09"
+    },
+    "observationCount": 301336,
+    "folds": [
+      {
+        "trainStart": "2022-03-01",
+        "trainEnd": "2025-02-28",
+        "validationStart": "2025-03-01",
+        "validationEnd": "2026-02-28",
+        "bestParameters": {
+          "trustDays": 3,
+          "trustMode": "consecutive",
+          "trustPercentile": 0.5,
+          "foreignMode": "synchronized_buy",
+          "supportMode": "ma20",
+          "stopMode": "pullback_low",
+          "exitMode": "reward_1_5"
+        },
+        "trainSummary": {
+          "startDate": "2022-03-01",
+          "endDate": "2025-02-28",
+          "endingEquity": 916599,
+          "annualizedReturnPct": -2.863,
+          "averageMonthlyEquityReturnPct": -0.24,
+          "maximumDrawdownPct": -9.1911,
+          "negativeMonths": 12,
+          "winRatePct": 44.6281,
+          "profitFactor": 0.5162,
+          "sharpeLike": -1.4749,
+          "trades": 121,
+          "concentrationPct": 6.6116,
+          "monthly": [
+            {
+              "month": "2022-03",
+              "equityReturnPct": 0,
+              "endingEquity": 1000000,
+              "trades": 0
+            },
+            {
+              "month": "2022-04",
+              "equityReturnPct": 0,
+              "endingEquity": 1000000,
+              "trades": 0
+            },
+            {
+              "month": "2022-05",
+              "equityReturnPct": 0,
+              "endingEquity": 1000000,
+              "trades": 0
+            },
+            {
+              "month": "2022-06",
+              "equityReturnPct": 0,
+              "endingEquity": 1000000,
+              "trades": 0
+            },
+            {
+              "month": "2022-07",
+              "equityReturnPct": -0.0447,
+              "endingEquity": 999553,
+              "trades": 2
+            },
+            {
+              "month": "2022-08",
+              "equityReturnPct": 0,
+              "endingEquity": 999553,
+              "trades": 0
+            },
+            {
+              "month": "2022-09",
+              "equityReturnPct": 0,
+              "endingEquity": 999553,
+              "trades": 0
+            },
+            {
+              "month": "2022-10",
+              "equityReturnPct": 0,
+              "endingEquity": 999553,
+              "trades": 0
+            },
+            {
+              "month": "2022-11",
+              "equityReturnPct": 0,
+              "endingEquity": 999553,
+              "trades": 0
+            },
+            {
+              "month": "2022-12",
+              "equityReturnPct": -1.3459,
+              "endingEquity": 986100,
+              "trades": 5
+            },
+            {
+              "month": "2023-01",
+              "equityReturnPct": -0.1605,
+              "endingEquity": 984517,
+              "trades": 9
+            },
+            {
+              "month": "2023-02",
+              "equityReturnPct": -0.7954,
+              "endingEquity": 976686,
+              "trades": 5
+            },
+            {
+              "month": "2023-03",
+              "equityReturnPct": -1.8945,
+              "endingEquity": 958183,
+              "trades": 13
+            },
+            {
+              "month": "2023-04",
+              "equityReturnPct": -0.6682,
+              "endingEquity": 951780,
+              "trades": 8
+            },
+            {
+              "month": "2023-05",
+              "equityReturnPct": -0.0279,
+              "endingEquity": 951514,
+              "trades": 16
+            },
+            {
+              "month": "2023-06",
+              "equityReturnPct": -0.5718,
+              "endingEquity": 946073,
+              "trades": 3
+            },
+            {
+              "month": "2023-07",
+              "equityReturnPct": -0.2385,
+              "endingEquity": 943817,
+              "trades": 13
+            },
+            {
+              "month": "2023-08",
+              "equityReturnPct": -1.7057,
+              "endingEquity": 927718,
+              "trades": 13
+            },
+            {
+              "month": "2023-09",
+              "equityReturnPct": 0.2964,
+              "endingEquity": 930468,
+              "trades": 17
+            },
+            {
+              "month": "2023-10",
+              "equityReturnPct": -1.6795,
+              "endingEquity": 914841,
+              "trades": 11
+            },
+            {
+              "month": "2023-11",
+              "equityReturnPct": 0,
+              "endingEquity": 914841,
+              "trades": 0
+            },
+            {
+              "month": "2023-12",
+              "equityReturnPct": 0,
+              "endingEquity": 914841,
+              "trades": 0
+            },
+            {
+              "month": "2024-01",
+              "equityReturnPct": -0.5797,
+              "endingEquity": 909538,
+              "trades": 2
+            },
+            {
+              "month": "2024-02",
+              "equityReturnPct": 0,
+              "endingEquity": 909538,
+              "trades": 0
+            },
+            {
+              "month": "2024-03",
+              "equityReturnPct": 0,
+              "endingEquity": 909538,
+              "trades": 0
+            },
+            {
+              "month": "2024-04",
+              "equityReturnPct": 0,
+              "endingEquity": 909538,
+              "trades": 0
+            },
+            {
+              "month": "2024-05",
+              "equityReturnPct": 0,
+              "endingEquity": 909538,
+              "trades": 0
+            },
+            {
+              "month": "2024-06",
+              "equityReturnPct": 0.3757,
+              "endingEquity": 912955,
+              "trades": 2
+            },
+            {
+              "month": "2024-07",
+              "equityReturnPct": 0,
+              "endingEquity": 912955,
+              "trades": 0
+            },
+            {
+              "month": "2024-08",
+              "equityReturnPct": 0.2107,
+              "endingEquity": 914879,
+              "trades": 1
+            },
+            {
+              "month": "2024-09",
+              "equityReturnPct": 0.188,
+              "endingEquity": 916599,
+              "trades": 1
+            },
+            {
+              "month": "2024-10",
+              "equityReturnPct": 0,
+              "endingEquity": 916599,
+              "trades": 0
+            },
+            {
+              "month": "2024-11",
+              "equityReturnPct": 0,
+              "endingEquity": 916599,
+              "trades": 0
+            },
+            {
+              "month": "2024-12",
+              "equityReturnPct": 0,
+              "endingEquity": 916599,
+              "trades": 0
+            },
+            {
+              "month": "2025-01",
+              "equityReturnPct": 0,
+              "endingEquity": 916599,
+              "trades": 0
+            },
+            {
+              "month": "2025-02",
+              "equityReturnPct": 0,
+              "endingEquity": 916599,
+              "trades": 0
+            }
+          ]
+        },
+        "validationSummary": {
+          "startDate": "2025-03-01",
+          "endDate": "2026-02-28",
+          "endingEquity": 985186,
+          "annualizedReturnPct": -1.4864,
+          "averageMonthlyEquityReturnPct": -0.1234,
+          "maximumDrawdownPct": -2.449,
+          "negativeMonths": 8,
+          "winRatePct": 39.3939,
+          "profitFactor": 0.641,
+          "sharpeLike": -1.1013,
+          "trades": 33,
+          "concentrationPct": 6.0606,
+          "monthly": [
+            {
+              "month": "2025-03",
+              "equityReturnPct": -0.1766,
+              "endingEquity": 998234,
+              "trades": 7
+            },
+            {
+              "month": "2025-04",
+              "equityReturnPct": -0.5519,
+              "endingEquity": 992725,
+              "trades": 5
+            },
+            {
+              "month": "2025-05",
+              "equityReturnPct": -0.0678,
+              "endingEquity": 992052,
+              "trades": 3
+            },
+            {
+              "month": "2025-06",
+              "equityReturnPct": -0.5326,
+              "endingEquity": 986768,
+              "trades": 1
+            },
+            {
+              "month": "2025-07",
+              "equityReturnPct": -0.053,
+              "endingEquity": 986245,
+              "trades": 1
+            },
+            {
+              "month": "2025-08",
+              "equityReturnPct": -0.7384,
+              "endingEquity": 978963,
+              "trades": 4
+            },
+            {
+              "month": "2025-09",
+              "equityReturnPct": 0.0771,
+              "endingEquity": 979718,
+              "trades": 2
+            },
+            {
+              "month": "2025-10",
+              "equityReturnPct": 0,
+              "endingEquity": 979718,
+              "trades": 0
+            },
+            {
+              "month": "2025-11",
+              "equityReturnPct": -0.3466,
+              "endingEquity": 976322,
+              "trades": 1
+            },
+            {
+              "month": "2025-12",
+              "equityReturnPct": 0.9791,
+              "endingEquity": 985881,
+              "trades": 7
+            },
+            {
+              "month": "2026-01",
+              "equityReturnPct": 0,
+              "endingEquity": 985881,
+              "trades": 0
+            },
+            {
+              "month": "2026-02",
+              "equityReturnPct": -0.0705,
+              "endingEquity": 985186,
+              "trades": 2
+            }
+          ]
+        },
+        "randomSummary": {
+          "startDate": "2025-03-01",
+          "endDate": "2026-02-28",
+          "endingEquity": 951884,
+          "annualizedReturnPct": -4.8277,
+          "averageMonthlyEquityReturnPct": -0.3949,
+          "maximumDrawdownPct": -7.3291,
+          "negativeMonths": 6,
+          "winRatePct": 43.5897,
+          "profitFactor": 0.841,
+          "sharpeLike": -0.6418,
+          "trades": 156,
+          "concentrationPct": 1.9231,
+          "monthly": [
+            {
+              "month": "2025-03",
+              "equityReturnPct": 0.3747,
+              "endingEquity": 1003747,
+              "trades": 5
+            },
+            {
+              "month": "2025-04",
+              "equityReturnPct": -2.2374,
+              "endingEquity": 981289,
+              "trades": 3
+            },
+            {
+              "month": "2025-05",
+              "equityReturnPct": -0.2384,
+              "endingEquity": 978950,
+              "trades": 7
+            },
+            {
+              "month": "2025-06",
+              "equityReturnPct": -1.2161,
+              "endingEquity": 967045,
+              "trades": 11
+            },
+            {
+              "month": "2025-07",
+              "equityReturnPct": -1.0137,
+              "endingEquity": 957242,
+              "trades": 17
+            },
+            {
+              "month": "2025-08",
+              "equityReturnPct": 2.1431,
+              "endingEquity": 977757,
+              "trades": 19
+            },
+            {
+              "month": "2025-09",
+              "equityReturnPct": 0.5323,
+              "endingEquity": 982962,
+              "trades": 20
+            },
+            {
+              "month": "2025-10",
+              "equityReturnPct": 1.7727,
+              "endingEquity": 1000387,
+              "trades": 17
+            },
+            {
+              "month": "2025-11",
+              "equityReturnPct": -4.3807,
+              "endingEquity": 956563,
+              "trades": 16
+            },
+            {
+              "month": "2025-12",
+              "equityReturnPct": 0.4425,
+              "endingEquity": 960796,
+              "trades": 11
+            },
+            {
+              "month": "2026-01",
+              "equityReturnPct": -1.5481,
+              "endingEquity": 945922,
+              "trades": 21
+            },
+            {
+              "month": "2026-02",
+              "equityReturnPct": 0.6303,
+              "endingEquity": 951884,
+              "trades": 9
+            }
+          ]
+        },
+        "marketMonthlyReturns": [
+          -10.259740259740258,
+          -2.4023119516552116,
+          6.613282024223999,
+          7.616134876999303,
+          6.596357705641043,
+          1.8428725063035056,
+          10.095236642020101,
+          12.02422293196712,
+          -3.706566063133443,
+          5.2125101516224515,
+          10.670731955522017,
+          11.776863955176985
+        ]
+      },
+      {
+        "trainStart": "2023-03-01",
+        "trainEnd": "2026-02-28",
+        "validationStart": "2026-03-01",
+        "validationEnd": "2026-06-09",
+        "bestParameters": {
+          "trustDays": 3,
+          "trustMode": "consecutive",
+          "trustPercentile": 0.5,
+          "foreignMode": "synchronized_buy",
+          "supportMode": "ma20",
+          "stopMode": "pullback_low",
+          "exitMode": "reward_1_5"
+        },
+        "trainSummary": {
+          "startDate": "2023-03-01",
+          "endDate": "2026-02-28",
+          "endingEquity": 916646,
+          "annualizedReturnPct": -2.8614,
+          "averageMonthlyEquityReturnPct": -0.24,
+          "maximumDrawdownPct": -8.7302,
+          "negativeMonths": 15,
+          "winRatePct": 44.186,
+          "profitFactor": 0.5322,
+          "sharpeLike": -1.489,
+          "trades": 129,
+          "concentrationPct": 5.4264,
+          "monthly": [
+            {
+              "month": "2023-03",
+              "equityReturnPct": -1.4449,
+              "endingEquity": 985551,
+              "trades": 8
+            },
+            {
+              "month": "2023-04",
+              "equityReturnPct": -0.6652,
+              "endingEquity": 978995,
+              "trades": 8
+            },
+            {
+              "month": "2023-05",
+              "equityReturnPct": -0.0307,
+              "endingEquity": 978694,
+              "trades": 16
+            },
+            {
+              "month": "2023-06",
+              "equityReturnPct": -0.5737,
+              "endingEquity": 973079,
+              "trades": 3
+            },
+            {
+              "month": "2023-07",
+              "equityReturnPct": -0.2391,
+              "endingEquity": 970752,
+              "trades": 13
+            },
+            {
+              "month": "2023-08",
+              "equityReturnPct": -1.7035,
+              "endingEquity": 954215,
+              "trades": 13
+            },
+            {
+              "month": "2023-09",
+              "equityReturnPct": 0.2954,
+              "endingEquity": 957034,
+              "trades": 17
+            },
+            {
+              "month": "2023-10",
+              "equityReturnPct": -1.6787,
+              "endingEquity": 940968,
+              "trades": 11
+            },
+            {
+              "month": "2023-11",
+              "equityReturnPct": 0.3937,
+              "endingEquity": 944673,
+              "trades": 5
+            },
+            {
+              "month": "2023-12",
+              "equityReturnPct": -0.1631,
+              "endingEquity": 943132,
+              "trades": 11
+            },
+            {
+              "month": "2024-01",
+              "equityReturnPct": -1.5179,
+              "endingEquity": 928816,
+              "trades": 9
+            },
+            {
+              "month": "2024-02",
+              "equityReturnPct": -0.1773,
+              "endingEquity": 927169,
+              "trades": 2
+            },
+            {
+              "month": "2024-03",
+              "equityReturnPct": 0,
+              "endingEquity": 927169,
+              "trades": 0
+            },
+            {
+              "month": "2024-04",
+              "equityReturnPct": -0.5161,
+              "endingEquity": 922384,
+              "trades": 2
+            },
+            {
+              "month": "2024-05",
+              "equityReturnPct": -0.5184,
+              "endingEquity": 917602,
+              "trades": 2
+            },
+            {
+              "month": "2024-06",
+              "equityReturnPct": 0.1878,
+              "endingEquity": 919325,
+              "trades": 1
+            },
+            {
+              "month": "2024-07",
+              "equityReturnPct": 0,
+              "endingEquity": 919325,
+              "trades": 0
+            },
+            {
+              "month": "2024-08",
+              "equityReturnPct": 0,
+              "endingEquity": 919325,
+              "trades": 0
+            },
+            {
+              "month": "2024-09",
+              "equityReturnPct": 0.1153,
+              "endingEquity": 920385,
+              "trades": 3
+            },
+            {
+              "month": "2024-10",
+              "equityReturnPct": 0,
+              "endingEquity": 920385,
+              "trades": 0
+            },
+            {
+              "month": "2024-11",
+              "equityReturnPct": 0,
+              "endingEquity": 920385,
+              "trades": 0
+            },
+            {
+              "month": "2024-12",
+              "equityReturnPct": -0.2609,
+              "endingEquity": 917984,
+              "trades": 1
+            },
+            {
+              "month": "2025-01",
+              "equityReturnPct": 0,
+              "endingEquity": 917984,
+              "trades": 0
+            },
+            {
+              "month": "2025-02",
+              "equityReturnPct": 0,
+              "endingEquity": 917984,
+              "trades": 0
+            },
+            {
+              "month": "2025-03",
+              "equityReturnPct": 0,
+              "endingEquity": 917984,
+              "trades": 0
+            },
+            {
+              "month": "2025-04",
+              "equityReturnPct": 0.1879,
+              "endingEquity": 919709,
+              "trades": 1
+            },
+            {
+              "month": "2025-05",
+              "equityReturnPct": 0,
+              "endingEquity": 919709,
+              "trades": 0
+            },
+            {
+              "month": "2025-06",
+              "equityReturnPct": 0,
+              "endingEquity": 919709,
+              "trades": 0
+            },
+            {
+              "month": "2025-07",
+              "equityReturnPct": 0,
+              "endingEquity": 919709,
+              "trades": 0
+            },
+            {
+              "month": "2025-08",
+              "equityReturnPct": -0.5189,
+              "endingEquity": 914937,
+              "trades": 2
+            },
+            {
+              "month": "2025-09",
+              "equityReturnPct": 0,
+              "endingEquity": 914937,
+              "trades": 0
+            },
+            {
+              "month": "2025-10",
+              "equityReturnPct": 0,
+              "endingEquity": 914937,
+              "trades": 0
+            },
+            {
+              "month": "2025-11",
+              "equityReturnPct": -0.0435,
+              "endingEquity": 914539,
+              "trades": 0
+            },
+            {
+              "month": "2025-12",
+              "equityReturnPct": 0.2304,
+              "endingEquity": 916646,
+              "trades": 1
+            },
+            {
+              "month": "2026-01",
+              "equityReturnPct": 0,
+              "endingEquity": 916646,
+              "trades": 0
+            },
+            {
+              "month": "2026-02",
+              "equityReturnPct": 0,
+              "endingEquity": 916646,
+              "trades": 0
+            }
+          ]
+        },
+        "validationSummary": {
+          "startDate": "2026-03-01",
+          "endDate": "2026-06-09",
+          "endingEquity": 998757,
+          "annualizedReturnPct": -0.4533,
+          "averageMonthlyEquityReturnPct": -0.031,
+          "maximumDrawdownPct": -0.4284,
+          "negativeMonths": 1,
+          "winRatePct": 50,
+          "profitFactor": 0.5182,
+          "sharpeLike": -0.672,
+          "trades": 2,
+          "concentrationPct": 50,
+          "monthly": [
+            {
+              "month": "2026-03",
+              "equityReturnPct": -0.258,
+              "endingEquity": 997420,
+              "trades": 1
+            },
+            {
+              "month": "2026-04",
+              "equityReturnPct": 0.134,
+              "endingEquity": 998757,
+              "trades": 1
+            },
+            {
+              "month": "2026-05",
+              "equityReturnPct": 0,
+              "endingEquity": 998757,
+              "trades": 0
+            },
+            {
+              "month": "2026-06",
+              "equityReturnPct": 0,
+              "endingEquity": 998757,
+              "trades": 0
+            }
+          ]
+        },
+        "randomSummary": {
+          "startDate": "2026-03-01",
+          "endDate": "2026-06-09",
+          "endingEquity": 974318,
+          "annualizedReturnPct": -9.0653,
+          "averageMonthlyEquityReturnPct": -0.6322,
+          "maximumDrawdownPct": -3.7529,
+          "negativeMonths": 2,
+          "winRatePct": 34.2857,
+          "profitFactor": 0.6815,
+          "sharpeLike": -1.4768,
+          "trades": 35,
+          "concentrationPct": 5.7143,
+          "monthly": [
+            {
+              "month": "2026-03",
+              "equityReturnPct": -3.5935,
+              "endingEquity": 964065,
+              "trades": 12
+            },
+            {
+              "month": "2026-04",
+              "equityReturnPct": -0.1138,
+              "endingEquity": 962968,
+              "trades": 15
+            },
+            {
+              "month": "2026-05",
+              "equityReturnPct": 1.1786,
+              "endingEquity": 974318,
+              "trades": 8
+            },
+            {
+              "month": "2026-06",
+              "equityReturnPct": 0,
+              "endingEquity": 974318,
+              "trades": 0
+            }
+          ]
+        },
+        "marketMonthlyReturns": [
+          -10.844119391607743,
+          25.086388263533955,
+          16.464090083844084,
+          -1.802657968095378
+        ]
+      }
+    ],
+    "combined": {
+      "validationTrades": 35,
+      "validationAverageMonthlyEquityReturnPct": -0.1003,
+      "validationAverageAnnualizedReturnPct": -1.2054,
+      "validationProfitFactor": 0.6338,
+      "validationMaximumDrawdownPct": -2.449,
+      "validationWinRatePct": 40,
+      "marketAverageMonthlyReturnPct": 5.3115,
+      "randomAverageMonthlyEquityReturnPct": -0.4542,
+      "concentrationPct": 8.5714,
+      "validationMonths": 16,
+      "minimumChecks": {
+        "beatsMarket": false,
+        "profitFactor": false,
+        "drawdown": true,
+        "tradeCount": false,
+        "beatsRandom": true,
+        "diversified": true,
+        "afterCostsPositive": false
+      },
+      "highChecks": {
+        "annualizedReturn": false,
+        "averageMonthly": false,
+        "profitFactor": false,
+        "drawdown": true
+      },
+      "passedMinimum": false,
+      "passedHighProfit": false,
+      "trades": [
+        {
+          "symbol": "2395",
+          "name": "研華",
+          "signalDate": "2025-03-04",
+          "entryDate": "2025-03-05",
+          "exitDate": "2025-03-06",
+          "tradeReturnPct": 2.09,
+          "setup": [
+            "投信 連買 3 日條件成立",
+            "股價在 MA60 上且趨勢向上",
+            "相對大盤強"
+          ],
+          "trigger": [
+            "回測 MA20 後收紅"
+          ],
+          "invalidation": [
+            "跌破回測支撐",
+            "跌破 MA20",
+            "投信轉賣且股價轉弱"
+          ],
+          "exitReason": "盤中達到停利",
+          "orderIntent": {
+            "intentId": "2d99b55a81b3a7465252",
+            "createdAt": "2026-06-22T12:13:17.192Z",
+            "tradeDate": "2025-03-05",
+            "symbol": "2395",
+            "strategyId": "trust_accumulation_pullback",
+            "action": "BUY",
+            "status": "PENDING_REVIEW",
+            "submitToRealBroker": false,
+            "reason": "投信連買強勢股回檔 Setup 與 Trigger 成立",
+            "warnings": [
+              "法人資料採 T 日公布、T+1 才可使用的保守假設"
+            ],
+            "audit": {
+              "setup": [
+                "投信 連買 3 日條件成立",
+                "股價在 MA60 上且趨勢向上",
+                "相對大盤強"
+              ],
+              "trigger": [
+                "回測 MA20 後收紅"
+              ],
+              "invalidation": [
+                "跌破回測支撐",
+                "跌破 MA20",
+                "投信轉賣且股價轉弱"
+              ],
+              "noFutureDataAttestation": true,
+              "humanApprovalRequired": true
+            },
+            "side": "BUY",
+            "quantity": 227,
+            "boardLotQuantity": 0,
+            "oddLotQuantity": 227,
+            "orderType": "MARKETABLE_LIMIT",
+            "limitPrice": 395.96999999999997,
+            "stopPrice": 386.12,
+            "targetPrice": 405.82,
+            "riskRewardRatio": 1.5,
+            "timeInForce": "ROD",
+            "session": "REGULAR",
+            "brokerPayload": {
+              "symbol": "2395",
+              "side": "BUY",
+              "quantity": 227,
+              "orderType": "MARKETABLE_LIMIT",
+              "price": 395.96999999999997,
+              "triggerPrice": 394,
+              "timeInForce": "ROD"
+            }
+          }
+        },
+        {
+          "symbol": "8069",
+          "name": "元太",
+          "signalDate": "2025-03-04",
+          "entryDate": "2025-03-05",
+          "exitDate": "2025-03-06",
+          "tradeReturnPct": 3.54,
+          "setup": [
+            "投信 連買 3 日條件成立",
+            "股價在 MA60 上且趨勢向上",
+            "相對大盤強"
+          ],
+          "trigger": [
+            "回測 MA20 後收紅"
+          ],
+          "invalidation": [
+            "跌破回測支撐",
+            "跌破 MA20",
+            "投信轉賣且股價轉弱"
+          ],
+          "exitReason": "盤中達到停利",
+          "orderIntent": {
+            "intentId": "892694bea00abc7fc703",
+            "createdAt": "2026-06-22T12:13:17.187Z",
+            "tradeDate": "2025-03-05",
+            "symbol": "8069",
+            "strategyId": "trust_accumulation_pullback",
+            "action": "BUY",
+            "status": "PENDING_REVIEW",
+            "submitToRealBroker": false,
+            "reason": "投信連買強勢股回檔 Setup 與 Trigger 成立",
+            "warnings": [
+              "法人資料採 T 日公布、T+1 才可使用的保守假設"
+            ],
+            "audit": {
+              "setup": [
+                "投信 連買 3 日條件成立",
+                "股價在 MA60 上且趨勢向上",
+                "相對大盤強"
+              ],
+              "trigger": [
+                "回測 MA20 後收紅"
+              ],
+              "invalidation": [
+                "跌破回測支撐",
+                "跌破 MA20",
+                "投信轉賣且股價轉弱"
+              ],
+              "noFutureDataAttestation": true,
+              "humanApprovalRequired": true
+            },
+            "side": "BUY",
+            "quantity": 314,
+            "boardLotQuantity": 0,
+            "oddLotQuantity": 314,
+            "orderType": "MARKETABLE_LIMIT",
+            "limitPrice": 286.92749999999995,
+            "stopPrice": 277,
+            "targetPrice": 298.25,
+            "riskRewardRatio": 1.5,
+            "timeInForce": "ROD",
+            "session": "REGULAR",
+            "brokerPayload": {
+              "symbol": "8069",
+              "side": "BUY",
+              "quantity": 314,
+              "orderType": "MARKETABLE_LIMIT",
+              "price": 286.92749999999995,
+              "triggerPrice": 285.5,
+              "timeInForce": "ROD"
+            }
+          }
+        },
+        {
+          "symbol": "5269",
+          "name": "祥碩",
+          "signalDate": "2025-03-05",
+          "entryDate": "2025-03-06",
+          "exitDate": "2025-03-07",
+          "tradeReturnPct": -4.24,
+          "setup": [
+            "投信 連買 3 日條件成立",
+            "股價在 MA60 上且趨勢向上",
+            "相對大盤強"
+          ],
+          "trigger": [
+            "回測 MA20 後收紅"
+          ],
+          "invalidation": [
+            "跌破回測支撐",
+            "跌破 MA20",
+            "投信轉賣且股價轉弱"
+          ],
+          "exitReason": "跳空跌破停損",
+          "orderIntent": {
+            "intentId": "b9cca5cd850f5e7316fa",
+            "createdAt": "2026-06-22T12:13:17.197Z",
+            "tradeDate": "2025-03-06",
+            "symbol": "5269",
+            "strategyId": "trust_accumulation_pullback",
+            "action": "BUY",
+            "status": "PENDING_REVIEW",
+            "submitToRealBroker": false,
+            "reason": "投信連買強勢股回檔 Setup 與 Trigger 成立",
+            "warnings": [
+              "法人資料採 T 日公布、T+1 才可使用的保守假設"
+            ],
+            "audit": {
+              "setup": [
+                "投信 連買 3 日條件成立",
+                "股價在 MA60 上且趨勢向上",
+                "相對大盤強"
+              ],
+              "trigger": [
+                "回測 MA20 後收紅"
+              ],
+              "invalidation": [
+                "跌破回測支撐",
+                "跌破 MA20",
+                "投信轉賣且股價轉弱"
+              ],
+              "noFutureDataAttestation": true,
+              "humanApprovalRequired": true
+            },
+            "side": "BUY",
+            "quantity": 43,
+            "boardLotQuantity": 0,
+            "oddLotQuantity": 43,
+            "orderType": "MARKETABLE_LIMIT",
+            "limitPrice": 2080.35,
+            "stopPrice": 2015,
+            "targetPrice": 2152.5,
+            "riskRewardRatio": 1.5,
+            "timeInForce": "ROD",
+            "session": "REGULAR",
+            "brokerPayload": {
+              "symbol": "5269",
+              "side": "BUY",
+              "quantity": 43,
+              "orderType": "MARKETABLE_LIMIT",
+              "price": 2080.35,
+              "triggerPrice": 2070,
+              "timeInForce": "ROD"
+            }
+          }
+        },
+        {
+          "symbol": "2368",
+          "name": "金像電",
+          "signalDate": "2025-03-05",
+          "entryDate": "2025-03-06",
+          "exitDate": "2025-03-07",
+          "tradeReturnPct": -0.01,
+          "setup": [
+            "投信 連買 3 日條件成立",
+            "股價在 MA60 上且趨勢向上",
+            "相對大盤強"
+          ],
+          "trigger": [
+            "回測 MA20 後收紅"
+          ],
+          "invalidation": [
+            "跌破回測支撐",
+            "跌破 MA20",
+            "投信轉賣且股價轉弱"
+          ],
+          "exitReason": "總曝險超過 0% 上限",
+          "orderIntent": {
+            "intentId": "26ab2b98e16fa7b667a1",
+            "createdAt": "2026-06-22T12:13:17.176Z",
+            "tradeDate": "2025-03-06",
+            "symbol": "2368",
+            "strategyId": "trust_accumulation_pullback",
+            "action": "BUY",
+            "status": "PENDING_REVIEW",
+            "submitToRealBroker": false,
+            "reason": "投信連買強勢股回檔 Setup 與 Trigger 成立",
+            "warnings": [
+              "法人資料採 T 日公布、T+1 才可使用的保守假設"
+            ],
+            "audit": {
+              "setup": [
+                "投信 連買 3 日條件成立",
+                "股價在 MA60 上且趨勢向上",
+                "相對大盤強"
+              ],
+              "trigger": [
+                "回測 MA20 後收紅"
+              ],
+              "invalidation": [
+                "跌破回測支撐",
+                "跌破 MA20",
+                "投信轉賣且股價轉弱"
+              ],
+              "noFutureDataAttestation": true,
+              "humanApprovalRequired": true
+            },
+            "side": "BUY",
+            "quantity": 397,
+            "boardLotQuantity": 0,
+            "oddLotQuantity": 397,
+            "orderType": "MARKETABLE_LIMIT",
+            "limitPrice": 227.12999999999997,
+            "stopPrice": 221,
+            "targetPrice": 233.5,
+            "riskRewardRatio": 1.5,
+            "timeInForce": "ROD",
+            "session": "REGULAR",
+            "brokerPayload": {
+              "symbol": "2368",
+              "side": "BUY",
+              "quantity": 397,
+              "orderType": "MARKETABLE_LIMIT",
+              "price": 227.12999999999997,
+              "triggerPrice": 226,
+              "timeInForce": "ROD"
+            }
+          }
+        },
+        {
+          "symbol": "2412",
+          "name": "中華電",
+          "signalDate": "2025-03-03",
+          "entryDate": "2025-03-04",
+          "exitDate": "2025-03-07",
+          "tradeReturnPct": -1.27,
+          "setup": [
+            "投信 連買 3 日條件成立",
+            "股價在 MA60 上且趨勢向上",
+            "相對大盤強"
+          ],
+          "trigger": [
+            "回測 MA20 後收紅"
+          ],
+          "invalidation": [
+            "跌破回測支撐",
+            "跌破 MA20",
+            "投信轉賣且股價轉弱"
+          ],
+          "exitReason": "總曝險超過 0% 上限",
+          "orderIntent": {
+            "intentId": "5e9c9866a9407f225d76",
+            "createdAt": "2026-06-22T12:13:17.166Z",
+            "tradeDate": "2025-03-04",
+            "symbol": "2412",
+            "strategyId": "trust_accumulation_pullback",
+            "action": "BUY",
+            "status": "PENDING_REVIEW",
+            "submitToRealBroker": false,
+            "reason": "投信連買強勢股回檔 Setup 與 Trigger 成立",
+            "warnings": [
+              "法人資料採 T 日公布、T+1 才可使用的保守假設"
+            ],
+            "audit": {
+              "setup": [
+                "投信 連買 3 日條件成立",
+                "股價在 MA60 上且趨勢向上",
+                "相對大盤強"
+              ],
+              "trigger": [
+                "回測 MA20 後收紅"
+              ],
+              "invalidation": [
+                "跌破回測支撐",
+                "跌破 MA20",
+                "投信轉賣且股價轉弱"
+              ],
+              "noFutureDataAttestation": true,
+              "humanApprovalRequired": true
+            },
+            "side": "BUY",
+            "quantity": 698,
+            "boardLotQuantity": 0,
+            "oddLotQuantity": 698,
+            "orderType": "MARKETABLE_LIMIT",
+            "limitPrice": 129.14249999999998,
+            "stopPrice": 125.92999999999999,
+            "targetPrice": 132.355,
+            "riskRewardRatio": 1.5,
+            "timeInForce": "ROD",
+            "session": "REGULAR",
+            "brokerPayload": {
+              "symbol": "2412",
+              "side": "BUY",
+              "quantity": 698,
+              "orderType": "MARKETABLE_LIMIT",
+              "price": 129.14249999999998,
+              "triggerPrice": 128.5,
+              "timeInForce": "ROD"
+            }
+          }
+        },
+        {
+          "symbol": "9904",
+          "name": "寶成",
+          "signalDate": "2025-03-04",
+          "entryDate": "2025-03-05",
+          "exitDate": "2025-03-07",
+          "tradeReturnPct": -1.53,
+          "setup": [
+            "投信 連買 3 日條件成立",
+            "股價在 MA60 上且趨勢向上",
+            "相對大盤強"
+          ],
+          "trigger": [
+            "回測 MA20 後收紅"
+          ],
+          "invalidation": [
+            "跌破回測支撐",
+            "跌破 MA20",
+            "投信轉賣且股價轉弱"
+          ],
+          "exitReason": "總曝險超過 0% 上限",
+          "orderIntent": {
+            "intentId": "efeece7d150118402ce6",
+            "createdAt": "2026-06-22T12:13:17.207Z",
+            "tradeDate": "2025-03-05",
+            "symbol": "9904",
+            "strategyId": "trust_accumulation_pullback",
+            "action": "BUY",
+            "status": "PENDING_REVIEW",
+            "submitToRealBroker": false,
+            "reason": "投信連買強勢股回檔 Setup 與 Trigger 成立",
+            "warnings": [
+              "法人資料採 T 日公布、T+1 才可使用的保守假設"
+            ],
+            "audit": {
+              "setup": [
+                "投信 連買 3 日條件成立",
+                "股價在 MA60 上且趨勢向上",
+                "相對大盤強"
+              ],
+              "trigger": [
+                "回測 MA20 後收紅"
+              ],
+              "invalidation": [
+                "跌破回測支撐",
+                "跌破 MA20",
+                "投信轉賣且股價轉弱"
+              ],
+              "noFutureDataAttestation": true,
+              "humanApprovalRequired": true
+            },
+            "side": "BUY",
+            "quantity": 2327,
+            "boardLotQuantity": 2000,
+            "oddLotQuantity": 327,
+            "orderType": "MARKETABLE_LIMIT",
+            "limitPrice": 38.742749233245846,
+            "stopPrice": 37.77899925231934,
+            "targetPrice": 39.70649921417237,
+            "riskRewardRatio": 1.5,
+            "timeInForce": "ROD",
+            "session": "REGULAR",
+            "brokerPayload": {
+              "symbol": "9904",
+              "side": "BUY",
+              "quantity": 2327,
+              "orderType": "MARKETABLE_LIMIT",
+              "price": 38.742749233245846,
+              "triggerPrice": 38.54999923706055,
+              "timeInForce": "ROD"
+            }
+          }
+        },
+        {
+          "symbol": "2376",
+          "name": "技嘉",
+          "signalDate": "2025-03-05",
+          "entryDate": "2025-03-06",
+          "exitDate": "2025-03-07",
+          "tradeReturnPct": -2.72,
+          "setup": [
+            "投信 連買 3 日條件成立",
+            "股價在 MA60 上且趨勢向上",
+            "相對大盤強"
+          ],
+          "trigger": [
+            "回測 MA20 後收紅"
+          ],
+          "invalidation": [
+            "跌破回測支撐",
+            "跌破 MA20",
+            "投信轉賣且股價轉弱"
+          ],
+          "exitReason": "總曝險超過 0% 上限",
+          "orderIntent": {
+            "intentId": "3d22121c6122aff0d7e8",
+            "createdAt": "2026-06-22T12:13:17.155Z",
+            "tradeDate": "2025-03-06",
+            "symbol": "2376",
+            "strategyId": "trust_accumulation_pullback",
+            "action": "BUY",
+            "status": "PENDING_REVIEW",
+            "submitToRealBroker": false,
+            "reason": "投信連買強勢股回檔 Setup 與 Trigger 成立",
+            "warnings": [
+              "法人資料採 T 日公布、T+1 才可使用的保守假設"
+            ],
+            "audit": {
+              "setup": [
+                "投信 連買 3 日條件成立",
+                "股價在 MA60 上且趨勢向上",
+                "相對大盤強"
+              ],
+              "trigger": [
+                "回測 MA20 後收紅"
+              ],
+              "invalidation": [
+                "跌破回測支撐",
+                "跌破 MA20",
+                "投信轉賣且股價轉弱"
+              ],
+              "noFutureDataAttestation": true,
+              "humanApprovalRequired": true
+            },
+            "side": "BUY",
+            "quantity": 332,
+            "boardLotQuantity": 0,
+            "oddLotQuantity": 332,
+            "orderType": "MARKETABLE_LIMIT",
+            "limitPrice": 271.34999999999997,
+            "stopPrice": 259,
+            "targetPrice": 286.5,
+            "riskRewardRatio": 1.5,
+            "timeInForce": "ROD",
+            "session": "REGULAR",
+            "brokerPayload": {
+              "symbol": "2376",
+              "side": "BUY",
+              "quantity": 332,
+              "orderType": "MARKETABLE_LIMIT",
+              "price": 271.34999999999997,
+              "triggerPrice": 270,
+              "timeInForce": "ROD"
+            }
+          }
+        },
+        {
+          "symbol": "3045",
+          "name": "台灣大",
+          "signalDate": "2025-04-10",
+          "entryDate": "2025-04-11",
+          "exitDate": "2025-04-15",
+          "tradeReturnPct": -5.05,
+          "setup": [
+            "投信 連買 3 日條件成立",
+            "股價在 MA60 上且趨勢向上",
+            "相對大盤強"
+          ],
+          "trigger": [
+            "回測 MA20 後收紅"
+          ],
+          "invalidation": [
+            "跌破回測支撐",
+            "跌破 MA20",
+            "投信轉賣且股價轉弱"
+          ],
+          "exitReason": "盤中跌破停損",
+          "orderIntent": {
+            "intentId": "c1e9813bee89f7c09153",
+            "createdAt": "2026-06-22T12:13:17.153Z",
+            "tradeDate": "2025-04-11",
+            "symbol": "3045",
+            "strategyId": "trust_accumulation_pullback",
+            "action": "BUY",
+            "status": "PENDING_REVIEW",
+            "submitToRealBroker": false,
+            "reason": "投信連買強勢股回檔 Setup 與 Trigger 成立",
+            "warnings": [
+              "法人資料採 T 日公布、T+1 才可使用的保守假設"
+            ],
+            "audit": {
+              "setup": [
+                "投信 連買 3 日條件成立",
+                "股價在 MA60 上且趨勢向上",
+                "相對大盤強"
+              ],
+              "trigger": [
+                "回測 MA20 後收紅"
+              ],
+              "invalidation": [
+                "跌破回測支撐",
+                "跌破 MA20",
+                "投信轉賣且股價轉弱"
+              ],
+              "noFutureDataAttestation": true,
+              "humanApprovalRequired": true
+            },
+            "side": "BUY",
+            "quantity": 754,
+            "boardLotQuantity": 0,
+            "oddLotQuantity": 754,
+            "orderType": "MARKETABLE_LIMIT",
+            "limitPrice": 119.59499999999998,
+            "stopPrice": 114,
+            "targetPrice": 126.5,
+            "riskRewardRatio": 1.5,
+            "timeInForce": "ROD",
+            "session": "REGULAR",
+            "brokerPayload": {
+              "symbol": "3045",
+              "side": "BUY",
+              "quantity": 754,
+              "orderType": "MARKETABLE_LIMIT",
+              "price": 119.59499999999998,
+              "triggerPrice": 119,
+              "timeInForce": "ROD"
+            }
+          }
+        },
+        {
+          "symbol": "2412",
+          "name": "中華電",
+          "signalDate": "2025-04-11",
+          "entryDate": "2025-04-14",
+          "exitDate": "2025-04-18",
+          "tradeReturnPct": -0.88,
+          "setup": [
+            "投信 連買 3 日條件成立",
+            "股價在 MA60 上且趨勢向上",
+            "相對大盤強"
+          ],
+          "trigger": [
+            "回測 MA20 後收紅"
+          ],
+          "invalidation": [
+            "跌破回測支撐",
+            "跌破 MA20",
+            "投信轉賣且股價轉弱"
+          ],
+          "exitReason": "總曝險超過 20% 上限",
+          "orderIntent": {
+            "intentId": "a1f04b8e7c6f4e0450f6",
+            "createdAt": "2026-06-22T12:13:17.166Z",
+            "tradeDate": "2025-04-14",
+            "symbol": "2412",
+            "strategyId": "trust_accumulation_pullback",
+            "action": "BUY",
+            "status": "PENDING_REVIEW",
+            "submitToRealBroker": false,
+            "reason": "投信連買強勢股回檔 Setup 與 Trigger 成立",
+            "warnings": [
+              "法人資料採 T 日公布、T+1 才可使用的保守假設"
+            ],
+            "audit": {
+              "setup": [
+                "投信 連買 3 日條件成立",
+                "股價在 MA60 上且趨勢向上",
+                "相對大盤強"
+              ],
+              "trigger": [
+                "回測 MA20 後收紅"
+              ],
+              "invalidation": [
+                "跌破回測支撐",
+                "跌破 MA20",
+                "投信轉賣且股價轉弱"
+              ],
+              "noFutureDataAttestation": true,
+              "humanApprovalRequired": true
+            },
+            "side": "BUY",
+            "quantity": 701,
+            "boardLotQuantity": 0,
+            "oddLotQuantity": 701,
+            "orderType": "MARKETABLE_LIMIT",
+            "limitPrice": 128.64,
+            "stopPrice": 125.44,
+            "targetPrice": 131.84,
+            "riskRewardRatio": 1.5,
+            "timeInForce": "ROD",
+            "session": "REGULAR",
+            "brokerPayload": {
+              "symbol": "2412",
+              "side": "BUY",
+              "quantity": 701,
+              "orderType": "MARKETABLE_LIMIT",
+              "price": 128.64,
+              "triggerPrice": 128,
+              "timeInForce": "ROD"
+            }
+          }
+        },
+        {
+          "symbol": "1210",
+          "name": "大成",
+          "signalDate": "2025-04-16",
+          "entryDate": "2025-04-17",
+          "exitDate": "2025-04-24",
+          "tradeReturnPct": 2.44,
+          "setup": [
+            "投信 連買 3 日條件成立",
+            "股價在 MA60 上且趨勢向上",
+            "相對大盤強"
+          ],
+          "trigger": [
+            "回測 MA20 後收紅"
+          ],
+          "invalidation": [
+            "跌破回測支撐",
+            "跌破 MA20",
+            "投信轉賣且股價轉弱"
+          ],
+          "exitReason": "盤中達到停利",
+          "orderIntent": {
+            "intentId": "bdb87c2db244fbecc847",
+            "createdAt": "2026-06-22T12:13:17.151Z",
+            "tradeDate": "2025-04-17",
+            "symbol": "1210",
+            "strategyId": "trust_accumulation_pullback",
+            "action": "BUY",
+            "status": "PENDING_REVIEW",
+            "submitToRealBroker": false,
+            "reason": "投信連買強勢股回檔 Setup 與 Trigger 成立",
+            "warnings": [
+              "法人資料採 T 日公布、T+1 才可使用的保守假設"
+            ],
+            "audit": {
+              "setup": [
+                "投信 連買 3 日條件成立",
+                "股價在 MA60 上且趨勢向上",
+                "相對大盤強"
+              ],
+              "trigger": [
+                "回測 MA20 後收紅"
+              ],
+              "invalidation": [
+                "跌破回測支撐",
+                "跌破 MA20",
+                "投信轉賣且股價轉弱"
+              ],
+              "noFutureDataAttestation": true,
+              "humanApprovalRequired": true
+            },
+            "side": "BUY",
+            "quantity": 1547,
+            "boardLotQuantity": 1000,
+            "oddLotQuantity": 547,
+            "orderType": "MARKETABLE_LIMIT",
+            "limitPrice": 58.28999999999999,
+            "stopPrice": 56.70000076293945,
+            "targetPrice": 59.94999885559082,
+            "riskRewardRatio": 1.5,
+            "timeInForce": "ROD",
+            "session": "REGULAR",
+            "brokerPayload": {
+              "symbol": "1210",
+              "side": "BUY",
+              "quantity": 1547,
+              "orderType": "MARKETABLE_LIMIT",
+              "price": 58.28999999999999,
+              "triggerPrice": 58,
+              "timeInForce": "ROD"
+            }
+          }
+        },
+        {
+          "symbol": "1210",
+          "name": "大成",
+          "signalDate": "2025-04-23",
+          "entryDate": "2025-04-24",
+          "exitDate": "2025-04-29",
+          "tradeReturnPct": 2.09,
+          "setup": [
+            "投信 連買 3 日條件成立",
+            "股價在 MA60 上且趨勢向上",
+            "相對大盤強"
+          ],
+          "trigger": [
+            "回測 MA20 後收紅"
+          ],
+          "invalidation": [
+            "跌破回測支撐",
+            "跌破 MA20",
+            "投信轉賣且股價轉弱"
+          ],
+          "exitReason": "盤中達到停利",
+          "orderIntent": {
+            "intentId": "806282eb0a3967c0f9f0",
+            "createdAt": "2026-06-22T12:13:17.151Z",
+            "tradeDate": "2025-04-24",
+            "symbol": "1210",
+            "strategyId": "trust_accumulation_pullback",
+            "action": "BUY",
+            "status": "PENDING_REVIEW",
+            "submitToRealBroker": false,
+            "reason": "投信連買強勢股回檔 Setup 與 Trigger 成立",
+            "warnings": [
+              "法人資料採 T 日公布、T+1 才可使用的保守假設"
+            ],
+            "audit": {
+              "setup": [
+                "投信 連買 3 日條件成立",
+                "股價在 MA60 上且趨勢向上",
+                "相對大盤強"
+              ],
+              "trigger": [
+                "回測 MA20 後收紅"
+              ],
+              "invalidation": [
+                "跌破回測支撐",
+                "跌破 MA20",
+                "投信轉賣且股價轉弱"
+              ],
+              "noFutureDataAttestation": true,
+              "humanApprovalRequired": true
+            },
+            "side": "BUY",
+            "quantity": 1520,
+            "boardLotQuantity": 1000,
+            "oddLotQuantity": 520,
+            "orderType": "MARKETABLE_LIMIT",
+            "limitPrice": 59.294999999999995,
+            "stopPrice": 57.82,
+            "targetPrice": 60.77,
+            "riskRewardRatio": 1.5,
+            "timeInForce": "ROD",
+            "session": "REGULAR",
+            "brokerPayload": {
+              "symbol": "1210",
+              "side": "BUY",
+              "quantity": 1520,
+              "orderType": "MARKETABLE_LIMIT",
+              "price": 59.294999999999995,
+              "triggerPrice": 59,
+              "timeInForce": "ROD"
+            }
+          }
+        },
+        {
+          "symbol": "2206",
+          "name": "三陽工業",
+          "signalDate": "2025-04-16",
+          "entryDate": "2025-04-17",
+          "exitDate": "2025-04-30",
+          "tradeReturnPct": -2.02,
+          "setup": [
+            "投信 連買 3 日條件成立",
+            "股價在 MA60 上且趨勢向上",
+            "相對大盤強"
+          ],
+          "trigger": [
+            "回測 MA20 後收紅"
+          ],
+          "invalidation": [
+            "跌破回測支撐",
+            "跌破 MA20",
+            "投信轉賣且股價轉弱"
+          ],
+          "exitReason": "研究固定持有期結束",
+          "orderIntent": {
+            "intentId": "b3ed6849171da4e539eb",
+            "createdAt": "2026-06-22T12:13:17.251Z",
+            "tradeDate": "2025-04-17",
+            "symbol": "2206",
+            "strategyId": "trust_accumulation_pullback",
+            "action": "BUY",
+            "status": "PENDING_REVIEW",
+            "submitToRealBroker": false,
+            "reason": "投信連買強勢股回檔 Setup 與 Trigger 成立",
+            "warnings": [
+              "法人資料採 T 日公布、T+1 才可使用的保守假設"
+            ],
+            "audit": {
+              "setup": [
+                "投信 連買 3 日條件成立",
+                "股價在 MA60 上且趨勢向上",
+                "相對大盤強"
+              ],
+              "trigger": [
+                "回測 MA20 後收紅"
+              ],
+              "invalidation": [
+                "跌破回測支撐",
+                "跌破 MA20",
+                "投信轉賣且股價轉弱"
+              ],
+              "noFutureDataAttestation": true,
+              "humanApprovalRequired": true
+            },
+            "side": "BUY",
+            "quantity": 1281,
+            "boardLotQuantity": 1000,
+            "oddLotQuantity": 281,
+            "orderType": "MARKETABLE_LIMIT",
+            "limitPrice": 70.35,
+            "stopPrice": 68.6,
+            "targetPrice": 72.10000000000001,
+            "riskRewardRatio": 1.5,
+            "timeInForce": "ROD",
+            "session": "REGULAR",
+            "brokerPayload": {
+              "symbol": "2206",
+              "side": "BUY",
+              "quantity": 1281,
+              "orderType": "MARKETABLE_LIMIT",
+              "price": 70.35,
+              "triggerPrice": 70,
+              "timeInForce": "ROD"
+            }
+          }
+        },
+        {
+          "symbol": "2539",
+          "name": "櫻花建",
+          "signalDate": "2025-04-29",
+          "entryDate": "2025-04-30",
+          "exitDate": "2025-05-02",
+          "tradeReturnPct": -2.87,
+          "setup": [
+            "投信 連買 3 日條件成立",
+            "股價在 MA60 上且趨勢向上",
+            "相對大盤強"
+          ],
+          "trigger": [
+            "回測 MA20 後收紅"
+          ],
+          "invalidation": [
+            "跌破回測支撐",
+            "跌破 MA20",
+            "投信轉賣且股價轉弱"
+          ],
+          "exitReason": "盤中跌破停損",
+          "orderIntent": {
+            "intentId": "3d8a9945bebbd80cfedf",
+            "createdAt": "2026-06-22T12:13:17.296Z",
+            "tradeDate": "2025-04-30",
+            "symbol": "2539",
+            "strategyId": "trust_accumulation_pullback",
+            "action": "BUY",
+            "status": "PENDING_REVIEW",
+            "submitToRealBroker": false,
+            "reason": "投信連買強勢股回檔 Setup 與 Trigger 成立",
+            "warnings": [
+              "法人資料採 T 日公布、T+1 才可使用的保守假設"
+            ],
+            "audit": {
+              "setup": [
+                "投信 連買 3 日條件成立",
+                "股價在 MA60 上且趨勢向上",
+                "相對大盤強"
+              ],
+              "trigger": [
+                "回測 MA20 後收紅"
+              ],
+              "invalidation": [
+                "跌破回測支撐",
+                "跌破 MA20",
+                "投信轉賣且股價轉弱"
+              ],
+              "noFutureDataAttestation": true,
+              "humanApprovalRequired": true
+            },
+            "side": "BUY",
+            "quantity": 1736,
+            "boardLotQuantity": 1000,
+            "oddLotQuantity": 736,
+            "orderType": "MARKETABLE_LIMIT",
+            "limitPrice": 51.92499744415283,
+            "stopPrice": 50.63333084106445,
+            "targetPrice": 53.21666404724121,
+            "riskRewardRatio": 1.5,
+            "timeInForce": "ROD",
+            "session": "REGULAR",
+            "brokerPayload": {
+              "symbol": "2539",
+              "side": "BUY",
+              "quantity": 1736,
+              "orderType": "MARKETABLE_LIMIT",
+              "price": 51.92499744415283,
+              "triggerPrice": 51.666664123535156,
+              "timeInForce": "ROD"
+            }
+          }
+        },
+        {
+          "symbol": "2303",
+          "name": "聯電",
+          "signalDate": "2025-04-28",
+          "entryDate": "2025-04-29",
+          "exitDate": "2025-05-09",
+          "tradeReturnPct": 1,
+          "setup": [
+            "投信 連買 3 日條件成立",
+            "股價在 MA60 上且趨勢向上",
+            "相對大盤強"
+          ],
+          "trigger": [
+            "回測 MA20 後收紅"
+          ],
+          "invalidation": [
+            "跌破回測支撐",
+            "跌破 MA20",
+            "投信轉賣且股價轉弱"
+          ],
+          "exitReason": "總曝險超過 0% 上限",
+          "orderIntent": {
+            "intentId": "5a73d24e4ce76b3ec550",
+            "createdAt": "2026-06-22T12:13:17.253Z",
+            "tradeDate": "2025-04-29",
+            "symbol": "2303",
+            "strategyId": "trust_accumulation_pullback",
+            "action": "BUY",
+            "status": "PENDING_REVIEW",
+            "submitToRealBroker": false,
+            "reason": "投信連買強勢股回檔 Setup 與 Trigger 成立",
+            "warnings": [
+              "法人資料採 T 日公布、T+1 才可使用的保守假設"
+            ],
+            "audit": {
+              "setup": [
+                "投信 連買 3 日條件成立",
+                "股價在 MA60 上且趨勢向上",
+                "相對大盤強"
+              ],
+              "trigger": [
+                "回測 MA20 後收紅"
+              ],
+              "invalidation": [
+                "跌破回測支撐",
+                "跌破 MA20",
+                "投信轉賣且股價轉弱"
+              ],
+              "noFutureDataAttestation": true,
+              "humanApprovalRequired": true
+            },
+            "side": "BUY",
+            "quantity": 2007,
+            "boardLotQuantity": 2000,
+            "oddLotQuantity": 7,
+            "orderType": "MARKETABLE_LIMIT",
+            "limitPrice": 44.923500766754145,
+            "stopPrice": 43.80600074768066,
+            "targetPrice": 46.041000785827634,
+            "riskRewardRatio": 1.5,
+            "timeInForce": "ROD",
+            "session": "REGULAR",
+            "brokerPayload": {
+              "symbol": "2303",
+              "side": "BUY",
+              "quantity": 2007,
+              "orderType": "MARKETABLE_LIMIT",
+              "price": 44.923500766754145,
+              "triggerPrice": 44.70000076293945,
+              "timeInForce": "ROD"
+            }
+          }
+        },
+        {
+          "symbol": "2206",
+          "name": "三陽工業",
+          "signalDate": "2025-04-29",
+          "entryDate": "2025-04-30",
+          "exitDate": "2025-05-09",
+          "tradeReturnPct": 1.11,
+          "setup": [
+            "投信 連買 3 日條件成立",
+            "股價在 MA60 上且趨勢向上",
+            "相對大盤強"
+          ],
+          "trigger": [
+            "回測 MA20 後收紅"
+          ],
+          "invalidation": [
+            "跌破回測支撐",
+            "跌破 MA20",
+            "投信轉賣且股價轉弱"
+          ],
+          "exitReason": "總曝險超過 0% 上限",
+          "orderIntent": {
+            "intentId": "effb476dfcf5a96921c2",
+            "createdAt": "2026-06-22T12:13:17.251Z",
+            "tradeDate": "2025-04-30",
+            "symbol": "2206",
+            "strategyId": "trust_accumulation_pullback",
+            "action": "BUY",
+            "status": "PENDING_REVIEW",
+            "submitToRealBroker": false,
+            "reason": "投信連買強勢股回檔 Setup 與 Trigger 成立",
+            "warnings": [
+              "法人資料採 T 日公布、T+1 才可使用的保守假設"
+            ],
+            "audit": {
+              "setup": [
+                "投信 連買 3 日條件成立",
+                "股價在 MA60 上且趨勢向上",
+                "相對大盤強"
+              ],
+              "trigger": [
+                "回測 MA20 後收紅"
+              ],
+              "invalidation": [
+                "跌破回測支撐",
+                "跌破 MA20",
+                "投信轉賣且股價轉弱"
+              ],
+              "noFutureDataAttestation": true,
+              "humanApprovalRequired": true
+            },
+            "side": "BUY",
+            "quantity": 1289,
+            "boardLotQuantity": 1000,
+            "oddLotQuantity": 289,
+            "orderType": "MARKETABLE_LIMIT",
+            "limitPrice": 69.9479984664917,
+            "stopPrice": 68.20799850463867,
+            "targetPrice": 71.68799842834473,
+            "riskRewardRatio": 1.5,
+            "timeInForce": "ROD",
+            "session": "REGULAR",
+            "brokerPayload": {
+              "symbol": "2206",
+              "side": "BUY",
+              "quantity": 1289,
+              "orderType": "MARKETABLE_LIMIT",
+              "price": 69.9479984664917,
+              "triggerPrice": 69.5999984741211,
+              "timeInForce": "ROD"
+            }
+          }
+        },
+        {
+          "symbol": "6412",
+          "name": "群電",
+          "signalDate": "2025-06-11",
+          "entryDate": "2025-06-12",
+          "exitDate": "2025-06-16",
+          "tradeReturnPct": -6.62,
+          "setup": [
+            "投信 連買 3 日條件成立",
+            "股價在 MA60 上且趨勢向上",
+            "相對大盤強"
+          ],
+          "trigger": [
+            "回測 MA20 後收紅"
+          ],
+          "invalidation": [
+            "跌破回測支撐",
+            "跌破 MA20",
+            "投信轉賣且股價轉弱"
+          ],
+          "exitReason": "跳空跌破停損",
+          "orderIntent": {
+            "intentId": "2bc1a4a54088a52afb3f",
+            "createdAt": "2026-06-22T12:13:17.214Z",
+            "tradeDate": "2025-06-12",
+            "symbol": "6412",
+            "strategyId": "trust_accumulation_pullback",
+            "action": "BUY",
+            "status": "PENDING_REVIEW",
+            "submitToRealBroker": false,
+            "reason": "投信連買強勢股回檔 Setup 與 Trigger 成立",
+            "warnings": [
+              "法人資料採 T 日公布、T+1 才可使用的保守假設"
+            ],
+            "audit": {
+              "setup": [
+                "投信 連買 3 日條件成立",
+                "股價在 MA60 上且趨勢向上",
+                "相對大盤強"
+              ],
+              "trigger": [
+                "回測 MA20 後收紅"
+              ],
+              "invalidation": [
+                "跌破回測支撐",
+                "跌破 MA20",
+                "投信轉賣且股價轉弱"
+              ],
+              "noFutureDataAttestation": true,
+              "humanApprovalRequired": true
+            },
+            "side": "BUY",
+            "quantity": 663,
+            "boardLotQuantity": 0,
+            "oddLotQuantity": 663,
+            "orderType": "MARKETABLE_LIMIT",
+            "limitPrice": 121.60499999999999,
+            "stopPrice": 114.5,
+            "targetPrice": 130.75,
+            "riskRewardRatio": 1.5,
+            "timeInForce": "ROD",
+            "session": "REGULAR",
+            "brokerPayload": {
+              "symbol": "6412",
+              "side": "BUY",
+              "quantity": 663,
+              "orderType": "MARKETABLE_LIMIT",
+              "price": 121.60499999999999,
+              "triggerPrice": 121,
+              "timeInForce": "ROD"
+            }
+          }
+        },
+        {
+          "symbol": "2892",
+          "name": "第一金",
+          "signalDate": "2025-07-10",
+          "entryDate": "2025-07-11",
+          "exitDate": "2025-07-24",
+          "tradeReturnPct": -0.59,
+          "setup": [
+            "投信 連買 3 日條件成立",
+            "股價在 MA60 上且趨勢向上",
+            "相對大盤強"
+          ],
+          "trigger": [
+            "回測 MA20 後收紅"
+          ],
+          "invalidation": [
+            "跌破回測支撐",
+            "跌破 MA20",
+            "投信轉賣且股價轉弱"
+          ],
+          "exitReason": "研究固定持有期結束",
+          "orderIntent": {
+            "intentId": "ebce6a8a84b0e50ca805",
+            "createdAt": "2026-06-22T12:13:17.177Z",
+            "tradeDate": "2025-07-11",
+            "symbol": "2892",
+            "strategyId": "trust_accumulation_pullback",
+            "action": "BUY",
+            "status": "PENDING_REVIEW",
+            "submitToRealBroker": false,
+            "reason": "投信連買強勢股回檔 Setup 與 Trigger 成立",
+            "warnings": [
+              "法人資料採 T 日公布、T+1 才可使用的保守假設"
+            ],
+            "audit": {
+              "setup": [
+                "投信 連買 3 日條件成立",
+                "股價在 MA60 上且趨勢向上",
+                "相對大盤強"
+              ],
+              "trigger": [
+                "回測 MA20 後收紅"
+              ],
+              "invalidation": [
+                "跌破回測支撐",
+                "跌破 MA20",
+                "投信轉賣且股價轉弱"
+              ],
+              "noFutureDataAttestation": true,
+              "humanApprovalRequired": true
+            },
+            "side": "BUY",
+            "quantity": 3101,
+            "boardLotQuantity": 3000,
+            "oddLotQuantity": 101,
+            "orderType": "MARKETABLE_LIMIT",
+            "limitPrice": 29.071462526321408,
+            "stopPrice": 28.348291816711424,
+            "targetPrice": 29.794633235931396,
+            "riskRewardRatio": 1.5,
+            "timeInForce": "ROD",
+            "session": "REGULAR",
+            "brokerPayload": {
+              "symbol": "2892",
+              "side": "BUY",
+              "quantity": 3101,
+              "orderType": "MARKETABLE_LIMIT",
+              "price": 29.071462526321408,
+              "triggerPrice": 28.926828384399414,
+              "timeInForce": "ROD"
+            }
+          }
+        },
+        {
+          "symbol": "2002",
+          "name": "中鋼",
+          "signalDate": "2025-08-14",
+          "entryDate": "2025-08-15",
+          "exitDate": "2025-08-18",
+          "tradeReturnPct": 2.07,
+          "setup": [
+            "投信 連買 3 日條件成立",
+            "股價在 MA60 上且趨勢向上",
+            "相對大盤強"
+          ],
+          "trigger": [
+            "回測 MA20 後收紅"
+          ],
+          "invalidation": [
+            "跌破回測支撐",
+            "跌破 MA20",
+            "投信轉賣且股價轉弱"
+          ],
+          "exitReason": "盤中達到停利",
+          "orderIntent": {
+            "intentId": "16a8fbc69a525088b975",
+            "createdAt": "2026-06-22T12:13:17.180Z",
+            "tradeDate": "2025-08-15",
+            "symbol": "2002",
+            "strategyId": "trust_accumulation_pullback",
+            "action": "BUY",
+            "status": "PENDING_REVIEW",
+            "submitToRealBroker": false,
+            "reason": "投信連買強勢股回檔 Setup 與 Trigger 成立",
+            "warnings": [
+              "法人資料採 T 日公布、T+1 才可使用的保守假設"
+            ],
+            "audit": {
+              "setup": [
+                "投信 連買 3 日條件成立",
+                "股價在 MA60 上且趨勢向上",
+                "相對大盤強"
+              ],
+              "trigger": [
+                "回測 MA20 後收紅"
+              ],
+              "invalidation": [
+                "跌破回測支撐",
+                "跌破 MA20",
+                "投信轉賣且股價轉弱"
+              ],
+              "noFutureDataAttestation": true,
+              "humanApprovalRequired": true
+            },
+            "side": "BUY",
+            "quantity": 4486,
+            "boardLotQuantity": 4000,
+            "oddLotQuantity": 486,
+            "orderType": "MARKETABLE_LIMIT",
+            "limitPrice": 20.099999999999998,
+            "stopPrice": 19.6,
+            "targetPrice": 20.6,
+            "riskRewardRatio": 1.5,
+            "timeInForce": "ROD",
+            "session": "REGULAR",
+            "brokerPayload": {
+              "symbol": "2002",
+              "side": "BUY",
+              "quantity": 4486,
+              "orderType": "MARKETABLE_LIMIT",
+              "price": 20.099999999999998,
+              "triggerPrice": 20,
+              "timeInForce": "ROD"
+            }
+          }
+        },
+        {
+          "symbol": "1477",
+          "name": "聚陽",
+          "signalDate": "2025-08-15",
+          "entryDate": "2025-08-18",
+          "exitDate": "2025-08-19",
+          "tradeReturnPct": -2.87,
+          "setup": [
+            "投信 連買 3 日條件成立",
+            "股價在 MA60 上且趨勢向上",
+            "相對大盤強"
+          ],
+          "trigger": [
+            "回測 MA20 後收紅"
+          ],
+          "invalidation": [
+            "跌破回測支撐",
+            "跌破 MA20",
+            "投信轉賣且股價轉弱"
+          ],
+          "exitReason": "盤中跌破停損",
+          "orderIntent": {
+            "intentId": "c5882ed0794926e1f26d",
+            "createdAt": "2026-06-22T12:13:17.244Z",
+            "tradeDate": "2025-08-18",
+            "symbol": "1477",
+            "strategyId": "trust_accumulation_pullback",
+            "action": "BUY",
+            "status": "PENDING_REVIEW",
+            "submitToRealBroker": false,
+            "reason": "投信連買強勢股回檔 Setup 與 Trigger 成立",
+            "warnings": [
+              "法人資料採 T 日公布、T+1 才可使用的保守假設"
+            ],
+            "audit": {
+              "setup": [
+                "投信 連買 3 日條件成立",
+                "股價在 MA60 上且趨勢向上",
+                "相對大盤強"
+              ],
+              "trigger": [
+                "回測 MA20 後收紅"
+              ],
+              "invalidation": [
+                "跌破回測支撐",
+                "跌破 MA20",
+                "投信轉賣且股價轉弱"
+              ],
+              "noFutureDataAttestation": true,
+              "humanApprovalRequired": true
+            },
+            "side": "BUY",
+            "quantity": 336,
+            "boardLotQuantity": 0,
+            "oddLotQuantity": 336,
+            "orderType": "MARKETABLE_LIMIT",
+            "limitPrice": 267.8325,
+            "stopPrice": 261.17,
+            "targetPrice": 274.495,
+            "riskRewardRatio": 1.5,
+            "timeInForce": "ROD",
+            "session": "REGULAR",
+            "brokerPayload": {
+              "symbol": "1477",
+              "side": "BUY",
+              "quantity": 336,
+              "orderType": "MARKETABLE_LIMIT",
+              "price": 267.8325,
+              "triggerPrice": 266.5,
+              "timeInForce": "ROD"
+            }
+          }
+        },
+        {
+          "symbol": "4904",
+          "name": "遠傳",
+          "signalDate": "2025-08-21",
+          "entryDate": "2025-08-22",
+          "exitDate": "2025-08-27",
+          "tradeReturnPct": -2.9,
+          "setup": [
+            "投信 連買 3 日條件成立",
+            "股價在 MA60 上且趨勢向上",
+            "相對大盤強"
+          ],
+          "trigger": [
+            "回測 MA20 後收紅"
+          ],
+          "invalidation": [
+            "跌破回測支撐",
+            "跌破 MA20",
+            "投信轉賣且股價轉弱"
+          ],
+          "exitReason": "盤中跌破停損",
+          "orderIntent": {
+            "intentId": "8fcde4abb204d6bfb3a4",
+            "createdAt": "2026-06-22T12:13:17.169Z",
+            "tradeDate": "2025-08-22",
+            "symbol": "4904",
+            "strategyId": "trust_accumulation_pullback",
+            "action": "BUY",
+            "status": "PENDING_REVIEW",
+            "submitToRealBroker": false,
+            "reason": "投信連買強勢股回檔 Setup 與 Trigger 成立",
+            "warnings": [
+              "法人資料採 T 日公布、T+1 才可使用的保守假設"
+            ],
+            "audit": {
+              "setup": [
+                "投信 連買 3 日條件成立",
+                "股價在 MA60 上且趨勢向上",
+                "相對大盤強"
+              ],
+              "trigger": [
+                "回測 MA20 後收紅"
+              ],
+              "invalidation": [
+                "跌破回測支撐",
+                "跌破 MA20",
+                "投信轉賣且股價轉弱"
+              ],
+              "noFutureDataAttestation": true,
+              "humanApprovalRequired": true
+            },
+            "side": "BUY",
+            "quantity": 1046,
+            "boardLotQuantity": 1000,
+            "oddLotQuantity": 46,
+            "orderType": "MARKETABLE_LIMIT",
+            "limitPrice": 86.1284969329834,
+            "stopPrice": 83.98599700927734,
+            "targetPrice": 88.27099685668945,
+            "riskRewardRatio": 1.5,
+            "timeInForce": "ROD",
+            "session": "REGULAR",
+            "brokerPayload": {
+              "symbol": "4904",
+              "side": "BUY",
+              "quantity": 1046,
+              "orderType": "MARKETABLE_LIMIT",
+              "price": 86.1284969329834,
+              "triggerPrice": 85.69999694824219,
+              "timeInForce": "ROD"
+            }
+          }
+        },
+        {
+          "symbol": "2883",
+          "name": "凱基金",
+          "signalDate": "2025-08-21",
+          "entryDate": "2025-08-22",
+          "exitDate": "2025-08-28",
+          "tradeReturnPct": -2.88,
+          "setup": [
+            "投信 連買 3 日條件成立",
+            "股價在 MA60 上且趨勢向上",
+            "相對大盤強"
+          ],
+          "trigger": [
+            "回測 MA20 後收紅"
+          ],
+          "invalidation": [
+            "跌破回測支撐",
+            "跌破 MA20",
+            "投信轉賣且股價轉弱"
+          ],
+          "exitReason": "盤中跌破停損",
+          "orderIntent": {
+            "intentId": "109e2180731172cc2f14",
+            "createdAt": "2026-06-22T12:13:17.209Z",
+            "tradeDate": "2025-08-22",
+            "symbol": "2883",
+            "strategyId": "trust_accumulation_pullback",
+            "action": "BUY",
+            "status": "PENDING_REVIEW",
+            "submitToRealBroker": false,
+            "reason": "投信連買強勢股回檔 Setup 與 Trigger 成立",
+            "warnings": [
+              "法人資料採 T 日公布、T+1 才可使用的保守假設"
+            ],
+            "audit": {
+              "setup": [
+                "投信 連買 3 日條件成立",
+                "股價在 MA60 上且趨勢向上",
+                "相對大盤強"
+              ],
+              "trigger": [
+                "回測 MA20 後收紅"
+              ],
+              "invalidation": [
+                "跌破回測支撐",
+                "跌破 MA20",
+                "投信轉賣且股價轉弱"
+              ],
+              "noFutureDataAttestation": true,
+              "humanApprovalRequired": true
+            },
+            "side": "BUY",
+            "quantity": 5682,
+            "boardLotQuantity": 5000,
+            "oddLotQuantity": 682,
+            "orderType": "MARKETABLE_LIMIT",
+            "limitPrice": 15.871036491394042,
+            "stopPrice": 15.476234588623047,
+            "targetPrice": 16.26583839416504,
+            "riskRewardRatio": 1.5,
+            "timeInForce": "ROD",
+            "session": "REGULAR",
+            "brokerPayload": {
+              "symbol": "2883",
+              "side": "BUY",
+              "quantity": 5682,
+              "orderType": "MARKETABLE_LIMIT",
+              "price": 15.871036491394042,
+              "triggerPrice": 15.792076110839844,
+              "timeInForce": "ROD"
+            }
+          }
+        },
+        {
+          "symbol": "2885",
+          "name": "元大金",
+          "signalDate": "2025-08-22",
+          "entryDate": "2025-08-25",
+          "exitDate": "2025-09-05",
+          "tradeReturnPct": 2.09,
+          "setup": [
+            "投信 連買 3 日條件成立",
+            "股價在 MA60 上且趨勢向上",
+            "相對大盤強"
+          ],
+          "trigger": [
+            "回測 MA20 後收紅"
+          ],
+          "invalidation": [
+            "跌破回測支撐",
+            "跌破 MA20",
+            "投信轉賣且股價轉弱"
+          ],
+          "exitReason": "盤中達到停利",
+          "orderIntent": {
+            "intentId": "c6e7cf7f4074de90bf48",
+            "createdAt": "2026-06-22T12:13:17.188Z",
+            "tradeDate": "2025-08-25",
+            "symbol": "2885",
+            "strategyId": "trust_accumulation_pullback",
+            "action": "BUY",
+            "status": "PENDING_REVIEW",
+            "submitToRealBroker": false,
+            "reason": "投信連買強勢股回檔 Setup 與 Trigger 成立",
+            "warnings": [
+              "法人資料採 T 日公布、T+1 才可使用的保守假設"
+            ],
+            "audit": {
+              "setup": [
+                "投信 連買 3 日條件成立",
+                "股價在 MA60 上且趨勢向上",
+                "相對大盤強"
+              ],
+              "trigger": [
+                "回測 MA20 後收紅"
+              ],
+              "invalidation": [
+                "跌破回測支撐",
+                "跌破 MA20",
+                "投信轉賣且股價轉弱"
+              ],
+              "noFutureDataAttestation": true,
+              "humanApprovalRequired": true
+            },
+            "side": "BUY",
+            "quantity": 2740,
+            "boardLotQuantity": 2000,
+            "oddLotQuantity": 740,
+            "orderType": "MARKETABLE_LIMIT",
+            "limitPrice": 32.91374999999999,
+            "stopPrice": 32.095,
+            "targetPrice": 33.7325,
+            "riskRewardRatio": 1.5,
+            "timeInForce": "ROD",
+            "session": "REGULAR",
+            "brokerPayload": {
+              "symbol": "2885",
+              "side": "BUY",
+              "quantity": 2740,
+              "orderType": "MARKETABLE_LIMIT",
+              "price": 32.91374999999999,
+              "triggerPrice": 32.75,
+              "timeInForce": "ROD"
+            }
+          }
+        },
+        {
+          "symbol": "2618",
+          "name": "長榮航",
+          "signalDate": "2025-09-03",
+          "entryDate": "2025-09-04",
+          "exitDate": "2025-09-11",
+          "tradeReturnPct": -2.88,
+          "setup": [
+            "投信 連買 3 日條件成立",
+            "股價在 MA60 上且趨勢向上",
+            "相對大盤強"
+          ],
+          "trigger": [
+            "回測 MA20 後收紅"
+          ],
+          "invalidation": [
+            "跌破回測支撐",
+            "跌破 MA20",
+            "投信轉賣且股價轉弱"
+          ],
+          "exitReason": "盤中跌破停損",
+          "orderIntent": {
+            "intentId": "02b6164edbe77452a6b9",
+            "createdAt": "2026-06-22T12:13:17.242Z",
+            "tradeDate": "2025-09-04",
+            "symbol": "2618",
+            "strategyId": "trust_accumulation_pullback",
+            "action": "BUY",
+            "status": "PENDING_REVIEW",
+            "submitToRealBroker": false,
+            "reason": "投信連買強勢股回檔 Setup 與 Trigger 成立",
+            "warnings": [
+              "法人資料採 T 日公布、T+1 才可使用的保守假設"
+            ],
+            "audit": {
+              "setup": [
+                "投信 連買 3 日條件成立",
+                "股價在 MA60 上且趨勢向上",
+                "相對大盤強"
+              ],
+              "trigger": [
+                "回測 MA20 後收紅"
+              ],
+              "invalidation": [
+                "跌破回測支撐",
+                "跌破 MA20",
+                "投信轉賣且股價轉弱"
+              ],
+              "noFutureDataAttestation": true,
+              "humanApprovalRequired": true
+            },
+            "side": "BUY",
+            "quantity": 2268,
+            "boardLotQuantity": 2000,
+            "oddLotQuantity": 268,
+            "orderType": "MARKETABLE_LIMIT",
+            "limitPrice": 39.74774923324585,
+            "stopPrice": 38.758999252319335,
+            "targetPrice": 40.73649921417236,
+            "riskRewardRatio": 1.5,
+            "timeInForce": "ROD",
+            "session": "REGULAR",
+            "brokerPayload": {
+              "symbol": "2618",
+              "side": "BUY",
+              "quantity": 2268,
+              "orderType": "MARKETABLE_LIMIT",
+              "price": 39.74774923324585,
+              "triggerPrice": 39.54999923706055,
+              "timeInForce": "ROD"
+            }
+          }
+        },
+        {
+          "symbol": "2890",
+          "name": "永豐金",
+          "signalDate": "2025-11-07",
+          "entryDate": "2025-11-10",
+          "exitDate": "2025-11-21",
+          "tradeReturnPct": -0.72,
+          "setup": [
+            "投信 連買 3 日條件成立",
+            "股價在 MA60 上且趨勢向上",
+            "相對大盤強"
+          ],
+          "trigger": [
+            "回測 MA20 後收紅"
+          ],
+          "invalidation": [
+            "跌破回測支撐",
+            "跌破 MA20",
+            "投信轉賣且股價轉弱"
+          ],
+          "exitReason": "研究固定持有期結束",
+          "orderIntent": {
+            "intentId": "abe124bff727ae88e042",
+            "createdAt": "2026-06-22T12:13:17.177Z",
+            "tradeDate": "2025-11-10",
+            "symbol": "2890",
+            "strategyId": "trust_accumulation_pullback",
+            "action": "BUY",
+            "status": "PENDING_REVIEW",
+            "submitToRealBroker": false,
+            "reason": "投信連買強勢股回檔 Setup 與 Trigger 成立",
+            "warnings": [
+              "法人資料採 T 日公布、T+1 才可使用的保守假設"
+            ],
+            "audit": {
+              "setup": [
+                "投信 連買 3 日條件成立",
+                "股價在 MA60 上且趨勢向上",
+                "相對大盤強"
+              ],
+              "trigger": [
+                "回測 MA20 後收紅"
+              ],
+              "invalidation": [
+                "跌破回測支撐",
+                "跌破 MA20",
+                "投信轉賣且股價轉弱"
+              ],
+              "noFutureDataAttestation": true,
+              "humanApprovalRequired": true
+            },
+            "side": "BUY",
+            "quantity": 3366,
+            "boardLotQuantity": 3000,
+            "oddLotQuantity": 366,
+            "orderType": "MARKETABLE_LIMIT",
+            "limitPrice": 26.78324961662292,
+            "stopPrice": 26.116999626159668,
+            "targetPrice": 27.44949960708618,
+            "riskRewardRatio": 1.5,
+            "timeInForce": "ROD",
+            "session": "REGULAR",
+            "brokerPayload": {
+              "symbol": "2890",
+              "side": "BUY",
+              "quantity": 3366,
+              "orderType": "MARKETABLE_LIMIT",
+              "price": 26.78324961662292,
+              "triggerPrice": 26.649999618530273,
+              "timeInForce": "ROD"
+            }
+          }
+        },
+        {
+          "symbol": "2885",
+          "name": "元大金",
+          "signalDate": "2025-11-24",
+          "entryDate": "2025-11-25",
+          "exitDate": "2025-12-04",
+          "tradeReturnPct": 2.09,
+          "setup": [
+            "投信 連買 3 日條件成立",
+            "股價在 MA60 上且趨勢向上",
+            "相對大盤強"
+          ],
+          "trigger": [
+            "回測 MA20 後收紅"
+          ],
+          "invalidation": [
+            "跌破回測支撐",
+            "跌破 MA20",
+            "投信轉賣且股價轉弱"
+          ],
+          "exitReason": "盤中達到停利",
+          "orderIntent": {
+            "intentId": "68d98a157a4f25c877b5",
+            "createdAt": "2026-06-22T12:13:17.188Z",
+            "tradeDate": "2025-11-25",
+            "symbol": "2885",
+            "strategyId": "trust_accumulation_pullback",
+            "action": "BUY",
+            "status": "PENDING_REVIEW",
+            "submitToRealBroker": false,
+            "reason": "投信連買強勢股回檔 Setup 與 Trigger 成立",
+            "warnings": [
+              "法人資料採 T 日公布、T+1 才可使用的保守假設"
+            ],
+            "audit": {
+              "setup": [
+                "投信 連買 3 日條件成立",
+                "股價在 MA60 上且趨勢向上",
+                "相對大盤強"
+              ],
+              "trigger": [
+                "回測 MA20 後收紅"
+              ],
+              "invalidation": [
+                "跌破回測支撐",
+                "跌破 MA20",
+                "投信轉賣且股價轉弱"
+              ],
+              "noFutureDataAttestation": true,
+              "humanApprovalRequired": true
+            },
+            "side": "BUY",
+            "quantity": 2496,
+            "boardLotQuantity": 2000,
+            "oddLotQuantity": 496,
+            "orderType": "MARKETABLE_LIMIT",
+            "limitPrice": 36.12975076675415,
+            "stopPrice": 35.23100074768066,
+            "targetPrice": 37.02850078582764,
+            "riskRewardRatio": 1.5,
+            "timeInForce": "ROD",
+            "session": "REGULAR",
+            "brokerPayload": {
+              "symbol": "2885",
+              "side": "BUY",
+              "quantity": 2496,
+              "orderType": "MARKETABLE_LIMIT",
+              "price": 36.12975076675415,
+              "triggerPrice": 35.95000076293945,
+              "timeInForce": "ROD"
+            }
+          }
+        },
+        {
+          "symbol": "2312",
+          "name": "金寶",
+          "signalDate": "2025-11-26",
+          "entryDate": "2025-11-27",
+          "exitDate": "2025-12-08",
+          "tradeReturnPct": 3.37,
+          "setup": [
+            "投信 連買 3 日條件成立",
+            "股價在 MA60 上且趨勢向上",
+            "相對大盤強"
+          ],
+          "trigger": [
+            "回測 MA20 後收紅"
+          ],
+          "invalidation": [
+            "跌破回測支撐",
+            "跌破 MA20",
+            "投信轉賣且股價轉弱"
+          ],
+          "exitReason": "盤中達到停利",
+          "orderIntent": {
+            "intentId": "b44b5740a53acb2122bf",
+            "createdAt": "2026-06-22T12:13:17.152Z",
+            "tradeDate": "2025-11-27",
+            "symbol": "2312",
+            "strategyId": "trust_accumulation_pullback",
+            "action": "BUY",
+            "status": "PENDING_REVIEW",
+            "submitToRealBroker": false,
+            "reason": "投信連買強勢股回檔 Setup 與 Trigger 成立",
+            "warnings": [
+              "法人資料採 T 日公布、T+1 才可使用的保守假設"
+            ],
+            "audit": {
+              "setup": [
+                "投信 連買 3 日條件成立",
+                "股價在 MA60 上且趨勢向上",
+                "相對大盤強"
+              ],
+              "trigger": [
+                "回測 MA20 後收紅"
+              ],
+              "invalidation": [
+                "跌破回測支撐",
+                "跌破 MA20",
+                "投信轉賣且股價轉弱"
+              ],
+              "noFutureDataAttestation": true,
+              "humanApprovalRequired": true
+            },
+            "side": "BUY",
+            "quantity": 3953,
+            "boardLotQuantity": 3000,
+            "oddLotQuantity": 953,
+            "orderType": "MARKETABLE_LIMIT",
+            "limitPrice": 22.81350076675415,
+            "stopPrice": 22.049999237060547,
+            "targetPrice": 23.675003051757812,
+            "riskRewardRatio": 1.5,
+            "timeInForce": "ROD",
+            "session": "REGULAR",
+            "brokerPayload": {
+              "symbol": "2312",
+              "side": "BUY",
+              "quantity": 3953,
+              "orderType": "MARKETABLE_LIMIT",
+              "price": 22.81350076675415,
+              "triggerPrice": 22.700000762939453,
+              "timeInForce": "ROD"
+            }
+          }
+        },
+        {
+          "symbol": "2330",
+          "name": "台積電",
+          "signalDate": "2025-12-03",
+          "entryDate": "2025-12-04",
+          "exitDate": "2025-12-08",
+          "tradeReturnPct": 2.09,
+          "setup": [
+            "投信 連買 3 日條件成立",
+            "股價在 MA60 上且趨勢向上",
+            "相對大盤強"
+          ],
+          "trigger": [
+            "回測 MA20 後收紅"
+          ],
+          "invalidation": [
+            "跌破回測支撐",
+            "跌破 MA20",
+            "投信轉賣且股價轉弱"
+          ],
+          "exitReason": "盤中達到停利",
+          "orderIntent": {
+            "intentId": "bdd284e3e65533984691",
+            "createdAt": "2026-06-22T12:13:17.173Z",
+            "tradeDate": "2025-12-04",
+            "symbol": "2330",
+            "strategyId": "trust_accumulation_pullback",
+            "action": "BUY",
+            "status": "PENDING_REVIEW",
+            "submitToRealBroker": false,
+            "reason": "投信連買強勢股回檔 Setup 與 Trigger 成立",
+            "warnings": [
+              "法人資料採 T 日公布、T+1 才可使用的保守假設"
+            ],
+            "audit": {
+              "setup": [
+                "投信 連買 3 日條件成立",
+                "股價在 MA60 上且趨勢向上",
+                "相對大盤強"
+              ],
+              "trigger": [
+                "回測 MA20 後收紅"
+              ],
+              "invalidation": [
+                "跌破回測支撐",
+                "跌破 MA20",
+                "投信轉賣且股價轉弱"
+              ],
+              "noFutureDataAttestation": true,
+              "humanApprovalRequired": true
+            },
+            "side": "BUY",
+            "quantity": 62,
+            "boardLotQuantity": 0,
+            "oddLotQuantity": 62,
+            "orderType": "MARKETABLE_LIMIT",
+            "limitPrice": 1452.225,
+            "stopPrice": 1416.1,
+            "targetPrice": 1488.3500000000001,
+            "riskRewardRatio": 1.5,
+            "timeInForce": "ROD",
+            "session": "REGULAR",
+            "brokerPayload": {
+              "symbol": "2330",
+              "side": "BUY",
+              "quantity": 62,
+              "orderType": "MARKETABLE_LIMIT",
+              "price": 1452.225,
+              "triggerPrice": 1445,
+              "timeInForce": "ROD"
+            }
+          }
+        },
+        {
+          "symbol": "2890",
+          "name": "永豐金",
+          "signalDate": "2025-11-27",
+          "entryDate": "2025-11-28",
+          "exitDate": "2025-12-11",
+          "tradeReturnPct": -0.18,
+          "setup": [
+            "投信 連買 3 日條件成立",
+            "股價在 MA60 上且趨勢向上",
+            "相對大盤強"
+          ],
+          "trigger": [
+            "回測 MA20 後收紅"
+          ],
+          "invalidation": [
+            "跌破回測支撐",
+            "跌破 MA20",
+            "投信轉賣且股價轉弱"
+          ],
+          "exitReason": "研究固定持有期結束",
+          "orderIntent": {
+            "intentId": "dec5cc227aeedf365892",
+            "createdAt": "2026-06-22T12:13:17.177Z",
+            "tradeDate": "2025-11-28",
+            "symbol": "2890",
+            "strategyId": "trust_accumulation_pullback",
+            "action": "BUY",
+            "status": "PENDING_REVIEW",
+            "submitToRealBroker": false,
+            "reason": "投信連買強勢股回檔 Setup 與 Trigger 成立",
+            "warnings": [
+              "法人資料採 T 日公布、T+1 才可使用的保守假設"
+            ],
+            "audit": {
+              "setup": [
+                "投信 連買 3 日條件成立",
+                "股價在 MA60 上且趨勢向上",
+                "相對大盤強"
+              ],
+              "trigger": [
+                "回測 MA20 後收紅"
+              ],
+              "invalidation": [
+                "跌破回測支撐",
+                "跌破 MA20",
+                "投信轉賣且股價轉弱"
+              ],
+              "noFutureDataAttestation": true,
+              "humanApprovalRequired": true
+            },
+            "side": "BUY",
+            "quantity": 3298,
+            "boardLotQuantity": 3000,
+            "oddLotQuantity": 298,
+            "orderType": "MARKETABLE_LIMIT",
+            "limitPrice": 27.336000766754147,
+            "stopPrice": 26.656000747680665,
+            "targetPrice": 28.016000785827636,
+            "riskRewardRatio": 1.5,
+            "timeInForce": "ROD",
+            "session": "REGULAR",
+            "brokerPayload": {
+              "symbol": "2890",
+              "side": "BUY",
+              "quantity": 3298,
+              "orderType": "MARKETABLE_LIMIT",
+              "price": 27.336000766754147,
+              "triggerPrice": 27.200000762939453,
+              "timeInForce": "ROD"
+            }
+          }
+        },
+        {
+          "symbol": "2855",
+          "name": "統一證",
+          "signalDate": "2025-12-09",
+          "entryDate": "2025-12-10",
+          "exitDate": "2025-12-11",
+          "tradeReturnPct": -2.87,
+          "setup": [
+            "投信 連買 3 日條件成立",
+            "股價在 MA60 上且趨勢向上",
+            "相對大盤強"
+          ],
+          "trigger": [
+            "回測 MA20 後收紅"
+          ],
+          "invalidation": [
+            "跌破回測支撐",
+            "跌破 MA20",
+            "投信轉賣且股價轉弱"
+          ],
+          "exitReason": "盤中跌破停損",
+          "orderIntent": {
+            "intentId": "fde589085dd4d5576bc7",
+            "createdAt": "2026-06-22T12:13:17.263Z",
+            "tradeDate": "2025-12-10",
+            "symbol": "2855",
+            "strategyId": "trust_accumulation_pullback",
+            "action": "BUY",
+            "status": "PENDING_REVIEW",
+            "submitToRealBroker": false,
+            "reason": "投信連買強勢股回檔 Setup 與 Trigger 成立",
+            "warnings": [
+              "法人資料採 T 日公布、T+1 才可使用的保守假設"
+            ],
+            "audit": {
+              "setup": [
+                "投信 連買 3 日條件成立",
+                "股價在 MA60 上且趨勢向上",
+                "相對大盤強"
+              ],
+              "trigger": [
+                "回測 MA20 後收紅"
+              ],
+              "invalidation": [
+                "跌破回測支撐",
+                "跌破 MA20",
+                "投信轉賣且股價轉弱"
+              ],
+              "noFutureDataAttestation": true,
+              "humanApprovalRequired": true
+            },
+            "side": "BUY",
+            "quantity": 3633,
+            "boardLotQuantity": 3000,
+            "oddLotQuantity": 633,
+            "orderType": "MARKETABLE_LIMIT",
+            "limitPrice": 24.823500766754147,
+            "stopPrice": 24.206000747680665,
+            "targetPrice": 25.441000785827637,
+            "riskRewardRatio": 1.5,
+            "timeInForce": "ROD",
+            "session": "REGULAR",
+            "brokerPayload": {
+              "symbol": "2855",
+              "side": "BUY",
+              "quantity": 3633,
+              "orderType": "MARKETABLE_LIMIT",
+              "price": 24.823500766754147,
+              "triggerPrice": 24.700000762939453,
+              "timeInForce": "ROD"
+            }
+          }
+        },
+        {
+          "symbol": "2002",
+          "name": "中鋼",
+          "signalDate": "2025-12-12",
+          "entryDate": "2025-12-15",
+          "exitDate": "2025-12-17",
+          "tradeReturnPct": -3.25,
+          "setup": [
+            "投信 連買 3 日條件成立",
+            "股價在 MA60 上且趨勢向上",
+            "相對大盤強"
+          ],
+          "trigger": [
+            "回測 MA20 後收紅"
+          ],
+          "invalidation": [
+            "跌破回測支撐",
+            "跌破 MA20",
+            "投信轉賣且股價轉弱"
+          ],
+          "exitReason": "盤中跌破停損",
+          "orderIntent": {
+            "intentId": "65c44802d4dea253ceac",
+            "createdAt": "2026-06-22T12:13:17.180Z",
+            "tradeDate": "2025-12-15",
+            "symbol": "2002",
+            "strategyId": "trust_accumulation_pullback",
+            "action": "BUY",
+            "status": "PENDING_REVIEW",
+            "submitToRealBroker": false,
+            "reason": "投信連買強勢股回檔 Setup 與 Trigger 成立",
+            "warnings": [
+              "法人資料採 T 日公布、T+1 才可使用的保守假設"
+            ],
+            "audit": {
+              "setup": [
+                "投信 連買 3 日條件成立",
+                "股價在 MA60 上且趨勢向上",
+                "相對大盤強"
+              ],
+              "trigger": [
+                "回測 MA20 後收紅"
+              ],
+              "invalidation": [
+                "跌破回測支撐",
+                "跌破 MA20",
+                "投信轉賣且股價轉弱"
+              ],
+              "noFutureDataAttestation": true,
+              "humanApprovalRequired": true
+            },
+            "side": "BUY",
+            "quantity": 4747,
+            "boardLotQuantity": 4000,
+            "oddLotQuantity": 747,
+            "orderType": "MARKETABLE_LIMIT",
+            "limitPrice": 18.994499616622925,
+            "stopPrice": 18.450000762939453,
+            "targetPrice": 19.574997901916504,
+            "riskRewardRatio": 1.5,
+            "timeInForce": "ROD",
+            "session": "REGULAR",
+            "brokerPayload": {
+              "symbol": "2002",
+              "side": "BUY",
+              "quantity": 4747,
+              "orderType": "MARKETABLE_LIMIT",
+              "price": 18.994499616622925,
+              "triggerPrice": 18.899999618530273,
+              "timeInForce": "ROD"
+            }
+          }
+        },
+        {
+          "symbol": "2383",
+          "name": "台光電",
+          "signalDate": "2025-12-18",
+          "entryDate": "2025-12-19",
+          "exitDate": "2025-12-24",
+          "tradeReturnPct": 6.54,
+          "setup": [
+            "投信 連買 3 日條件成立",
+            "股價在 MA60 上且趨勢向上",
+            "相對大盤強"
+          ],
+          "trigger": [
+            "回測 MA20 後收紅"
+          ],
+          "invalidation": [
+            "跌破回測支撐",
+            "跌破 MA20",
+            "投信轉賣且股價轉弱"
+          ],
+          "exitReason": "跳空達到停利",
+          "orderIntent": {
+            "intentId": "3326ff519cdfc0bc8d6f",
+            "createdAt": "2026-06-22T12:13:17.154Z",
+            "tradeDate": "2025-12-19",
+            "symbol": "2383",
+            "strategyId": "trust_accumulation_pullback",
+            "action": "BUY",
+            "status": "PENDING_REVIEW",
+            "submitToRealBroker": false,
+            "reason": "投信連買強勢股回檔 Setup 與 Trigger 成立",
+            "warnings": [
+              "法人資料採 T 日公布、T+1 才可使用的保守假設"
+            ],
+            "audit": {
+              "setup": [
+                "投信 連買 3 日條件成立",
+                "股價在 MA60 上且趨勢向上",
+                "相對大盤強"
+              ],
+              "trigger": [
+                "回測 MA20 後收紅"
+              ],
+              "invalidation": [
+                "跌破回測支撐",
+                "跌破 MA20",
+                "投信轉賣且股價轉弱"
+              ],
+              "noFutureDataAttestation": true,
+              "humanApprovalRequired": true
+            },
+            "side": "BUY",
+            "quantity": 58,
+            "boardLotQuantity": 0,
+            "oddLotQuantity": 58,
+            "orderType": "MARKETABLE_LIMIT",
+            "limitPrice": 1542.6749999999997,
+            "stopPrice": 1470,
+            "targetPrice": 1632.5,
+            "riskRewardRatio": 1.5,
+            "timeInForce": "ROD",
+            "session": "REGULAR",
+            "brokerPayload": {
+              "symbol": "2383",
+              "side": "BUY",
+              "quantity": 58,
+              "orderType": "MARKETABLE_LIMIT",
+              "price": 1542.6749999999997,
+              "triggerPrice": 1535,
+              "timeInForce": "ROD"
+            }
+          }
+        },
+        {
+          "symbol": "2883",
+          "name": "凱基金",
+          "signalDate": "2026-02-04",
+          "entryDate": "2026-02-05",
+          "exitDate": "2026-02-06",
+          "tradeReturnPct": -2.87,
+          "setup": [
+            "投信 連買 3 日條件成立",
+            "股價在 MA60 上且趨勢向上",
+            "相對大盤強"
+          ],
+          "trigger": [
+            "回測 MA20 後收紅"
+          ],
+          "invalidation": [
+            "跌破回測支撐",
+            "跌破 MA20",
+            "投信轉賣且股價轉弱"
+          ],
+          "exitReason": "盤中跌破停損",
+          "orderIntent": {
+            "intentId": "498f2455ade8cc2aab77",
+            "createdAt": "2026-06-22T12:13:17.209Z",
+            "tradeDate": "2026-02-05",
+            "symbol": "2883",
+            "strategyId": "trust_accumulation_pullback",
+            "action": "BUY",
+            "status": "PENDING_REVIEW",
+            "submitToRealBroker": false,
+            "reason": "投信連買強勢股回檔 Setup 與 Trigger 成立",
+            "warnings": [
+              "法人資料採 T 日公布、T+1 才可使用的保守假設"
+            ],
+            "audit": {
+              "setup": [
+                "投信 連買 3 日條件成立",
+                "股價在 MA60 上且趨勢向上",
+                "相對大盤強"
+              ],
+              "trigger": [
+                "回測 MA20 後收紅"
+              ],
+              "invalidation": [
+                "跌破回測支撐",
+                "跌破 MA20",
+                "投信轉賣且股價轉弱"
+              ],
+              "noFutureDataAttestation": true,
+              "humanApprovalRequired": true
+            },
+            "side": "BUY",
+            "quantity": 4863,
+            "boardLotQuantity": 4000,
+            "oddLotQuantity": 863,
+            "orderType": "MARKETABLE_LIMIT",
+            "limitPrice": 18.542250766754147,
+            "stopPrice": 18.081000747680665,
+            "targetPrice": 19.003500785827637,
+            "riskRewardRatio": 1.5,
+            "timeInForce": "ROD",
+            "session": "REGULAR",
+            "brokerPayload": {
+              "symbol": "2883",
+              "side": "BUY",
+              "quantity": 4863,
+              "orderType": "MARKETABLE_LIMIT",
+              "price": 18.542250766754147,
+              "triggerPrice": 18.450000762939453,
+              "timeInForce": "ROD"
+            }
+          }
+        },
+        {
+          "symbol": "2880",
+          "name": "華南金",
+          "signalDate": "2026-02-05",
+          "entryDate": "2026-02-06",
+          "exitDate": "2026-02-11",
+          "tradeReturnPct": 2.09,
+          "setup": [
+            "投信 連買 3 日條件成立",
+            "股價在 MA60 上且趨勢向上",
+            "相對大盤強"
+          ],
+          "trigger": [
+            "回測 MA20 後收紅"
+          ],
+          "invalidation": [
+            "跌破回測支撐",
+            "跌破 MA20",
+            "投信轉賣且股價轉弱"
+          ],
+          "exitReason": "盤中達到停利",
+          "orderIntent": {
+            "intentId": "926e8fe6fea112c0f5f3",
+            "createdAt": "2026-06-22T12:13:17.181Z",
+            "tradeDate": "2026-02-06",
+            "symbol": "2880",
+            "strategyId": "trust_accumulation_pullback",
+            "action": "BUY",
+            "status": "PENDING_REVIEW",
+            "submitToRealBroker": false,
+            "reason": "投信連買強勢股回檔 Setup 與 Trigger 成立",
+            "warnings": [
+              "法人資料採 T 日公布、T+1 才可使用的保守假設"
+            ],
+            "audit": {
+              "setup": [
+                "投信 連買 3 日條件成立",
+                "股價在 MA60 上且趨勢向上",
+                "相對大盤強"
+              ],
+              "trigger": [
+                "回測 MA20 後收紅"
+              ],
+              "invalidation": [
+                "跌破回測支撐",
+                "跌破 MA20",
+                "投信轉賣且股價轉弱"
+              ],
+              "noFutureDataAttestation": true,
+              "humanApprovalRequired": true
+            },
+            "side": "BUY",
+            "quantity": 2694,
+            "boardLotQuantity": 2000,
+            "oddLotQuantity": 694,
+            "orderType": "MARKETABLE_LIMIT",
+            "limitPrice": 33.46649923324585,
+            "stopPrice": 32.633999252319335,
+            "targetPrice": 34.29899921417236,
+            "riskRewardRatio": 1.5,
+            "timeInForce": "ROD",
+            "session": "REGULAR",
+            "brokerPayload": {
+              "symbol": "2880",
+              "side": "BUY",
+              "quantity": 2694,
+              "orderType": "MARKETABLE_LIMIT",
+              "price": 33.46649923324585,
+              "triggerPrice": 33.29999923706055,
+              "timeInForce": "ROD"
+            }
+          }
+        },
+        {
+          "symbol": "2412",
+          "name": "中華電",
+          "signalDate": "2026-03-09",
+          "entryDate": "2026-03-10",
+          "exitDate": "2026-03-20",
+          "tradeReturnPct": -2.87,
+          "setup": [
+            "投信 連買 3 日條件成立",
+            "股價在 MA60 上且趨勢向上",
+            "相對大盤強"
+          ],
+          "trigger": [
+            "回測 MA20 後收紅"
+          ],
+          "invalidation": [
+            "跌破回測支撐",
+            "跌破 MA20",
+            "投信轉賣且股價轉弱"
+          ],
+          "exitReason": "盤中跌破停損",
+          "orderIntent": {
+            "intentId": "c6eb2fa254d01478a52a",
+            "createdAt": "2026-06-22T12:17:52.366Z",
+            "tradeDate": "2026-03-10",
+            "symbol": "2412",
+            "strategyId": "trust_accumulation_pullback",
+            "action": "BUY",
+            "status": "PENDING_REVIEW",
+            "submitToRealBroker": false,
+            "reason": "投信連買強勢股回檔 Setup 與 Trigger 成立",
+            "warnings": [
+              "法人資料採 T 日公布、T+1 才可使用的保守假設"
+            ],
+            "audit": {
+              "setup": [
+                "投信 連買 3 日條件成立",
+                "股價在 MA60 上且趨勢向上",
+                "相對大盤強"
+              ],
+              "trigger": [
+                "回測 MA20 後收紅"
+              ],
+              "invalidation": [
+                "跌破回測支撐",
+                "跌破 MA20",
+                "投信轉賣且股價轉弱"
+              ],
+              "noFutureDataAttestation": true,
+              "humanApprovalRequired": true
+            },
+            "side": "BUY",
+            "quantity": 655,
+            "boardLotQuantity": 0,
+            "oddLotQuantity": 655,
+            "orderType": "MARKETABLE_LIMIT",
+            "limitPrice": 137.68499999999997,
+            "stopPrice": 134.26,
+            "targetPrice": 141.11,
+            "riskRewardRatio": 1.5,
+            "timeInForce": "ROD",
+            "session": "REGULAR",
+            "brokerPayload": {
+              "symbol": "2412",
+              "side": "BUY",
+              "quantity": 655,
+              "orderType": "MARKETABLE_LIMIT",
+              "price": 137.68499999999997,
+              "triggerPrice": 137,
+              "timeInForce": "ROD"
+            }
+          }
+        },
+        {
+          "symbol": "2357",
+          "name": "華碩",
+          "signalDate": "2026-04-09",
+          "entryDate": "2026-04-10",
+          "exitDate": "2026-04-23",
+          "tradeReturnPct": 1.49,
+          "setup": [
+            "投信 連買 3 日條件成立",
+            "股價在 MA60 上且趨勢向上",
+            "相對大盤強"
+          ],
+          "trigger": [
+            "回測 MA20 後收紅"
+          ],
+          "invalidation": [
+            "跌破回測支撐",
+            "跌破 MA20",
+            "投信轉賣且股價轉弱"
+          ],
+          "exitReason": "研究固定持有期結束",
+          "orderIntent": {
+            "intentId": "12bb8df01075cf1bf427",
+            "createdAt": "2026-06-22T12:17:52.399Z",
+            "tradeDate": "2026-04-10",
+            "symbol": "2357",
+            "strategyId": "trust_accumulation_pullback",
+            "action": "BUY",
+            "status": "PENDING_REVIEW",
+            "submitToRealBroker": false,
+            "reason": "投信連買強勢股回檔 Setup 與 Trigger 成立",
+            "warnings": [
+              "法人資料採 T 日公布、T+1 才可使用的保守假設"
+            ],
+            "audit": {
+              "setup": [
+                "投信 連買 3 日條件成立",
+                "股價在 MA60 上且趨勢向上",
+                "相對大盤強"
+              ],
+              "trigger": [
+                "回測 MA20 後收紅"
+              ],
+              "invalidation": [
+                "跌破回測支撐",
+                "跌破 MA20",
+                "投信轉賣且股價轉弱"
+              ],
+              "noFutureDataAttestation": true,
+              "humanApprovalRequired": true
+            },
+            "side": "BUY",
+            "quantity": 153,
+            "boardLotQuantity": 0,
+            "oddLotQuantity": 153,
+            "orderType": "MARKETABLE_LIMIT",
+            "limitPrice": 586.92,
+            "stopPrice": 560,
+            "targetPrice": 620,
+            "riskRewardRatio": 1.5,
+            "timeInForce": "ROD",
+            "session": "REGULAR",
+            "brokerPayload": {
+              "symbol": "2357",
+              "side": "BUY",
+              "quantity": 153,
+              "orderType": "MARKETABLE_LIMIT",
+              "price": 586.92,
+              "triggerPrice": 584,
+              "timeInForce": "ROD"
+            }
+          }
+        }
+      ]
+    }
+  },
   "qualification": {
     "researchMinimumCandidatePassed": false,
     "researchHighProfitCandidatePassed": false,
     "executableCandidatePassed": false
   },
-  "conclusion": "法人歷史資料不足，尚無法完成真實 walk-forward 驗證"
+  "conclusion": "沒有策略通過最低候選標準，也沒有策略通過高報酬候選標準"
 }

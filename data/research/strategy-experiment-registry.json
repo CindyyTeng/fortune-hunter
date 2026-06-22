@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
   "generatedAt": "2026-06-16T16:13:34.718Z",
-  "updatedAt": "2026-06-22T12:17:52.501Z",
+  "updatedAt": "2026-06-22T13:10:02.885Z",
   "experiments": [
     {
       "experimentId": "EXP-20260616161335-34c09c70",
@@ -2722,12 +2722,471 @@
         ]
       },
       "resultStatus": "failed",
+      "failureReason": "Validation 僅 35 筆、Profit Factor 小於 1、策略虧損且輸給 0050／大盤；除非新增月營收、融資融券或產業族群資料，否則禁止重測。",
+      "overfitFlag": false,
+      "passedMinimum": false,
+      "passedHighProfit": false,
+      "allowRetest": false,
+      "notes": "已完成真實 rolling walk-forward。",
+      "strategyDisposition": "FAILED_DO_NOT_RETUNE",
+      "paperTradingAllowed": false,
+      "liveTradingAllowed": false
+    },
+    {
+      "experimentId": "EXP-20260622130830-cd580de4",
+      "createdAt": "2026-06-22T13:08:30.788Z",
+      "strategyId": "trust_flow_intensity",
+      "strategyFamilyId": "trust_flow_intensity:712d60d2b026c00034091870",
+      "experimentHash": "cd580de422f1e46afee22fe1",
+      "dataSources": [
+        "daily_ohlcv",
+        "institutional_trust",
+        "institutional_foreign",
+        "institutional_dealer",
+        "point_in_time_t_plus_1"
+      ],
+      "parameters": {
+        "definitionCount": 4,
+        "datasetVersion": "2022-03-09_2026-06-09"
+      },
+      "trainPeriod": {
+        "months": 36
+      },
+      "validationPeriod": {
+        "months": 12,
+        "stepMonths": 12
+      },
+      "costModel": {
+        "buyFeePct": 0.1425,
+        "sellFeePct": 0.1425,
+        "sellTaxPct": 0.3,
+        "slippagePct": 0.15
+      },
+      "executionModel": {
+        "entry": "next_open_market",
+        "settlement": "T+2",
+        "simulator": "shared"
+      },
+      "metrics": {
+        "validationTrades": 211,
+        "validationAverageMonthlyEquityReturnPct": 0.6264,
+        "validationAnnualizedReturnPct": 6.8139,
+        "validationProfitFactor": 1.1858,
+        "validationMaximumDrawdownPct": -8.4323,
+        "validationWinRatePct": 44.5498,
+        "marketAverageMonthlyReturnPct": 5.3115,
+        "randomAverageMonthlyReturnPct": -0.506,
+        "concentrationPct": 4.2654,
+        "profitableYears": 1,
+        "validationYears": 2,
+        "minimumChecks": {
+          "tradeCount": false,
+          "beatsMarket": false,
+          "profitFactor": true,
+          "drawdown": true,
+          "beatsRandom": true,
+          "positiveAfterCosts": true,
+          "diversified": true,
+          "crossYear": false,
+          "decisionActions": true,
+          "orderIntent": true
+        },
+        "highChecks": {
+          "annualized": false,
+          "monthly": false,
+          "profitFactor": false,
+          "drawdown": true
+        },
+        "passedMinimum": false,
+        "passedHighProfit": false
+      },
+      "resultStatus": "failed",
       "failureReason": "Validation 未通過最低候選標準",
       "overfitFlag": false,
       "passedMinimum": false,
       "passedHighProfit": false,
       "allowRetest": false,
-      "notes": "已完成真實 rolling walk-forward。"
+      "notes": "Alpha Tournament 家族級 validation。"
+    },
+    {
+      "experimentId": "EXP-20260622130857-13816cba",
+      "createdAt": "2026-06-22T13:08:57.010Z",
+      "strategyId": "foreign_trust_sync",
+      "strategyFamilyId": "foreign_trust_sync:f0a8a62295a08086db3446da",
+      "experimentHash": "13816cba75868a79d59c44bc",
+      "dataSources": [
+        "daily_ohlcv",
+        "institutional_trust",
+        "institutional_foreign",
+        "institutional_dealer",
+        "point_in_time_t_plus_1"
+      ],
+      "parameters": {
+        "definitionCount": 4,
+        "datasetVersion": "2022-03-09_2026-06-09"
+      },
+      "trainPeriod": {
+        "months": 36
+      },
+      "validationPeriod": {
+        "months": 12,
+        "stepMonths": 12
+      },
+      "costModel": {
+        "buyFeePct": 0.1425,
+        "sellFeePct": 0.1425,
+        "sellTaxPct": 0.3,
+        "slippagePct": 0.15
+      },
+      "executionModel": {
+        "entry": "next_open_market",
+        "settlement": "T+2",
+        "simulator": "shared"
+      },
+      "metrics": {
+        "validationTrades": 175,
+        "validationAverageMonthlyEquityReturnPct": 0.8244,
+        "validationAnnualizedReturnPct": 9.2635,
+        "validationProfitFactor": 1.2856,
+        "validationMaximumDrawdownPct": -11.3706,
+        "validationWinRatePct": 46.8571,
+        "marketAverageMonthlyReturnPct": 5.3115,
+        "randomAverageMonthlyReturnPct": -0.506,
+        "concentrationPct": 2.8571,
+        "profitableYears": 2,
+        "validationYears": 2,
+        "minimumChecks": {
+          "tradeCount": false,
+          "beatsMarket": false,
+          "profitFactor": true,
+          "drawdown": true,
+          "beatsRandom": true,
+          "positiveAfterCosts": true,
+          "diversified": true,
+          "crossYear": true,
+          "decisionActions": true,
+          "orderIntent": true
+        },
+        "highChecks": {
+          "annualized": false,
+          "monthly": false,
+          "profitFactor": false,
+          "drawdown": true
+        },
+        "passedMinimum": false,
+        "passedHighProfit": false
+      },
+      "resultStatus": "failed",
+      "failureReason": "Validation 未通過最低候選標準",
+      "overfitFlag": false,
+      "passedMinimum": false,
+      "passedHighProfit": false,
+      "allowRetest": false,
+      "notes": "Alpha Tournament 家族級 validation。"
+    },
+    {
+      "experimentId": "EXP-20260622130911-934462c7",
+      "createdAt": "2026-06-22T13:09:11.572Z",
+      "strategyId": "institutional_flow_reversal",
+      "strategyFamilyId": "institutional_flow_reversal:a407c360945a66d8595b9571",
+      "experimentHash": "934462c705d544f72b7bee45",
+      "dataSources": [
+        "daily_ohlcv",
+        "institutional_trust",
+        "institutional_foreign",
+        "institutional_dealer",
+        "point_in_time_t_plus_1"
+      ],
+      "parameters": {
+        "definitionCount": 4,
+        "datasetVersion": "2022-03-09_2026-06-09"
+      },
+      "trainPeriod": {
+        "months": 36
+      },
+      "validationPeriod": {
+        "months": 12,
+        "stepMonths": 12
+      },
+      "costModel": {
+        "buyFeePct": 0.1425,
+        "sellFeePct": 0.1425,
+        "sellTaxPct": 0.3,
+        "slippagePct": 0.15
+      },
+      "executionModel": {
+        "entry": "next_open_market",
+        "settlement": "T+2",
+        "simulator": "shared"
+      },
+      "metrics": {
+        "validationTrades": 189,
+        "validationAverageMonthlyEquityReturnPct": -0.2872,
+        "validationAnnualizedReturnPct": -3.6895,
+        "validationProfitFactor": 0.8973,
+        "validationMaximumDrawdownPct": -10.099,
+        "validationWinRatePct": 40.7407,
+        "marketAverageMonthlyReturnPct": 5.3115,
+        "randomAverageMonthlyReturnPct": -0.506,
+        "concentrationPct": 3.1746,
+        "profitableYears": 0,
+        "validationYears": 2,
+        "minimumChecks": {
+          "tradeCount": false,
+          "beatsMarket": false,
+          "profitFactor": false,
+          "drawdown": true,
+          "beatsRandom": true,
+          "positiveAfterCosts": false,
+          "diversified": true,
+          "crossYear": false,
+          "decisionActions": true,
+          "orderIntent": true
+        },
+        "highChecks": {
+          "annualized": false,
+          "monthly": false,
+          "profitFactor": false,
+          "drawdown": true
+        },
+        "passedMinimum": false,
+        "passedHighProfit": false
+      },
+      "resultStatus": "failed",
+      "failureReason": "Validation 未通過最低候選標準",
+      "overfitFlag": false,
+      "passedMinimum": false,
+      "passedHighProfit": false,
+      "allowRetest": false,
+      "notes": "Alpha Tournament 家族級 validation。"
+    },
+    {
+      "experimentId": "EXP-20260622130920-d8838be3",
+      "createdAt": "2026-06-22T13:09:20.612Z",
+      "strategyId": "institutional_relative_strength",
+      "strategyFamilyId": "institutional_relative_strength:657fd4dfa358a925e3fedb28",
+      "experimentHash": "d8838be3fae859e87f653339",
+      "dataSources": [
+        "daily_ohlcv",
+        "institutional_trust",
+        "institutional_foreign",
+        "institutional_dealer",
+        "point_in_time_t_plus_1"
+      ],
+      "parameters": {
+        "definitionCount": 4,
+        "datasetVersion": "2022-03-09_2026-06-09"
+      },
+      "trainPeriod": {
+        "months": 36
+      },
+      "validationPeriod": {
+        "months": 12,
+        "stepMonths": 12
+      },
+      "costModel": {
+        "buyFeePct": 0.1425,
+        "sellFeePct": 0.1425,
+        "sellTaxPct": 0.3,
+        "slippagePct": 0.15
+      },
+      "executionModel": {
+        "entry": "next_open_market",
+        "settlement": "T+2",
+        "simulator": "shared"
+      },
+      "metrics": {
+        "validationTrades": 226,
+        "validationAverageMonthlyEquityReturnPct": 0.5475,
+        "validationAnnualizedReturnPct": 6.2293,
+        "validationProfitFactor": 1.1671,
+        "validationMaximumDrawdownPct": -7.0089,
+        "validationWinRatePct": 42.9204,
+        "marketAverageMonthlyReturnPct": 5.3115,
+        "randomAverageMonthlyReturnPct": -0.506,
+        "concentrationPct": 4.4248,
+        "profitableYears": 2,
+        "validationYears": 2,
+        "minimumChecks": {
+          "tradeCount": false,
+          "beatsMarket": false,
+          "profitFactor": true,
+          "drawdown": true,
+          "beatsRandom": true,
+          "positiveAfterCosts": true,
+          "diversified": true,
+          "crossYear": true,
+          "decisionActions": true,
+          "orderIntent": true
+        },
+        "highChecks": {
+          "annualized": false,
+          "monthly": false,
+          "profitFactor": false,
+          "drawdown": true
+        },
+        "passedMinimum": false,
+        "passedHighProfit": false
+      },
+      "resultStatus": "failed",
+      "failureReason": "Validation 未通過最低候選標準",
+      "overfitFlag": false,
+      "passedMinimum": false,
+      "passedHighProfit": false,
+      "allowRetest": false,
+      "notes": "Alpha Tournament 家族級 validation。"
+    },
+    {
+      "experimentId": "EXP-20260622130954-a5e1498c",
+      "createdAt": "2026-06-22T13:09:54.197Z",
+      "strategyId": "institutional_risk_exclusion",
+      "strategyFamilyId": "institutional_risk_exclusion:b30cfd0a9c6a7a1f7ad69fcb",
+      "experimentHash": "a5e1498c2b6fb3c68c045405",
+      "dataSources": [
+        "daily_ohlcv",
+        "institutional_trust",
+        "institutional_foreign",
+        "institutional_dealer",
+        "point_in_time_t_plus_1"
+      ],
+      "parameters": {
+        "definitionCount": 4,
+        "datasetVersion": "2022-03-09_2026-06-09"
+      },
+      "trainPeriod": {
+        "months": 36
+      },
+      "validationPeriod": {
+        "months": 12,
+        "stepMonths": 12
+      },
+      "costModel": {
+        "buyFeePct": 0.1425,
+        "sellFeePct": 0.1425,
+        "sellTaxPct": 0.3,
+        "slippagePct": 0.15
+      },
+      "executionModel": {
+        "entry": "next_open_market",
+        "settlement": "T+2",
+        "simulator": "shared"
+      },
+      "metrics": {
+        "validationTrades": 137,
+        "validationAverageMonthlyEquityReturnPct": 0.2442,
+        "validationAnnualizedReturnPct": 2.2526,
+        "validationProfitFactor": 1.1023,
+        "validationMaximumDrawdownPct": -10.9292,
+        "validationWinRatePct": 43.7956,
+        "marketAverageMonthlyReturnPct": 5.3115,
+        "randomAverageMonthlyReturnPct": -0.506,
+        "concentrationPct": 4.3796,
+        "profitableYears": 1,
+        "validationYears": 2,
+        "minimumChecks": {
+          "tradeCount": false,
+          "beatsMarket": false,
+          "profitFactor": false,
+          "drawdown": true,
+          "beatsRandom": true,
+          "positiveAfterCosts": true,
+          "diversified": true,
+          "crossYear": false,
+          "decisionActions": true,
+          "orderIntent": true
+        },
+        "highChecks": {
+          "annualized": false,
+          "monthly": false,
+          "profitFactor": false,
+          "drawdown": true
+        },
+        "passedMinimum": false,
+        "passedHighProfit": false
+      },
+      "resultStatus": "failed",
+      "failureReason": "Validation 未通過最低候選標準",
+      "overfitFlag": false,
+      "passedMinimum": false,
+      "passedHighProfit": false,
+      "allowRetest": false,
+      "notes": "Alpha Tournament 家族級 validation。"
+    },
+    {
+      "experimentId": "EXP-20260622131002-7c0a7244",
+      "createdAt": "2026-06-22T13:10:02.885Z",
+      "strategyId": "institutional_contrarian_audit",
+      "strategyFamilyId": "institutional_contrarian_audit:7b72b9ca612afe82fda021a4",
+      "experimentHash": "7c0a7244f6c87638eb53fa16",
+      "dataSources": [
+        "daily_ohlcv",
+        "institutional_trust",
+        "institutional_foreign",
+        "institutional_dealer",
+        "point_in_time_t_plus_1"
+      ],
+      "parameters": {
+        "definitionCount": 4,
+        "datasetVersion": "2022-03-09_2026-06-09"
+      },
+      "trainPeriod": {
+        "months": 36
+      },
+      "validationPeriod": {
+        "months": 12,
+        "stepMonths": 12
+      },
+      "costModel": {
+        "buyFeePct": 0.1425,
+        "sellFeePct": 0.1425,
+        "sellTaxPct": 0.3,
+        "slippagePct": 0.15
+      },
+      "executionModel": {
+        "entry": "next_open_market",
+        "settlement": "T+2",
+        "simulator": "shared"
+      },
+      "metrics": {
+        "validationTrades": 200,
+        "validationAverageMonthlyEquityReturnPct": 0.2938,
+        "validationAnnualizedReturnPct": 3.0021,
+        "validationProfitFactor": 1.0934,
+        "validationMaximumDrawdownPct": -6.7692,
+        "validationWinRatePct": 45,
+        "marketAverageMonthlyReturnPct": 5.3115,
+        "randomAverageMonthlyReturnPct": -0.506,
+        "concentrationPct": 5.5,
+        "profitableYears": 2,
+        "validationYears": 2,
+        "minimumChecks": {
+          "tradeCount": false,
+          "beatsMarket": false,
+          "profitFactor": false,
+          "drawdown": true,
+          "beatsRandom": true,
+          "positiveAfterCosts": true,
+          "diversified": true,
+          "crossYear": true,
+          "decisionActions": true,
+          "orderIntent": true
+        },
+        "highChecks": {
+          "annualized": false,
+          "monthly": false,
+          "profitFactor": false,
+          "drawdown": true
+        },
+        "passedMinimum": false,
+        "passedHighProfit": false
+      },
+      "resultStatus": "failed",
+      "failureReason": "Validation 未通過最低候選標準",
+      "overfitFlag": false,
+      "passedMinimum": false,
+      "passedHighProfit": false,
+      "allowRetest": false,
+      "notes": "Alpha Tournament 家族級 validation。"
     }
   ]
 }

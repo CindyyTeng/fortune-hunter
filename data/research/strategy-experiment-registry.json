@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
   "generatedAt": "2026-06-16T16:13:34.718Z",
-  "updatedAt": "2026-06-22T13:10:02.885Z",
+  "updatedAt": "2026-06-23T16:15:18.727Z",
   "experiments": [
     {
       "experimentId": "EXP-20260616161335-34c09c70",
@@ -3187,6 +3187,314 @@
       "passedHighProfit": false,
       "allowRetest": false,
       "notes": "Alpha Tournament 家族級 validation。"
+    },
+    {
+      "experimentId": "EXP-20260623161456-ca27ceec",
+      "createdAt": "2026-06-23T16:14:56.178Z",
+      "strategyId": "sector_sync_institutional_buy",
+      "strategyFamilyId": "sector_sync_institutional_buy:2604aad08f44ceb4acfe65cc",
+      "experimentHash": "ca27ceec6030399c495dc8a4",
+      "dataSources": [
+        "daily_ohlcv",
+        "institutional_point_in_time_t_plus_1",
+        "sector_static_current_classification_v1"
+      ],
+      "parameters": {
+        "definitions": [
+          "top20_sync",
+          "top20_sync_strong_stock",
+          "top20_sync_breadth",
+          "top20_sync_new_highs"
+        ],
+        "dataset": "2022-03-10_2026-06-09"
+      },
+      "trainPeriod": {
+        "months": 36
+      },
+      "validationPeriod": {
+        "months": 12,
+        "stepMonths": 12
+      },
+      "costModel": {
+        "buyFeePct": 0.1425,
+        "sellFeePct": 0.1425,
+        "sellTaxPct": 0.3,
+        "slippagePct": 0.15
+      },
+      "executionModel": {
+        "entry": "next_open_market",
+        "settlement": "T+2",
+        "simulator": "shared"
+      },
+      "metrics": {
+        "validationTrades": 213,
+        "validationAverageMonthlyEquityReturnPct": 0.279,
+        "validationAnnualizedReturnPct": 2.8594,
+        "validationProfitFactor": 1.0784,
+        "validationMaximumDrawdownPct": -9.0774,
+        "validationWinRatePct": 46.4789,
+        "marketAverageMonthlyReturnPct": 5.3115,
+        "randomAverageMonthlyReturnPct": 0.0768,
+        "concentrationPct": 2.8169,
+        "minimumChecks": {
+          "tradeCount": false,
+          "beatsMarket": false,
+          "profitFactor": false,
+          "drawdown": true,
+          "beatsRandom": true,
+          "positiveAfterCosts": true,
+          "diversified": true,
+          "decisionActions": true,
+          "orderIntent": true,
+          "historicalSectorPointInTime": false
+        },
+        "highChecks": {
+          "annualized": false,
+          "monthly": false,
+          "profitFactor": false,
+          "drawdown": true
+        },
+        "passedMinimum": false,
+        "passedHighProfit": false
+      },
+      "resultStatus": "failed",
+      "failureReason": "Validation 未通過完整門檻，且歷史產業分類不是 point-in-time。",
+      "overfitFlag": false,
+      "passedMinimum": false,
+      "passedHighProfit": false,
+      "allowRetest": false,
+      "notes": "新增產業／族群資料後的獨立策略家族。"
+    },
+    {
+      "experimentId": "EXP-20260623161501-b5068c86",
+      "createdAt": "2026-06-23T16:15:01.567Z",
+      "strategyId": "sector_trust_intensity",
+      "strategyFamilyId": "sector_trust_intensity:e1fb1bb52be4ccbcc7ee2540",
+      "experimentHash": "b5068c86fb4211f0e998d6cb",
+      "dataSources": [
+        "daily_ohlcv",
+        "institutional_point_in_time_t_plus_1",
+        "sector_static_current_classification_v1"
+      ],
+      "parameters": {
+        "definitions": [
+          "trust5_top",
+          "trust10_top",
+          "trust5_relative",
+          "trust10_breadth"
+        ],
+        "dataset": "2022-03-10_2026-06-09"
+      },
+      "trainPeriod": {
+        "months": 36
+      },
+      "validationPeriod": {
+        "months": 12,
+        "stepMonths": 12
+      },
+      "costModel": {
+        "buyFeePct": 0.1425,
+        "sellFeePct": 0.1425,
+        "sellTaxPct": 0.3,
+        "slippagePct": 0.15
+      },
+      "executionModel": {
+        "entry": "next_open_market",
+        "settlement": "T+2",
+        "simulator": "shared"
+      },
+      "metrics": {
+        "validationTrades": 170,
+        "validationAverageMonthlyEquityReturnPct": -0.0893,
+        "validationAnnualizedReturnPct": -1.561,
+        "validationProfitFactor": 0.9763,
+        "validationMaximumDrawdownPct": -10.5269,
+        "validationWinRatePct": 42.3529,
+        "marketAverageMonthlyReturnPct": 5.3115,
+        "randomAverageMonthlyReturnPct": -0.4106,
+        "concentrationPct": 4.1176,
+        "minimumChecks": {
+          "tradeCount": false,
+          "beatsMarket": false,
+          "profitFactor": false,
+          "drawdown": true,
+          "beatsRandom": true,
+          "positiveAfterCosts": false,
+          "diversified": true,
+          "decisionActions": true,
+          "orderIntent": true,
+          "historicalSectorPointInTime": false
+        },
+        "highChecks": {
+          "annualized": false,
+          "monthly": false,
+          "profitFactor": false,
+          "drawdown": true
+        },
+        "passedMinimum": false,
+        "passedHighProfit": false
+      },
+      "resultStatus": "failed",
+      "failureReason": "Validation 未通過完整門檻，且歷史產業分類不是 point-in-time。",
+      "overfitFlag": false,
+      "passedMinimum": false,
+      "passedHighProfit": false,
+      "allowRetest": false,
+      "notes": "新增產業／族群資料後的獨立策略家族。"
+    },
+    {
+      "experimentId": "EXP-20260623161506-9c24ba97",
+      "createdAt": "2026-06-23T16:15:06.833Z",
+      "strategyId": "sector_institutional_diffusion",
+      "strategyFamilyId": "sector_institutional_diffusion:c065ca03b653cbf20501faa6",
+      "experimentHash": "9c24ba9729bd4e791d888bc6",
+      "dataSources": [
+        "daily_ohlcv",
+        "institutional_point_in_time_t_plus_1",
+        "sector_static_current_classification_v1"
+      ],
+      "parameters": {
+        "definitions": [
+          "buy_breadth",
+          "buy_new_highs",
+          "buy_value_expand",
+          "buy_full_diffusion"
+        ],
+        "dataset": "2022-03-10_2026-06-09"
+      },
+      "trainPeriod": {
+        "months": 36
+      },
+      "validationPeriod": {
+        "months": 12,
+        "stepMonths": 12
+      },
+      "costModel": {
+        "buyFeePct": 0.1425,
+        "sellFeePct": 0.1425,
+        "sellTaxPct": 0.3,
+        "slippagePct": 0.15
+      },
+      "executionModel": {
+        "entry": "next_open_market",
+        "settlement": "T+2",
+        "simulator": "shared"
+      },
+      "metrics": {
+        "validationTrades": 159,
+        "validationAverageMonthlyEquityReturnPct": -0.0152,
+        "validationAnnualizedReturnPct": -0.4323,
+        "validationProfitFactor": 0.9874,
+        "validationMaximumDrawdownPct": -6.5781,
+        "validationWinRatePct": 40.8805,
+        "marketAverageMonthlyReturnPct": 5.3115,
+        "randomAverageMonthlyReturnPct": -0.4624,
+        "concentrationPct": 3.1447,
+        "minimumChecks": {
+          "tradeCount": false,
+          "beatsMarket": false,
+          "profitFactor": false,
+          "drawdown": true,
+          "beatsRandom": true,
+          "positiveAfterCosts": false,
+          "diversified": true,
+          "decisionActions": true,
+          "orderIntent": true,
+          "historicalSectorPointInTime": false
+        },
+        "highChecks": {
+          "annualized": false,
+          "monthly": false,
+          "profitFactor": false,
+          "drawdown": true
+        },
+        "passedMinimum": false,
+        "passedHighProfit": false
+      },
+      "resultStatus": "failed",
+      "failureReason": "Validation 未通過完整門檻，且歷史產業分類不是 point-in-time。",
+      "overfitFlag": false,
+      "passedMinimum": false,
+      "passedHighProfit": false,
+      "allowRetest": false,
+      "notes": "新增產業／族群資料後的獨立策略家族。"
+    },
+    {
+      "experimentId": "EXP-20260623161518-640a720f",
+      "createdAt": "2026-06-23T16:15:18.727Z",
+      "strategyId": "sector_weakness_exclusion",
+      "strategyFamilyId": "sector_weakness_exclusion:a5042397ee1c599a7a183c19",
+      "experimentHash": "640a720ff2c0e9d5090300d0",
+      "dataSources": [
+        "daily_ohlcv",
+        "institutional_point_in_time_t_plus_1",
+        "sector_static_current_classification_v1"
+      ],
+      "parameters": {
+        "definitions": [
+          "exclude_bottom20",
+          "upper60",
+          "upper40",
+          "top20"
+        ],
+        "dataset": "2022-03-10_2026-06-09"
+      },
+      "trainPeriod": {
+        "months": 36
+      },
+      "validationPeriod": {
+        "months": 12,
+        "stepMonths": 12
+      },
+      "costModel": {
+        "buyFeePct": 0.1425,
+        "sellFeePct": 0.1425,
+        "sellTaxPct": 0.3,
+        "slippagePct": 0.15
+      },
+      "executionModel": {
+        "entry": "next_open_market",
+        "settlement": "T+2",
+        "simulator": "shared"
+      },
+      "metrics": {
+        "validationTrades": 181,
+        "validationAverageMonthlyEquityReturnPct": 0.648,
+        "validationAnnualizedReturnPct": 7.5069,
+        "validationProfitFactor": 1.2686,
+        "validationMaximumDrawdownPct": -10.152,
+        "validationWinRatePct": 47.5138,
+        "marketAverageMonthlyReturnPct": 5.3115,
+        "randomAverageMonthlyReturnPct": -0.2723,
+        "concentrationPct": 2.7624,
+        "minimumChecks": {
+          "tradeCount": false,
+          "beatsMarket": false,
+          "profitFactor": true,
+          "drawdown": true,
+          "beatsRandom": true,
+          "positiveAfterCosts": true,
+          "diversified": true,
+          "decisionActions": true,
+          "orderIntent": true,
+          "historicalSectorPointInTime": false
+        },
+        "highChecks": {
+          "annualized": false,
+          "monthly": false,
+          "profitFactor": false,
+          "drawdown": true
+        },
+        "passedMinimum": false,
+        "passedHighProfit": false
+      },
+      "resultStatus": "failed",
+      "failureReason": "Validation 未通過完整門檻，且歷史產業分類不是 point-in-time。",
+      "overfitFlag": false,
+      "passedMinimum": false,
+      "passedHighProfit": false,
+      "allowRetest": false,
+      "notes": "新增產業／族群資料後的獨立策略家族。"
     }
   ]
 }

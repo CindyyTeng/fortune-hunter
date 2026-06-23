@@ -1,0 +1,28 @@
+{
+  "generatedAt": "2026-06-23T17:41:09.902Z",
+  "branch": "institutional-data-fetcher-v1",
+  "status": "DATA_INSUFFICIENT",
+  "marginValidation": {
+    "generatedAt": "2026-06-23T17:41:04.477Z",
+    "status": "INSUFFICIENT",
+    "records": 1001694,
+    "uniqueDates": 1033,
+    "pointInTimeSafeRecords": 1001694,
+    "twseRecords": 450985,
+    "tpexRecords": 550709,
+    "twseDates": 540,
+    "tpexDates": 1033,
+    "errorCount": 0,
+    "errors": [],
+    "warning": "逐筆 publishedAt 未驗證，採 T+1 保守時間點政策。"
+  },
+  "configurationsPrepared": 64,
+  "validationCompleted": false,
+  "metrics": null,
+  "readiness": {
+    "paperTradingAllowed": false,
+    "liveTradingAllowed": false,
+    "realBrokerAllowed": false
+  },
+  "conclusion": "融資融券資料不足：上市 540 日、上櫃 1033 日；Profit Hunter 未完成有效 validation。"
+}

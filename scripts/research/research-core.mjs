@@ -653,6 +653,15 @@ export function simulateSignalMap(context, signalMap, options = {}) {
         Math.max(position.peakPrice, bar.high ?? bar.price),
         position.trailingStopRule
       );
+      if (bar.forcedExit) {
+        closePosition(portfolio, position, {
+          date,
+          price: bar.forcedExit.price ?? bar.open ?? bar.price,
+          reason: bar.forcedExit.reason,
+          type: bar.forcedExit.type || 'rule_exit'
+        }, dayIndex);
+        continue;
+      }
       const exit = simulateExit({
         day: bar,
         stopLoss: position.stopLoss,
@@ -700,7 +709,7 @@ export function simulateSignalMap(context, signalMap, options = {}) {
         entryPrice: fill.price,
         stopLoss: fill.price * (1 - stopDistancePct / 100),
         takeProfit: rewardRisk ? fill.price * (1 + stopDistancePct * rewardRisk / 100) : null,
-        positionPct: 9,
+        positionPct: candidate.positionPct ?? 9,
         strategy: options.strategyId || '研究策略',
         regime,
         bars: candidate.futureBars,
@@ -713,7 +722,7 @@ export function simulateSignalMap(context, signalMap, options = {}) {
         reason: candidate.reason,
         orderIntent: candidate.orderIntent
       }, dayIndex, {
-        positionPct: 9,
+        positionPct: candidate.positionPct ?? 9,
         accountRiskPct: 0.5,
         regime
       });

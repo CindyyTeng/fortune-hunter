@@ -1,0 +1,44 @@
+{
+  "generatedAt": "2026-06-23T16:35:12.000Z",
+  "status": "AVAILABLE",
+  "historicalBackfillSupported": true,
+  "pointInTimePolicy": "T 日收盤資料僅允許 T+1 交易日使用；歷史逐筆公布時間仍採保守假設。",
+  "sources": [
+    {
+      "market": "TWSE",
+      "id": "latest_openapi",
+      "url": "https://openapi.twse.com.tw/v1/exchangeReport/MI_MARGN",
+      "status": "AVAILABLE",
+      "rows": 1278,
+      "supportsHistoricalDate": false,
+      "returnedDate": null
+    },
+    {
+      "market": "TWSE",
+      "id": "historical_rwd",
+      "url": "https://www.twse.com.tw/rwd/zh/marginTrading/MI_MARGN?date=20250623&selectType=ALL&response=json",
+      "status": "AVAILABLE",
+      "rows": 1212,
+      "supportsHistoricalDate": true,
+      "returnedDate": "20250623"
+    },
+    {
+      "market": "TPEX",
+      "id": "latest_openapi",
+      "url": "https://www.tpex.org.tw/openapi/v1/tpex_mainboard_margin_balance",
+      "status": "AVAILABLE",
+      "rows": 904,
+      "supportsHistoricalDate": false,
+      "returnedDate": null
+    },
+    {
+      "market": "TPEX",
+      "id": "historical_page",
+      "url": "https://www.tpex.org.tw/www/zh-tw/margin/balance?date=2025/06/23&id=&response=json",
+      "status": "AVAILABLE",
+      "rows": 820,
+      "supportsHistoricalDate": true,
+      "returnedDate": "20250623"
+    }
+  ]
+}

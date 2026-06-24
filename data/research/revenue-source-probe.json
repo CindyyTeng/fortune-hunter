@@ -1,0 +1,36 @@
+{
+  "generatedAt": "2026-06-24T14:32:54.523Z",
+  "status": "AVAILABLE",
+  "historicalBackfillSupported": true,
+  "pointInTimeMode": "conservative_assumption",
+  "policy": "營收月份次月 10 日視為最晚公布日，僅於下一交易日使用。",
+  "revisionWarning": "FinMind 公開 API 未提供完整逐筆歷史公布時間，採法定期限後 T+1；原始版本與事後更正未完全驗證。",
+  "manualFallback": "data/revenue/manual/",
+  "sources": [
+    {
+      "market": "TWSE",
+      "id": "current_openapi",
+      "url": "https://openapi.twse.com.tw/v1/opendata/t187ap05_L",
+      "status": "CURRENT_ONLY",
+      "supportsHistoricalMonth": false,
+      "note": "官方 OpenAPI 提供當期資料，不作歷史回填主來源。"
+    },
+    {
+      "market": "TPEX",
+      "id": "current_openapi",
+      "url": "https://www.tpex.org.tw/openapi/v1/mopsfin_t187ap05_O",
+      "status": "CURRENT_ONLY",
+      "supportsHistoricalMonth": false,
+      "note": "官方 OpenAPI 提供當期資料，不作歷史回填主來源。"
+    },
+    {
+      "market": "ALL",
+      "id": "finmind_history",
+      "url": "https://api.finmindtrade.com/api/v4/data?dataset=TaiwanStockMonthRevenue&data_id=2330&start_date=2021-01-01",
+      "status": "AVAILABLE",
+      "supportsHistoricalMonth": true,
+      "cachedFiles": 472,
+      "note": "已以成功下載並通過解析的本機快取作為可用性證據，避免每次探測消耗免費 API 額度。"
+    }
+  ]
+}

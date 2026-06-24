@@ -376,6 +376,7 @@ export async function loadResearchContext() {
 export function iterateObservations(context, callback, options = {}) {
   let count = 0;
   for (const stockRow of context.ohlcv.stocks) {
+    if (options.symbols && !options.symbols.has(stockRow.stock.symbol)) continue;
     const rolling = rollingData(stockRow.history);
     for (let index = 120; index + 20 < stockRow.history.length; index += 1) {
       const date = stockRow.history[index].date;

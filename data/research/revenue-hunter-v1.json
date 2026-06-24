@@ -1,0 +1,262 @@
+{
+  "generatedAt": "2026-06-24T14:27:18.025Z",
+  "branch": "institutional-data-fetcher-v1",
+  "status": "COMPLETED",
+  "data": {
+    "records": 30153,
+    "symbols": 470,
+    "months": 65,
+    "pointInTimeSafe": 30153,
+    "fullyVerifiedPointInTime": false,
+    "researchRows": 20315
+  },
+  "search": {
+    "families": 4,
+    "variants": 7,
+    "configurations": 588,
+    "topCounts": [
+      3,
+      5,
+      10
+    ],
+    "entries": [
+      "公布後隔日開盤",
+      "突破 20 日高點",
+      "回測 MA20 不破",
+      "整理後重新轉強"
+    ],
+    "exits": [
+      "跌破 MA20",
+      "跌破進場 K 低點",
+      "跌破前高轉支撐",
+      "1.5R 停利",
+      "2R 停利",
+      "移動停利",
+      "大盤轉弱出場"
+    ]
+  },
+  "walkForward": {
+    "trainMonths": 36,
+    "validationMonths": 12,
+    "stepMonths": 12,
+    "folds": 3
+  },
+  "familyResults": [
+    {
+      "id": "growth_acceleration_breakout",
+      "name": "營收成長加速＋突破",
+      "status": "COMPLETED",
+      "skippedDuplicate": true,
+      "reason": "相同 experimentHash 已存在，不重複回測",
+      "configurationsEvaluated": 0,
+      "selectedStrategies": [
+        "沿用相同 experimentHash 的既有 validation 結果"
+      ],
+      "metrics": {
+        "validationTrades": 97,
+        "validationAverageMonthlyEquityReturnPct": 0.0468,
+        "targetGapPct": 9.9532,
+        "validationAnnualizedReturnPct": 0.5366,
+        "validationProfitFactor": 1.0698,
+        "validationMaximumDrawdownPct": -3.7196,
+        "validationWinRatePct": 44.3299,
+        "marketAverageMonthlyReturnPct": 3.9472,
+        "randomAverageMonthlyReturnPct": 0.0468,
+        "concentrationPct": 5.1546,
+        "orderIntents": 97,
+        "supportedActions": [
+          "BUY",
+          "SELL",
+          "HOLD",
+          "SKIP"
+        ],
+        "checks": {
+          "tradeCount": false,
+          "beatsMarket": false,
+          "beatsRandom": false,
+          "profitFactor": false,
+          "drawdown": true,
+          "diversified": true,
+          "positiveAfterCosts": true,
+          "actionsAndIntents": true
+        },
+        "passed": false,
+        "highProfit": false
+      },
+      "folds": []
+    },
+    {
+      "id": "decline_to_growth_strengthen",
+      "name": "營收由衰退轉成長＋價格轉強",
+      "status": "COMPLETED",
+      "skippedDuplicate": true,
+      "reason": "相同 experimentHash 已存在，不重複回測",
+      "configurationsEvaluated": 0,
+      "selectedStrategies": [
+        "沿用相同 experimentHash 的既有 validation 結果"
+      ],
+      "metrics": {
+        "validationTrades": 47,
+        "validationAverageMonthlyEquityReturnPct": -0.087,
+        "targetGapPct": 10.087,
+        "validationAnnualizedReturnPct": -1.0505,
+        "validationProfitFactor": 0.7419,
+        "validationMaximumDrawdownPct": -4.165,
+        "validationWinRatePct": 36.1702,
+        "marketAverageMonthlyReturnPct": 3.9472,
+        "randomAverageMonthlyReturnPct": 0.0251,
+        "concentrationPct": 4.2553,
+        "orderIntents": 47,
+        "supportedActions": [
+          "BUY",
+          "SELL",
+          "HOLD",
+          "SKIP"
+        ],
+        "checks": {
+          "tradeCount": false,
+          "beatsMarket": false,
+          "beatsRandom": false,
+          "profitFactor": false,
+          "drawdown": true,
+          "diversified": true,
+          "positiveAfterCosts": false,
+          "actionsAndIntents": true
+        },
+        "passed": false,
+        "highProfit": false
+      },
+      "folds": []
+    },
+    {
+      "id": "revenue_high_institutional",
+      "name": "營收創高＋法人確認",
+      "status": "COMPLETED",
+      "skippedDuplicate": true,
+      "reason": "相同 experimentHash 已存在，不重複回測",
+      "configurationsEvaluated": 0,
+      "selectedStrategies": [
+        "沿用相同 experimentHash 的既有 validation 結果"
+      ],
+      "metrics": {
+        "validationTrades": 72,
+        "validationAverageMonthlyEquityReturnPct": -0.1125,
+        "targetGapPct": 10.1125,
+        "validationAnnualizedReturnPct": -1.3664,
+        "validationProfitFactor": 0.7558,
+        "validationMaximumDrawdownPct": -4.1622,
+        "validationWinRatePct": 36.1111,
+        "marketAverageMonthlyReturnPct": 3.9472,
+        "randomAverageMonthlyReturnPct": -0.1142,
+        "concentrationPct": 4.1667,
+        "orderIntents": 72,
+        "supportedActions": [
+          "BUY",
+          "SELL",
+          "HOLD",
+          "SKIP"
+        ],
+        "checks": {
+          "tradeCount": false,
+          "beatsMarket": false,
+          "beatsRandom": true,
+          "profitFactor": false,
+          "drawdown": true,
+          "diversified": true,
+          "positiveAfterCosts": false,
+          "actionsAndIntents": true
+        },
+        "passed": false,
+        "highProfit": false
+      },
+      "folds": []
+    },
+    {
+      "id": "strong_revenue_no_chase",
+      "name": "營收強但不追高",
+      "status": "COMPLETED",
+      "skippedDuplicate": true,
+      "reason": "相同 experimentHash 已存在，不重複回測",
+      "configurationsEvaluated": 0,
+      "selectedStrategies": [
+        "沿用相同 experimentHash 的既有 validation 結果"
+      ],
+      "metrics": {
+        "validationTrades": 145,
+        "validationAverageMonthlyEquityReturnPct": -0.1902,
+        "targetGapPct": 10.1902,
+        "validationAnnualizedReturnPct": -2.2893,
+        "validationProfitFactor": 0.7685,
+        "validationMaximumDrawdownPct": -4.1465,
+        "validationWinRatePct": 35.1724,
+        "marketAverageMonthlyReturnPct": 3.9472,
+        "randomAverageMonthlyReturnPct": -0.2202,
+        "concentrationPct": 4.8276,
+        "orderIntents": 145,
+        "supportedActions": [
+          "BUY",
+          "SELL",
+          "HOLD",
+          "SKIP"
+        ],
+        "checks": {
+          "tradeCount": false,
+          "beatsMarket": false,
+          "beatsRandom": true,
+          "profitFactor": false,
+          "drawdown": true,
+          "diversified": true,
+          "positiveAfterCosts": false,
+          "actionsAndIntents": true
+        },
+        "passed": false,
+        "highProfit": false
+      },
+      "folds": []
+    }
+  ],
+  "bestStrategy": {
+    "family": "營收成長加速＋突破",
+    "selectedStrategies": [
+      "沿用相同 experimentHash 的既有 validation 結果"
+    ],
+    "metrics": {
+      "validationTrades": 97,
+      "validationAverageMonthlyEquityReturnPct": 0.0468,
+      "targetGapPct": 9.9532,
+      "validationAnnualizedReturnPct": 0.5366,
+      "validationProfitFactor": 1.0698,
+      "validationMaximumDrawdownPct": -3.7196,
+      "validationWinRatePct": 44.3299,
+      "marketAverageMonthlyReturnPct": 3.9472,
+      "randomAverageMonthlyReturnPct": 0.0468,
+      "concentrationPct": 5.1546,
+      "orderIntents": 97,
+      "supportedActions": [
+        "BUY",
+        "SELL",
+        "HOLD",
+        "SKIP"
+      ],
+      "checks": {
+        "tradeCount": false,
+        "beatsMarket": false,
+        "beatsRandom": false,
+        "profitFactor": false,
+        "drawdown": true,
+        "diversified": true,
+        "positiveAfterCosts": true,
+        "actionsAndIntents": true
+      },
+      "passed": false,
+      "highProfit": false
+    }
+  },
+  "readiness": {
+    "paperTradingAllowed": false,
+    "liveTradingAllowed": false,
+    "realBrokerAllowed": false,
+    "highProfitCandidates": []
+  },
+  "conclusion": "沒有策略通過 validation；最接近的是 營收成長加速＋突破，月均 0.0468%，距離 10% 尚差 9.9532 個百分點。"
+}

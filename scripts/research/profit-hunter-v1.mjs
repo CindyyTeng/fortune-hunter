@@ -22,6 +22,7 @@ const MARGIN_VALIDATION = new URL('../../data/margin/validation-report.json', im
 const SECTORS = new URL('../../data/sector/sector-classification.json', import.meta.url);
 const OUTPUT = new URL('../../data/research/profit-hunter-v1.json', import.meta.url);
 const REPORT = new URL('../../docs/PROFIT_HUNTER_V1.md', import.meta.url);
+const AUTO_READINESS = new URL('../../docs/AUTO_TRADING_READINESS.md', import.meta.url);
 const REGISTRY = new URL('../../data/research/strategy-experiment-registry.json', import.meta.url);
 
 const readJson = url => fs.readFile(url, 'utf8').then(JSON.parse);
@@ -101,12 +102,16 @@ function buildRows(context, institutionalRows, marginRows, sectorRows, startDate
     const sectorMetric = sector && sectors.get(`${observation.date}|${sector.sectorCode}`);
     const flow = institutions.get(`${observation.date}|${observation.symbol}`);
     const margin = margins.get(`${observation.date}|${observation.symbol}`);
-    if (!sectorMetric || !flow || !margin) return;
+    if (!sectorMetric || !flow) return;
     const index = marketIndex.get(observation.date);
     const market60 = index >= 60 ? (context.marketHistory[index].close / context.marketHistory[index - 60].close - 1) * 100 : 0;
-    const marginIncreasePriceWeak = margin.marginChange > 0 && observation.day.close <= observation.prior.close;
+    const marginIncreasePriceWeak = margin
+      ? margin.marginChange > 0 && observation.day.close <= observation.prior.close
+      : false;
     rows.push({
-      observation, sector: sectorMetric, flow, margin: { ...margin, marginIncreasePriceWeak },
+      observation, sector: sectorMetric, flow,
+      margin: margin ? { ...margin, marginIncreasePriceWeak } : null,
+      marginDataMissing: !margin,
       relative60: observation.factors.return60 - market60
     });
   }, { startDate, endDate });
@@ -125,7 +130,7 @@ function buildRows(context, institutionalRows, marginRows, sectorRows, startDate
     for (const row of list) {
       const factors = row.observation.factors;
       const sync = row.flow.foreignNetBuy > 0 && row.flow.trustNetBuy > 0;
-      row.score = rank(rel20, factors.relativeMarket20) * 20
+      row.baseScore = rank(rel20, factors.relativeMarket20) * 20
         + rank(rel60, row.relative60) * 15
         + row.sector.rank * 20
         + (row.sector.top20 ? 8 : 0)
@@ -134,17 +139,46 @@ function buildRows(context, institutionalRows, marginRows, sectorRows, startDate
         + Math.min(2, factors.volumeRatio20 || 0) * 4
         + (factors.breakout20 ? 6 : 0)
         + (factors.distanceMa20 >= -2 && factors.distanceMa20 <= 2 && factors.ma20Slope > 0 ? 5 : 0)
-        + (row.margin.shortCoverPressure && row.sector.top20 ? 4 : 0)
-        - Math.max(0, factors.atrPct - 4) * 3
-        - (row.margin.marginIncreasePriceWeak ? 10 : 0)
-        - (row.margin.marginOverheated ? 20 : 0);
-      row.positionPct = row.margin.shortMarginRatio >= 30 ? 4.5 : 9;
+        - Math.max(0, factors.atrPct - 4) * 3;
     }
-    list.sort((a, b) => b.score - a.score);
+  }
+  return { rows, byDate, byDateSymbol };
+}
+
+const paths = [
+  { id: 'core', name: 'Core Profit Hunter', marketCoverage: 'ALL', useMargin: false, requireTpexMargin: false },
+  { id: 'tpex_margin', name: 'TPEx-only Margin Profit Hunter', marketCoverage: 'TPEX_ONLY', useMargin: true, requireTpexMargin: true },
+  { id: 'hybrid', name: 'Hybrid Profit Hunter', marketCoverage: 'ALL_WITH_OPTIONAL_MARGIN', useMargin: true, requireTpexMargin: false }
+];
+
+function preparePathData(data, path) {
+  const byDate = new Map();
+  const byDateSymbol = new Map();
+  const rows = [];
+  for (const [date, source] of data.byDate) {
+    const list = source
+      .filter(row => !path.requireTpexMargin || row.margin?.market === 'TPEX')
+      .map(row => {
+        let marginScore = 0;
+        if (path.useMargin && row.margin) {
+          if (row.margin.marginOverheated) marginScore -= 20;
+          if (row.margin.marginIncreasePriceWeak) marginScore -= 10;
+          if (row.margin.shortCoverPressure && row.sector.top20) marginScore += 4;
+        }
+        return {
+          ...row,
+          score: row.baseScore + marginScore,
+          positionPct: path.useMargin && row.margin?.shortMarginRatio >= 30 ? 4.5 : 9,
+          marginDataMissing: !row.margin
+        };
+      })
+      .sort((left, right) => right.score - left.score);
     list.forEach((row, index) => {
       row.dailyRank = index + 1;
-      byDateSymbol.set(`${row.observation.date}|${row.observation.symbol}`, row);
+      byDateSymbol.set(`${date}|${row.observation.symbol}`, row);
+      rows.push(row);
     });
+    if (list.length) byDate.set(date, list);
   }
   return { rows, byDate, byDateSymbol };
 }
@@ -169,8 +203,6 @@ const configurations = topCounts.flatMap(topCount => entryModes.flatMap(entry =>
 
 const baseTradable = row => row.observation.factors.transactionValue >= 30_000_000
   && row.observation.factors.atrPct <= 8
-  && !row.margin.marginOverheated
-  && !row.margin.marginIncreasePriceWeak
   && !['BEAR_DEFENSE', 'HIGH_VOLATILITY'].includes(row.observation.factors.regime)
   && Math.abs(row.observation.factors.gapPct) <= 5;
 
@@ -181,8 +213,15 @@ function candidate(row, config, byDateSymbol) {
   const bars = observation.futureBars.map(value => ({ ...value }));
   for (let index = 0; index + 1 < bars.length; index += 1) {
     const futureRow = byDateSymbol.get(`${bars[index].date}|${observation.symbol}`);
-    if (futureRow && config.exit.forced(futureRow, row)) {
-      bars[index + 1].forcedExit = { price: bars[index + 1].open, reason: config.exit.name, type: config.exit.id };
+    const marginWeakExit = config.path.useMargin
+      && futureRow?.margin?.marginChange > 0
+      && futureRow.observation.day.close < futureRow.observation.ma20;
+    if (futureRow && (config.exit.forced(futureRow, row) || marginWeakExit)) {
+      bars[index + 1].forcedExit = {
+        price: bars[index + 1].open,
+        reason: marginWeakExit ? '融資增加且跌破 MA20' : config.exit.name,
+        type: marginWeakExit ? 'margin_rise_weak_exit' : config.exit.id
+      };
       break;
     }
   }
@@ -190,11 +229,15 @@ function candidate(row, config, byDateSymbol) {
   const trigger = [config.entry.name, 'T 日收盤確認，T+1 執行'];
   const invalidation = [config.exit.name, '融資過熱或融資增加但價格轉弱時不進場'];
   const decision = {
-    date: observation.nextDate, symbol: observation.symbol, action: 'BUY', strategyId: config.id,
+    date: observation.nextDate, symbol: observation.symbol, action: 'BUY', strategyId: `${config.path.id}:${config.id}`,
     setup, trigger, invalidation,
     entryPlan: { referencePrice: observation.nextOpen, maximumAcceptablePrice: observation.nextOpen * 1.005, orderType: 'MARKETABLE_LIMIT', timeInForce: 'ROD', session: 'REGULAR' },
     riskPlan: { stopPrice: observation.nextOpen * (1 - stopDistancePct / 100), targetPrice: observation.nextOpen * (1 + stopDistancePct * config.exit.rewardRisk / 100), riskRewardRatio: config.exit.rewardRisk, positionBudget: row.positionPct / 100 * 1_000_000, riskBudget: 5_000 },
-    reason: `${config.name} 條件成立`, warnings: ['產業分類為現行靜態分類；僅供 validation']
+    reason: `${config.name} 條件成立`,
+    warnings: [
+      '產業分類為現行靜態分類；僅供 validation',
+      ...(row.marginDataMissing ? ['融資融券資料缺少，本筆以 unknown 處理'] : [])
+    ]
   };
   return {
     signalDate: observation.date, entryDate: observation.nextDate, symbol: observation.symbol, name: observation.name,
@@ -280,111 +323,136 @@ function combine(folds) {
     drawdown: metrics.validationMaximumDrawdownPct > -20,
     diversified: metrics.concentrationPct < 20,
     positiveAfterCosts: metrics.validationAverageMonthlyEquityReturnPct > 0,
-    actionsAndIntents: metrics.buyOrderIntents === trades.length && metrics.sellDecisions === trades.length,
-    historicalSectorPointInTime: false
+    actionsAndIntents: metrics.buyOrderIntents === trades.length && metrics.sellDecisions === trades.length
   };
+  metrics.dataWarnings = ['產業分類為現行靜態分類，不宣稱完全 point-in-time 全市場驗證。'];
   metrics.passed = Object.values(metrics.checks).every(Boolean);
   metrics.nearTenPercent = metrics.validationAverageMonthlyEquityReturnPct >= 8;
   return metrics;
 }
 
-function registryInput(range, metrics = null) {
+function registryInput(path, range, metrics = null) {
   return {
-    strategyId: 'profit_hunter_multifactor_margin_v1',
-    dataSources: ['daily_ohlcv', 'institutional_point_in_time_t_plus_1', 'sector_static_current_classification_v1', 'margin_point_in_time_t_plus_1'],
+    strategyId: `profit_hunter_v1_${path.id}`,
+    dataSources: [
+      'daily_ohlcv',
+      'institutional_point_in_time_t_plus_1',
+      'sector_static_current_classification_v1',
+      ...(path.useMargin ? ['margin_point_in_time_t_plus_1_optional'] : [])
+    ],
     setupRules: ['多因子每日排名，測試 Top 3／5／10／20'],
     triggerRules: entryModes.map(row => row.name), invalidationRules: ['融資過熱', '融資增加但價格轉弱', 'ATR 過高', '空頭或高波動大盤'],
     exitRules: exitModes.map(row => row.name), riskRules: ['單筆風險 0.5%', '集中持股', '券資比高時部位減半', 'T+2'],
     blockedWhen: ['融資過熱', '成交值低於三千萬元', 'ATR 高於 8%', '大盤防守狀態'],
-    parameters: { configurations: configurations.map(row => row.id), dataset: `${range.start}_${range.end}` },
+    parameters: { path: path.id, marketCoverage: path.marketCoverage, configurations: configurations.map(row => row.id), dataset: `${range.start}_${range.end}` },
     trainPeriod: { months: 36 }, validationPeriod: { months: 12, stepMonths: 12 },
     costModel: { buyFeePct: 0.1425, sellFeePct: 0.1425, sellTaxPct: 0.3, slippagePct: 0.15 },
     executionModel: { entry: 'next_open_market', settlement: 'T+2', simulator: 'shared' },
     metrics, resultStatus: metrics ? (metrics.passed ? 'passed' : 'failed') : 'inconclusive',
     failureReason: metrics?.passed ? null : 'Validation 未達完整門檻。',
     passedMinimum: metrics?.passed === true, passedHighProfit: metrics?.nearTenPercent === true && metrics?.passed === true,
-    allowRetest: false, coreRulesChanged: true, notes: 'Profit Hunter v1 多因子排名與融資券新資料。'
+    allowRetest: false, coreRulesChanged: true, notes: `Profit Hunter v1 ${path.name}。`
+  };
+}
+
+async function runPath(path, sourceData, context, range, folds) {
+  const input = registryInput(path, range);
+  const identity = buildExperimentIdentity(input);
+  const precheck = shouldSkipExperiment(await loadRegistry(), identity, input);
+  if (precheck.skip) return { id: path.id, name: path.name, skipped: true, reason: precheck.reason };
+
+  const data = preparePathData(sourceData, path);
+  if (!data.rows.length) return { id: path.id, name: path.name, skipped: false, status: 'NO_ELIGIBLE_ROWS', configurationsEvaluated: 0 };
+  const foldResults = [];
+  for (const fold of folds) {
+    let best;
+    for (const baseConfig of configurations) {
+      const config = { ...baseConfig, path };
+      const result = simulateSignalMap(context, signalMap(data, config, fold.trainStart, fold.trainEnd), {
+        startDate: fold.trainStart, endDate: fold.trainEnd, strategyId: `${path.id}:${config.id}`,
+        holdingDays: 10, maxOpenPositions: Math.min(config.topCount, 6)
+      });
+      const score = objective(result.summary);
+      if (!best || score > best.score) best = { config, score, summary: result.summary };
+    }
+    const selected = signalMap(data, best.config, fold.validationStart, fold.validationEnd);
+    const validation = simulateSignalMap(context, selected, {
+      startDate: fold.validationStart, endDate: fold.validationEnd, strategyId: `${path.id}:${best.config.id}`,
+      holdingDays: 10, maxOpenPositions: Math.min(best.config.topCount, 6)
+    });
+    const random = simulateSignalMap(context, randomMap(data, selected, best.config, fold.validationStart, fold.validationEnd), {
+      startDate: fold.validationStart, endDate: fold.validationEnd, strategyId: `${path.id}:${best.config.id}:fair_random`,
+      holdingDays: 10, maxOpenPositions: Math.min(best.config.topCount, 6)
+    });
+    foldResults.push({
+      ...fold, selectedConfig: best.config, trainSummary: best.summary, validation, random,
+      marketReturns: marketMonthly(context, fold.validationStart, fold.validationEnd)
+    });
+    console.log(`${path.name} ${fold.validationStart}：${best.config.name}，交易 ${validation.summary.trades}。`);
+  }
+  const metrics = combine(foldResults);
+  const missingMarginRows = data.rows.filter(row => row.marginDataMissing).length;
+  metrics.marginDataMissingPct = round(missingMarginRows / data.rows.length * 100);
+  await appendExperiment(registryInput(path, range, metrics));
+  return {
+    id: path.id, name: path.name, marketCoverage: path.marketCoverage, skipped: false, status: 'COMPLETED',
+    experiment: identity, configurationsEvaluated: configurations.length, researchRows: data.rows.length,
+    selectedStrategies: [...new Set(foldResults.map(row => row.selectedConfig.name))], metrics,
+    folds: foldResults.map(row => ({
+      trainStart: row.trainStart, trainEnd: row.trainEnd,
+      validationStart: row.validationStart, validationEnd: row.validationEnd,
+      selectedConfig: row.selectedConfig.name,
+      trainSummary: row.trainSummary, validationSummary: row.validation.summary, randomSummary: row.random.summary
+    }))
   };
 }
 
 const [institutional, margin, marginValidation, sectors] = await Promise.all([
   readJson(INSTITUTIONAL), readJson(MARGIN), readJson(MARGIN_VALIDATION), readJson(SECTORS)
 ]);
-if (marginValidation.status !== 'VALID') {
-  const registry = await readJson(REGISTRY);
-  registry.experiments = registry.experiments.filter(row => row.strategyId !== 'profit_hunter_multifactor_margin_v1');
-  registry.updatedAt = new Date().toISOString();
-  await fs.writeFile(REGISTRY, `${JSON.stringify(registry, null, 2)}\n`, 'utf8');
-  const report = {
-    generatedAt: new Date().toISOString(),
-    branch: 'institutional-data-fetcher-v1',
-    status: 'DATA_INSUFFICIENT',
-    marginValidation,
-    configurationsPrepared: configurations.length,
-    validationCompleted: false,
-    metrics: null,
-    readiness: { paperTradingAllowed: false, liveTradingAllowed: false, realBrokerAllowed: false },
-    conclusion: `融資融券資料不足：上市 ${marginValidation.twseDates || 0} 日、上櫃 ${marginValidation.tpexDates || 0} 日；Profit Hunter 未完成有效 validation。`
-  };
-  await fs.writeFile(OUTPUT, `${JSON.stringify(report, null, 2)}\n`, 'utf8');
-  await fs.writeFile(REPORT, `# Profit Hunter v1\n\n${report.conclusion}\n\n- 已建立 64 組多因子排名、進場與出場搜尋組合。\n- 因市場別資料覆蓋不平衡，本次不產生績效結論。\n- 紙上交易：不可。\n- 實盤：不可。\n`, 'utf8');
-  console.log(report.conclusion);
-  process.exit(0);
-}
-const dates = [...new Set(margin.records.map(row => row.effectiveDate))].sort();
+const dates = [...new Set((institutional.records || []).filter(row => row.isPointInTimeSafe && row.effectiveDate > row.date).map(row => row.effectiveDate))].sort();
 const context = await loadResearchContext();
 const range = { start: dates[0], end: [dates.at(-1), context.endDate].sort()[0] };
-const preInput = registryInput(range);
-const identity = buildExperimentIdentity(preInput);
-const precheck = shouldSkipExperiment(await loadRegistry(), identity, preInput);
-if (precheck.skip) {
-  console.log(`Profit Hunter 跳過重複實驗：${precheck.reason}`);
-  process.exit(0);
-}
-const data = buildRows(context, institutional.records || [], margin.records || [], sectors.records || [], range.start, range.end);
 const folds = foldWindows(range.start, range.end, 36, 12);
-const foldResults = [];
-for (const fold of folds) {
-  let best;
-  for (const config of configurations) {
-    const result = simulateSignalMap(context, signalMap(data, config, fold.trainStart, fold.trainEnd), {
-      startDate: fold.trainStart, endDate: fold.trainEnd, strategyId: config.id,
-      holdingDays: 10, maxOpenPositions: Math.min(config.topCount, 6)
-    });
-    const score = objective(result.summary);
-    if (!best || score > best.score) best = { config, score, summary: result.summary };
-  }
-  const selected = signalMap(data, best.config, fold.validationStart, fold.validationEnd);
-  const validation = simulateSignalMap(context, selected, {
-    startDate: fold.validationStart, endDate: fold.validationEnd, strategyId: best.config.id,
-    holdingDays: 10, maxOpenPositions: Math.min(best.config.topCount, 6)
-  });
-  const random = simulateSignalMap(context, randomMap(data, selected, best.config, fold.validationStart, fold.validationEnd), {
-    startDate: fold.validationStart, endDate: fold.validationEnd, strategyId: `${best.config.id}:fair_random`,
-    holdingDays: 10, maxOpenPositions: Math.min(best.config.topCount, 6)
-  });
-  foldResults.push({ ...fold, selectedConfig: best.config, trainSummary: best.summary, validation, random, marketReturns: marketMonthly(context, fold.validationStart, fold.validationEnd) });
-  console.log(`Fold ${fold.validationStart}：${best.config.name}，交易 ${validation.summary.trades}。`);
-}
-const metrics = combine(foldResults);
-await appendExperiment(registryInput(range, metrics));
-const selectedNames = [...new Set(foldResults.map(row => row.selectedConfig.name))];
+const sourceData = buildRows(context, institutional.records || [], margin.records || [], sectors.records || [], range.start, range.end);
+const pathResults = [];
+for (const path of paths) pathResults.push(await runPath(path, sourceData, context, range, folds));
+
+const completed = pathResults.filter(row => row.status === 'COMPLETED');
+const best = [...completed].sort((left, right) => right.metrics.validationAverageMonthlyEquityReturnPct - left.metrics.validationAverageMonthlyEquityReturnPct)[0] || null;
+const passed = completed.filter(row => row.metrics.passed);
+const effectiveBacktestConfigurations = completed.reduce((sum, row) => sum + row.configurationsEvaluated, 0);
 const report = {
-  generatedAt: new Date().toISOString(), branch: 'institutional-data-fetcher-v1', experiment: identity,
-  data: { marginRecords: margin.records.length, marginDates: marginValidation.uniqueDates, researchRows: data.rows.length, sectorPointInTimeSafe: false },
-  search: { configurationsTested: configurations.length, topCounts, entryModes: entryModes.map(row => row.name), exitModes: exitModes.map(row => row.name) },
+  generatedAt: new Date().toISOString(), branch: 'institutional-data-fetcher-v1', status: completed.length ? 'COMPLETED' : 'NO_VALID_BACKTEST',
+  data: {
+    institutionalDates: dates.length, marginStatus: marginValidation.status,
+    marginRecords: margin.records.length, twseMarginDates: marginValidation.twseDates,
+    tpexMarginDates: marginValidation.tpexDates, sectorPointInTimeSafe: false
+  },
+  search: {
+    paths: paths.map(path => ({ id: path.id, name: path.name, marketCoverage: path.marketCoverage })),
+    configurationsPerPath: configurations.length, effectiveBacktestConfigurations,
+    topCounts, entryModes: entryModes.map(row => row.name), exitModes: exitModes.map(row => row.name)
+  },
   walkForward: { trainMonths: 36, validationMonths: 12, stepMonths: 12, folds: folds.length },
-  selectedStrategies: selectedNames,
-  folds: foldResults.map(row => ({
-    trainStart: row.trainStart, trainEnd: row.trainEnd, validationStart: row.validationStart, validationEnd: row.validationEnd,
-    selectedConfig: row.selectedConfig.name, trainSummary: row.trainSummary, validationSummary: row.validation.summary, randomSummary: row.random.summary
-  })),
-  metrics,
-  readiness: { paperTradingAllowed: metrics.passed, liveTradingAllowed: false, realBrokerAllowed: false },
-  conclusion: metrics.passed
-    ? '策略通過最低 validation 門檻，但只能進紙上交易，不可實盤。'
-    : `沒有策略通過 validation；最佳月均 ${metrics.validationAverageMonthlyEquityReturnPct}%，距離 10% 尚差 ${metrics.targetGapPct} 個百分點。`
+  pathResults,
+  bestStrategy: best ? {
+    path: best.name, marketCoverage: best.marketCoverage,
+    selectedStrategies: best.selectedStrategies, metrics: best.metrics
+  } : null,
+  readiness: {
+    paperTradingAllowed: passed.length > 0,
+    paperTradingCandidates: passed.map(row => row.name),
+    liveTradingAllowed: false, realBrokerAllowed: false
+  },
+  conclusion: best
+    ? (passed.length
+      ? `${best.name} 通過最低 validation 門檻，但只能進紙上交易，不可實盤。`
+      : `沒有策略通過完整門檻；目前最接近的是 ${best.name}，月均 ${best.metrics.validationAverageMonthlyEquityReturnPct}%，距離 10% 尚差 ${best.metrics.targetGapPct} 個百分點。`)
+    : '沒有任何有效回測；原因是程式或資料仍無法產生候選。'
 };
 await fs.writeFile(OUTPUT, `${JSON.stringify(report, null, 2)}\n`, 'utf8');
-await fs.writeFile(REPORT, `# Profit Hunter v1\n\n${report.conclusion}\n\n- 測試組合：${configurations.length}\n- 驗證交易：${metrics.validationTrades}\n- 月均總資產報酬：${metrics.validationAverageMonthlyEquityReturnPct}%\n- 年化報酬：${metrics.validationAnnualizedReturnPct}%\n- Profit Factor：${metrics.validationProfitFactor}\n- 最大回撤：${metrics.validationMaximumDrawdownPct}%\n- 勝率：${metrics.validationWinRatePct}%\n- 大盤月均：${metrics.marketAverageMonthlyReturnPct}%\n- 公平隨機月均：${metrics.randomAverageMonthlyReturnPct}%\n- 紙上交易：${metrics.passed ? '僅可進入下一階段' : '不可'}\n- 實盤：不可\n\n限制：產業分類仍是現行靜態分類，不是歷史 point-in-time。\n`, 'utf8');
+const rows = completed.map(row => `| ${row.name} | ${row.marketCoverage} | ${row.metrics.validationTrades} | ${row.metrics.validationAverageMonthlyEquityReturnPct}% | ${row.metrics.validationAnnualizedReturnPct}% | ${row.metrics.validationProfitFactor} | ${row.metrics.validationMaximumDrawdownPct}% | ${row.metrics.passed ? '通過' : '未通過'} |`).join('\n');
+await fs.writeFile(REPORT, `# Profit Hunter v1\n\n${report.conclusion}\n\n| 路徑 | 市場 | 交易數 | 月均報酬 | 年化 | PF | 最大回撤 | 結果 |\n|---|---|---:|---:|---:|---:|---:|---|\n${rows}\n\n- 有效搜尋組合：${effectiveBacktestConfigurations}\n- 融資缺值在 Core／Hybrid 以 unknown 處理，不再全域停止。\n- TPEx-only 不可宣稱全台股適用；即使通過也只能紙上交易。\n- 實盤：不可。\n`, 'utf8');
+await fs.writeFile(AUTO_READINESS, `# 自動交易落地判斷\n\n更新時間：${report.generatedAt}\n\n- Profit Hunter 有效回測組合：${effectiveBacktestConfigurations}\n- 紙上交易：${passed.length ? `僅允許候選 ${passed.map(row => row.name).join('、')}` : '不可'}\n- 實盤：不可\n- 真實券商下單：不可\n- 原因：${report.conclusion}\n\n下一步優先補 point-in-time 月營收與歷史產業分類，再建立「基本面成長加速＋價格確認」核心邏輯。\n`, 'utf8');
 console.log(report.conclusion);

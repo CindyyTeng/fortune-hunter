@@ -13,9 +13,9 @@ const START_DATE = '2016-06-01';
 const PRIOR_BEST_MONTHLY = 5.0003;
 const PRIOR_BEST_DRAWDOWN = -9.3993;
 const PRIOR_BEST_TRADES = 10;
-const LONG_BASELINE_MONTHLY = 1.8428;
-const LONG_BASELINE_DRAWDOWN = -17.3036;
-const LONG_BASELINE_TRADES = 53;
+const LONG_BASELINE_MONTHLY = 2.2688;
+const LONG_BASELINE_DRAWDOWN = -16.8686;
+const LONG_BASELINE_TRADES = 54;
 const TARGET_MONTHLY = 10;
 const INITIAL_CAPITAL = 1_000_000;
 const BUY_COST = 0.001425 + 0.0015;
@@ -202,6 +202,20 @@ const configs = [
       return null;
     },
     positionPct: (row, target) => target === 'inverse' ? 5 : target === 'benchmark_mid' ? 50 : 100
+  },
+  {
+    id: 'complete_fast_trend_defensive_micro_inverse',
+    name: '0050 完整驗證寬趨勢／低曝險微反向',
+    target: row => {
+      const fastTrend = row.ma3 > row.ma20 && row.mom5 > -20;
+      const longTrend = row.close > row.ma200 && row.mom20 > -8 && row.regime !== 'HIGH_VOLATILITY';
+      const softTrend = row.close > row.ma60 && row.mom20 > 2 && row.mom5 > -10 && row.regime !== 'HIGH_VOLATILITY';
+      if (fastTrend || longTrend) return 'benchmark';
+      if (softTrend) return 'benchmark_mid';
+      if (row.close < row.ma60 && row.mom20 < -6 && row.vol20 > 16) return 'inverse';
+      return null;
+    },
+    positionPct: (row, target) => target === 'inverse' ? 2 : target === 'benchmark_mid' ? 25 : 100
   },
   {
     id: 'low_drawdown_momentum_70',
@@ -433,10 +447,16 @@ async function main() {
   }
   const metrics = combine(foldResults);
   const improved = metrics.validationAverageMonthlyEquityReturnPct > PRIOR_BEST_MONTHLY;
-  const comparableLongBaseline = evaluated.find(row => row.config.id === 'fast_trend_guard_tiny_inverse')?.metrics || {
+  const comparableLongBaseline = {
+    validationFolds: 7,
+    validationTrades: LONG_BASELINE_TRADES,
     validationAverageMonthlyEquityReturnPct: LONG_BASELINE_MONTHLY,
     validationMaximumDrawdownPct: LONG_BASELINE_DRAWDOWN,
-    validationTrades: LONG_BASELINE_TRADES
+    validationAnnualizedReturnPct: 28.8176,
+    validationProfitFactor: 7.595,
+    validationWinRatePct: 46.2963,
+    negativeMonths: 30,
+    orderIntents: 108
   };
   const improvedAgainstComparableLong = comparableLongBaseline
     ? metrics.validationAverageMonthlyEquityReturnPct > comparableLongBaseline.validationAverageMonthlyEquityReturnPct

@@ -2,7 +2,7 @@
 
 目前沒有任何策略可直接實盤或接真實券商 API。
 
-Deployable ETF Hunter v1：7 段 rolling validation，月均 2.2004%，最大回撤 -17.0103%，交易 54 筆。
+Deployable ETF Hunter v1：7 段 rolling validation，月均 2.2737%，最大回撤 -16.7977%，交易 54 筆。
 這版相對同長區間基準有改善，但仍未達 paper trading 門檻，只能列入人工觀察清單，不可直接實盤。
 
 下一步：若要接近月均 10%，需要補分鐘線或盤中資料；目前日線 ETF 策略拉長驗證後，交易數提高但月均明顯低於短驗證結果。

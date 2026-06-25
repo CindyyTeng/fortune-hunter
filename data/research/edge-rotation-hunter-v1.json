@@ -1,0 +1,89 @@
+{
+  "generatedAt": "2026-06-25T11:08:42.969Z",
+  "branch": "institutional-data-fetcher-v1",
+  "status": "COMPLETED",
+  "data": {
+    "institutionalDates": 1034,
+    "sectorPointInTimeSafe": false,
+    "revenueRecords": 30153,
+    "qualityRecords": 11634,
+    "researchRows": 80880
+  },
+  "search": {
+    "configurations": 288,
+    "families": [
+      "多頭廣域領漲輪動",
+      "高成交值動能輪動",
+      "強勢盤滿曝險領漲輪動",
+      "成長事件後領漲確認",
+      "強勢族群創高動能",
+      "領漲股回測 MA20 再進場"
+    ],
+    "topCounts": [
+      5,
+      8,
+      10
+    ],
+    "entries": [
+      "進榜隔日開盤",
+      "突破確認",
+      "回測轉強",
+      "放量重新轉強"
+    ],
+    "exits": [
+      "跌出前 30 或跌破 MA20",
+      "跌出前 30 或大盤轉弱",
+      "快速移動停利",
+      "寬鬆移動停利"
+    ]
+  },
+  "walkForward": {
+    "trainMonths": 36,
+    "validationMonths": 12,
+    "stepMonths": 12,
+    "folds": 2
+  },
+  "bestStrategy": {
+    "selectedStrategies": [
+      "成長事件後領漲確認／Top 8／放量重新轉強／跌出前 30 或大盤轉弱",
+      "多頭廣域領漲輪動／Top 8／進榜隔日開盤／跌出前 30 或跌破 MA20"
+    ],
+    "metrics": {
+      "validationTrades": 65,
+      "validationAverageMonthlyEquityReturnPct": -0.3095,
+      "targetGapPct": 10.3095,
+      "validationAnnualizedReturnPct": -3.714,
+      "validationProfitFactor": 0.5886,
+      "validationMaximumDrawdownPct": -3.7766,
+      "validationWinRatePct": 35.3846,
+      "marketAverageMonthlyReturnPct": 5.3115,
+      "randomAverageMonthlyReturnPct": -0.2486,
+      "concentrationPct": 7.6923,
+      "orderIntents": 65,
+      "supportedActions": [
+        "BUY",
+        "SELL",
+        "HOLD",
+        "SKIP"
+      ],
+      "checks": {
+        "tradeCount": false,
+        "beatsMarket": false,
+        "beatsRandom": false,
+        "profitFactor": false,
+        "drawdown": true,
+        "diversified": true,
+        "positiveAfterCosts": false,
+        "actionsAndIntents": true
+      },
+      "passed": false,
+      "nearTenPercent": false
+    }
+  },
+  "readiness": {
+    "paperTradingAllowed": false,
+    "liveTradingAllowed": false,
+    "realBrokerAllowed": false
+  },
+  "conclusion": "沒有策略通過 validation；Edge Rotation Hunter v1 月均 -0.3095%，距離 10% 還差 10.3095 個百分點。"
+}

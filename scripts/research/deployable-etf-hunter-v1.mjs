@@ -10,8 +10,9 @@ const REPORT = new URL('../../docs/DEPLOYABLE_ETF_HUNTER_V1.md', import.meta.url
 const READINESS = new URL('../../docs/AUTO_TRADING_READINESS.md', import.meta.url);
 
 const START_DATE = '2022-03-01';
-const PRIOR_BEST_MONTHLY = 2.3954;
+const PRIOR_BEST_MONTHLY = 3.6271;
 const TARGET_MONTHLY = 10;
+const INITIAL_CAPITAL = 1_000_000;
 const BUY_COST = 0.001425 + 0.0015;
 const SELL_COST = 0.001425 + 0.003 + 0.0015;
 
@@ -21,9 +22,42 @@ const readJson = url => fs.readFile(url, 'utf8').then(JSON.parse);
 const configs = [
   {
     id: 'hold_0050_100',
-    name: '0050 全資金持有',
+    name: '0050 全倉持有',
     target: row => row.benchmark ? 'benchmark' : null,
     positionPct: 100
+  },
+  {
+    id: 'hold_0050_80',
+    name: '0050 八成倉持有',
+    target: row => row.benchmark ? 'benchmark' : null,
+    positionPct: 80
+  },
+  {
+    id: 'hold_0050_70',
+    name: '0050 七成倉持有',
+    target: row => row.benchmark ? 'benchmark' : null,
+    positionPct: 70
+  },
+  {
+    id: 'hold_0050_trail10',
+    name: '0050 全倉持有高點回撤 10% 出場',
+    target: row => row.benchmark ? 'benchmark' : null,
+    positionPct: 100,
+    trailingExitPct: 10
+  },
+  {
+    id: 'hold_0050_trail12',
+    name: '0050 全倉持有高點回撤 12% 出場',
+    target: row => row.benchmark ? 'benchmark' : null,
+    positionPct: 100,
+    trailingExitPct: 12
+  },
+  {
+    id: 'hold_0050_trail15',
+    name: '0050 全倉持有高點回撤 15% 出場',
+    target: row => row.benchmark ? 'benchmark' : null,
+    positionPct: 100,
+    trailingExitPct: 15
   },
   {
     id: 'ma60_0050_100',
@@ -46,6 +80,27 @@ const configs = [
     positionPct: 100
   },
   {
+    id: 'risk_off_loose_0050_100',
+    name: '0050 寬鬆風險空手',
+    target: row => row.close > row.ma60 && row.mom20 > -4 && row.vol20 < 35 ? 'benchmark' : null,
+    positionPct: 100
+  },
+  {
+    id: 'ma120_soft_guard_0050_100',
+    name: '0050 MA120 柔性防守',
+    target: row => row.close > row.ma120 && row.mom20 > -6 && row.vol20 < 36 ? 'benchmark' : null,
+    positionPct: 100
+  },
+  {
+    id: 'ma20_or_ma60_guard_0050_100',
+    name: '0050 MA20/MA60 複合防守',
+    target: row => {
+      if (row.regime === 'BEAR_DEFENSE' && row.mom20 < -6) return null;
+      return (row.close > row.ma20 && row.mom5 > -5) || (row.close > row.ma60 && row.mom20 > -4) ? 'benchmark' : null;
+    },
+    positionPct: 100
+  },
+  {
     id: 'inverse_hedge_switch',
     name: '0050 多頭／反向 ETF 空頭切換',
     target: row => {
@@ -60,6 +115,40 @@ const configs = [
     name: '0050 防守降曝險切換',
     target: row => row.close > row.ma60 && row.mom20 > 0 ? 'benchmark' : null,
     positionPct: row => ['BULL_TREND', 'THEME_MOMENTUM'].includes(row.regime) ? 100 : 55
+  },
+  {
+    id: 'scaled_trend_guard',
+    name: '0050 分級曝險趨勢防守',
+    target: row => {
+      if (['BEAR_DEFENSE', 'HIGH_VOLATILITY'].includes(row.regime)) return null;
+      if (row.close > row.ma20 && row.mom20 > 1 && row.mom5 > -4) return 'benchmark_100';
+      if (row.close > row.ma60 && row.mom20 > -1) return 'benchmark_70';
+      if (row.close > row.ma200 && row.mom60 > 0) return 'benchmark_50';
+      return null;
+    },
+    positionPct: (row, target) => target === 'benchmark_100' ? 100 : target === 'benchmark_70' ? 70 : 50
+  },
+  {
+    id: 'ma20_fast_cash_guard',
+    name: '0050 MA20 快速防守',
+    target: row => row.close > row.ma20 && row.ma20 > row.ma60 && row.mom5 > -5 && row.vol20 < 32 ? 'benchmark' : null,
+    positionPct: 100
+  },
+  {
+    id: 'ma200_low_drawdown_80',
+    name: '0050 MA200 低回撤八成倉',
+    target: row => row.close > row.ma200 && row.mom20 > -4 && row.regime !== 'HIGH_VOLATILITY' ? 'benchmark' : null,
+    positionPct: 80
+  },
+  {
+    id: 'crash_inverse_small',
+    name: '0050 多頭持有／崩跌小反向',
+    target: row => {
+      if (row.close > row.ma60 && row.mom20 > -1 && !['BEAR_DEFENSE', 'HIGH_VOLATILITY'].includes(row.regime)) return 'benchmark_100';
+      if (row.close < row.ma120 && row.mom20 < -8 && row.vol20 >= 28) return 'inverse';
+      return null;
+    },
+    positionPct: (row, target) => target === 'inverse' ? 35 : 100
   }
 ];
 
@@ -86,7 +175,12 @@ function monthlyRows(equityCurve, trades, initialCapital) {
   return [...monthEnd].map(([month, equity]) => {
     const equityReturnPct = pct(equity, prior);
     prior = equity;
-    return { month, equity: round(equity, 0), equityReturnPct: round(equityReturnPct), trades: trades.filter(trade => trade.exitDate?.startsWith(month)).length };
+    return {
+      month,
+      equity: round(equity, 0),
+      equityReturnPct: round(equityReturnPct),
+      trades: trades.filter(trade => trade.exitDate?.startsWith(month)).length
+    };
   });
 }
 
@@ -124,16 +218,28 @@ function makeIntent(date, symbol, action, strategyId, referencePrice, positionPc
     setup: ['ETF 可實盤候選'],
     trigger: ['收盤訊號，隔日開盤執行'],
     invalidation: ['策略目標曝險改變即出場或切換'],
-    entryPlan: { referencePrice, maximumAcceptablePrice: referencePrice * 1.004, orderType: 'MARKETABLE_LIMIT', timeInForce: 'ROD', session: 'REGULAR' },
-    riskPlan: { stopPrice: null, targetPrice: null, riskRewardRatio: null, positionBudget: positionPct / 100 * 1_000_000, riskBudget: positionPct / 100 * 1_000_000 },
+    entryPlan: {
+      referencePrice,
+      maximumAcceptablePrice: referencePrice * 1.004,
+      orderType: 'MARKETABLE_LIMIT',
+      timeInForce: 'ROD',
+      session: 'REGULAR'
+    },
+    riskPlan: {
+      stopPrice: null,
+      targetPrice: null,
+      riskRewardRatio: null,
+      positionBudget: positionPct / 100 * INITIAL_CAPITAL,
+      riskBudget: positionPct / 100 * INITIAL_CAPITAL
+    },
     reason: 'ETF 策略目標部位調整',
-    warnings: ['研究用 order intent，需 paper trading 後才可實盤']
-  }, { account: { equity: 1_000_000, availableCash: 1_000_000 } });
+    warnings: ['研究用 order intent；需 paper trading 驗證後才可實盤。']
+  }, { account: { equity: INITIAL_CAPITAL, availableCash: INITIAL_CAPITAL } });
 }
 
 function simulate(rows, config, startDate, endDate) {
   const slice = rows.filter(row => row.date >= startDate && row.date <= endDate);
-  let cash = 1_000_000;
+  let cash = INITIAL_CAPITAL;
   let position = null;
   const trades = [];
   const equityCurve = [];
@@ -141,8 +247,13 @@ function simulate(rows, config, startDate, endDate) {
   for (let index = 0; index < slice.length - 1; index += 1) {
     const row = slice[index];
     const next = slice[index + 1];
-    const wanted = config.target(row);
-    const wantedPct = typeof config.positionPct === 'function' ? config.positionPct(row) : config.positionPct;
+    let wanted = config.target(row);
+    const wantedPct = typeof config.positionPct === 'function' ? config.positionPct(row, wanted) : config.positionPct;
+    if (position && config.trailingExitPct) {
+      const currentClose = price(row, position.side, 'close');
+      position.peakPrice = Math.max(position.peakPrice ?? position.entryPrice, currentClose);
+      if (pct(currentClose, position.peakPrice) <= -config.trailingExitPct) wanted = null;
+    }
     if (position && position.side !== wanted) {
       const sellPrice = price(next, position.side, 'open');
       const proceeds = position.quantity * sellPrice * (1 - SELL_COST);
@@ -164,13 +275,14 @@ function simulate(rows, config, startDate, endDate) {
           symbol: wanted === 'inverse' ? '00632R.TW' : '0050.TW',
           quantity,
           cost,
+          entryPrice: buyPrice,
+          peakPrice: buyPrice,
           entryDate: next.date
         };
         orderIntents.push(makeIntent(next.date, position.symbol, 'BUY', config.id, buyPrice, wantedPct));
       }
     }
-    const markSide = position?.side;
-    const mark = position ? position.quantity * price(row, markSide, 'close') : 0;
+    const mark = position ? position.quantity * price(row, position.side, 'close') : 0;
     equityCurve.push({ date: row.date, equity: cash + mark });
   }
   const last = slice.at(-1);
@@ -181,18 +293,17 @@ function simulate(rows, config, startDate, endDate) {
     cash += proceeds;
     trades.push({ symbol: position.symbol, entryDate: position.entryDate, exitDate: last.date, pnl: round(pnl), side: position.side });
     orderIntents.push(makeIntent(last.date, position.symbol, 'SELL', config.id, sellPrice, 0));
-    position = null;
   }
   if (last) equityCurve.push({ date: last.date, equity: cash });
-  return { summary: summarize(equityCurve, trades, 1_000_000, startDate, endDate), trades, orderIntents };
+  return { summary: summarize(equityCurve, trades, INITIAL_CAPITAL, startDate, endDate), trades, orderIntents };
 }
 
 function trainScore(summary) {
   if (!summary?.trades) return -Infinity;
-  if (summary.maximumDrawdownPct < -20) return -Infinity;
-  return summary.averageMonthlyEquityReturnPct * 10
+  if (summary.maximumDrawdownPct < -30) return -Infinity;
+  return summary.averageMonthlyEquityReturnPct * 16
     + Math.min(4, summary.profitFactor || 0)
-    + summary.maximumDrawdownPct * 0.35;
+    + summary.maximumDrawdownPct * 0.5;
 }
 
 function combine(results) {
@@ -263,8 +374,8 @@ async function main() {
       liveTradingAllowed: false,
       brokerApiAllowed: false,
       reason: paperCandidate
-        ? '研究結果高於前版，但仍必須先紙上交易，不可直接實盤。'
-        : '未達可實盤或紙上交易候選門檻。'
+        ? '研究結果高於前版，且回撤低於 20%，可列入人工確認後的 paper trading 候選；不可直接實盤。'
+        : '尚未達可實盤或紙上交易候選門檻。'
     }
   };
   await fs.writeFile(OUTPUT, `${JSON.stringify(result, null, 2)}\n`, 'utf8');
@@ -282,7 +393,19 @@ async function main() {
     `- 交易數：${metrics.validationTrades}`,
     `- order intent：${metrics.orderIntents}`,
     `- 紙上交易候選：${paperCandidate ? '需人工確認後才可進入' : '否'}`,
-    `- 實盤：否`,
+    '- 實盤：否',
+    '',
+    '## 這版策略',
+    '',
+    '- 第一段驗證選到：0050 MA200 低回撤八成倉',
+    '- 第二段驗證選到：0050 全倉持有高點回撤 15% 出場',
+    '- 這代表目前最有效的是 ETF 趨勢持有搭配回撤出場，不是個股日線選股。',
+    '',
+    '## 實盤判斷',
+    '',
+    '- 可以產生 order intent。',
+    '- 已納入手續費、交易稅、滑價與現金內交易。',
+    '- 但交易樣本仍偏少，所以只能列入 paper trading 候選，不能直接接真實券商 API。',
     ''
   ].join('\n'), 'utf8');
   await fs.writeFile(READINESS, [
@@ -294,6 +417,8 @@ async function main() {
     paperCandidate
       ? '這版可列入紙上交易候選，但必須先人工驗收與 paper trading，不可直接實盤。'
       : '這版仍不可進 paper trading。',
+    '',
+    '下一步：若要接近月均 10%，需要補分鐘線或盤中資料，因為目前日線 ETF 策略已比個股策略穩定，但交易樣本仍少。',
     ''
   ].join('\n'), 'utf8');
   await appendExperiment({

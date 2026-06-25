@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
   "generatedAt": "2026-06-16T16:13:34.718Z",
-  "updatedAt": "2026-06-25T15:48:18.081Z",
+  "updatedAt": "2026-06-25T16:27:15.046Z",
   "experiments": [
     {
       "experimentId": "EXP-20260616161335-34c09c70",
@@ -7383,6 +7383,125 @@
       "passedHighProfit": false,
       "allowRetest": false,
       "notes": "月均提高，但仍不可直接實盤。"
+    },
+    {
+      "experimentId": "EXP-20260625162549-bfd0582e",
+      "createdAt": "2026-06-25T16:25:49.950Z",
+      "strategyId": "deployable_etf_hunter_v1",
+      "strategyFamilyId": "deployable_etf_hunter_v1:9e6fe9ff140a38bf0d110aff",
+      "experimentHash": "bfd0582e5cfe260ba6643267",
+      "dataSources": [
+        "0050_daily_ohlcv",
+        "00632R_daily_ohlcv",
+        "market-regime"
+      ],
+      "parameters": {
+        "version": "v1",
+        "configs": [
+          "hold_0050_100",
+          "ma60_0050_100",
+          "ma20_momentum_0050_100",
+          "risk_off_cash_0050_100",
+          "inverse_hedge_switch",
+          "half_risk_switch",
+          "scaled_trend_guard",
+          "ma20_fast_cash_guard",
+          "ma200_low_drawdown_80",
+          "crash_inverse_small"
+        ],
+        "startDate": "2022-03-01"
+      },
+      "trainPeriod": {
+        "months": 36
+      },
+      "validationPeriod": {
+        "months": 12,
+        "stepMonths": 12
+      },
+      "costModel": {
+        "buyCost": 0.002925,
+        "sellCost": 0.005925
+      },
+      "executionModel": "next-open ETF execution, cash-only",
+      "metrics": {
+        "validationTrades": 9,
+        "validationAverageMonthlyEquityReturnPct": 2.7952,
+        "improvementVsPreviousPct": 0.3998,
+        "targetGapPct": 7.2048,
+        "validationAnnualizedReturnPct": 36.8328,
+        "validationProfitFactor": 5.1046,
+        "validationMaximumDrawdownPct": -9.0048,
+        "validationWinRatePct": 44.4444,
+        "orderIntents": 18
+      },
+      "resultStatus": "inconclusive",
+      "failureReason": null,
+      "overfitFlag": false,
+      "passedMinimum": false,
+      "passedHighProfit": false,
+      "allowRetest": false,
+      "notes": "月均提高，但仍不可直接實盤。"
+    },
+    {
+      "experimentId": "EXP-20260625162715-af394032",
+      "createdAt": "2026-06-25T16:27:15.046Z",
+      "strategyId": "deployable_etf_hunter_v1",
+      "strategyFamilyId": "deployable_etf_hunter_v1:9e6fe9ff140a38bf0d110aff",
+      "experimentHash": "af3940329c8df86be7d52b17",
+      "dataSources": [
+        "0050_daily_ohlcv",
+        "00632R_daily_ohlcv",
+        "market-regime"
+      ],
+      "parameters": {
+        "version": "v1",
+        "configs": [
+          "hold_0050_100",
+          "ma60_0050_100",
+          "ma20_momentum_0050_100",
+          "risk_off_cash_0050_100",
+          "risk_off_loose_0050_100",
+          "ma120_soft_guard_0050_100",
+          "ma20_or_ma60_guard_0050_100",
+          "inverse_hedge_switch",
+          "half_risk_switch",
+          "scaled_trend_guard",
+          "ma20_fast_cash_guard",
+          "ma200_low_drawdown_80",
+          "crash_inverse_small"
+        ],
+        "startDate": "2022-03-01"
+      },
+      "trainPeriod": {
+        "months": 36
+      },
+      "validationPeriod": {
+        "months": 12,
+        "stepMonths": 12
+      },
+      "costModel": {
+        "buyCost": 0.002925,
+        "sellCost": 0.005925
+      },
+      "executionModel": "next-open ETF execution, cash-only",
+      "metrics": {
+        "validationTrades": 9,
+        "validationAverageMonthlyEquityReturnPct": 2.8861,
+        "improvementVsPreviousPct": -0.741,
+        "targetGapPct": 7.1139,
+        "validationAnnualizedReturnPct": 37.802,
+        "validationProfitFactor": 4.5059,
+        "validationMaximumDrawdownPct": -9.0048,
+        "validationWinRatePct": 44.4444,
+        "orderIntents": 18
+      },
+      "resultStatus": "failed",
+      "failureReason": null,
+      "overfitFlag": false,
+      "passedMinimum": false,
+      "passedHighProfit": false,
+      "allowRetest": false,
+      "notes": "未提高月均。"
     }
   ]
 }

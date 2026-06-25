@@ -1,50 +1,50 @@
 {
-  "generatedAt": "2026-06-25T15:54:46.781Z",
+  "generatedAt": "2026-06-25T16:34:50.003Z",
   "branch": "institutional-data-fetcher-v1",
   "status": "IMPROVED",
-  "priorBestMonthlyPct": 2.3954,
+  "priorBestMonthlyPct": 3.6271,
   "targetMonthlyPct": 10,
-  "configsTested": 6,
+  "configsTested": 18,
   "folds": [
     {
       "trainStart": "2022-03-01",
       "trainEnd": "2025-02-28",
       "validationStart": "2025-03-01",
       "validationEnd": "2026-02-28",
-      "selectedConfig": "risk_off_cash_0050_100",
-      "selectedName": "0050 風險盤空手",
-      "trainMonthly": 0.2836,
-      "validationMonthly": 4.2485,
-      "validationTrades": 3
+      "selectedConfig": "ma200_low_drawdown_80",
+      "selectedName": "0050 MA200 低回撤八成倉",
+      "trainMonthly": 0.628,
+      "validationMonthly": 3.2604,
+      "validationTrades": 5
     },
     {
       "trainStart": "2023-03-01",
       "trainEnd": "2026-02-28",
       "validationStart": "2026-03-01",
       "validationEnd": "2026-06-09",
-      "selectedConfig": "risk_off_cash_0050_100",
-      "selectedName": "0050 風險盤空手",
-      "trainMonthly": 1.7587,
-      "validationMonthly": 1.763,
-      "validationTrades": 4
+      "selectedConfig": "hold_0050_trail15",
+      "selectedName": "0050 全倉持有高點回撤 15% 出場",
+      "trainMonthly": 2.8319,
+      "validationMonthly": 7.3204,
+      "validationTrades": 1
     }
   ],
   "metrics": {
-    "validationTrades": 7,
-    "validationAverageMonthlyEquityReturnPct": 3.6271,
-    "improvementVsPreviousPct": 1.2317,
-    "targetGapPct": 6.3729,
-    "validationAnnualizedReturnPct": 49.6273,
-    "validationProfitFactor": 5.5275,
-    "validationMaximumDrawdownPct": -9.3058,
-    "validationWinRatePct": 57.1429,
-    "orderIntents": 14
+    "validationTrades": 6,
+    "validationAverageMonthlyEquityReturnPct": 4.2754,
+    "improvementVsPreviousPct": 0.6483,
+    "targetGapPct": 5.7246,
+    "validationAnnualizedReturnPct": 59.1331,
+    "validationProfitFactor": 24.4111,
+    "validationMaximumDrawdownPct": -9.9558,
+    "validationWinRatePct": 50,
+    "orderIntents": 12
   },
   "readiness": {
     "paperTradingAllowed": false,
     "paperCandidateAfterHumanApproval": true,
     "liveTradingAllowed": false,
     "brokerApiAllowed": false,
-    "reason": "研究結果高於前版，但仍必須先紙上交易，不可直接實盤。"
+    "reason": "研究結果高於前版，且回撤低於 20%，可列入人工確認後的 paper trading 候選；不可直接實盤。"
   }
 }

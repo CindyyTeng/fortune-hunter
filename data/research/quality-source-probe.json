@@ -1,0 +1,41 @@
+{
+  "generatedAt": "2026-06-25T10:35:03.110Z",
+  "sources": [
+    {
+      "id": "finmind_taiwan_stock_financial_statements",
+      "name": "FinMind TaiwanStockFinancialStatements",
+      "freePublicSource": true,
+      "supportsHistoricalBackfill": true,
+      "pointInTimeMode": "conservative_assumption",
+      "recommendedForBuild": true,
+      "probe": {
+        "skipped": false,
+        "ok": true,
+        "status": 200,
+        "apiStatus": 200,
+        "rowCount": 153,
+        "sampleFields": [
+          "date",
+          "stock_id",
+          "type",
+          "value",
+          "origin_name"
+        ],
+        "url": "https://api.finmindtrade.com/api/v4/data?dataset=TaiwanStockFinancialStatements&data_id=2330&start_date=2024-01-01"
+      }
+    },
+    {
+      "id": "manual_csv",
+      "name": "人工 CSV 匯入",
+      "freePublicSource": true,
+      "supportsHistoricalBackfill": true,
+      "recommendedForBuild": true,
+      "notes": "當 API 無法取得完整財報時，可用 data/quality/manual 匯入。"
+    }
+  ],
+  "cached": {
+    "files": 0,
+    "sampledRows": 0
+  },
+  "warning": "財報若沒有逐筆歷史公布時間，採保守 T+1，不宣稱 fully verified point-in-time。"
+}

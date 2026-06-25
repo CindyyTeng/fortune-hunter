@@ -1,0 +1,121 @@
+{
+  "generatedAt": "2026-06-25T11:33:03.630Z",
+  "branch": "institutional-data-fetcher-v1",
+  "status": "COMPLETED",
+  "skip": {
+    "skip": false,
+    "reason": "未找到需跳過的既有實驗"
+  },
+  "priorBestMonthlyPct": 0.648,
+  "targetMonthlyPct": 10,
+  "configurationsTested": 216,
+  "folds": 8,
+  "foldSelections": [
+    {
+      "trainStart": "2016-03-01",
+      "trainEnd": "2019-02-28",
+      "validationStart": "2019-03-01",
+      "validationEnd": "2020-02-29",
+      "selectedConfig": "bull_thrust_breakout_top3_hold7_fixed_5",
+      "selectedName": "強多攻擊盤突破 Top 3 持有 7 日 fixed_5",
+      "trainMonthly": -0.0392,
+      "validationMonthly": -0.5619,
+      "validationTrades": 47
+    },
+    {
+      "trainStart": "2017-03-01",
+      "trainEnd": "2020-02-29",
+      "validationStart": "2020-03-01",
+      "validationEnd": "2021-02-28",
+      "selectedConfig": "volume_breakout_top3_hold10_atr_1_8",
+      "selectedName": "放量突破續強 Top 3 持有 10 日 atr_1_8",
+      "trainMonthly": 0.0483,
+      "validationMonthly": 0.3226,
+      "validationTrades": 88
+    },
+    {
+      "trainStart": "2018-03-01",
+      "trainEnd": "2021-02-28",
+      "validationStart": "2021-03-01",
+      "validationEnd": "2022-02-28",
+      "selectedConfig": "volume_breakout_top3_hold10_atr_1_8",
+      "selectedName": "放量突破續強 Top 3 持有 10 日 atr_1_8",
+      "trainMonthly": 0.2423,
+      "validationMonthly": -0.5059,
+      "validationTrades": 103
+    },
+    {
+      "trainStart": "2019-03-01",
+      "trainEnd": "2022-02-28",
+      "validationStart": "2022-03-01",
+      "validationEnd": "2023-02-28",
+      "selectedConfig": "volume_breakout_top5_hold10_atr_1_8",
+      "selectedName": "放量突破續強 Top 5 持有 10 日 atr_1_8",
+      "trainMonthly": 0.4364,
+      "validationMonthly": -0.2053,
+      "validationTrades": 50
+    },
+    {
+      "trainStart": "2020-03-01",
+      "trainEnd": "2023-02-28",
+      "validationStart": "2023-03-01",
+      "validationEnd": "2024-02-29",
+      "selectedConfig": "volume_breakout_top5_hold10_atr_1_8",
+      "selectedName": "放量突破續強 Top 5 持有 10 日 atr_1_8",
+      "trainMonthly": 0.5664,
+      "validationMonthly": -0.5861,
+      "validationTrades": 87
+    },
+    {
+      "trainStart": "2021-03-01",
+      "trainEnd": "2024-02-29",
+      "validationStart": "2024-03-01",
+      "validationEnd": "2025-02-28",
+      "selectedConfig": "volume_breakout_top5_hold7_atr_1_8",
+      "selectedName": "放量突破續強 Top 5 持有 7 日 atr_1_8",
+      "trainMonthly": 0.1834,
+      "validationMonthly": 0.464,
+      "validationTrades": 187
+    },
+    {
+      "trainStart": "2022-03-01",
+      "trainEnd": "2025-02-28",
+      "validationStart": "2025-03-01",
+      "validationEnd": "2026-02-28",
+      "selectedConfig": "bull_low_vol_leader_top5_hold7_atr_1_8",
+      "selectedName": "強多低波領漲股 Top 5 持有 7 日 atr_1_8",
+      "trainMonthly": 0.0653,
+      "validationMonthly": -0.1781,
+      "validationTrades": 51
+    },
+    {
+      "trainStart": "2023-03-01",
+      "trainEnd": "2026-02-28",
+      "validationStart": "2026-03-01",
+      "validationEnd": "2026-06-09",
+      "selectedConfig": "volume_breakout_top5_hold7_atr_1_8",
+      "selectedName": "放量突破續強 Top 5 持有 7 日 atr_1_8",
+      "trainMonthly": 0.1901,
+      "validationMonthly": -1.4277,
+      "validationTrades": 25
+    }
+  ],
+  "best": {
+    "id": "burst_continuation_hunter_v1",
+    "name": "短線爆發續強 walk-forward 組合",
+    "metrics": {
+      "validationTrades": 638,
+      "validationAverageMonthlyEquityReturnPct": -0.2354,
+      "targetGapPct": 10.2354,
+      "priorBestGapPct": -0.8834,
+      "validationAnnualizedReturnPct": -2.9473,
+      "validationProfitFactor": 0.8767,
+      "validationMaximumDrawdownPct": -9.7394,
+      "validationWinRatePct": 39.8119,
+      "validationNegativeMonths": 42,
+      "folds": 8
+    },
+    "improved": false,
+    "passMinimum": false
+  }
+}

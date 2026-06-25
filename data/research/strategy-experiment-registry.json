@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
   "generatedAt": "2026-06-16T16:13:34.718Z",
-  "updatedAt": "2026-06-25T11:16:47.707Z",
+  "updatedAt": "2026-06-25T11:37:16.289Z",
   "experiments": [
     {
       "experimentId": "EXP-20260616161335-34c09c70",
@@ -6787,6 +6787,363 @@
       "passedHighProfit": false,
       "allowRetest": false,
       "notes": "Tactical Market Hunter v1：0050 / 00632R / 現金市場切換。"
+    },
+    {
+      "experimentId": "EXP-20260625112327-fa90a690",
+      "createdAt": "2026-06-25T11:23:27.226Z",
+      "strategyId": "return_improvement_hunter_v1",
+      "strategyFamilyId": "return_improvement_hunter_v1:af03cf75fcf81e7f5c14ccfc",
+      "experimentHash": "fa90a690f30e2bbd6cbce132",
+      "dataSources": [
+        "0050_daily_ohlcv",
+        "00632R_daily_ohlcv",
+        "market_regime"
+      ],
+      "parameters": {
+        "range": {
+          "start": "2016-03-22",
+          "end": "2026-06-09"
+        },
+        "priorBestMonthlyPct": 0.648,
+        "configs": [
+          "buy_hold_0050",
+          "bull_hold_0050",
+          "strong_momentum_0050",
+          "cash_or_inverse"
+        ]
+      },
+      "trainPeriod": {
+        "months": 36
+      },
+      "validationPeriod": {
+        "months": 12,
+        "stepMonths": 12
+      },
+      "costModel": {
+        "buyFeePct": 0.1425,
+        "sellFeePct": 0.1425,
+        "sellTaxPct": 0.3,
+        "slippagePct": 0.15
+      },
+      "executionModel": {
+        "entry": "next_open_market",
+        "settlement": "T+2",
+        "simulator": "shared"
+      },
+      "metrics": {
+        "validationTrades": 47,
+        "validationAverageMonthlyEquityReturnPct": 0.0482,
+        "priorBestMonthlyPct": 0.648,
+        "improvementPct": -0.5998,
+        "targetGapPct": 9.9518,
+        "validationAnnualizedReturnPct": 0.5739,
+        "validationProfitFactor": 1.6162,
+        "validationMaximumDrawdownPct": -1.3493,
+        "validationWinRatePct": 40.4255,
+        "benchmarkAverageMonthlyReturnPct": 2.1326,
+        "orderIntents": 47,
+        "improved": false,
+        "nearTenPercent": false
+      },
+      "resultStatus": "failed",
+      "failureReason": "沒有高於前一最佳月均報酬。",
+      "overfitFlag": false,
+      "passedMinimum": false,
+      "passedHighProfit": false,
+      "allowRetest": false,
+      "notes": "Return Improvement Hunter v1：先找能提高月均的 ETF 基準策略。"
+    },
+    {
+      "experimentId": "EXP-20260625113055-e45628a7",
+      "createdAt": "2026-06-25T11:30:55.538Z",
+      "strategyId": "burst_continuation_hunter_v1",
+      "strategyFamilyId": "burst_continuation_hunter_v1:2d43067e471259a430c22959",
+      "experimentHash": "e45628a799328b37a402d8da",
+      "dataSources": [
+        "OHLCV",
+        "market-regime",
+        "trade-value",
+        "relative-strength"
+      ],
+      "parameters": {
+        "configurationsTested": 144
+      },
+      "trainPeriod": {
+        "start": "2016-03-01",
+        "end": "2026-02-28"
+      },
+      "validationPeriod": {
+        "start": "2019-03-01",
+        "end": "2026-06-09"
+      },
+      "costModel": "fees-tax-slippage",
+      "executionModel": "shared-simulator-next-open",
+      "metrics": {
+        "validationTrades": 817,
+        "validationAverageMonthlyEquityReturnPct": -0.0525,
+        "targetGapPct": 10.0525,
+        "priorBestGapPct": -0.7005,
+        "validationAnnualizedReturnPct": -0.9268,
+        "validationProfitFactor": 0.973,
+        "validationMaximumDrawdownPct": -9.7394,
+        "validationWinRatePct": 41.0037,
+        "validationNegativeMonths": 42,
+        "folds": 8
+      },
+      "resultStatus": "failed",
+      "failureReason": null,
+      "overfitFlag": false,
+      "passedMinimum": false,
+      "passedHighProfit": false,
+      "allowRetest": false,
+      "notes": "本輪未提高月均。"
+    },
+    {
+      "experimentId": "EXP-20260625113303-1ff060a2",
+      "createdAt": "2026-06-25T11:33:03.637Z",
+      "strategyId": "burst_continuation_hunter_v1",
+      "strategyFamilyId": "burst_continuation_hunter_v1:2d43067e471259a430c22959",
+      "experimentHash": "1ff060a2daa26dfa763f175d",
+      "dataSources": [
+        "OHLCV",
+        "market-regime",
+        "trade-value",
+        "relative-strength"
+      ],
+      "parameters": {
+        "configurationsTested": 216
+      },
+      "trainPeriod": {
+        "start": "2016-03-01",
+        "end": "2026-02-28"
+      },
+      "validationPeriod": {
+        "start": "2019-03-01",
+        "end": "2026-06-09"
+      },
+      "costModel": "fees-tax-slippage",
+      "executionModel": "shared-simulator-next-open",
+      "metrics": {
+        "validationTrades": 638,
+        "validationAverageMonthlyEquityReturnPct": -0.2354,
+        "targetGapPct": 10.2354,
+        "priorBestGapPct": -0.8834,
+        "validationAnnualizedReturnPct": -2.9473,
+        "validationProfitFactor": 0.8767,
+        "validationMaximumDrawdownPct": -9.7394,
+        "validationWinRatePct": 39.8119,
+        "validationNegativeMonths": 42,
+        "folds": 8
+      },
+      "resultStatus": "failed",
+      "failureReason": null,
+      "overfitFlag": false,
+      "passedMinimum": false,
+      "passedHighProfit": false,
+      "allowRetest": false,
+      "notes": "本輪未提高月均。"
+    },
+    {
+      "experimentId": "EXP-20260625113438-fa278258",
+      "createdAt": "2026-06-25T11:34:38.836Z",
+      "strategyId": "return_improvement_hunter_v1",
+      "strategyFamilyId": "return_improvement_hunter_v1:af03cf75fcf81e7f5c14ccfc",
+      "experimentHash": "fa278258b8e7353c16d1143c",
+      "dataSources": [
+        "0050_daily_ohlcv",
+        "00632R_daily_ohlcv",
+        "market_regime"
+      ],
+      "parameters": {
+        "range": {
+          "start": "2016-03-22",
+          "end": "2026-06-09"
+        },
+        "priorBestMonthlyPct": 0.648,
+        "implementationVersion": "risk-adjusted-reentry-v2",
+        "configs": [
+          "buy_hold_0050",
+          "bull_hold_0050",
+          "strong_momentum_0050",
+          "cash_or_inverse"
+        ]
+      },
+      "trainPeriod": {
+        "months": 36
+      },
+      "validationPeriod": {
+        "months": 12,
+        "stepMonths": 12
+      },
+      "costModel": {
+        "buyFeePct": 0.1425,
+        "sellFeePct": 0.1425,
+        "sellTaxPct": 0.3,
+        "slippagePct": 0.15
+      },
+      "executionModel": {
+        "entry": "next_open_market",
+        "settlement": "T+2",
+        "simulator": "shared"
+      },
+      "metrics": {
+        "validationTrades": 48,
+        "validationAverageMonthlyEquityReturnPct": 0.5599,
+        "priorBestMonthlyPct": 0.648,
+        "improvementPct": -0.0881,
+        "targetGapPct": 9.4401,
+        "validationAnnualizedReturnPct": 6.1338,
+        "validationProfitFactor": 1.7918,
+        "validationMaximumDrawdownPct": -19.5256,
+        "validationWinRatePct": 43.75,
+        "benchmarkAverageMonthlyReturnPct": 2.1326,
+        "orderIntents": 48,
+        "improved": false,
+        "nearTenPercent": false
+      },
+      "resultStatus": "failed",
+      "failureReason": "沒有高於前一最佳月均報酬。",
+      "overfitFlag": false,
+      "passedMinimum": false,
+      "passedHighProfit": false,
+      "allowRetest": false,
+      "notes": "Return Improvement Hunter v1：先找能提高月均的 ETF 基準策略。"
+    },
+    {
+      "experimentId": "EXP-20260625113604-3320c9a4",
+      "createdAt": "2026-06-25T11:36:04.919Z",
+      "strategyId": "return_improvement_hunter_v1",
+      "strategyFamilyId": "return_improvement_hunter_v1:17e27f86218151bad8cfb219",
+      "experimentHash": "3320c9a459c42f628cd8be72",
+      "dataSources": [
+        "0050_daily_ohlcv",
+        "00632R_daily_ohlcv",
+        "market_regime"
+      ],
+      "parameters": {
+        "range": {
+          "start": "2016-03-22",
+          "end": "2026-06-09"
+        },
+        "priorBestMonthlyPct": 0.648,
+        "implementationVersion": "defensive-trend-v3",
+        "configs": [
+          "buy_hold_0050",
+          "bull_hold_0050",
+          "strong_momentum_0050",
+          "defensive_trend_0050",
+          "theme_momentum_0050",
+          "cash_or_inverse"
+        ]
+      },
+      "trainPeriod": {
+        "months": 36
+      },
+      "validationPeriod": {
+        "months": 12,
+        "stepMonths": 12
+      },
+      "costModel": {
+        "buyFeePct": 0.1425,
+        "sellFeePct": 0.1425,
+        "sellTaxPct": 0.3,
+        "slippagePct": 0.15
+      },
+      "executionModel": {
+        "entry": "next_open_market",
+        "settlement": "T+2",
+        "simulator": "shared"
+      },
+      "metrics": {
+        "validationTrades": 48,
+        "validationAverageMonthlyEquityReturnPct": 0.5464,
+        "priorBestMonthlyPct": 0.648,
+        "improvementPct": -0.1016,
+        "targetGapPct": 9.4536,
+        "validationAnnualizedReturnPct": 6.0484,
+        "validationProfitFactor": 1.8274,
+        "validationMaximumDrawdownPct": -19.5256,
+        "validationWinRatePct": 43.75,
+        "benchmarkAverageMonthlyReturnPct": 2.1326,
+        "orderIntents": 48,
+        "improved": false,
+        "nearTenPercent": false
+      },
+      "resultStatus": "failed",
+      "failureReason": "沒有高於前一最佳月均報酬。",
+      "overfitFlag": false,
+      "passedMinimum": false,
+      "passedHighProfit": false,
+      "allowRetest": false,
+      "notes": "Return Improvement Hunter v1：先找能提高月均的 ETF 基準策略。"
+    },
+    {
+      "experimentId": "EXP-20260625113716-95ccc4e1",
+      "createdAt": "2026-06-25T11:37:16.289Z",
+      "strategyId": "return_improvement_hunter_v1",
+      "strategyFamilyId": "return_improvement_hunter_v1:17e27f86218151bad8cfb219",
+      "experimentHash": "95ccc4e1b601dc024ab46402",
+      "dataSources": [
+        "0050_daily_ohlcv",
+        "00632R_daily_ohlcv",
+        "market_regime"
+      ],
+      "parameters": {
+        "range": {
+          "start": "2022-03-01",
+          "end": "2026-06-09"
+        },
+        "priorBestMonthlyPct": 0.648,
+        "implementationVersion": "aligned-validation-window-v4",
+        "configs": [
+          "buy_hold_0050",
+          "bull_hold_0050",
+          "strong_momentum_0050",
+          "defensive_trend_0050",
+          "theme_momentum_0050",
+          "cash_or_inverse"
+        ]
+      },
+      "trainPeriod": {
+        "months": 36
+      },
+      "validationPeriod": {
+        "months": 12,
+        "stepMonths": 12
+      },
+      "costModel": {
+        "buyFeePct": 0.1425,
+        "sellFeePct": 0.1425,
+        "sellTaxPct": 0.3,
+        "slippagePct": 0.15
+      },
+      "executionModel": {
+        "entry": "next_open_market",
+        "settlement": "T+2",
+        "simulator": "shared"
+      },
+      "metrics": {
+        "validationTrades": 13,
+        "validationAverageMonthlyEquityReturnPct": 2.3954,
+        "priorBestMonthlyPct": 0.648,
+        "improvementPct": 1.7474,
+        "targetGapPct": 7.6045,
+        "validationAnnualizedReturnPct": 31.5915,
+        "validationProfitFactor": 7.0637,
+        "validationMaximumDrawdownPct": -7.2503,
+        "validationWinRatePct": 76.9231,
+        "benchmarkAverageMonthlyReturnPct": 5.3115,
+        "orderIntents": 13,
+        "improved": true,
+        "nearTenPercent": false
+      },
+      "resultStatus": "inconclusive",
+      "failureReason": null,
+      "overfitFlag": false,
+      "passedMinimum": false,
+      "passedHighProfit": false,
+      "allowRetest": false,
+      "notes": "Return Improvement Hunter v1：先找能提高月均的 ETF 基準策略。"
     }
   ]
 }

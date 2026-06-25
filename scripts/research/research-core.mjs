@@ -725,7 +725,7 @@ export function simulateSignalMap(context, signalMap, options = {}) {
         orderIntent: candidate.orderIntent
       }, dayIndex, {
         positionPct: candidate.positionPct ?? 9,
-        accountRiskPct: 0.5,
+        accountRiskPct: candidate.accountRiskPct ?? options.accountRiskPct ?? 0.5,
         regime
       });
     }

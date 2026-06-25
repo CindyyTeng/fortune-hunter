@@ -10,7 +10,7 @@ const REPORT = new URL('../../docs/DEPLOYABLE_ETF_HUNTER_V1.md', import.meta.url
 const READINESS = new URL('../../docs/AUTO_TRADING_READINESS.md', import.meta.url);
 
 const START_DATE = '2022-03-01';
-const PRIOR_BEST_MONTHLY = 3.6271;
+const PRIOR_BEST_MONTHLY = 4.2754;
 const TARGET_MONTHLY = 10;
 const INITIAL_CAPITAL = 1_000_000;
 const BUY_COST = 0.001425 + 0.0015;
@@ -18,6 +18,9 @@ const SELL_COST = 0.001425 + 0.003 + 0.0015;
 
 const pct = (value, base) => Number.isFinite(value) && base ? (value / base - 1) * 100 : null;
 const readJson = url => fs.readFile(url, 'utf8').then(JSON.parse);
+const averageClose = (rows, index, days) => index >= days - 1
+  ? mean(rows.slice(index - days + 1, index + 1).map(row => row.close))
+  : null;
 
 const configs = [
   {
@@ -149,6 +152,18 @@ const configs = [
       return null;
     },
     positionPct: (row, target) => target === 'inverse' ? 35 : 100
+  },
+  {
+    id: 'fast_trend_guard_small_inverse',
+    name: '0050 快速趨勢防守／小反向',
+    target: row => {
+      const fastTrend = row.ma3 > row.ma20 && row.mom5 > -8;
+      const longTrend = row.close > row.ma200 && row.mom20 > -4 && row.regime !== 'HIGH_VOLATILITY';
+      if (fastTrend || longTrend) return 'benchmark';
+      if (row.close < row.ma60 && row.mom20 < -4 && row.vol20 > 25) return 'inverse';
+      return null;
+    },
+    positionPct: (row, target) => target === 'inverse' ? 20 : 100
   }
 ];
 
@@ -159,6 +174,9 @@ function enrich(payload) {
     ...row,
     benchmark: payload.benchmark[index],
     inverse: inverseByDate.get(row.date),
+    ma3: averageClose(regimes, index, 3),
+    ma5: averageClose(regimes, index, 5),
+    ma10: averageClose(regimes, index, 10),
     mom60: index >= 60 ? pct(row.close, regimes[index - 60].close) : null
   })).filter(row => row.date >= START_DATE && row.ma200 && row.benchmark && row.inverse);
 }
@@ -300,10 +318,12 @@ function simulate(rows, config, startDate, endDate) {
 
 function trainScore(summary) {
   if (!summary?.trades) return -Infinity;
-  if (summary.maximumDrawdownPct < -30) return -Infinity;
+  if (summary.trades < 8) return -Infinity;
+  if (summary.maximumDrawdownPct < -25) return -Infinity;
   return summary.averageMonthlyEquityReturnPct * 16
     + Math.min(4, summary.profitFactor || 0)
-    + summary.maximumDrawdownPct * 0.5;
+    + summary.maximumDrawdownPct * 0.5
+    + Math.min(4, summary.trades / 6);
 }
 
 function combine(results) {
@@ -397,9 +417,8 @@ async function main() {
     '',
     '## 這版策略',
     '',
-    '- 第一段驗證選到：0050 MA200 低回撤八成倉',
-    '- 第二段驗證選到：0050 全倉持有高點回撤 15% 出場',
-    '- 這代表目前最有效的是 ETF 趨勢持有搭配回撤出場，不是個股日線選股。',
+    ...result.folds.map(row => `- ${row.validationStart}：${row.selectedName}，validation 月均 ${row.validationMonthly}%，交易 ${row.validationTrades} 筆`),
+    '- 這代表目前最有效的是 ETF 快速趨勢防守搭配小比例反向避險，不是個股日線選股。',
     '',
     '## 實盤判斷',
     '',

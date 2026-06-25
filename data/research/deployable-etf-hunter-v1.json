@@ -1,44 +1,44 @@
 {
-  "generatedAt": "2026-06-25T16:34:50.003Z",
+  "generatedAt": "2026-06-25T16:41:47.925Z",
   "branch": "institutional-data-fetcher-v1",
   "status": "IMPROVED",
-  "priorBestMonthlyPct": 3.6271,
+  "priorBestMonthlyPct": 4.2754,
   "targetMonthlyPct": 10,
-  "configsTested": 18,
+  "configsTested": 19,
   "folds": [
     {
       "trainStart": "2022-03-01",
       "trainEnd": "2025-02-28",
       "validationStart": "2025-03-01",
       "validationEnd": "2026-02-28",
-      "selectedConfig": "ma200_low_drawdown_80",
-      "selectedName": "0050 MA200 低回撤八成倉",
-      "trainMonthly": 0.628,
-      "validationMonthly": 3.2604,
-      "validationTrades": 5
+      "selectedConfig": "fast_trend_guard_small_inverse",
+      "selectedName": "0050 快速趨勢防守／小反向",
+      "trainMonthly": 0.8265,
+      "validationMonthly": 4.8392,
+      "validationTrades": 6
     },
     {
       "trainStart": "2023-03-01",
       "trainEnd": "2026-02-28",
       "validationStart": "2026-03-01",
       "validationEnd": "2026-06-09",
-      "selectedConfig": "hold_0050_trail15",
-      "selectedName": "0050 全倉持有高點回撤 15% 出場",
-      "trainMonthly": 2.8319,
-      "validationMonthly": 7.3204,
-      "validationTrades": 1
+      "selectedConfig": "fast_trend_guard_small_inverse",
+      "selectedName": "0050 快速趨勢防守／小反向",
+      "trainMonthly": 2.2823,
+      "validationMonthly": 5.4835,
+      "validationTrades": 4
     }
   ],
   "metrics": {
-    "validationTrades": 6,
-    "validationAverageMonthlyEquityReturnPct": 4.2754,
-    "improvementVsPreviousPct": 0.6483,
-    "targetGapPct": 5.7246,
-    "validationAnnualizedReturnPct": 59.1331,
-    "validationProfitFactor": 24.4111,
-    "validationMaximumDrawdownPct": -9.9558,
+    "validationTrades": 10,
+    "validationAverageMonthlyEquityReturnPct": 5.0003,
+    "improvementVsPreviousPct": 0.7249,
+    "targetGapPct": 4.9997,
+    "validationAnnualizedReturnPct": 74.9835,
+    "validationProfitFactor": 9.3871,
+    "validationMaximumDrawdownPct": -9.3993,
     "validationWinRatePct": 50,
-    "orderIntents": 12
+    "orderIntents": 20
   },
   "readiness": {
     "paperTradingAllowed": false,

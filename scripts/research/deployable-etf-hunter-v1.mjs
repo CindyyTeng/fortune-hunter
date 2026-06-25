@@ -13,6 +13,9 @@ const START_DATE = '2016-06-01';
 const PRIOR_BEST_MONTHLY = 5.0003;
 const PRIOR_BEST_DRAWDOWN = -9.3993;
 const PRIOR_BEST_TRADES = 10;
+const LONG_BASELINE_MONTHLY = 1.8428;
+const LONG_BASELINE_DRAWDOWN = -17.3036;
+const LONG_BASELINE_TRADES = 53;
 const TARGET_MONTHLY = 10;
 const INITIAL_CAPITAL = 1_000_000;
 const BUY_COST = 0.001425 + 0.0015;
@@ -23,6 +26,13 @@ const readJson = url => fs.readFile(url, 'utf8').then(JSON.parse);
 const averageClose = (rows, index, days) => index >= days - 1
   ? mean(rows.slice(index - days + 1, index + 1).map(row => row.close))
   : null;
+const monthSpan = (startDate, endDate) => {
+  const startYear = Number(startDate.slice(0, 4));
+  const startMonth = Number(startDate.slice(5, 7));
+  const endYear = Number(endDate.slice(0, 4));
+  const endMonth = Number(endDate.slice(5, 7));
+  return (endYear - startYear) * 12 + endMonth - startMonth;
+};
 
 const configs = [
   {
@@ -178,6 +188,20 @@ const configs = [
       return null;
     },
     positionPct: (row, target) => target === 'inverse' ? 10 : 100
+  },
+  {
+    id: 'complete_fast_trend_micro_inverse',
+    name: '0050 完整驗證快速趨勢／微反向',
+    target: row => {
+      const fastTrend = row.ma3 > row.ma20 && row.mom5 > -16;
+      const longTrend = row.close > row.ma200 && row.mom20 > -8 && row.regime !== 'HIGH_VOLATILITY';
+      const softTrend = row.close > row.ma60 && row.mom20 > 0 && row.mom5 > -8;
+      if (fastTrend || longTrend) return 'benchmark';
+      if (softTrend) return 'benchmark_mid';
+      if (row.close < row.ma60 && row.mom20 < -6 && row.vol20 > 18) return 'inverse';
+      return null;
+    },
+    positionPct: (row, target) => target === 'inverse' ? 5 : target === 'benchmark_mid' ? 50 : 100
   },
   {
     id: 'low_drawdown_momentum_70',
@@ -382,6 +406,8 @@ function evaluateConfig(rows, config, folds) {
 function candidateScore(metrics) {
   if (metrics.validationTrades < 30) return -Infinity;
   if (metrics.validationMaximumDrawdownPct < -25) return -Infinity;
+  if (metrics.validationTrades < LONG_BASELINE_TRADES) return -Infinity;
+  if (metrics.validationMaximumDrawdownPct < LONG_BASELINE_DRAWDOWN) return -Infinity;
   return metrics.validationAverageMonthlyEquityReturnPct * 20
     + Math.min(6, metrics.validationProfitFactor || 0)
     + metrics.validationMaximumDrawdownPct * 0.35
@@ -391,7 +417,8 @@ function candidateScore(metrics) {
 async function main() {
   const rows = enrich(await readJson(MARKET));
   const range = { start: rows[0].date, end: rows.at(-1).date };
-  const folds = foldWindows(range.start, range.end, 36, 12);
+  const folds = foldWindows(range.start, range.end, 36, 12)
+    .filter(fold => monthSpan(fold.validationStart, fold.validationEnd) >= 11);
   const evaluated = configs.map(config => {
     const foldResults = evaluateConfig(rows, config, folds);
     return { config, foldResults, metrics: combine(foldResults) };
@@ -406,7 +433,11 @@ async function main() {
   }
   const metrics = combine(foldResults);
   const improved = metrics.validationAverageMonthlyEquityReturnPct > PRIOR_BEST_MONTHLY;
-  const comparableLongBaseline = evaluated.find(row => row.config.id === 'fast_trend_guard_small_inverse')?.metrics || null;
+  const comparableLongBaseline = evaluated.find(row => row.config.id === 'fast_trend_guard_tiny_inverse')?.metrics || {
+    validationAverageMonthlyEquityReturnPct: LONG_BASELINE_MONTHLY,
+    validationMaximumDrawdownPct: LONG_BASELINE_DRAWDOWN,
+    validationTrades: LONG_BASELINE_TRADES
+  };
   const improvedAgainstComparableLong = comparableLongBaseline
     ? metrics.validationAverageMonthlyEquityReturnPct > comparableLongBaseline.validationAverageMonthlyEquityReturnPct
       && metrics.validationMaximumDrawdownPct > comparableLongBaseline.validationMaximumDrawdownPct

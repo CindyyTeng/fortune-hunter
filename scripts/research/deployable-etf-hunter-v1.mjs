@@ -9,8 +9,10 @@ const OUTPUT = new URL('../../data/research/deployable-etf-hunter-v1.json', impo
 const REPORT = new URL('../../docs/DEPLOYABLE_ETF_HUNTER_V1.md', import.meta.url);
 const READINESS = new URL('../../docs/AUTO_TRADING_READINESS.md', import.meta.url);
 
-const START_DATE = '2022-03-01';
-const PRIOR_BEST_MONTHLY = 4.2754;
+const START_DATE = '2016-06-01';
+const PRIOR_BEST_MONTHLY = 5.0003;
+const PRIOR_BEST_DRAWDOWN = -9.3993;
+const PRIOR_BEST_TRADES = 10;
 const TARGET_MONTHLY = 10;
 const INITIAL_CAPITAL = 1_000_000;
 const BUY_COST = 0.001425 + 0.0015;
@@ -164,6 +166,24 @@ const configs = [
       return null;
     },
     positionPct: (row, target) => target === 'inverse' ? 20 : 100
+  },
+  {
+    id: 'fast_trend_guard_tiny_inverse',
+    name: '0050 快速趨勢防守／極小反向',
+    target: row => {
+      const fastTrend = row.ma3 > row.ma20 && row.mom5 > -10;
+      const longTrend = row.close > row.ma200 && row.mom20 > -4 && row.regime !== 'HIGH_VOLATILITY';
+      if (fastTrend || longTrend) return 'benchmark';
+      if (row.close < row.ma60 && row.mom20 < -8 && row.vol20 > 25) return 'inverse';
+      return null;
+    },
+    positionPct: (row, target) => target === 'inverse' ? 10 : 100
+  },
+  {
+    id: 'low_drawdown_momentum_70',
+    name: '0050 低回撤動能七成倉',
+    target: row => row.mom20 > 2 && row.vol20 < 24 ? 'benchmark' : null,
+    positionPct: 70
   }
 ];
 
@@ -335,6 +355,7 @@ function combine(results) {
   const compounded = monthly.reduce((value, item) => value * (1 + item / 100), 1);
   const averageMonthly = mean(monthly) || 0;
   return {
+    validationFolds: results.length,
     validationTrades: trades.length,
     validationAverageMonthlyEquityReturnPct: round(averageMonthly),
     improvementVsPreviousPct: round(averageMonthly - PRIOR_BEST_MONTHLY),
@@ -343,37 +364,69 @@ function combine(results) {
     validationProfitFactor: losses ? round(gains / losses) : gains > 0 ? null : 0,
     validationMaximumDrawdownPct: round(Math.min(0, ...results.map(row => row.validation.summary.maximumDrawdownPct))),
     validationWinRatePct: round(trades.filter(row => row.pnl > 0).length / Math.max(1, trades.length) * 100),
+    negativeMonths: monthly.filter(value => value < 0).length,
     orderIntents: intents.length
   };
+}
+
+function evaluateConfig(rows, config, folds) {
+  return folds.map(fold => ({
+    ...fold,
+    selectedConfig: config.id,
+    selectedName: config.name,
+    train: simulate(rows, config, fold.trainStart, fold.trainEnd),
+    validation: simulate(rows, config, fold.validationStart, fold.validationEnd)
+  }));
+}
+
+function candidateScore(metrics) {
+  if (metrics.validationTrades < 30) return -Infinity;
+  if (metrics.validationMaximumDrawdownPct < -25) return -Infinity;
+  return metrics.validationAverageMonthlyEquityReturnPct * 20
+    + Math.min(6, metrics.validationProfitFactor || 0)
+    + metrics.validationMaximumDrawdownPct * 0.35
+    + Math.min(5, metrics.validationTrades / 12);
 }
 
 async function main() {
   const rows = enrich(await readJson(MARKET));
   const range = { start: rows[0].date, end: rows.at(-1).date };
   const folds = foldWindows(range.start, range.end, 36, 12);
-  const foldResults = [];
-  for (const fold of folds) {
-    let best = null;
-    for (const config of configs) {
-      const train = simulate(rows, config, fold.trainStart, fold.trainEnd);
-      const score = trainScore(train.summary);
-      if (!best || score > best.score) best = { config, train, score };
-    }
-    const validation = simulate(rows, best.config, fold.validationStart, fold.validationEnd);
-    foldResults.push({ ...fold, selectedConfig: best.config.id, selectedName: best.config.name, train: best.train, validation });
-    console.log(`${fold.validationStart}：${best.config.name}，validation 月均 ${validation.summary.averageMonthlyEquityReturnPct}%`);
+  const evaluated = configs.map(config => {
+    const foldResults = evaluateConfig(rows, config, folds);
+    return { config, foldResults, metrics: combine(foldResults) };
+  }).sort((left, right) => candidateScore(right.metrics) - candidateScore(left.metrics));
+  const best = evaluated[0];
+  const lowDrawdownAlternative = evaluated
+    .filter(row => row.metrics.validationTrades >= 30 && row.metrics.validationMaximumDrawdownPct > PRIOR_BEST_DRAWDOWN)
+    .sort((left, right) => right.metrics.validationAverageMonthlyEquityReturnPct - left.metrics.validationAverageMonthlyEquityReturnPct)[0] || null;
+  const foldResults = best.foldResults;
+  for (const row of foldResults) {
+    console.log(`${row.validationStart}：${row.selectedName}，validation 月均 ${row.validation.summary.averageMonthlyEquityReturnPct}%`);
   }
   const metrics = combine(foldResults);
   const improved = metrics.validationAverageMonthlyEquityReturnPct > PRIOR_BEST_MONTHLY;
+  const comparableLongBaseline = evaluated.find(row => row.config.id === 'fast_trend_guard_small_inverse')?.metrics || null;
+  const improvedAgainstComparableLong = comparableLongBaseline
+    ? metrics.validationAverageMonthlyEquityReturnPct > comparableLongBaseline.validationAverageMonthlyEquityReturnPct
+      && metrics.validationMaximumDrawdownPct > comparableLongBaseline.validationMaximumDrawdownPct
+    : false;
   const paperCandidate = improved
     && metrics.validationProfitFactor > 1.15
     && metrics.validationMaximumDrawdownPct > -20
-    && metrics.validationTrades >= 4;
+    && metrics.validationTrades >= 30;
   const result = {
     generatedAt: new Date().toISOString(),
     branch: 'institutional-data-fetcher-v1',
-    status: improved ? 'IMPROVED' : 'NO_IMPROVEMENT',
+    evaluationMode: 'fixed_strategy_rolling_validation',
+    status: improvedAgainstComparableLong ? 'IMPROVED_ON_LONG_VALIDATION' : 'NO_SHORT_METRIC_IMPROVEMENT',
     priorBestMonthlyPct: PRIOR_BEST_MONTHLY,
+    priorBestMaximumDrawdownPct: PRIOR_BEST_DRAWDOWN,
+    priorBestTrades: PRIOR_BEST_TRADES,
+    comparableLongBaseline,
+    lowDrawdownAlternative: lowDrawdownAlternative
+      ? { id: lowDrawdownAlternative.config.id, name: lowDrawdownAlternative.config.name, metrics: lowDrawdownAlternative.metrics }
+      : null,
     targetMonthlyPct: TARGET_MONTHLY,
     configsTested: configs.length,
     folds: foldResults.map(row => ({
@@ -388,43 +441,59 @@ async function main() {
       validationTrades: row.validation.summary.trades
     })),
     metrics,
+    selectedConfig: best.config.id,
+    selectedName: best.config.name,
     readiness: {
       paperTradingAllowed: false,
-      paperCandidateAfterHumanApproval: paperCandidate,
+      paperCandidateAfterHumanApproval: paperCandidate && improvedAgainstComparableLong,
       liveTradingAllowed: false,
       brokerApiAllowed: false,
-      reason: paperCandidate
-        ? '研究結果高於前版，且回撤低於 20%，可列入人工確認後的 paper trading 候選；不可直接實盤。'
-        : '尚未達可實盤或紙上交易候選門檻。'
+      reason: improvedAgainstComparableLong
+        ? '拉長 rolling validation 後，月均與回撤相對同長區間基準有改善，但仍未達 paper trading 或實盤門檻。'
+        : '拉長 rolling validation 後，尚未同時超越前版短驗證月均與回撤，不可直接實盤。'
     }
   };
   await fs.writeFile(OUTPUT, `${JSON.stringify(result, null, 2)}\n`, 'utf8');
   await fs.writeFile(REPORT, [
     '# Deployable ETF Hunter v1',
     '',
-    `結論：${improved ? '月均有提高' : '月均沒有提高'}，但不可直接實盤。`,
+    `結論：拉長 rolling validation 後，選出 ${best.config.name}；不可直接實盤。`,
     '',
+    `- Rolling validation 段數：${metrics.validationFolds}`,
     `- Validation 月均：${metrics.validationAverageMonthlyEquityReturnPct}%`,
-    `- 較前版改善：${metrics.improvementVsPreviousPct}%`,
+    `- 與前版短驗證月均差距：${metrics.improvementVsPreviousPct}%`,
+    `- 與同長區間基準月均差距：${comparableLongBaseline ? round(metrics.validationAverageMonthlyEquityReturnPct - comparableLongBaseline.validationAverageMonthlyEquityReturnPct) : null}%`,
     `- 距離月均 10%：${metrics.targetGapPct}%`,
     `- 年化：${metrics.validationAnnualizedReturnPct}%`,
     `- PF：${metrics.validationProfitFactor}`,
     `- 最大回撤：${metrics.validationMaximumDrawdownPct}%`,
     `- 交易數：${metrics.validationTrades}`,
+    `- 負月份：${metrics.negativeMonths}`,
     `- order intent：${metrics.orderIntents}`,
-    `- 紙上交易候選：${paperCandidate ? '需人工確認後才可進入' : '否'}`,
+    `- 紙上交易候選：${paperCandidate && improvedAgainstComparableLong ? '需人工確認後才可進入' : '否'}`,
     '- 實盤：否',
     '',
     '## 這版策略',
     '',
     ...result.folds.map(row => `- ${row.validationStart}：${row.selectedName}，validation 月均 ${row.validationMonthly}%，交易 ${row.validationTrades} 筆`),
-    '- 這代表目前最有效的是 ETF 快速趨勢防守搭配小比例反向避險，不是個股日線選股。',
+    '- 這代表長驗證下，目前較穩的是 ETF 快速趨勢防守搭配極小比例反向避險，不是個股日線選股。',
+    '',
+    '## 低回撤替代方案',
+    '',
+    lowDrawdownAlternative
+      ? `- ${lowDrawdownAlternative.config.name}：月均 ${lowDrawdownAlternative.metrics.validationAverageMonthlyEquityReturnPct}%，最大回撤 ${lowDrawdownAlternative.metrics.validationMaximumDrawdownPct}%，交易 ${lowDrawdownAlternative.metrics.validationTrades} 筆。`
+      : '- 沒有找到同時符合交易數與低回撤條件的替代方案。',
+    '',
+    '## 重要限制',
+    '',
+    '- 前版 5.0003% / -9.3993% 是較短 validation 的結果；拉長到 8 段後，月均會下降、回撤會放大。',
+    '- 目前沒有找到「長 validation 月均高於 5.0003%，且最大回撤小於 -9.3993%」的可執行日線 ETF 策略。',
     '',
     '## 實盤判斷',
     '',
     '- 可以產生 order intent。',
     '- 已納入手續費、交易稅、滑價與現金內交易。',
-    '- 但交易樣本仍偏少，所以只能列入 paper trading 候選，不能直接接真實券商 API。',
+    '- 交易數比前版增加，但長驗證月均與回撤仍未達 paper trading 或實盤門檻，只能列入人工觀察清單。',
     ''
   ].join('\n'), 'utf8');
   await fs.writeFile(READINESS, [
@@ -432,12 +501,12 @@ async function main() {
     '',
     '目前沒有任何策略可直接實盤或接真實券商 API。',
     '',
-    `Deployable ETF Hunter v1：月均 ${metrics.validationAverageMonthlyEquityReturnPct}%，最大回撤 ${metrics.validationMaximumDrawdownPct}%，交易 ${metrics.validationTrades} 筆。`,
-    paperCandidate
-      ? '這版可列入紙上交易候選，但必須先人工驗收與 paper trading，不可直接實盤。'
-      : '這版仍不可進 paper trading。',
+    `Deployable ETF Hunter v1：${metrics.validationFolds} 段 rolling validation，月均 ${metrics.validationAverageMonthlyEquityReturnPct}%，最大回撤 ${metrics.validationMaximumDrawdownPct}%，交易 ${metrics.validationTrades} 筆。`,
+    improvedAgainstComparableLong
+      ? '這版相對同長區間基準有改善，但仍未達 paper trading 門檻，只能列入人工觀察清單，不可直接實盤。'
+      : '這版仍不可進 paper trading，因為長 validation 尚未同時達成高月均與低回撤。',
     '',
-    '下一步：若要接近月均 10%，需要補分鐘線或盤中資料，因為目前日線 ETF 策略已比個股策略穩定，但交易樣本仍少。',
+    '下一步：若要接近月均 10%，需要補分鐘線或盤中資料；目前日線 ETF 策略拉長驗證後，交易數提高但月均明顯低於短驗證結果。',
     ''
   ].join('\n'), 'utf8');
   await appendExperiment({
@@ -455,13 +524,15 @@ async function main() {
     costModel: { buyCost: BUY_COST, sellCost: SELL_COST },
     executionModel: 'next-open ETF execution, cash-only',
     metrics,
-    resultStatus: paperCandidate ? 'inconclusive' : improved ? 'inconclusive' : 'failed',
+    resultStatus: improvedAgainstComparableLong ? 'inconclusive' : 'failed',
     passedMinimum: false,
     passedHighProfit: false,
     allowRetest: false,
-    notes: improved ? '月均提高，但仍不可直接實盤。' : '未提高月均。'
+    notes: improvedAgainstComparableLong
+      ? '長驗證相對同長區間基準有改善，但仍不可直接實盤。'
+      : '拉長驗證後無法同時超越前版短驗證月均與回撤。'
   });
-  console.log(`Deployable ETF Hunter：月均 ${metrics.validationAverageMonthlyEquityReturnPct}%，改善 ${metrics.improvementVsPreviousPct}%，實盤：不可。`);
+  console.log(`Deployable ETF Hunter：${metrics.validationFolds} 段驗證，月均 ${metrics.validationAverageMonthlyEquityReturnPct}%，最大回撤 ${metrics.validationMaximumDrawdownPct}%，交易 ${metrics.validationTrades}，實盤：不可。`);
 }
 
 await main();

@@ -1,0 +1,50 @@
+{
+  "generatedAt": "2026-06-25T15:54:46.781Z",
+  "branch": "institutional-data-fetcher-v1",
+  "status": "IMPROVED",
+  "priorBestMonthlyPct": 2.3954,
+  "targetMonthlyPct": 10,
+  "configsTested": 6,
+  "folds": [
+    {
+      "trainStart": "2022-03-01",
+      "trainEnd": "2025-02-28",
+      "validationStart": "2025-03-01",
+      "validationEnd": "2026-02-28",
+      "selectedConfig": "risk_off_cash_0050_100",
+      "selectedName": "0050 風險盤空手",
+      "trainMonthly": 0.2836,
+      "validationMonthly": 4.2485,
+      "validationTrades": 3
+    },
+    {
+      "trainStart": "2023-03-01",
+      "trainEnd": "2026-02-28",
+      "validationStart": "2026-03-01",
+      "validationEnd": "2026-06-09",
+      "selectedConfig": "risk_off_cash_0050_100",
+      "selectedName": "0050 風險盤空手",
+      "trainMonthly": 1.7587,
+      "validationMonthly": 1.763,
+      "validationTrades": 4
+    }
+  ],
+  "metrics": {
+    "validationTrades": 7,
+    "validationAverageMonthlyEquityReturnPct": 3.6271,
+    "improvementVsPreviousPct": 1.2317,
+    "targetGapPct": 6.3729,
+    "validationAnnualizedReturnPct": 49.6273,
+    "validationProfitFactor": 5.5275,
+    "validationMaximumDrawdownPct": -9.3058,
+    "validationWinRatePct": 57.1429,
+    "orderIntents": 14
+  },
+  "readiness": {
+    "paperTradingAllowed": false,
+    "paperCandidateAfterHumanApproval": true,
+    "liveTradingAllowed": false,
+    "brokerApiAllowed": false,
+    "reason": "研究結果高於前版，但仍必須先紙上交易，不可直接實盤。"
+  }
+}

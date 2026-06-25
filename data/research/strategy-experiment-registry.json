@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
   "generatedAt": "2026-06-16T16:13:34.718Z",
-  "updatedAt": "2026-06-25T12:28:22.126Z",
+  "updatedAt": "2026-06-25T15:48:18.081Z",
   "experiments": [
     {
       "experimentId": "EXP-20260616161335-34c09c70",
@@ -7329,6 +7329,60 @@
       "passedHighProfit": false,
       "allowRetest": false,
       "notes": "Return Improvement Hunter v1：先找能提高月均的 ETF 基準策略。"
+    },
+    {
+      "experimentId": "EXP-20260625154818-9256195f",
+      "createdAt": "2026-06-25T15:48:18.081Z",
+      "strategyId": "deployable_etf_hunter_v1",
+      "strategyFamilyId": "deployable_etf_hunter_v1:9e6fe9ff140a38bf0d110aff",
+      "experimentHash": "9256195fbb30503286f87c87",
+      "dataSources": [
+        "0050_daily_ohlcv",
+        "00632R_daily_ohlcv",
+        "market-regime"
+      ],
+      "parameters": {
+        "version": "v1",
+        "configs": [
+          "hold_0050_100",
+          "ma60_0050_100",
+          "ma20_momentum_0050_100",
+          "risk_off_cash_0050_100",
+          "inverse_hedge_switch",
+          "half_risk_switch"
+        ],
+        "startDate": "2022-03-01"
+      },
+      "trainPeriod": {
+        "months": 36
+      },
+      "validationPeriod": {
+        "months": 12,
+        "stepMonths": 12
+      },
+      "costModel": {
+        "buyCost": 0.002925,
+        "sellCost": 0.005925
+      },
+      "executionModel": "next-open ETF execution, cash-only",
+      "metrics": {
+        "validationTrades": 2,
+        "validationAverageMonthlyEquityReturnPct": 5.504,
+        "improvementVsPreviousPct": 3.1086,
+        "targetGapPct": 4.496,
+        "validationAnnualizedReturnPct": 82.4041,
+        "validationProfitFactor": null,
+        "validationMaximumDrawdownPct": -22.7471,
+        "validationWinRatePct": 100,
+        "orderIntents": 4
+      },
+      "resultStatus": "inconclusive",
+      "failureReason": null,
+      "overfitFlag": false,
+      "passedMinimum": false,
+      "passedHighProfit": false,
+      "allowRetest": false,
+      "notes": "月均提高，但仍不可直接實盤。"
     }
   ]
 }

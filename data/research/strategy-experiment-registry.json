@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
   "generatedAt": "2026-06-16T16:13:34.718Z",
-  "updatedAt": "2026-06-25T11:08:42.967Z",
+  "updatedAt": "2026-06-25T11:16:47.707Z",
   "experiments": [
     {
       "experimentId": "EXP-20260616161335-34c09c70",
@@ -6711,6 +6711,82 @@
       "passedHighProfit": false,
       "allowRetest": false,
       "notes": "Edge Rotation Hunter v1：強勢盤滿曝險輪動，弱勢盤空手。"
+    },
+    {
+      "experimentId": "EXP-20260625111647-b38cd2fd",
+      "createdAt": "2026-06-25T11:16:47.707Z",
+      "strategyId": "tactical_market_hunter_v1",
+      "strategyFamilyId": "tactical_market_hunter_v1:6a392eb301b4e1457cc18a61",
+      "experimentHash": "b38cd2fd32202b4edd0879db",
+      "dataSources": [
+        "0050_daily_ohlcv",
+        "00632R_daily_ohlcv",
+        "market_regime"
+      ],
+      "parameters": {
+        "configs": [
+          "bull_cash_defense",
+          "bull_inverse_defense",
+          "momentum_only",
+          "panic_rebound"
+        ],
+        "range": {
+          "start": "2016-03-22",
+          "end": "2026-06-09"
+        }
+      },
+      "trainPeriod": {
+        "months": 36
+      },
+      "validationPeriod": {
+        "months": 12,
+        "stepMonths": 12
+      },
+      "costModel": {
+        "buyFeePct": 0.1425,
+        "sellFeePct": 0.1425,
+        "sellTaxPct": 0.3,
+        "slippagePct": 0.15
+      },
+      "executionModel": {
+        "entry": "next_open_market",
+        "settlement": "T+2",
+        "simulator": "shared"
+      },
+      "metrics": {
+        "validationTrades": 70,
+        "validationAverageMonthlyEquityReturnPct": -0.0603,
+        "targetGapPct": 10.0603,
+        "validationAnnualizedReturnPct": -0.7268,
+        "validationProfitFactor": 0.4263,
+        "validationMaximumDrawdownPct": -3.5415,
+        "validationWinRatePct": 24.2857,
+        "marketAverageMonthlyReturnPct": 2.1326,
+        "orderIntents": 70,
+        "supportedActions": [
+          "BUY",
+          "SELL",
+          "HOLD",
+          "SKIP"
+        ],
+        "checks": {
+          "tradeCount": true,
+          "beatsMarket": false,
+          "profitFactor": false,
+          "drawdown": true,
+          "positiveAfterCosts": false,
+          "actionsAndIntents": true
+        },
+        "passed": false,
+        "nearTenPercent": false
+      },
+      "resultStatus": "failed",
+      "failureReason": "Validation 未達完整門檻。",
+      "overfitFlag": false,
+      "passedMinimum": false,
+      "passedHighProfit": false,
+      "allowRetest": false,
+      "notes": "Tactical Market Hunter v1：0050 / 00632R / 現金市場切換。"
     }
   ]
 }

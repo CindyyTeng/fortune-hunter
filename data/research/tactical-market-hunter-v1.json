@@ -1,0 +1,53 @@
+{
+  "generatedAt": "2026-06-25T11:16:47.710Z",
+  "branch": "institutional-data-fetcher-v1",
+  "status": "COMPLETED",
+  "search": {
+    "configs": [
+      "多頭持有 0050／弱勢空手",
+      "多頭 0050／空頭反向 ETF",
+      "大盤 20/60 日動能順勢",
+      "恐慌後反彈 0050 短打"
+    ],
+    "folds": 8
+  },
+  "bestStrategy": {
+    "selectedStrategies": [
+      "恐慌後反彈 0050 短打",
+      "多頭持有 0050／弱勢空手"
+    ],
+    "metrics": {
+      "validationTrades": 70,
+      "validationAverageMonthlyEquityReturnPct": -0.0603,
+      "targetGapPct": 10.0603,
+      "validationAnnualizedReturnPct": -0.7268,
+      "validationProfitFactor": 0.4263,
+      "validationMaximumDrawdownPct": -3.5415,
+      "validationWinRatePct": 24.2857,
+      "marketAverageMonthlyReturnPct": 2.1326,
+      "orderIntents": 70,
+      "supportedActions": [
+        "BUY",
+        "SELL",
+        "HOLD",
+        "SKIP"
+      ],
+      "checks": {
+        "tradeCount": true,
+        "beatsMarket": false,
+        "profitFactor": false,
+        "drawdown": true,
+        "positiveAfterCosts": false,
+        "actionsAndIntents": true
+      },
+      "passed": false,
+      "nearTenPercent": false
+    }
+  },
+  "readiness": {
+    "paperTradingAllowed": false,
+    "liveTradingAllowed": false,
+    "realBrokerAllowed": false
+  },
+  "conclusion": "沒有策略通過 validation；Tactical Market Hunter v1 月均 -0.0603%，距離 10% 還差 10.0603 個百分點。"
+}

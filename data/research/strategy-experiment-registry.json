@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
   "generatedAt": "2026-06-16T16:13:34.718Z",
-  "updatedAt": "2026-06-25T11:37:16.289Z",
+  "updatedAt": "2026-06-25T12:28:22.126Z",
   "experiments": [
     {
       "experimentId": "EXP-20260616161335-34c09c70",
@@ -7096,6 +7096,191 @@
         "priorBestMonthlyPct": 0.648,
         "implementationVersion": "aligned-validation-window-v4",
         "configs": [
+          "buy_hold_0050",
+          "bull_hold_0050",
+          "strong_momentum_0050",
+          "defensive_trend_0050",
+          "theme_momentum_0050",
+          "cash_or_inverse"
+        ]
+      },
+      "trainPeriod": {
+        "months": 36
+      },
+      "validationPeriod": {
+        "months": 12,
+        "stepMonths": 12
+      },
+      "costModel": {
+        "buyFeePct": 0.1425,
+        "sellFeePct": 0.1425,
+        "sellTaxPct": 0.3,
+        "slippagePct": 0.15
+      },
+      "executionModel": {
+        "entry": "next_open_market",
+        "settlement": "T+2",
+        "simulator": "shared"
+      },
+      "metrics": {
+        "validationTrades": 13,
+        "validationAverageMonthlyEquityReturnPct": 2.3954,
+        "priorBestMonthlyPct": 0.648,
+        "improvementPct": 1.7474,
+        "targetGapPct": 7.6045,
+        "validationAnnualizedReturnPct": 31.5915,
+        "validationProfitFactor": 7.0637,
+        "validationMaximumDrawdownPct": -7.2503,
+        "validationWinRatePct": 76.9231,
+        "benchmarkAverageMonthlyReturnPct": 5.3115,
+        "orderIntents": 13,
+        "improved": true,
+        "nearTenPercent": false
+      },
+      "resultStatus": "inconclusive",
+      "failureReason": null,
+      "overfitFlag": false,
+      "passedMinimum": false,
+      "passedHighProfit": false,
+      "allowRetest": false,
+      "notes": "Return Improvement Hunter v1：先找能提高月均的 ETF 基準策略。"
+    },
+    {
+      "experimentId": "EXP-20260625122610-090e3396",
+      "createdAt": "2026-06-25T12:26:10.304Z",
+      "strategyId": "live_ready_hunter_v1",
+      "strategyFamilyId": "live_ready_hunter_v1:6d6276ff21c7e6b22a863ad5",
+      "experimentHash": "090e339699cf690ddfb5233f",
+      "dataSources": [
+        "OHLCV",
+        "0050",
+        "market-regime",
+        "trade-value",
+        "relative-strength"
+      ],
+      "parameters": {
+        "version": "v1",
+        "configsTested": 108,
+        "startDate": "2022-03-01"
+      },
+      "trainPeriod": {
+        "months": 36
+      },
+      "validationPeriod": {
+        "months": 12,
+        "stepMonths": 12
+      },
+      "costModel": "fees-tax-slippage",
+      "executionModel": "shared-simulator-next-open-T+2",
+      "metrics": {
+        "validationTrades": 137,
+        "validationAverageMonthlyEquityReturnPct": 0.3985,
+        "improvementVsPreviousPct": -1.9969,
+        "targetGapPct": 9.6015,
+        "validationAnnualizedReturnPct": 3.8243,
+        "validationProfitFactor": 1.1602,
+        "validationMaximumDrawdownPct": -7.9694,
+        "validationWinRatePct": 43.0657,
+        "validationNegativeMonths": 6,
+        "orderIntents": 137
+      },
+      "resultStatus": "failed",
+      "failureReason": null,
+      "overfitFlag": false,
+      "passedMinimum": false,
+      "passedHighProfit": false,
+      "allowRetest": false,
+      "notes": "未提高月均。"
+    },
+    {
+      "experimentId": "EXP-20260625122740-58ad4a15",
+      "createdAt": "2026-06-25T12:27:40.224Z",
+      "strategyId": "return_improvement_hunter_v1",
+      "strategyFamilyId": "return_improvement_hunter_v1:c0ff0c5afcf0a179bd2b3a8e",
+      "experimentHash": "58ad4a15517aae83a1c3a62e",
+      "dataSources": [
+        "0050_daily_ohlcv",
+        "00632R_daily_ohlcv",
+        "market_regime"
+      ],
+      "parameters": {
+        "range": {
+          "start": "2022-03-01",
+          "end": "2026-06-09"
+        },
+        "priorBestMonthlyPct": 0.648,
+        "implementationVersion": "aligned-validation-window-v4",
+        "configs": [
+          "raw_buy_hold_0050",
+          "buy_hold_0050",
+          "bull_hold_0050",
+          "strong_momentum_0050",
+          "defensive_trend_0050",
+          "theme_momentum_0050",
+          "cash_or_inverse"
+        ]
+      },
+      "trainPeriod": {
+        "months": 36
+      },
+      "validationPeriod": {
+        "months": 12,
+        "stepMonths": 12
+      },
+      "costModel": {
+        "buyFeePct": 0.1425,
+        "sellFeePct": 0.1425,
+        "sellTaxPct": 0.3,
+        "slippagePct": 0.15
+      },
+      "executionModel": {
+        "entry": "next_open_market",
+        "settlement": "T+2",
+        "simulator": "shared"
+      },
+      "metrics": {
+        "validationTrades": 13,
+        "validationAverageMonthlyEquityReturnPct": 2.3954,
+        "priorBestMonthlyPct": 0.648,
+        "improvementPct": 1.7474,
+        "targetGapPct": 7.6045,
+        "validationAnnualizedReturnPct": 31.5915,
+        "validationProfitFactor": 7.0637,
+        "validationMaximumDrawdownPct": -7.2503,
+        "validationWinRatePct": 76.9231,
+        "benchmarkAverageMonthlyReturnPct": 5.3115,
+        "orderIntents": 13,
+        "improved": true,
+        "nearTenPercent": false
+      },
+      "resultStatus": "inconclusive",
+      "failureReason": null,
+      "overfitFlag": false,
+      "passedMinimum": false,
+      "passedHighProfit": false,
+      "allowRetest": false,
+      "notes": "Return Improvement Hunter v1：先找能提高月均的 ETF 基準策略。"
+    },
+    {
+      "experimentId": "EXP-20260625122822-b663090c",
+      "createdAt": "2026-06-25T12:28:22.126Z",
+      "strategyId": "return_improvement_hunter_v1",
+      "strategyFamilyId": "return_improvement_hunter_v1:c0ff0c5afcf0a179bd2b3a8e",
+      "experimentHash": "b663090c1a8c67029e0c1757",
+      "dataSources": [
+        "0050_daily_ohlcv",
+        "00632R_daily_ohlcv",
+        "market_regime"
+      ],
+      "parameters": {
+        "range": {
+          "start": "2022-03-01",
+          "end": "2026-06-09"
+        },
+        "priorBestMonthlyPct": 0.648,
+        "implementationVersion": "full-cash-etf-v5",
+        "configs": [
+          "raw_buy_hold_0050",
           "buy_hold_0050",
           "bull_hold_0050",
           "strong_momentum_0050",

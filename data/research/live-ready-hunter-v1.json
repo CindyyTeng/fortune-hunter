@@ -1,0 +1,51 @@
+{
+  "generatedAt": "2026-06-25T12:26:10.300Z",
+  "branch": "institutional-data-fetcher-v1",
+  "status": "NO_IMPROVEMENT",
+  "priorBestMonthlyPct": 2.3954,
+  "targetMonthlyPct": 10,
+  "configsTested": 108,
+  "folds": [
+    {
+      "trainStart": "2022-03-01",
+      "trainEnd": "2025-02-28",
+      "validationStart": "2025-03-01",
+      "validationEnd": "2026-02-28",
+      "selectedConfig": "trend_0050_70_leader_pullback_top3_hold3_pct8",
+      "selectedName": "0050 趨勢底倉 70% + 領漲股拉回再轉強 Top 3 持有 3 日",
+      "trainMonthly": -0.0918,
+      "validationMonthly": 0.6461,
+      "validationTrades": 130
+    },
+    {
+      "trainStart": "2023-03-01",
+      "trainEnd": "2026-02-28",
+      "validationStart": "2026-03-01",
+      "validationEnd": "2026-06-09",
+      "selectedConfig": "trend_0050_70_leader_pullback_top3_hold7_pct8",
+      "selectedName": "0050 趨勢底倉 70% + 領漲股拉回再轉強 Top 3 持有 7 日",
+      "trainMonthly": 0.168,
+      "validationMonthly": -0.3441,
+      "validationTrades": 7
+    }
+  ],
+  "metrics": {
+    "validationTrades": 137,
+    "validationAverageMonthlyEquityReturnPct": 0.3985,
+    "improvementVsPreviousPct": -1.9969,
+    "targetGapPct": 9.6015,
+    "validationAnnualizedReturnPct": 3.8243,
+    "validationProfitFactor": 1.1602,
+    "validationMaximumDrawdownPct": -7.9694,
+    "validationWinRatePct": 43.0657,
+    "validationNegativeMonths": 6,
+    "orderIntents": 137
+  },
+  "readiness": {
+    "paperTradingAllowed": false,
+    "liveTradingAllowed": false,
+    "brokerApiAllowed": false,
+    "paperGateWouldPassAfterHumanApproval": false,
+    "reason": "未達可進紙上交易門檻，不可實盤。"
+  }
+}

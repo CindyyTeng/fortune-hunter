@@ -38,6 +38,15 @@ function enrich(payload) {
 
 const configs = [
   {
+    id: 'raw_buy_hold_0050',
+    name: '0050 長線底倉持有',
+    signal: () => 'benchmark',
+    maxHoldingDays: 420,
+    positionPct: 100,
+    stopDistancePct: 35,
+    accountRiskPct: 100
+  },
+  {
     id: 'buy_hold_0050',
     name: '全期持有 0050',
     signal: row => row.close > row.ma60 ? 'benchmark' : null,
@@ -116,7 +125,7 @@ function candidateFor(rows, inverseRows, row, config, side, rowByDate) {
   const symbol = side === 'inverse' ? '00632R.TW' : '0050.TW';
   const name = side === 'inverse' ? '元大台灣50反1' : '元大台灣50';
   const next = futureBars[0];
-  const stopDistancePct = side === 'inverse' ? 6 : 5;
+  const stopDistancePct = config.stopDistancePct ?? (side === 'inverse' ? 6 : 5);
   const setup = [config.name, side === 'inverse' ? '空頭用反向 ETF' : '持有 0050'];
   const decision = {
     date: next.date,
@@ -146,7 +155,7 @@ function candidateFor(rows, inverseRows, row, config, side, rowByDate) {
     maxHoldingDays: config.maxHoldingDays,
     trailingStopRule: config.id === 'buy_hold_0050' ? null : { triggerPct: 8, lockPct: 2, givebackPct: 5 },
     positionPct: config.positionPct,
-    accountRiskPct: side === 'inverse' ? 2 : 5,
+    accountRiskPct: config.accountRiskPct ?? (side === 'inverse' ? 2 : 5),
     setup,
     trigger: decision.trigger,
     invalidation: decision.invalidation,
@@ -229,7 +238,7 @@ function registryInput(range, metrics = null) {
     exitRules: ['規則出場與期末出場'],
     riskRules: ['ETF 單檔 90%', 'T+2', '不用槓桿'],
     blockedWhen: ['沒有訊號時持有現金'],
-    parameters: { range, priorBestMonthlyPct: PRIOR_BEST_MONTHLY, implementationVersion: 'aligned-validation-window-v4', configs: configs.map(row => row.id) },
+    parameters: { range, priorBestMonthlyPct: PRIOR_BEST_MONTHLY, implementationVersion: 'full-cash-etf-v5', configs: configs.map(row => row.id) },
     trainPeriod: { months: 36 },
     validationPeriod: { months: 12, stepMonths: 12 },
     costModel: { buyFeePct: 0.1425, sellFeePct: 0.1425, sellTaxPct: 0.3, slippagePct: 0.15 },
@@ -271,7 +280,7 @@ async function main() {
         endDate: fold.trainEnd,
         strategyId: `return-improvement:${config.id}`,
         maxOpenPositions: 1,
-        riskRules: { maxAccountRiskPct: 5, maxSinglePositionPct: 100, exposureLimits: { BULL_TREND: 100, THEME_MOMENTUM: 100, BULL_PULLBACK: 100, RANGE_BOUND: 100, HIGH_VOLATILITY: 100, BEAR_DEFENSE: 100 } }
+        riskRules: { maxAccountRiskPct: 100, maxSinglePositionPct: 100, exposureLimits: { BULL_TREND: 100, THEME_MOMENTUM: 100, BULL_PULLBACK: 100, RANGE_BOUND: 100, HIGH_VOLATILITY: 100, BEAR_DEFENSE: 100 } }
       });
       const value = score(train.summary);
       if (!best || value > best.score) best = { config, score: value, summary: train.summary };
@@ -281,7 +290,7 @@ async function main() {
       endDate: fold.validationEnd,
       strategyId: `return-improvement:${best.config.id}`,
       maxOpenPositions: 1,
-      riskRules: { maxAccountRiskPct: 5, maxSinglePositionPct: 100, exposureLimits: { BULL_TREND: 100, THEME_MOMENTUM: 100, BULL_PULLBACK: 100, RANGE_BOUND: 100, HIGH_VOLATILITY: 100, BEAR_DEFENSE: 100 } }
+      riskRules: { maxAccountRiskPct: 100, maxSinglePositionPct: 100, exposureLimits: { BULL_TREND: 100, THEME_MOMENTUM: 100, BULL_PULLBACK: 100, RANGE_BOUND: 100, HIGH_VOLATILITY: 100, BEAR_DEFENSE: 100 } }
     });
     foldResults.push({ ...fold, selectedConfig: best.config, trainSummary: best.summary, validation, benchmarkReturns: monthlyBenchmark(rows, fold.validationStart, fold.validationEnd) });
     console.log(`${fold.validationStart}：${best.config.name}，月均 ${validation.summary.averageMonthlyEquityReturnPct}%`);

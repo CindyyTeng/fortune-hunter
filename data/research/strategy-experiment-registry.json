@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
   "generatedAt": "2026-06-16T16:13:34.718Z",
-  "updatedAt": "2026-06-29T18:21:14.426Z",
+  "updatedAt": "2026-06-29T19:18:39.364Z",
   "experiments": [
     {
       "experimentId": "EXP-20260616161335-34c09c70",
@@ -8429,6 +8429,61 @@
       "passedHighProfit": false,
       "allowRetest": false,
       "notes": "未達門檻，不可紙上交易或實盤。"
+    },
+    {
+      "experimentId": "EXP-20260629191839-75dcce44",
+      "createdAt": "2026-06-29T19:18:39.364Z",
+      "strategyId": "deployable_core_satellite_v1",
+      "strategyFamilyId": "deployable_core_satellite_v1:81a758a05922897c232b5a08",
+      "experimentHash": "75dcce448c3ae464b23cd785",
+      "dataSources": [
+        "0050_TWSE_daily",
+        "0052_TWSE_daily"
+      ],
+      "parameters": {
+        "configs": 972,
+        "symbols": [
+          "0050.TW",
+          "0052.TW"
+        ]
+      },
+      "trainPeriod": {
+        "months": 36
+      },
+      "validationPeriod": {
+        "months": 12,
+        "stepMonths": 12
+      },
+      "costModel": {
+        "buyFeePct": 0.1425,
+        "sellFeePct": 0.1425,
+        "sellTaxPct": 0.1,
+        "buySlippagePct": 0.15,
+        "sellSlippagePct": 0.15,
+        "minimumFee": 20,
+        "boardLotShares": 1000
+      },
+      "executionModel": "T 日收盤訊號、T+1 開盤、T+2 可用資金",
+      "metrics": {
+        "startDate": "2013-11-01",
+        "endDate": "2025-10-31",
+        "endingEquity": 6218763,
+        "averageMonthlyEquityReturnPct": 1.6415,
+        "annualizedReturnPct": 19.5183,
+        "profitFactor": 8.1106,
+        "maximumDrawdownPct": -24.6706,
+        "winRatePct": 50,
+        "trades": 56,
+        "negativeMonths": 48,
+        "orderIntents": 115
+      },
+      "resultStatus": "inconclusive",
+      "failureReason": null,
+      "overfitFlag": false,
+      "passedMinimum": true,
+      "passedHighProfit": false,
+      "allowRetest": false,
+      "notes": "歷史門檻通過，但同一 validation 已反覆研究，只能進入全新期間紙上驗證。"
     }
   ]
 }

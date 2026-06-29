@@ -1,299 +1,314 @@
 import fs from 'node:fs/promises';
+import {
+  buyExecution,
+  sellExecution
+} from '../lib/execution-simulator.mjs';
 import { decisionToOrderIntent } from '../lib/order-intent-generator.mjs';
 import { buildMarketRegimes } from '../lib/market-regime.mjs';
 import { foldWindows, mean, round } from './research-core.mjs';
 import { appendExperiment } from './strategy-experiment-registry.mjs';
 
-const MARKET = new URL('../../data/market-regime-history-10y.json', import.meta.url);
+const CACHE = new URL('../../data/research/deployable-etf-history.json', import.meta.url);
+const EXISTING_MARKET = new URL('../../data/market-regime-history-10y.json', import.meta.url);
 const OUTPUT = new URL('../../data/research/deployable-etf-hunter-v1.json', import.meta.url);
 const REPORT = new URL('../../docs/DEPLOYABLE_ETF_HUNTER_V1.md', import.meta.url);
 const READINESS = new URL('../../docs/AUTO_TRADING_READINESS.md', import.meta.url);
 
-const START_DATE = '2016-06-01';
-const PRIOR_BEST_MONTHLY = 5.0003;
-const PRIOR_BEST_DRAWDOWN = -9.3993;
-const PRIOR_BEST_TRADES = 10;
-const LONG_BASELINE_MONTHLY = 2.2688;
-const LONG_BASELINE_DRAWDOWN = -16.8686;
-const LONG_BASELINE_TRADES = 54;
-const TARGET_MONTHLY = 10;
+const START_DATE = '2015-06-01';
 const INITIAL_CAPITAL = 1_000_000;
-const BUY_COST = 0.001425 + 0.0015;
-const SELL_COST = 0.001425 + 0.003 + 0.0015;
+const TARGET_MONTHLY = 10;
+const SETTLEMENT_DAYS = 2;
+const EXECUTION_COSTS = Object.freeze({
+  buyFeePct: 0.1425,
+  sellFeePct: 0.1425,
+  sellTaxPct: 0.3,
+  buySlippagePct: 0.15,
+  sellSlippagePct: 0.15,
+  minimumFee: 20,
+  boardLotShares: 1000
+});
+const SYMBOLS = Object.freeze({
+  benchmark: '0050.TW',
+  leveraged: '00631L.TW',
+  inverse: '00632R.TW'
+});
 
 const pct = (value, base) => Number.isFinite(value) && base ? (value / base - 1) * 100 : null;
-const readJson = url => fs.readFile(url, 'utf8').then(JSON.parse);
-const averageClose = (rows, index, days) => index >= days - 1
+const average = (rows, index, days) => index >= days - 1
   ? mean(rows.slice(index - days + 1, index + 1).map(row => row.close))
   : null;
 const monthSpan = (startDate, endDate) => {
-  const startYear = Number(startDate.slice(0, 4));
-  const startMonth = Number(startDate.slice(5, 7));
-  const endYear = Number(endDate.slice(0, 4));
-  const endMonth = Number(endDate.slice(5, 7));
-  return (endYear - startYear) * 12 + endMonth - startMonth;
+  const start = new Date(`${startDate}T00:00:00Z`);
+  const end = new Date(`${endDate}T00:00:00Z`);
+  return (end.getUTCFullYear() - start.getUTCFullYear()) * 12 + end.getUTCMonth() - start.getUTCMonth();
 };
 
-const configs = [
-  {
-    id: 'hold_0050_100',
-    name: '0050 全倉持有',
-    target: row => row.benchmark ? 'benchmark' : null,
-    positionPct: 100
-  },
-  {
-    id: 'hold_0050_80',
-    name: '0050 八成倉持有',
-    target: row => row.benchmark ? 'benchmark' : null,
-    positionPct: 80
-  },
-  {
-    id: 'hold_0050_70',
-    name: '0050 七成倉持有',
-    target: row => row.benchmark ? 'benchmark' : null,
-    positionPct: 70
-  },
-  {
-    id: 'hold_0050_trail10',
-    name: '0050 全倉持有高點回撤 10% 出場',
-    target: row => row.benchmark ? 'benchmark' : null,
-    positionPct: 100,
-    trailingExitPct: 10
-  },
-  {
-    id: 'hold_0050_trail12',
-    name: '0050 全倉持有高點回撤 12% 出場',
-    target: row => row.benchmark ? 'benchmark' : null,
-    positionPct: 100,
-    trailingExitPct: 12
-  },
-  {
-    id: 'hold_0050_trail15',
-    name: '0050 全倉持有高點回撤 15% 出場',
-    target: row => row.benchmark ? 'benchmark' : null,
-    positionPct: 100,
-    trailingExitPct: 15
-  },
-  {
-    id: 'ma60_0050_100',
-    name: '0050 MA60 趨勢持有',
-    target: row => row.close > row.ma60 && row.mom20 > 0 ? 'benchmark' : null,
-    positionPct: 100
-  },
-  {
-    id: 'ma20_momentum_0050_100',
-    name: '0050 MA20 動能持有',
-    target: row => row.close > row.ma20 && row.ma20 > row.ma60 && row.mom20 > 1 ? 'benchmark' : null,
-    positionPct: 100
-  },
-  {
-    id: 'risk_off_cash_0050_100',
-    name: '0050 風險盤空手',
-    target: row => ['BEAR_DEFENSE', 'HIGH_VOLATILITY'].includes(row.regime)
-      ? null
-      : row.close > row.ma60 && row.mom20 > -1 ? 'benchmark' : null,
-    positionPct: 100
-  },
-  {
-    id: 'risk_off_loose_0050_100',
-    name: '0050 寬鬆風險空手',
-    target: row => row.close > row.ma60 && row.mom20 > -4 && row.vol20 < 35 ? 'benchmark' : null,
-    positionPct: 100
-  },
-  {
-    id: 'ma120_soft_guard_0050_100',
-    name: '0050 MA120 柔性防守',
-    target: row => row.close > row.ma120 && row.mom20 > -6 && row.vol20 < 36 ? 'benchmark' : null,
-    positionPct: 100
-  },
-  {
-    id: 'ma20_or_ma60_guard_0050_100',
-    name: '0050 MA20/MA60 複合防守',
-    target: row => {
-      if (row.regime === 'BEAR_DEFENSE' && row.mom20 < -6) return null;
-      return (row.close > row.ma20 && row.mom5 > -5) || (row.close > row.ma60 && row.mom20 > -4) ? 'benchmark' : null;
-    },
-    positionPct: 100
-  },
-  {
-    id: 'inverse_hedge_switch',
-    name: '0050 多頭／反向 ETF 空頭切換',
-    target: row => {
-      if (row.close > row.ma60 && row.mom20 > 0) return 'benchmark';
-      if (row.close < row.ma60 && row.mom20 < -4 && ['BEAR_DEFENSE', 'HIGH_VOLATILITY'].includes(row.regime)) return 'inverse';
-      return null;
-    },
-    positionPct: 100
-  },
-  {
-    id: 'half_risk_switch',
-    name: '0050 防守降曝險切換',
-    target: row => row.close > row.ma60 && row.mom20 > 0 ? 'benchmark' : null,
-    positionPct: row => ['BULL_TREND', 'THEME_MOMENTUM'].includes(row.regime) ? 100 : 55
-  },
-  {
-    id: 'scaled_trend_guard',
-    name: '0050 分級曝險趨勢防守',
-    target: row => {
-      if (['BEAR_DEFENSE', 'HIGH_VOLATILITY'].includes(row.regime)) return null;
-      if (row.close > row.ma20 && row.mom20 > 1 && row.mom5 > -4) return 'benchmark_100';
-      if (row.close > row.ma60 && row.mom20 > -1) return 'benchmark_70';
-      if (row.close > row.ma200 && row.mom60 > 0) return 'benchmark_50';
-      return null;
-    },
-    positionPct: (row, target) => target === 'benchmark_100' ? 100 : target === 'benchmark_70' ? 70 : 50
-  },
-  {
-    id: 'ma20_fast_cash_guard',
-    name: '0050 MA20 快速防守',
-    target: row => row.close > row.ma20 && row.ma20 > row.ma60 && row.mom5 > -5 && row.vol20 < 32 ? 'benchmark' : null,
-    positionPct: 100
-  },
-  {
-    id: 'ma200_low_drawdown_80',
-    name: '0050 MA200 低回撤八成倉',
-    target: row => row.close > row.ma200 && row.mom20 > -4 && row.regime !== 'HIGH_VOLATILITY' ? 'benchmark' : null,
-    positionPct: 80
-  },
-  {
-    id: 'crash_inverse_small',
-    name: '0050 多頭持有／崩跌小反向',
-    target: row => {
-      if (row.close > row.ma60 && row.mom20 > -1 && !['BEAR_DEFENSE', 'HIGH_VOLATILITY'].includes(row.regime)) return 'benchmark_100';
-      if (row.close < row.ma120 && row.mom20 < -8 && row.vol20 >= 28) return 'inverse';
-      return null;
-    },
-    positionPct: (row, target) => target === 'inverse' ? 35 : 100
-  },
-  {
-    id: 'fast_trend_guard_small_inverse',
-    name: '0050 快速趨勢防守／小反向',
-    target: row => {
-      const fastTrend = row.ma3 > row.ma20 && row.mom5 > -8;
-      const longTrend = row.close > row.ma200 && row.mom20 > -4 && row.regime !== 'HIGH_VOLATILITY';
-      if (fastTrend || longTrend) return 'benchmark';
-      if (row.close < row.ma60 && row.mom20 < -4 && row.vol20 > 25) return 'inverse';
-      return null;
-    },
-    positionPct: (row, target) => target === 'inverse' ? 20 : 100
-  },
-  {
-    id: 'fast_trend_guard_tiny_inverse',
-    name: '0050 快速趨勢防守／極小反向',
-    target: row => {
-      const fastTrend = row.ma3 > row.ma20 && row.mom5 > -10;
-      const longTrend = row.close > row.ma200 && row.mom20 > -4 && row.regime !== 'HIGH_VOLATILITY';
-      if (fastTrend || longTrend) return 'benchmark';
-      if (row.close < row.ma60 && row.mom20 < -8 && row.vol20 > 25) return 'inverse';
-      return null;
-    },
-    positionPct: (row, target) => target === 'inverse' ? 10 : 100
-  },
-  {
-    id: 'complete_fast_trend_micro_inverse',
-    name: '0050 完整驗證快速趨勢／微反向',
-    target: row => {
-      const fastTrend = row.ma3 > row.ma20 && row.mom5 > -16;
-      const longTrend = row.close > row.ma200 && row.mom20 > -8 && row.regime !== 'HIGH_VOLATILITY';
-      const softTrend = row.close > row.ma60 && row.mom20 > 0 && row.mom5 > -8;
-      if (fastTrend || longTrend) return 'benchmark';
-      if (softTrend) return 'benchmark_mid';
-      if (row.close < row.ma60 && row.mom20 < -6 && row.vol20 > 18) return 'inverse';
-      return null;
-    },
-    positionPct: (row, target) => target === 'inverse' ? 5 : target === 'benchmark_mid' ? 50 : 100
-  },
-  {
-    id: 'complete_fast_trend_defensive_micro_inverse',
-    name: '0050 完整驗證寬趨勢／低曝險微反向',
-    target: row => {
-      const fastTrend = row.ma3 > row.ma20 && row.mom5 > -20;
-      const longTrend = row.close > row.ma200 && row.mom20 > -8 && row.regime !== 'HIGH_VOLATILITY';
-      const softTrend = row.close > row.ma60 && row.mom20 > 2 && row.mom5 > -10 && row.regime !== 'HIGH_VOLATILITY';
-      if (fastTrend || longTrend) return 'benchmark';
-      if (softTrend) return 'benchmark_mid';
-      if (row.close < row.ma60 && row.mom20 < -6 && row.vol20 > 16) return 'inverse';
-      return null;
-    },
-    positionPct: (row, target) => target === 'inverse' ? 2 : target === 'benchmark_mid' ? 25 : 100
-  },
-  {
-    id: 'low_drawdown_momentum_70',
-    name: '0050 低回撤動能七成倉',
-    target: row => row.mom20 > 2 && row.vol20 < 24 ? 'benchmark' : null,
-    positionPct: 70
+const wait = milliseconds => new Promise(resolve => setTimeout(resolve, milliseconds));
+const number = value => Number(String(value).replaceAll(',', ''));
+
+function marketMonths() {
+  const rows = [];
+  const cursor = new Date(`${START_DATE}T00:00:00Z`);
+  const end = new Date();
+  cursor.setUTCDate(1);
+  while (cursor <= end) {
+    rows.push(`${cursor.getUTCFullYear()}${String(cursor.getUTCMonth() + 1).padStart(2, '0')}01`);
+    cursor.setUTCMonth(cursor.getUTCMonth() + 1);
   }
-];
+  return rows;
+}
+
+async function fetchTwseMonth(stockNo, date, attempt = 1) {
+  const url = `https://www.twse.com.tw/exchangeReport/STOCK_DAY?response=json&date=${date}&stockNo=${stockNo}`;
+  try {
+    const response = await fetch(url, {
+      headers: { 'user-agent': 'Mozilla/5.0', accept: 'application/json' },
+      signal: AbortSignal.timeout(30_000)
+    });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const payload = await response.json();
+    return payload.stat === 'OK' ? payload.data || [] : [];
+  } catch (error) {
+    if (attempt >= 3) throw new Error(`${stockNo} ${date} 下載失敗：${error.message}`);
+    await wait(500 * attempt);
+    return fetchTwseMonth(stockNo, date, attempt + 1);
+  }
+}
+
+function adjustSplits(rows) {
+  const adjusted = rows.map(row => ({ ...row }));
+  for (let index = 1; index < adjusted.length; index += 1) {
+    const ratio = adjusted[index].open / adjusted[index - 1].close;
+    if (ratio >= 0.4) continue;
+    const divisor = Math.round(1 / ratio);
+    if (divisor < 2 || divisor > 30) continue;
+    for (let prior = 0; prior < index; prior += 1) {
+      for (const field of ['open', 'high', 'low', 'close']) adjusted[prior][field] /= divisor;
+    }
+  }
+  return adjusted;
+}
+
+async function fetchHistory(symbol) {
+  const stockNo = symbol.replace('.TW', '');
+  const months = marketMonths();
+  const raw = [];
+  for (let index = 0; index < months.length; index += 4) {
+    const batch = months.slice(index, index + 4);
+    const payloads = await Promise.all(batch.map(date => fetchTwseMonth(stockNo, date)));
+    for (const data of payloads) raw.push(...data);
+    await wait(150);
+  }
+  const unique = new Map();
+  for (const row of raw) {
+    const [year, month, day] = row[0].split('/').map(Number);
+    const item = {
+      date: `${year + 1911}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`,
+      open: number(row[3]),
+      high: number(row[4]),
+      low: number(row[5]),
+      close: number(row[6])
+    };
+    if ([item.open, item.high, item.low, item.close].every(Number.isFinite)) unique.set(item.date, item);
+  }
+  return adjustSplits([...unique.values()].sort((left, right) => left.date.localeCompare(right.date)));
+}
+
+async function loadHistory() {
+  if (process.env.REFRESH_ETF_DATA !== '1') {
+    try {
+      const cached = JSON.parse(await fs.readFile(CACHE, 'utf8'));
+      if (Object.values(SYMBOLS).every(symbol => cached.series?.[symbol]?.length >= 2_000)) return cached;
+    } catch {
+      // 首次執行或快取不完整時才連線下載。
+    }
+  }
+  const existing = JSON.parse(await fs.readFile(EXISTING_MARKET, 'utf8'));
+  const normalize = rows => rows.map(row => ({
+    ...row,
+    high: row.high ?? Math.max(row.open, row.close),
+    low: row.low ?? Math.min(row.open, row.close)
+  }));
+  const leveraged = await fetchHistory(SYMBOLS.leveraged);
+  const payload = {
+    generatedAt: new Date().toISOString(),
+    source: '專案既有 0050／00632R 日線 + TWSE 官方 00631L 月行情（研究用途）',
+    symbols: SYMBOLS,
+    series: {
+      [SYMBOLS.benchmark]: normalize(existing.benchmark),
+      [SYMBOLS.leveraged]: leveraged,
+      [SYMBOLS.inverse]: normalize(existing.inverse)
+    }
+  };
+  await fs.writeFile(CACHE, `${JSON.stringify(payload)}\n`, 'utf8');
+  return payload;
+}
 
 function enrich(payload) {
-  const inverseByDate = new Map((payload.inverse || []).map(row => [row.date, row]));
-  const regimes = buildMarketRegimes(payload.benchmark || []);
+  const benchmark = payload.series[SYMBOLS.benchmark];
+  const leveraged = new Map(payload.series[SYMBOLS.leveraged].map(row => [row.date, row]));
+  const inverse = new Map(payload.series[SYMBOLS.inverse].map(row => [row.date, row]));
+  const regimes = buildMarketRegimes(benchmark);
   return regimes.map((row, index) => ({
     ...row,
-    benchmark: payload.benchmark[index],
-    inverse: inverseByDate.get(row.date),
-    ma3: averageClose(regimes, index, 3),
-    ma5: averageClose(regimes, index, 5),
-    ma10: averageClose(regimes, index, 10),
-    mom60: index >= 60 ? pct(row.close, regimes[index - 60].close) : null
-  })).filter(row => row.date >= START_DATE && row.ma200 && row.benchmark && row.inverse);
+    index,
+    ma5: average(regimes, index, 5),
+    ma10: average(regimes, index, 10),
+    mom60: index >= 60 ? pct(row.close, regimes[index - 60].close) : null,
+    bars: {
+      benchmark: benchmark[index],
+      leveraged: leveraged.get(row.date),
+      inverse: inverse.get(row.date)
+    }
+  })).filter(row => row.date >= START_DATE
+    && row.ma200
+    && row.bars.benchmark
+    && row.bars.leveraged
+    && row.bars.inverse);
 }
 
-function price(row, side, field) {
-  const source = side === 'inverse' ? row.inverse : row.benchmark;
-  return source?.[field] ?? null;
-}
-
-function monthlyRows(equityCurve, trades, initialCapital) {
-  const monthEnd = new Map();
-  for (const row of equityCurve) monthEnd.set(row.date.slice(0, 7), row.equity);
-  let prior = initialCapital;
-  return [...monthEnd].map(([month, equity]) => {
-    const equityReturnPct = pct(equity, prior);
-    prior = equity;
-    return {
-      month,
-      equity: round(equity, 0),
-      equityReturnPct: round(equityReturnPct),
-      trades: trades.filter(trade => trade.exitDate?.startsWith(month)).length
-    };
-  });
-}
-
-function summarize(equityCurve, trades, initialCapital, startDate, endDate) {
-  const monthly = monthlyRows(equityCurve, trades, initialCapital);
-  const gains = trades.filter(row => row.pnl > 0).reduce((sum, row) => sum + row.pnl, 0);
-  const losses = Math.abs(trades.filter(row => row.pnl <= 0).reduce((sum, row) => sum + row.pnl, 0));
-  let peak = initialCapital;
-  let maxDrawdown = 0;
-  for (const row of equityCurve) {
-    peak = Math.max(peak, row.equity);
-    maxDrawdown = Math.min(maxDrawdown, pct(row.equity, peak));
+function buildConfigs() {
+  const rows = [];
+  for (const baseMa of ['ma120', 'ma200']) {
+    for (const baseMomentum of [-6, -2]) {
+      for (const strongMomentum of [2, 5]) {
+        for (const maxStrongVol of [24, 28, 32]) {
+          for (const leveragedPct of [60, 80, 100]) {
+            for (const targetVol of [25, 35]) {
+              for (const drawdownGuardPct of [8, 10]) {
+              rows.push({
+                id: `${baseMa}_m${baseMomentum}_strong${strongMomentum}_vol${maxStrongVol}_lev${leveragedPct}_tv${targetVol}_dd${drawdownGuardPct}`,
+                name: `趨勢波動縮放 ${baseMa.toUpperCase()}／正2 ${leveragedPct}%／目標波動 ${targetVol}%`,
+                baseMa,
+                baseMomentum,
+                strongMomentum,
+                maxStrongVol,
+                leveragedPct,
+                targetVol,
+                benchmarkPct: 100,
+                inversePct: 0,
+                drawdownGuardPct
+              });
+              }
+            }
+          }
+        }
+      }
+    }
   }
-  const compounded = monthly.reduce((value, row) => value * (1 + row.equityReturnPct / 100), 1);
-  return {
-    startDate,
-    endDate,
-    endingEquity: round(equityCurve.at(-1)?.equity ?? initialCapital, 0),
-    averageMonthlyEquityReturnPct: round(mean(monthly.map(row => row.equityReturnPct)) || 0),
-    annualizedReturnPct: round(monthly.length ? (compounded ** (12 / monthly.length) - 1) * 100 : 0),
-    profitFactor: losses ? round(gains / losses) : gains > 0 ? null : 0,
-    maximumDrawdownPct: round(maxDrawdown),
-    winRatePct: round(trades.filter(row => row.pnl > 0).length / Math.max(1, trades.length) * 100),
-    trades: trades.length,
-    monthly
-  };
+  for (const baseMa of ['ma60', 'ma120', 'ma200']) {
+    for (const baseMomentum of [-6, -2, 2]) {
+      for (const benchmarkPct of [90, 100]) {
+        for (const drawdownGuardPct of [8, 10, 99]) {
+        rows.push({
+          id: `benchmark_only_${baseMa}_m${baseMomentum}_pct${benchmarkPct}_dd${drawdownGuardPct}`,
+          name: `純 0050 趨勢 ${baseMa.toUpperCase()}／曝險 ${benchmarkPct}%`,
+          baseMa,
+          baseMomentum,
+          strongMomentum: 99,
+          maxStrongVol: 0,
+          leveragedPct: 0,
+          targetVol: 20,
+          benchmarkPct,
+          inversePct: 0,
+          drawdownGuardPct,
+          benchmarkOnly: true
+        });
+        }
+      }
+    }
+  }
+  return rows;
 }
 
-function makeIntent(date, symbol, action, strategyId, referencePrice, positionPct) {
+const configs = buildConfigs();
+
+function desiredTarget(row, config, risk) {
+  if (risk.cooldown > 0 || (!config.legacyMode && risk.monthlyBlocked)) return { side: null, positionPct: 0, reason: '帳戶風控熔斷' };
+  const strongTrend = row.close > row.ma20
+    && row.ma20 > row.ma60
+    && row.ma60Slope > 0
+    && row.mom20 >= config.strongMomentum
+    && row.mom60 > 0
+    && row.vol20 <= config.maxStrongVol
+    && !['BEAR_DEFENSE', 'HIGH_VOLATILITY'].includes(row.regime);
+  if (strongTrend && !config.benchmarkOnly) {
+    const targetPosition = config.targetVol / Math.max(12, row.vol20 * 2) * 100;
+    const positionPct = Math.max(30, Math.round(Math.min(config.leveragedPct, targetPosition) / 5) * 5);
+    return { side: 'leveraged', positionPct, reason: '低波動強趨勢，受控持有台灣50正2' };
+  }
+  const holdingRiskAsset = Boolean(risk.position) && !config.legacyMode;
+  const baseThreshold = config.legacyMode ? 1 : holdingRiskAsset ? 0.98 : 1.01;
+  const momentumThreshold = config.legacyMode ? config.baseMomentum : holdingRiskAsset ? config.baseMomentum - 2 : config.baseMomentum;
+  const baseTrend = row.close > row[config.baseMa] * baseThreshold
+    && row.mom20 >= momentumThreshold
+    && row.mom60 > -8
+    && row.regime !== 'HIGH_VOLATILITY';
+  if (baseTrend) {
+    const volatilityScale = Math.min(1, (config.baseTargetVol ?? 20) / Math.max(12, row.vol20));
+    const positionPct = Math.max(40, Math.round(config.benchmarkPct * volatilityScale / 5) * 5);
+    return { side: 'benchmark', positionPct, reason: '中長期趨勢仍正向，持有 0050' };
+  }
+  return { side: null, positionPct: 0, reason: '趨勢或波動條件不允許進場' };
+}
+
+function markEquity(state, row, field = 'close') {
+  const unsettled = state.unsettled.reduce((sum, item) => sum + item.amount, 0);
+  const positionValue = state.position
+    ? state.position.quantity * row.bars[state.position.side][field]
+    : 0;
+  return state.cash + unsettled + positionValue;
+}
+
+function sellPosition(state, row, quantity, reason) {
+  if (!state.position || quantity <= 0) return;
+  const sell = sellExecution(row.bars[state.position.side].open, quantity, EXECUTION_COSTS);
+  const cost = state.position.averageCost * quantity;
+  const pnl = sell.net - cost;
+  state.unsettled.push({ releaseIndex: row.index + SETTLEMENT_DAYS, amount: sell.net });
+  state.trades.push({
+    symbol: SYMBOLS[state.position.side],
+    side: state.position.side,
+    entryDate: state.position.entryDate,
+    exitDate: row.date,
+    quantity,
+    pnl: round(pnl),
+    reason
+  });
+  if (state.emitIntents) state.intents.push(makeIntent(row.date, SYMBOLS[state.position.side], 'SELL', state.config.id, sell.fillPrice, 0, reason));
+  state.position.quantity -= quantity;
+  if (state.position.quantity <= 0) state.position = null;
+}
+
+function buyPosition(state, row, side, budget, reason) {
+  const open = row.bars[side].open;
+  let quantity = Math.floor(Math.min(state.cash, budget) / (open * (1 + 0.004)));
+  while (quantity > 0 && buyExecution(open, quantity, EXECUTION_COSTS).total > Math.min(state.cash, budget)) quantity -= 1;
+  if (quantity <= 0) return;
+  const buy = buyExecution(open, quantity, EXECUTION_COSTS);
+  const priorQuantity = state.position?.quantity || 0;
+  const priorCost = state.position ? state.position.averageCost * priorQuantity : 0;
+  state.cash -= buy.total;
+  state.position = {
+    side,
+    quantity: priorQuantity + quantity,
+    averageCost: (priorCost + buy.total) / (priorQuantity + quantity),
+    entryDate: state.position?.entryDate || row.date
+  };
+  if (state.emitIntents) {
+    state.intents.push(makeIntent(row.date, SYMBOLS[side], 'BUY', state.config.id, buy.fillPrice, budget / Math.max(1, markEquity(state, row, 'open')) * 100, reason));
+  }
+}
+
+function makeIntent(date, symbol, action, strategyId, referencePrice, positionPct, reason) {
   return decisionToOrderIntent({
     date,
     symbol,
     action,
-    strategyId,
-    setup: ['ETF 可實盤候選'],
-    trigger: ['收盤訊號，隔日開盤執行'],
-    invalidation: ['策略目標曝險改變即出場或切換'],
+    strategyId: `deployable_etf_hunter_v1:${strategyId}`,
+    setup: ['台灣50趨勢與波動度分級'],
+    trigger: ['T 日收盤確認，T+1 開盤以可成交限價執行'],
+    invalidation: ['趨勢失效、波動升高或帳戶回撤熔斷'],
     entryPlan: {
       referencePrice,
       maximumAcceptablePrice: referencePrice * 1.004,
@@ -305,285 +320,343 @@ function makeIntent(date, symbol, action, strategyId, referencePrice, positionPc
       stopPrice: null,
       targetPrice: null,
       riskRewardRatio: null,
-      positionBudget: positionPct / 100 * INITIAL_CAPITAL,
-      riskBudget: positionPct / 100 * INITIAL_CAPITAL
+      positionBudget: INITIAL_CAPITAL * positionPct / 100,
+      riskBudget: INITIAL_CAPITAL * 0.005
     },
-    reason: 'ETF 策略目標部位調整',
-    warnings: ['研究用 order intent；需 paper trading 驗證後才可實盤。']
+    reason,
+    warnings: ['研究用 order intent；通過紙上交易前禁止實盤']
   }, { account: { equity: INITIAL_CAPITAL, availableCash: INITIAL_CAPITAL } });
 }
 
-function simulate(rows, config, startDate, endDate) {
+function summarize(state, initialCapital, startDate, endDate) {
+  const monthEnd = new Map();
+  for (const row of state.equityCurve) monthEnd.set(row.date.slice(0, 7), row.equity);
+  let prior = initialCapital;
+  const monthly = [...monthEnd].map(([month, equity]) => {
+    const equityReturnPct = pct(equity, prior);
+    prior = equity;
+    return { month, equity: round(equity, 0), equityReturnPct: round(equityReturnPct) };
+  });
+  const gains = state.trades.filter(row => row.pnl > 0).reduce((sum, row) => sum + row.pnl, 0);
+  const losses = Math.abs(state.trades.filter(row => row.pnl <= 0).reduce((sum, row) => sum + row.pnl, 0));
+  let peak = initialCapital;
+  let maximumDrawdownPct = 0;
+  for (const row of state.equityCurve) {
+    peak = Math.max(peak, row.equity);
+    maximumDrawdownPct = Math.min(maximumDrawdownPct, pct(row.equity, peak));
+  }
+  const compounded = monthly.reduce((value, row) => value * (1 + row.equityReturnPct / 100), 1);
+  return {
+    startDate,
+    endDate,
+    endingEquity: round(state.equityCurve.at(-1)?.equity ?? initialCapital, 0),
+    averageMonthlyEquityReturnPct: round(mean(monthly.map(row => row.equityReturnPct)) || 0),
+    annualizedReturnPct: round(monthly.length ? (compounded ** (12 / monthly.length) - 1) * 100 : 0),
+    profitFactor: losses ? round(gains / losses) : gains > 0 ? null : 0,
+    maximumDrawdownPct: round(maximumDrawdownPct),
+    winRatePct: round(state.trades.filter(row => row.pnl > 0).length / Math.max(1, state.trades.length) * 100),
+    trades: state.trades.length,
+    negativeMonths: monthly.filter(row => row.equityReturnPct < 0).length,
+    monthly
+  };
+}
+
+function compactSummary(summary) {
+  const { monthly, ...metrics } = summary;
+  return metrics;
+}
+
+function simulate(rows, schedule, startDate, endDate, initialCapital = INITIAL_CAPITAL, emitIntents = false) {
+  const state = {
+    cash: initialCapital,
+    unsettled: [],
+    position: null,
+    trades: [],
+    intents: [],
+    equityCurve: [],
+    peakEquity: initialCapital,
+    cooldown: 0,
+    currentMonth: null,
+    monthStartEquity: initialCapital,
+    monthlyBlocked: false,
+    config: schedule(startDate),
+    emitIntents
+  };
   const slice = rows.filter(row => row.date >= startDate && row.date <= endDate);
-  let cash = INITIAL_CAPITAL;
-  let position = null;
-  const trades = [];
-  const equityCurve = [];
-  const orderIntents = [];
-  for (let index = 0; index < slice.length - 1; index += 1) {
-    const row = slice[index];
-    const next = slice[index + 1];
-    let wanted = config.target(row);
-    const wantedPct = typeof config.positionPct === 'function' ? config.positionPct(row, wanted) : config.positionPct;
-    if (position && config.trailingExitPct) {
-      const currentClose = price(row, position.side, 'close');
-      position.peakPrice = Math.max(position.peakPrice ?? position.entryPrice, currentClose);
-      if (pct(currentClose, position.peakPrice) <= -config.trailingExitPct) wanted = null;
+  for (let offset = 1; offset < slice.length; offset += 1) {
+    const signalRow = slice[offset - 1];
+    const row = slice[offset];
+    state.config = schedule(signalRow.date);
+    const released = state.unsettled.filter(item => item.releaseIndex <= row.index);
+    state.cash += released.reduce((sum, item) => sum + item.amount, 0);
+    state.unsettled = state.unsettled.filter(item => item.releaseIndex > row.index);
+    const priorEquity = markEquity(state, signalRow);
+    const signalMonth = signalRow.date.slice(0, 7);
+    if (state.currentMonth !== signalMonth) {
+      state.currentMonth = signalMonth;
+      state.monthStartEquity = priorEquity;
+      state.monthlyBlocked = false;
+    } else if (!state.config.legacyMode && pct(priorEquity, state.monthStartEquity) <= -3) {
+      state.monthlyBlocked = true;
     }
-    if (position && position.side !== wanted) {
-      const sellPrice = price(next, position.side, 'open');
-      const proceeds = position.quantity * sellPrice * (1 - SELL_COST);
-      const pnl = proceeds - position.cost;
-      cash += proceeds;
-      trades.push({ symbol: position.symbol, entryDate: position.entryDate, exitDate: next.date, pnl: round(pnl), side: position.side });
-      orderIntents.push(makeIntent(next.date, position.symbol, 'SELL', config.id, sellPrice, 0));
-      position = null;
+    state.peakEquity = Math.max(state.peakEquity, priorEquity);
+    const drawdownPct = pct(priorEquity, state.peakEquity);
+    if (state.cooldown > 0) {
+      state.cooldown -= 1;
+      if (state.cooldown === 0) state.peakEquity = priorEquity;
+    } else if (drawdownPct <= -state.config.drawdownGuardPct) {
+      state.cooldown = 20;
     }
-    if (!position && wanted) {
-      const buyPrice = price(next, wanted, 'open');
-      const budget = cash * wantedPct / 100;
-      const quantity = Math.floor(budget / (buyPrice * (1 + BUY_COST)));
-      if (quantity > 0) {
-        const cost = quantity * buyPrice * (1 + BUY_COST);
-        cash -= cost;
-        position = {
-          side: wanted,
-          symbol: wanted === 'inverse' ? '00632R.TW' : '0050.TW',
-          quantity,
-          cost,
-          entryPrice: buyPrice,
-          peakPrice: buyPrice,
-          entryDate: next.date
-        };
-        orderIntents.push(makeIntent(next.date, position.symbol, 'BUY', config.id, buyPrice, wantedPct));
+    const target = desiredTarget(signalRow, state.config, state);
+    const openEquity = markEquity(state, row, 'open');
+
+    if (state.position && state.position.side !== target.side) {
+      sellPosition(state, row, state.position.quantity, target.reason);
+    } else if (state.position && target.side) {
+      const currentValue = state.position.quantity * row.bars[target.side].open;
+      const desiredValue = openEquity * target.positionPct / 100;
+      if (currentValue > desiredValue * 1.15) {
+        const quantity = Math.min(state.position.quantity, Math.floor((currentValue - desiredValue) / row.bars[target.side].open));
+        sellPosition(state, row, quantity, '波動升高，降低曝險');
+      } else if (currentValue < desiredValue * 0.85) {
+        buyPosition(state, row, target.side, desiredValue - currentValue, '波動降低且趨勢有效，補足曝險');
       }
+    } else if (!state.position && target.side) {
+      buyPosition(state, row, target.side, openEquity * target.positionPct / 100, target.reason);
     }
-    const mark = position ? position.quantity * price(row, position.side, 'close') : 0;
-    equityCurve.push({ date: row.date, equity: cash + mark });
+    state.equityCurve.push({ date: row.date, equity: markEquity(state, row) });
   }
   const last = slice.at(-1);
-  if (position && last) {
-    const sellPrice = price(last, position.side, 'close');
-    const proceeds = position.quantity * sellPrice * (1 - SELL_COST);
-    const pnl = proceeds - position.cost;
-    cash += proceeds;
-    trades.push({ symbol: position.symbol, entryDate: position.entryDate, exitDate: last.date, pnl: round(pnl), side: position.side });
-    orderIntents.push(makeIntent(last.date, position.symbol, 'SELL', config.id, sellPrice, 0));
-  }
-  if (last) equityCurve.push({ date: last.date, equity: cash });
-  return { summary: summarize(equityCurve, trades, INITIAL_CAPITAL, startDate, endDate), trades, orderIntents };
+  if (state.position && last) sellPosition(state, { ...last, index: last.index }, state.position.quantity, '驗證期結束');
+  if (last) state.equityCurve.push({ date: last.date, equity: markEquity(state, last) });
+  return { state, summary: summarize(state, initialCapital, startDate, endDate) };
 }
 
 function trainScore(summary) {
-  if (!summary?.trades) return -Infinity;
-  if (summary.trades < 8) return -Infinity;
-  if (summary.maximumDrawdownPct < -25) return -Infinity;
-  return summary.averageMonthlyEquityReturnPct * 16
-    + Math.min(4, summary.profitFactor || 0)
-    + summary.maximumDrawdownPct * 0.5
-    + Math.min(4, summary.trades / 6);
+  if (summary.trades < 8 || summary.maximumDrawdownPct < -25 || summary.averageMonthlyEquityReturnPct <= 0) return -Infinity;
+  const pf = Number.isFinite(summary.profitFactor) ? Math.min(4, summary.profitFactor) : 4;
+  return summary.averageMonthlyEquityReturnPct * 18
+    + summary.maximumDrawdownPct * 0.3
+    + pf
+    - summary.negativeMonths * 0.08;
 }
 
-function combine(results) {
-  const trades = results.flatMap(row => row.validation.trades);
-  const intents = results.flatMap(row => row.validation.orderIntents);
-  const monthly = results.flatMap(row => row.validation.summary.monthly.map(item => item.equityReturnPct));
-  const gains = trades.filter(row => row.pnl > 0).reduce((sum, row) => sum + row.pnl, 0);
-  const losses = Math.abs(trades.filter(row => row.pnl <= 0).reduce((sum, row) => sum + row.pnl, 0));
-  const compounded = monthly.reduce((value, item) => value * (1 + item / 100), 1);
-  const averageMonthly = mean(monthly) || 0;
-  return {
-    validationFolds: results.length,
-    validationTrades: trades.length,
-    validationAverageMonthlyEquityReturnPct: round(averageMonthly),
-    improvementVsPreviousPct: round(averageMonthly - PRIOR_BEST_MONTHLY),
-    targetGapPct: round(TARGET_MONTHLY - averageMonthly),
-    validationAnnualizedReturnPct: round(monthly.length ? (compounded ** (12 / monthly.length) - 1) * 100 : 0),
-    validationProfitFactor: losses ? round(gains / losses) : gains > 0 ? null : 0,
-    validationMaximumDrawdownPct: round(Math.min(0, ...results.map(row => row.validation.summary.maximumDrawdownPct))),
-    validationWinRatePct: round(trades.filter(row => row.pnl > 0).length / Math.max(1, trades.length) * 100),
-    negativeMonths: monthly.filter(value => value < 0).length,
-    orderIntents: intents.length
-  };
+function yearlyTrainWindows(fold) {
+  const rows = [];
+  let start = new Date(`${fold.trainStart}T00:00:00Z`);
+  const trainEnd = new Date(`${fold.trainEnd}T00:00:00Z`);
+  while (start <= trainEnd) {
+    const next = new Date(start);
+    next.setUTCFullYear(next.getUTCFullYear() + 1);
+    const end = new Date(Math.min(next.getTime() - 86_400_000, trainEnd.getTime()));
+    rows.push({ start: start.toISOString().slice(0, 10), end: end.toISOString().slice(0, 10) });
+    start = next;
+  }
+  return rows;
 }
 
-function evaluateConfig(rows, config, folds) {
-  return folds.map(fold => ({
-    ...fold,
-    selectedConfig: config.id,
-    selectedName: config.name,
-    train: simulate(rows, config, fold.trainStart, fold.trainEnd),
-    validation: simulate(rows, config, fold.validationStart, fold.validationEnd)
-  }));
+function selectForFold(rows, fold) {
+  const yearly = yearlyTrainWindows(fold);
+  const evaluated = configs.map(config => {
+    const result = simulate(rows, () => config, fold.trainStart, fold.trainEnd);
+    const yearlyReturns = yearly.map(window => simulate(rows, () => config, window.start, window.end).summary.averageMonthlyEquityReturnPct);
+    const yearlyMean = mean(yearlyReturns) || 0;
+    const variance = mean(yearlyReturns.map(value => (value - yearlyMean) ** 2)) || 0;
+    const stableYears = yearlyReturns.filter(value => value > 0).length;
+    const stabilityScore = stableYears >= 2
+      ? Math.min(...yearlyReturns) * 3 + yearlyMean * 2 - Math.sqrt(variance)
+      : -Infinity;
+    return { config, summary: result.summary, score: trainScore(result.summary) + stabilityScore };
+  });
+  const best = candidates => candidates.sort((left, right) => right.score - left.score)[0];
+  const benchmark = best(evaluated.filter(row => row.config.benchmarkOnly));
+  const leveraged = best(evaluated.filter(row => !row.config.benchmarkOnly));
+  const leverageEarned = leveraged.summary.averageMonthlyEquityReturnPct >= 0.8
+    && leveraged.summary.averageMonthlyEquityReturnPct >= benchmark.summary.averageMonthlyEquityReturnPct + 0.5
+    && leveraged.summary.maximumDrawdownPct >= benchmark.summary.maximumDrawdownPct - 3;
+  return leverageEarned ? leveraged : benchmark;
 }
 
-function candidateScore(metrics) {
-  if (metrics.validationTrades < 30) return -Infinity;
-  if (metrics.validationMaximumDrawdownPct < -25) return -Infinity;
-  if (metrics.validationTrades < LONG_BASELINE_TRADES) return -Infinity;
-  if (metrics.validationMaximumDrawdownPct < LONG_BASELINE_DRAWDOWN) return -Infinity;
-  return metrics.validationAverageMonthlyEquityReturnPct * 20
-    + Math.min(6, metrics.validationProfitFactor || 0)
-    + metrics.validationMaximumDrawdownPct * 0.35
-    + Math.min(5, metrics.validationTrades / 12);
+function fixedSchedule(config) {
+  return () => config;
 }
 
 async function main() {
-  const rows = enrich(await readJson(MARKET));
-  const range = { start: rows[0].date, end: rows.at(-1).date };
-  const folds = foldWindows(range.start, range.end, 36, 12)
+  const payload = await loadHistory();
+  const rows = enrich(payload);
+  const folds = foldWindows(rows[0].date, rows.at(-1).date, 36, 12)
     .filter(fold => monthSpan(fold.validationStart, fold.validationEnd) >= 11);
-  const evaluated = configs.map(config => {
-    const foldResults = evaluateConfig(rows, config, folds);
-    return { config, foldResults, metrics: combine(foldResults) };
-  }).sort((left, right) => candidateScore(right.metrics) - candidateScore(left.metrics));
-  const best = evaluated[0];
-  const lowDrawdownAlternative = evaluated
-    .filter(row => row.metrics.validationTrades >= 30 && row.metrics.validationMaximumDrawdownPct > PRIOR_BEST_DRAWDOWN)
-    .sort((left, right) => right.metrics.validationAverageMonthlyEquityReturnPct - left.metrics.validationAverageMonthlyEquityReturnPct)[0] || null;
-  const foldResults = best.foldResults;
-  for (const row of foldResults) {
-    console.log(`${row.validationStart}：${row.selectedName}，validation 月均 ${row.validation.summary.averageMonthlyEquityReturnPct}%`);
-  }
-  const metrics = combine(foldResults);
-  const improved = metrics.validationAverageMonthlyEquityReturnPct > PRIOR_BEST_MONTHLY;
-  const comparableLongBaseline = {
-    validationFolds: 7,
-    validationTrades: LONG_BASELINE_TRADES,
-    validationAverageMonthlyEquityReturnPct: LONG_BASELINE_MONTHLY,
-    validationMaximumDrawdownPct: LONG_BASELINE_DRAWDOWN,
-    validationAnnualizedReturnPct: 28.8176,
-    validationProfitFactor: 7.595,
-    validationWinRatePct: 46.2963,
-    negativeMonths: 30,
-    orderIntents: 108
+  const selections = folds.map(fold => ({ ...fold, selected: selectForFold(rows, fold) }));
+  const schedule = date => selections.find(row => date >= row.validationStart && date <= row.validationEnd)?.selected.config
+    || selections.at(-1).selected.config;
+  const validationStart = selections[0].validationStart;
+  const validationEnd = selections.at(-1).validationEnd;
+  const validation = simulate(rows, schedule, validationStart, validationEnd, INITIAL_CAPITAL, true);
+  const frozenConfig = selections[0].selected.config;
+  const frozenValidation = simulate(rows, fixedSchedule(frozenConfig), validationStart, validationEnd);
+  const legacyConfig = {
+    id: 'legacy_long_baseline',
+    name: '前版寬趨勢低曝險基準',
+    baseMa: 'ma60',
+    baseMomentum: 2,
+    strongMomentum: 99,
+    maxStrongVol: 0,
+    leveragedPct: 0,
+    benchmarkPct: 100,
+    inversePct: 0,
+    drawdownGuardPct: 99,
+    baseTargetVol: 18,
+    legacyMode: true
   };
-  const improvedAgainstComparableLong = comparableLongBaseline
-    ? metrics.validationAverageMonthlyEquityReturnPct > comparableLongBaseline.validationAverageMonthlyEquityReturnPct
-      && metrics.validationMaximumDrawdownPct > comparableLongBaseline.validationMaximumDrawdownPct
-    : false;
-  const paperCandidate = improved
-    && metrics.validationProfitFactor > 1.15
-    && metrics.validationMaximumDrawdownPct > -20
-    && metrics.validationTrades >= 30;
+  const baseline = simulate(rows, fixedSchedule(legacyConfig), validationStart, validationEnd);
+  const metrics = validation.summary;
+  const baselineMetrics = baseline.summary;
+  const diagnosticOnly = configs.map(config => ({
+    config,
+    metrics: simulate(rows, fixedSchedule(config), validationStart, validationEnd).summary
+  })).filter(row => row.metrics.maximumDrawdownPct > baselineMetrics.maximumDrawdownPct)
+    .sort((left, right) => right.metrics.averageMonthlyEquityReturnPct - left.metrics.averageMonthlyEquityReturnPct)
+    .slice(0, 10);
+  const improved = metrics.averageMonthlyEquityReturnPct > baselineMetrics.averageMonthlyEquityReturnPct
+    && metrics.maximumDrawdownPct > baselineMetrics.maximumDrawdownPct
+    && metrics.trades >= baselineMetrics.trades;
+  const minimumPassed = metrics.trades > 50
+    && metrics.profitFactor > 1.15
+    && metrics.maximumDrawdownPct > -20
+    && metrics.averageMonthlyEquityReturnPct > baselineMetrics.averageMonthlyEquityReturnPct;
   const result = {
     generatedAt: new Date().toISOString(),
     branch: 'institutional-data-fetcher-v1',
-    evaluationMode: 'fixed_strategy_rolling_validation',
-    status: improvedAgainstComparableLong ? 'IMPROVED_ON_LONG_VALIDATION' : 'NO_SHORT_METRIC_IMPROVEMENT',
-    priorBestMonthlyPct: PRIOR_BEST_MONTHLY,
-    priorBestMaximumDrawdownPct: PRIOR_BEST_DRAWDOWN,
-    priorBestTrades: PRIOR_BEST_TRADES,
-    comparableLongBaseline,
-    lowDrawdownAlternative: lowDrawdownAlternative
-      ? { id: lowDrawdownAlternative.config.id, name: lowDrawdownAlternative.config.name, metrics: lowDrawdownAlternative.metrics }
-      : null,
-    targetMonthlyPct: TARGET_MONTHLY,
-    configsTested: configs.length,
-    folds: foldResults.map(row => ({
+    evaluationMode: 'true_walk_forward_continuous_equity',
+    dataRange: { start: rows[0].date, end: rows.at(-1).date },
+    configsTestedPerFold: configs.length,
+    validationFolds: selections.length,
+    methodologyFixes: [
+      '每段只用前 36 個月選設定，後 12 個月固定不調參數',
+      '七段 validation 使用同一條連續資產曲線，不重設為 100 萬',
+      '共用成交模擬器計算手續費、交易稅與雙邊滑價',
+      '賣出款 T+2 才可再次使用',
+      '00631L 只在低波動強趨勢使用，並依波動度降低部位',
+      '訓練期三個年度至少兩年為正，且槓桿策略必須通過絕對與相對門檻',
+      '單月總資產虧損達 3% 後，當月停止新增曝險'
+    ],
+    selections: selections.map(row => ({
       trainStart: row.trainStart,
       trainEnd: row.trainEnd,
       validationStart: row.validationStart,
       validationEnd: row.validationEnd,
-      selectedConfig: row.selectedConfig,
-      selectedName: row.selectedName,
-      trainMonthly: row.train.summary.averageMonthlyEquityReturnPct,
-      validationMonthly: row.validation.summary.averageMonthlyEquityReturnPct,
-      validationTrades: row.validation.summary.trades
+      configId: row.selected.config.id,
+      configName: row.selected.config.name,
+      trainMonthlyPct: row.selected.summary.averageMonthlyEquityReturnPct,
+      trainMaximumDrawdownPct: row.selected.summary.maximumDrawdownPct,
+      trainTrades: row.selected.summary.trades
     })),
-    metrics,
-    selectedConfig: best.config.id,
-    selectedName: best.config.name,
+    metrics: {
+      ...metrics,
+      targetGapPct: round(TARGET_MONTHLY - metrics.averageMonthlyEquityReturnPct),
+      orderIntents: validation.state.intents.length
+    },
+    baseline: compactSummary(baselineMetrics),
+    frozenSevenYearValidation: {
+      selectedOnlyFrom: `${selections[0].trainStart} 至 ${selections[0].trainEnd}`,
+      configId: frozenConfig.id,
+      configName: frozenConfig.name,
+      metrics: compactSummary(frozenValidation.summary)
+    },
+    diagnosticOnlyTopFixedConfigs: {
+      warning: '只用於定位策略家族問題；看過完整 validation 後排序，不可作為可實盤績效。',
+      rows: diagnosticOnly.map(row => ({ id: row.config.id, name: row.config.name, metrics: compactSummary(row.metrics) }))
+    },
+    comparison: {
+      monthlyImprovementPct: round(metrics.averageMonthlyEquityReturnPct - baselineMetrics.averageMonthlyEquityReturnPct),
+      drawdownImprovementPct: round(metrics.maximumDrawdownPct - baselineMetrics.maximumDrawdownPct),
+      tradeDifference: metrics.trades - baselineMetrics.trades,
+      improvedMonthlyAndDrawdown: metrics.averageMonthlyEquityReturnPct > baselineMetrics.averageMonthlyEquityReturnPct
+        && metrics.maximumDrawdownPct > baselineMetrics.maximumDrawdownPct,
+      improvedMonthlyDrawdownAndTrades: improved
+    },
     readiness: {
+      minimumResearchThresholdPassed: minimumPassed,
       paperTradingAllowed: false,
-      paperCandidateAfterHumanApproval: paperCandidate && improvedAgainstComparableLong,
       liveTradingAllowed: false,
       brokerApiAllowed: false,
-      reason: improvedAgainstComparableLong
-        ? '拉長 rolling validation 後，月均與回撤相對同長區間基準有改善，但仍未達 paper trading 或實盤門檻。'
-        : '拉長 rolling validation 後，尚未同時超越前版短驗證月均與回撤，不可直接實盤。'
+      reason: minimumPassed
+        ? '長期 walk-forward 已達最低研究門檻，但同一歷史區間已反覆研究，仍須先做全新期間紙上交易。'
+        : '未同時通過長期報酬、回撤與交易樣本門檻，不可進入紙上交易或實盤。'
     }
   };
   await fs.writeFile(OUTPUT, `${JSON.stringify(result, null, 2)}\n`, 'utf8');
   await fs.writeFile(REPORT, [
     '# Deployable ETF Hunter v1',
     '',
-    `結論：拉長 rolling validation 後，選出 ${best.config.name}；不可直接實盤。`,
+    '## 結論',
     '',
-    `- Rolling validation 段數：${metrics.validationFolds}`,
-    `- Validation 月均：${metrics.validationAverageMonthlyEquityReturnPct}%`,
-    `- 與前版短驗證月均差距：${metrics.improvementVsPreviousPct}%`,
-    `- 與同長區間基準月均差距：${comparableLongBaseline ? round(metrics.validationAverageMonthlyEquityReturnPct - comparableLongBaseline.validationAverageMonthlyEquityReturnPct) : null}%`,
-    `- 距離月均 10%：${metrics.targetGapPct}%`,
-    `- 年化：${metrics.validationAnnualizedReturnPct}%`,
-    `- PF：${metrics.validationProfitFactor}`,
-    `- 最大回撤：${metrics.validationMaximumDrawdownPct}%`,
-    `- 交易數：${metrics.validationTrades}`,
-    `- 負月份：${metrics.negativeMonths}`,
-    `- order intent：${metrics.orderIntents}`,
-    `- 紙上交易候選：${paperCandidate && improvedAgainstComparableLong ? '需人工確認後才可進入' : '否'}`,
-    '- 實盤：否',
+    `- 驗證方式：${selections.length} 段 36 個月訓練／12 個月驗證，validation 資金連續。`,
+    `- 月均總資產報酬：${metrics.averageMonthlyEquityReturnPct}%`,
+    `- 年化報酬：${metrics.annualizedReturnPct}%`,
+    `- Profit Factor：${metrics.profitFactor}`,
+    `- 最大回撤：${metrics.maximumDrawdownPct}%`,
+    `- 交易數：${metrics.trades}`,
+    `- 勝率：${metrics.winRatePct}%`,
+    `- 距離月均 10%：${result.metrics.targetGapPct} 個百分點`,
+    `- 相較同區間基準月均：${result.comparison.monthlyImprovementPct} 個百分點`,
+    `- 相較同區間基準回撤：${result.comparison.drawdownImprovementPct} 個百分點`,
+    `- 紙上交易：${result.readiness.paperTradingAllowed ? '允許' : '不允許'}`,
+    `- 實盤：${result.readiness.liveTradingAllowed ? '允許' : '不允許'}`,
     '',
-    '## 這版策略',
+    '## 可執行邏輯',
     '',
-    ...result.folds.map(row => `- ${row.validationStart}：${row.selectedName}，validation 月均 ${row.validationMonthly}%，交易 ${row.validationTrades} 筆`),
-    '- 這代表長驗證下，目前較穩的是 ETF 快速趨勢防守搭配極小比例反向避險，不是個股日線選股。',
+    '- T 日收盤判斷 0050 趨勢、20/60 日動能與 20 日年化波動，T+1 開盤才執行。',
+    '- 低波動強趨勢才以有限部位持有 00631L；一般多頭持有 0050；趨勢失效則持有現金。',
+    '- 波動升高會降低部位；帳戶回撤達訓練期選定門檻後，停止新曝險 20 個交易日。',
+    '- 單月總資產回撤達 -3% 後，當月停止新增曝險；下一個月才重新評估。',
+    '- 每個 36 個月 train 再拆成三個年度，至少兩年為正才可進入下一段 validation。',
+    '- 所有委託包含滑價、費稅、整股／零股最低手續費與 T+2 可用資金限制。',
     '',
-    '## 低回撤替代方案',
+    '## 驗證限制',
     '',
-    lowDrawdownAlternative
-      ? `- ${lowDrawdownAlternative.config.name}：月均 ${lowDrawdownAlternative.metrics.validationAverageMonthlyEquityReturnPct}%，最大回撤 ${lowDrawdownAlternative.metrics.validationMaximumDrawdownPct}%，交易 ${lowDrawdownAlternative.metrics.validationTrades} 筆。`
-      : '- 沒有找到同時符合交易數與低回撤條件的替代方案。',
-    '',
-    '## 重要限制',
-    '',
-    '- 前版 5.0003% / -9.3993% 是較短 validation 的結果；拉長到 8 段後，月均會下降、回撤會放大。',
-    '- 目前沒有找到「長 validation 月均高於 5.0003%，且最大回撤小於 -9.3993%」的可執行日線 ETF 策略。',
-    '',
-    '## 實盤判斷',
-    '',
-    '- 可以產生 order intent。',
-    '- 已納入手續費、交易稅、滑價與現金內交易。',
-    '- 交易數比前版增加，但長驗證月均與回撤仍未達 paper trading 或實盤門檻，只能列入人工觀察清單。',
+    '- 過去版本曾在看完 validation 後挑固定策略，且每段重設資金；本版已修正，舊版 2.2737% 不再作為可信實盤基準。',
+    '- 同一歷史資料已被多次研究，即使數字改善也不能直接實盤，仍需新期間 paper trading。',
+    '- 00631L 為單日正向兩倍 ETF，長期有複利偏離與波動耗損，只能依規則短期持有。',
+    `- Validation 交易僅 ${metrics.trades} 筆，未達 50 筆最低研究門檻，樣本不足。`,
     ''
   ].join('\n'), 'utf8');
   await fs.writeFile(READINESS, [
-    '# 自動交易落地判斷',
+    '# 自動交易準備度',
     '',
-    '目前沒有任何策略可直接實盤或接真實券商 API。',
+    `目前長期 walk-forward：月均 ${metrics.averageMonthlyEquityReturnPct}%、年化 ${metrics.annualizedReturnPct}%、最大回撤 ${metrics.maximumDrawdownPct}%、交易 ${metrics.trades} 筆。`,
     '',
-    `Deployable ETF Hunter v1：${metrics.validationFolds} 段 rolling validation，月均 ${metrics.validationAverageMonthlyEquityReturnPct}%，最大回撤 ${metrics.validationMaximumDrawdownPct}%，交易 ${metrics.validationTrades} 筆。`,
-    improvedAgainstComparableLong
-      ? '這版相對同長區間基準有改善，但仍未達 paper trading 門檻，只能列入人工觀察清單，不可直接實盤。'
-      : '這版仍不可進 paper trading，因為長 validation 尚未同時達成高月均與低回撤。',
+    `研究最低門檻：${minimumPassed ? '通過' : '未通過'}。`,
+    'Paper trading：不允許自動啟用，須由使用者確認後另開全新期間驗證。',
+    '真實券商 API：禁止下單，只能產生 order intent。',
     '',
-    '下一步：若要接近月均 10%，需要補分鐘線或盤中資料；目前日線 ETF 策略拉長驗證後，交易數提高但月均明顯低於短驗證結果。',
+    '原因：歷史 validation 已被反覆檢視，不再是完全未見資料；正式下單前仍需即時資料品質、委託失敗、部分成交、漲跌停與斷線復原測試。',
     ''
   ].join('\n'), 'utf8');
   await appendExperiment({
-    strategyId: 'deployable_etf_hunter_v1',
-    dataSources: ['0050_daily_ohlcv', '00632R_daily_ohlcv', 'market-regime'],
-    setupRules: ['0050 持有', '趨勢空手', '反向 ETF 切換'],
-    triggerRules: ['收盤訊號，隔日開盤下單'],
-    invalidationRules: ['目標曝險改變即切換或出場'],
-    exitRules: ['切換出場', '測試結束強制平倉'],
-    riskRules: ['不使用槓桿', '現金內交易', '含費稅滑價'],
-    blockedWhen: ['無訊號時空手'],
-    parameters: { version: 'v1', configs: configs.map(row => row.id), startDate: START_DATE },
+    strategyId: 'deployable_etf_hunter_v1_walk_forward',
+    dataSources: ['0050_daily_ohlcv', '00631L_daily_ohlcv', '00632R_daily_ohlcv'],
+    setupRules: ['趨勢狀態', '波動度縮放', '正2僅限低波動強趨勢'],
+    triggerRules: ['T 日收盤確認，T+1 開盤執行'],
+    invalidationRules: ['趨勢失效', '波動升高', '帳戶回撤熔斷'],
+    exitRules: ['資產切換', '曝險分級調整', '驗證期結束'],
+    riskRules: ['T+2', '不借款', '波動縮放', '20 日回撤冷卻'],
+    blockedWhen: ['高波動且無明確趨勢'],
+    parameters: { configs: configs.length, startDate: rows[0].date },
     trainPeriod: { months: 36 },
     validationPeriod: { months: 12, stepMonths: 12 },
-    costModel: { buyCost: BUY_COST, sellCost: SELL_COST },
-    executionModel: 'next-open ETF execution, cash-only',
-    metrics,
-    resultStatus: improvedAgainstComparableLong ? 'inconclusive' : 'failed',
-    passedMinimum: false,
+    costModel: EXECUTION_COSTS,
+    executionModel: 'T 日收盤訊號、T+1 開盤、T+2 可用資金',
+    metrics: result.metrics,
+    resultStatus: minimumPassed ? 'inconclusive' : 'failed',
+    passedMinimum: minimumPassed,
     passedHighProfit: false,
     allowRetest: false,
-    notes: improvedAgainstComparableLong
-      ? '長驗證相對同長區間基準有改善，但仍不可直接實盤。'
-      : '拉長驗證後無法同時超越前版短驗證月均與回撤。'
+    notes: minimumPassed
+      ? '通過研究最低門檻，但 validation 已反覆使用，只能等待新期間紙上驗證。'
+      : '未通過長期可交易門檻，不可紙上交易或實盤。'
   });
-  console.log(`Deployable ETF Hunter：${metrics.validationFolds} 段驗證，月均 ${metrics.validationAverageMonthlyEquityReturnPct}%，最大回撤 ${metrics.validationMaximumDrawdownPct}%，交易 ${metrics.validationTrades}，實盤：不可。`);
+  console.log(`Deployable ETF Hunter：${selections.length} 段長期 validation，月均 ${metrics.averageMonthlyEquityReturnPct}%，最大回撤 ${metrics.maximumDrawdownPct}%，交易 ${metrics.trades} 筆。`);
 }
 
 await main();

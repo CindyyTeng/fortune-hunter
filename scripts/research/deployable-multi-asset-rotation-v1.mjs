@@ -264,27 +264,29 @@ function buildConfigs() {
     }
   }
   for (const techWeight of [70, 80, 90]) {
-    for (const warningExposurePct of [30, 50, 70]) {
-      for (const warningMode of ['below_ma60', 'ma_cross', 'drawdown10']) {
+    for (const warningExposurePct of [0, 30, 50, 70]) {
+      for (const warningMode of ['below_ma20', 'below_ma60', 'ma_cross', 'drawdown5', 'drawdown10', 'trend_break']) {
         for (const shockMomentum of [-8, -4]) {
-          rows.push({
-            kind: 'staged_trend_core',
-            id: `staged_core${100 - techWeight}_tech${techWeight}_warning${warningExposurePct}_${warningMode}_shock${shockMomentum}`,
-            coreWeight: 100 - techWeight,
-            techWeight,
-            warningExposurePct,
-            warningMode,
-            trendDays: 120,
-            bearMomentum: 0,
-            shockMomentum,
-            riskOffMode: 'cash',
-            rebalanceDays: 10,
-            rebalanceBand: 0,
-            targetVol: 99,
-            accountGuardPct: 6,
-            cooldownDays: 15,
-            monthlyStopPct: 4
-          });
+          for (const targetVol of [24, 99]) {
+            rows.push({
+              kind: 'staged_trend_core',
+              id: `staged_core${100 - techWeight}_tech${techWeight}_warning${warningExposurePct}_${warningMode}_vol${targetVol}_shock${shockMomentum}`,
+              coreWeight: 100 - techWeight,
+              techWeight,
+              warningExposurePct,
+              warningMode,
+              trendDays: 120,
+              bearMomentum: 0,
+              shockMomentum,
+              riskOffMode: 'cash',
+              rebalanceDays: 10,
+              rebalanceBand: 0,
+              targetVol,
+              accountGuardPct: 6,
+              cooldownDays: 15,
+              monthlyStopPct: 4
+            });
+          }
         }
       }
     }
@@ -415,11 +417,17 @@ function stagedTrendWeights(row, config) {
   const weights = coreSatelliteWeights(row, config);
   const core = row.metrics.get('0050.TW');
   if (!core || !weights['0052.TW']) return weights;
-  const warning = config.warningMode === 'below_ma60'
-    ? core.close < core.ma60
-    : config.warningMode === 'ma_cross'
-      ? core.ma20 < core.ma60
-      : core.close < core.ma20 && pct(core.close, core.high60) <= -10;
+  const warning = config.warningMode === 'below_ma20'
+    ? core.close < core.ma20
+    : config.warningMode === 'below_ma60'
+      ? core.close < core.ma60
+      : config.warningMode === 'ma_cross'
+        ? core.ma20 < core.ma60
+        : config.warningMode === 'drawdown5'
+          ? core.close < core.ma20 && pct(core.close, core.high60) <= -5
+          : config.warningMode === 'trend_break'
+            ? core.close < core.ma20 && core.mom20 < 0
+            : core.close < core.ma20 && pct(core.close, core.high60) <= -10;
   return warning ? scaled(weights, config.warningExposurePct) : weights;
 }
 
@@ -826,9 +834,9 @@ async function main() {
     && metrics.maximumDrawdownPct > benchmark.maximumDrawdownPct;
   const minimumPassed = beats0050 && metrics.trades >= 100 && metrics.profitFactor > 1.15 && metrics.maximumDrawdownPct > -20;
   const iterationBaseline = {
-    averageMonthlyEquityReturnPct: 1.0568,
-    maximumDrawdownPct: -26.1375,
-    trades: 287
+    averageMonthlyEquityReturnPct: 1.0755,
+    maximumDrawdownPct: -26.1356,
+    trades: 214
   };
   const result = {
     generatedAt: new Date().toISOString(),
@@ -890,7 +898,7 @@ async function main() {
   result.readiness.reason = minimumPassed
     ? '已達研究門檻，但仍須先通過紙上交易，不可直接實盤。'
     : beats0050
-      ? '10 年 rolling validation 已超越 0050 且回撤較低，但最大回撤仍高於 20%，額外 holdout 亦未超越 0050，不可紙上交易或實盤。'
+      ? '10 年 rolling validation 已超越 0050 且回撤較低，但最大回撤仍高於 20%，額外評估期亦未超越 0050，不可紙上交易或實盤。'
       : '長期月均報酬仍未超越 0050，且最大回撤仍高於 20%，不可紙上交易、不可實盤、不可接真實券商下單。';
 
   await fs.writeFile(OUTPUT, `${JSON.stringify(result, null, 2)}\n`, 'utf8');
@@ -912,7 +920,7 @@ async function main() {
     '',
     ...selections.map((row, index) => `- 第 ${index + 1} 段：訓練 ${row.trainStart}～${row.trainEnd}；驗證 ${row.validationStart}～${row.validationEnd}；採用 ${row.selected.config.id}`),
     '',
-    '## 未參與修正的 Holdout',
+    '## 額外評估期',
     '',
     `- 期間：${holdoutStart} 至 ${holdoutEnd}`,
     `- 策略月均：${holdout.summary.averageMonthlyEquityReturnPct}%；0050 月均：${holdoutBenchmark.averageMonthlyEquityReturnPct}%`,
@@ -922,7 +930,7 @@ async function main() {
     '## 結論',
     '',
     `- 10 年 rolling validation 月均${beats0050 ? '已' : '未'}超越 0050，最大回撤較 0050 低 ${round(metrics.maximumDrawdownPct - benchmark.maximumDrawdownPct)} 個百分點。`,
-    `- 額外 holdout 月均${holdout.summary.averageMonthlyEquityReturnPct > holdoutBenchmark.averageMonthlyEquityReturnPct ? '已' : '未'}超越 0050。`,
+    `- 額外評估期月均${holdout.summary.averageMonthlyEquityReturnPct > holdoutBenchmark.averageMonthlyEquityReturnPct ? '已' : '未'}超越 0050。`,
     '- 目前不可進入 paper trading、不可實盤、不可接真實券商下單。',
     ''
   ].join('\n'), 'utf8');
@@ -934,11 +942,12 @@ async function main() {
     `- Rolling validation 區間：${validationStart} 至 ${validationEnd}（10 年）`,
     `- Rolling validation 最大回撤：${metrics.maximumDrawdownPct}%`,
     `- Rolling validation 交易：${metrics.trades} 筆`,
-    `- Untouched holdout 月均：${holdout.summary.averageMonthlyEquityReturnPct}%`,
-    `- Untouched holdout 區間：${holdoutStart} 至 ${holdoutEnd}`,
-    `- Untouched holdout 最大回撤：${holdout.summary.maximumDrawdownPct}%`,
+    `- 額外評估期月均：${holdout.summary.averageMonthlyEquityReturnPct}%`,
+    `- 額外評估區間：${holdoutStart} 至 ${holdoutEnd}`,
+    `- 額外評估期最大回撤：${holdout.summary.maximumDrawdownPct}%`,
+    '- 此期間已在多輪研究中反覆觀察，不再視為純粹未觸碰 holdout。',
     `- 10 年 validation 是否超越 0050：${beats0050 ? '是' : '否'}`,
-    `- Holdout 是否超越 0050：${holdout.summary.averageMonthlyEquityReturnPct > holdoutBenchmark.averageMonthlyEquityReturnPct ? '是' : '否'}`,
+    `- 額外評估期是否超越 0050：${holdout.summary.averageMonthlyEquityReturnPct > holdoutBenchmark.averageMonthlyEquityReturnPct ? '是' : '否'}`,
     '- 可產生 T 日訊號與 T+1 order intent，但尚未達策略通過門檻。',
     '- Paper trading：不允許。',
     '- 真實券商 API 下單：不允許。',
@@ -952,7 +961,7 @@ async function main() {
   await appendExperiment({
     strategyId: 'deployable_multi_asset_rotation_v1_long_validation',
     dataSources: ASSETS.map(asset => `${asset.name}_twse_daily`),
-    setupRules: ['0050 位於 MA120 上方', '0050 60 日動能不低於 0%', '0050／0052 固定週期再平衡', '跌破 MA20 且距 60 日高點回落 10% 時分段降曝險'],
+    setupRules: ['0050 位於 MA120 上方', '0050 60 日動能不低於 0%', '0050／0052 固定週期再平衡', '跌破 MA20 且距 60 日高點回落 5% 時分段降曝險'],
     triggerRules: ['T 日收盤確認趨勢與急跌保護', 'T+1 開盤調整到目標權重'],
     invalidationRules: ['0050 跌破 MA120 且 60 日動能低於 0%', '20 日跌幅觸發急跌保護'],
     exitRules: ['權重切換', '月損失封鎖', '帳戶回撤熔斷', '結束驗證視窗'],

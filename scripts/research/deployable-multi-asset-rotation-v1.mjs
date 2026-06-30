@@ -50,6 +50,22 @@ const CASH_CONFIG = Object.freeze({
   monthlyStopPct: 4,
   targetVol: 0
 });
+const MARKET_FALLBACK_CONFIG = Object.freeze({
+  kind: 'scheduled_trend_core',
+  id: 'market_fallback_0050_buy_and_hold',
+  coreWeight: 100,
+  techWeight: 0,
+  trendDays: 120,
+  bearMomentum: -999,
+  shockMomentum: null,
+  riskOffMode: 'cash',
+  rebalanceDays: 20,
+  rebalanceBand: 0.05,
+  targetVol: 99,
+  accountGuardPct: 99,
+  cooldownDays: 0,
+  monthlyStopPct: 999
+});
 
 const average = values => values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : null;
 const pct = (value, base) => Number.isFinite(value) && base ? (value / base - 1) * 100 : 0;
@@ -222,31 +238,29 @@ function buildConfigs() {
       }
     }
   }
-  for (const techWeight of [40, 50, 60]) {
-    for (const bearMomentum of [0]) {
-        for (const accountGuardPct of [6]) {
-          for (const rebalanceDays of [5, 10]) {
-            for (const shockMomentum of [-8, -4]) {
-            rows.push({
-              kind: 'scheduled_trend_core',
-              id: `scheduled_core${100 - techWeight}_tech${techWeight}_ma120_bear${bearMomentum}_shock${shockMomentum}_cash_guard${accountGuardPct}_month4_r${rebalanceDays}`,
-              coreWeight: 100 - techWeight,
-              techWeight,
-              trendDays: 120,
-              bearMomentum,
-              shockMomentum,
-              riskOffMode: 'cash',
-              rebalanceDays,
-              rebalanceBand: 0,
-              targetVol: 99,
-              accountGuardPct,
-              cooldownDays: 15,
-              monthlyStopPct: 4
-            });
-            }
-          }
+  for (const techWeight of [40, 50, 60, 70, 80, 85, 90]) {
+    for (const riskOffMode of ['cash']) {
+      for (const rebalanceDays of [5, 10]) {
+        for (const shockMomentum of [-8, -4]) {
+          rows.push({
+            kind: 'scheduled_trend_core',
+            id: `scheduled_core${100 - techWeight}_tech${techWeight}_ma120_bear0_shock${shockMomentum}_${riskOffMode}_guard6_month4_r${rebalanceDays}`,
+            coreWeight: 100 - techWeight,
+            techWeight,
+            trendDays: 120,
+            bearMomentum: 0,
+            shockMomentum,
+            riskOffMode,
+            rebalanceDays,
+            rebalanceBand: 0,
+            targetVol: 99,
+            accountGuardPct: 6,
+            cooldownDays: 15,
+            monthlyStopPct: 4
+          });
         }
       }
+    }
   }
   return rows;
 }
@@ -366,7 +380,7 @@ function coreSatelliteWeights(row, config) {
   const core = row.metrics.get('0050.TW');
   if (!core) return {};
   const bear = core.close < core[`ma${config.trendDays}`] && core.mom60 < config.bearMomentum;
-  if (bear) return config.riskOffMode === 'core50' ? { '0050.TW': 50 } : {};
+  if (bear) return riskOffWeights(row, config);
   return { '0050.TW': config.coreWeight, '0052.TW': config.techWeight };
 }
 
@@ -555,7 +569,7 @@ function simulate(rows, schedule, startDate, endDate, emitIntents = false) {
     let weights = state.cooldown > 0 || state.monthlyBlocked
       ? {}
       : (state.config.kind === 'core_satellite'
-        ? coreSatelliteWeights(signal, state.config)
+              ? coreSatelliteWeights(signal, state.config)
         : state.config.kind === 'relative_strength'
           ? relativeStrengthWeights(signal, state.config)
           : state.config.kind === 'leveraged_overlay'
@@ -629,6 +643,7 @@ function selectConfig(rows, fold, family = null) {
     && row.metrics.has('00632R.TW')).length;
   const eligibleConfigs = configs.filter(config => (!family || config.kind === family)
     && (config.kind !== 'leveraged_overlay' || leveragedTrainingDays >= 252)
+    && (!config.leveragedWeight || leveragedTrainingDays >= 252)
     && (!config.riskOffMode?.startsWith('inverse') || inverseTrainingDays >= 252));
   const preliminary = eligibleConfigs.map(config => {
     const summary = simulate(rows, () => config, fold.trainStart, fold.trainEnd).summary;
@@ -646,9 +661,10 @@ function selectConfig(rows, fold, family = null) {
     const score = scoreSummary(summary, annual);
     return { config, summary, score };
   }).sort((left, right) => right.score - left.score);
+  const fallback = family === PRIMARY_FAMILY ? MARKET_FALLBACK_CONFIG : CASH_CONFIG;
   return evaluated.find(row => Number.isFinite(row.score)) || {
-    config: CASH_CONFIG,
-    summary: simulate(rows, () => CASH_CONFIG, fold.trainStart, fold.trainEnd).summary,
+    config: fallback,
+    summary: simulate(rows, () => fallback, fold.trainStart, fold.trainEnd).summary,
     score: 0
   };
 }
@@ -769,9 +785,9 @@ async function main() {
     && metrics.maximumDrawdownPct > benchmark.maximumDrawdownPct;
   const minimumPassed = beats0050 && metrics.trades >= 100 && metrics.profitFactor > 1.15 && metrics.maximumDrawdownPct > -20;
   const iterationBaseline = {
-    averageMonthlyEquityReturnPct: 0.5229,
-    maximumDrawdownPct: -30.9537,
-    trades: 251
+    averageMonthlyEquityReturnPct: 0.9092,
+    maximumDrawdownPct: -25.3691,
+    trades: 297
   };
   const result = {
     generatedAt: new Date().toISOString(),
@@ -832,48 +848,16 @@ async function main() {
   };
   result.readiness.reason = minimumPassed
     ? '已達研究門檻，但仍須先通過紙上交易，不可直接實盤。'
-    : '長期月均報酬仍未超越 0050，且最大回撤仍高於 20%，不可紙上交易、不可實盤、不可接真實券商下單。';
+    : beats0050
+      ? '10 年 rolling validation 已超越 0050 且回撤較低，但最大回撤仍高於 20%，額外 holdout 亦未超越 0050，不可紙上交易或實盤。'
+      : '長期月均報酬仍未超越 0050，且最大回撤仍高於 20%，不可紙上交易、不可實盤、不可接真實券商下單。';
 
   await fs.writeFile(OUTPUT, `${JSON.stringify(result, null, 2)}\n`, 'utf8');
-  await fs.writeFile(REPORT, [
-    '# 多資產輪動長驗證研究 v1',
-    '',
-    `- 驗證方法：${TRAIN_MONTHS} 個月滾動訓練／${VALIDATION_MONTHS} 個月非重疊驗證`,
-    `- Validation 段數：${selections.length}`,
-    `- 月均總資產報酬：${metrics.averageMonthlyEquityReturnPct}%`,
-    `- 距離月均 10%：${result.metrics.targetGapPct} 個百分點`,
-    `- 年化報酬：${metrics.annualizedReturnPct}%`,
-    `- 最大回撤：${metrics.maximumDrawdownPct}%`,
-    `- Profit Factor：${metrics.profitFactor}`,
-    `- 交易數：${metrics.trades}`,
-    `- 勝率：${metrics.winRatePct}%`,
-    `- 0050 月均：${benchmark.averageMonthlyEquityReturnPct}%`,
-    `- 0050 最大回撤：${benchmark.maximumDrawdownPct}%`,
-    `- 相較前版月均變化：${result.comparison.improvedMonthlyVsPriorPct} 個百分點`,
-    `- 相較前版回撤變化：${result.comparison.improvedDrawdownVsPriorPct} 個百分點`,
-    `- 相較前版交易數變化：${result.comparison.improvedTradesVsPrior}`,
-    `- 可進 paper trading：${result.readiness.paperTradingAllowed ? '是' : '否'}`,
-    `- 可直接實盤：${result.readiness.liveTradingAllowed ? '是' : '否'}`,
-    '- 結論：交易數雖增加，但報酬輸給 0050 且回撤過高，不可視為可實盤策略。',
-    '',
-    '策略邏輯摘要：同時比較核心配置與相對強弱輪動；用 0050 判斷大盤風險，風險資產在台灣、美股、日股 ETF 間輪動，大盤轉弱時退到黃金、0050 半倉或現金。訓練期只選規則，後續兩年驗證期固定不改參數。',
-    ''
-  ].join('\n'), 'utf8');
-
-  await fs.writeFile(READINESS, [
-    '# 自動交易可落地狀態',
-    '',
-    `多資產輪動 48/24 長期 validation：月均 ${metrics.averageMonthlyEquityReturnPct}% 、年化 ${metrics.annualizedReturnPct}% 、最大回撤 ${metrics.maximumDrawdownPct}% 、交易 ${metrics.trades} 筆。`,
-    `雖然已納入 T+1、T+2、手續費、交易稅、滑價與 order intent，但仍未因這次結果自動放行實盤。`,
-    '結論：未通過 validation，不可啟用 paper trading，也不可接真實券商 API 下單。',
-    ''
-  ].join('\n'), 'utf8');
-
   await fs.writeFile(REPORT, [
     '# 長期可執行多資產輪動策略 v1',
     '',
     `- 方法：${result.methodology}`,
-    `- Rolling validation：${validationStart} 至 ${validationEnd}，共 ${selections.length} 段`,
+    `- Rolling validation：${validationStart} 至 ${validationEnd}，共 10 年、${selections.length} 段`,
     `- 月均總資產報酬：${metrics.averageMonthlyEquityReturnPct}%`,
     `- 年化報酬：${metrics.annualizedReturnPct}%`,
     `- 最大回撤：${metrics.maximumDrawdownPct}%（${result.maximumDrawdown.peakDate} 至 ${result.maximumDrawdown.troughDate}）`,
@@ -881,7 +865,11 @@ async function main() {
     `- 交易筆數：${metrics.trades}`,
     `- 勝率：${metrics.winRatePct}%`,
     `- 0050 同期月均：${benchmark.averageMonthlyEquityReturnPct}%`,
-    `- 相較前一版：月均 ${result.iterationComparison.improvedMonthlyPct >= 0 ? '+' : ''}${result.iterationComparison.improvedMonthlyPct} 個百分點、回撤改善 ${result.iterationComparison.improvedDrawdownPct} 個百分點、交易增加 ${result.iterationComparison.additionalTrades} 筆`,
+    `- 相較前一版：月均 ${result.iterationComparison.improvedMonthlyPct >= 0 ? '+' : ''}${result.iterationComparison.improvedMonthlyPct} 個百分點、最大回撤變化 ${result.iterationComparison.improvedDrawdownPct} 個百分點、交易筆數變化 ${result.iterationComparison.additionalTrades} 筆`,
+    '',
+    '## 訓練與驗證區間',
+    '',
+    ...selections.map((row, index) => `- 第 ${index + 1} 段：訓練 ${row.trainStart}～${row.trainEnd}；驗證 ${row.validationStart}～${row.validationEnd}；採用 ${row.selected.config.id}`),
     '',
     '## 未參與修正的 Holdout',
     '',
@@ -892,7 +880,8 @@ async function main() {
     '',
     '## 結論',
     '',
-    '- 新策略已同時提高月均、降低回撤並增加交易樣本，但長期與 holdout 月均仍低於 0050。',
+    `- 10 年 rolling validation 月均${beats0050 ? '已' : '未'}超越 0050，最大回撤較 0050 低 ${round(metrics.maximumDrawdownPct - benchmark.maximumDrawdownPct)} 個百分點。`,
+    `- 額外 holdout 月均${holdout.summary.averageMonthlyEquityReturnPct > holdoutBenchmark.averageMonthlyEquityReturnPct ? '已' : '未'}超越 0050。`,
     '- 目前不可進入 paper trading、不可實盤、不可接真實券商下單。',
     ''
   ].join('\n'), 'utf8');
@@ -901,11 +890,14 @@ async function main() {
     '# 自動交易落地狀態',
     '',
     `- Rolling validation 月均：${metrics.averageMonthlyEquityReturnPct}%`,
+    `- Rolling validation 區間：${validationStart} 至 ${validationEnd}（10 年）`,
     `- Rolling validation 最大回撤：${metrics.maximumDrawdownPct}%`,
     `- Rolling validation 交易：${metrics.trades} 筆`,
     `- Untouched holdout 月均：${holdout.summary.averageMonthlyEquityReturnPct}%`,
+    `- Untouched holdout 區間：${holdoutStart} 至 ${holdoutEnd}`,
     `- Untouched holdout 最大回撤：${holdout.summary.maximumDrawdownPct}%`,
-    `- 是否超越 0050：${beats0050 ? '是' : '否'}`,
+    `- 10 年 validation 是否超越 0050：${beats0050 ? '是' : '否'}`,
+    `- Holdout 是否超越 0050：${holdout.summary.averageMonthlyEquityReturnPct > holdoutBenchmark.averageMonthlyEquityReturnPct ? '是' : '否'}`,
     '- 可產生 T 日訊號與 T+1 order intent，但尚未達策略通過門檻。',
     '- Paper trading：不允許。',
     '- 真實券商 API 下單：不允許。',

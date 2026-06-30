@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
   "generatedAt": "2026-06-16T16:13:34.718Z",
-  "updatedAt": "2026-06-30T15:26:29.581Z",
+  "updatedAt": "2026-06-30T15:52:13.596Z",
   "experiments": [
     {
       "experimentId": "EXP-20260616161335-34c09c70",
@@ -8768,11 +8768,11 @@
       "notes": "未達門檻，不可紙上交易或實盤。"
     },
     {
-      "experimentId": "EXP-20260630152629-0ecdbbb9",
-      "createdAt": "2026-06-30T15:26:29.581Z",
+      "experimentId": "EXP-20260630155213-5eb77d12",
+      "createdAt": "2026-06-30T15:52:13.596Z",
       "strategyId": "deployable_multi_asset_rotation_v1_long_validation",
       "strategyFamilyId": "deployable_multi_asset_rotation_v1_long_validation:3dd16efd494c8413ec812eae",
-      "experimentHash": "0ecdbbb97f14bd4962c8fce2",
+      "experimentHash": "5eb77d127c9bc7ad3a50ae7b",
       "dataSources": [
         "0050_twse_daily",
         "0052_twse_daily",
@@ -8784,7 +8784,7 @@
         "00635U_twse_daily"
       ],
       "parameters": {
-        "configs": 12,
+        "configs": 28,
         "assets": [
           "0050.TW",
           "0052.TW"
@@ -8814,16 +8814,16 @@
       "metrics": {
         "startDate": "2015-01-01",
         "endDate": "2024-12-31",
-        "endingEquity": 2682393,
-        "averageMonthlyEquityReturnPct": 0.9092,
-        "annualizedReturnPct": 10.3704,
-        "profitFactor": 2.7507,
-        "maximumDrawdownPct": -25.3691,
-        "winRatePct": 67.3401,
-        "trades": 297,
-        "negativeMonths": 33,
-        "targetGapPct": 9.0908,
-        "orderIntents": 654
+        "endingEquity": 3090693,
+        "averageMonthlyEquityReturnPct": 1.0568,
+        "annualizedReturnPct": 11.9452,
+        "profitFactor": 2.8776,
+        "maximumDrawdownPct": -26.1375,
+        "winRatePct": 63.0662,
+        "trades": 287,
+        "negativeMonths": 45,
+        "targetGapPct": 8.9432,
+        "orderIntents": 628
       },
       "resultStatus": "failed",
       "failureReason": null,
@@ -8831,7 +8831,7 @@
       "passedMinimum": false,
       "passedHighProfit": false,
       "allowRetest": false,
-      "notes": "長期月均報酬仍未超越 0050，且最大回撤仍高於 20%，不可紙上交易、不可實盤、不可接真實券商下單。"
+      "notes": "10 年 rolling validation 已超越 0050 且回撤較低，但最大回撤仍高於 20%，額外 holdout 亦未超越 0050，不可紙上交易或實盤。"
     }
   ]
 }

@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
   "generatedAt": "2026-06-16T16:13:34.718Z",
-  "updatedAt": "2026-06-30T15:52:13.596Z",
+  "updatedAt": "2026-06-30T19:52:49.568Z",
   "experiments": [
     {
       "experimentId": "EXP-20260616161335-34c09c70",
@@ -8768,11 +8768,11 @@
       "notes": "未達門檻，不可紙上交易或實盤。"
     },
     {
-      "experimentId": "EXP-20260630155213-5eb77d12",
-      "createdAt": "2026-06-30T15:52:13.596Z",
+      "experimentId": "EXP-20260630195249-5b0b13a5",
+      "createdAt": "2026-06-30T19:52:49.568Z",
       "strategyId": "deployable_multi_asset_rotation_v1_long_validation",
-      "strategyFamilyId": "deployable_multi_asset_rotation_v1_long_validation:3dd16efd494c8413ec812eae",
-      "experimentHash": "5eb77d127c9bc7ad3a50ae7b",
+      "strategyFamilyId": "deployable_multi_asset_rotation_v1_long_validation:2406e6c07500166be9ce8345",
+      "experimentHash": "5b0b13a5ed935c41e0867ad5",
       "dataSources": [
         "0050_twse_daily",
         "0052_twse_daily",
@@ -8784,13 +8784,13 @@
         "00635U_twse_daily"
       ],
       "parameters": {
-        "configs": 28,
+        "configs": 54,
         "assets": [
           "0050.TW",
           "0052.TW"
         ],
         "strategyFamilies": [
-          "scheduled_trend_core"
+          "staged_trend_core"
         ]
       },
       "trainPeriod": {
@@ -8814,16 +8814,16 @@
       "metrics": {
         "startDate": "2015-01-01",
         "endDate": "2024-12-31",
-        "endingEquity": 3090693,
-        "averageMonthlyEquityReturnPct": 1.0568,
-        "annualizedReturnPct": 11.9452,
-        "profitFactor": 2.8776,
-        "maximumDrawdownPct": -26.1375,
-        "winRatePct": 63.0662,
-        "trades": 287,
-        "negativeMonths": 45,
-        "targetGapPct": 8.9432,
-        "orderIntents": 628
+        "endingEquity": 3184577,
+        "averageMonthlyEquityReturnPct": 1.0755,
+        "annualizedReturnPct": 12.2807,
+        "profitFactor": 3.9837,
+        "maximumDrawdownPct": -26.1356,
+        "winRatePct": 64.486,
+        "trades": 214,
+        "negativeMonths": 46,
+        "targetGapPct": 8.9245,
+        "orderIntents": 477
       },
       "resultStatus": "failed",
       "failureReason": null,

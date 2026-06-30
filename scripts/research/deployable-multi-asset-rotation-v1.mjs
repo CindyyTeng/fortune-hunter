@@ -102,6 +102,7 @@ function enrich(rows) {
       ma60: index >= 59 ? average(closes.slice(-60)) : null,
       ma120: index >= 119 ? average(closes.slice(-120)) : null,
       ma200: index >= 199 ? average(closes.slice(-200)) : null,
+      high60: index >= 59 ? Math.max(...closes.slice(-60)) : null,
       mom20: index >= 20 ? pct(bar.close, closes[index - 20]) : null,
       mom60: index >= 60 ? pct(bar.close, closes[index - 60]) : null,
       mom120: index >= 120 ? pct(bar.close, closes[index - 120]) : null,
@@ -262,12 +263,38 @@ function buildConfigs() {
       }
     }
   }
+  for (const techWeight of [70, 80, 90]) {
+    for (const warningExposurePct of [30, 50, 70]) {
+      for (const warningMode of ['below_ma60', 'ma_cross', 'drawdown10']) {
+        for (const shockMomentum of [-8, -4]) {
+          rows.push({
+            kind: 'staged_trend_core',
+            id: `staged_core${100 - techWeight}_tech${techWeight}_warning${warningExposurePct}_${warningMode}_shock${shockMomentum}`,
+            coreWeight: 100 - techWeight,
+            techWeight,
+            warningExposurePct,
+            warningMode,
+            trendDays: 120,
+            bearMomentum: 0,
+            shockMomentum,
+            riskOffMode: 'cash',
+            rebalanceDays: 10,
+            rebalanceBand: 0,
+            targetVol: 99,
+            accountGuardPct: 6,
+            cooldownDays: 15,
+            monthlyStopPct: 4
+          });
+        }
+      }
+    }
+  }
   return rows;
 }
 
 const configs = buildConfigs();
 const TEST_FAMILY = process.env.ROTATION_TEST_FAMILY || null;
-const PRIMARY_FAMILY = 'scheduled_trend_core';
+const PRIMARY_FAMILY = 'staged_trend_core';
 
 function assetScore(item, core, config) {
   const weights = config.scoreWeights;
@@ -384,6 +411,18 @@ function coreSatelliteWeights(row, config) {
   return { '0050.TW': config.coreWeight, '0052.TW': config.techWeight };
 }
 
+function stagedTrendWeights(row, config) {
+  const weights = coreSatelliteWeights(row, config);
+  const core = row.metrics.get('0050.TW');
+  if (!core || !weights['0052.TW']) return weights;
+  const warning = config.warningMode === 'below_ma60'
+    ? core.close < core.ma60
+    : config.warningMode === 'ma_cross'
+      ? core.ma20 < core.ma60
+      : core.close < core.ma20 && pct(core.close, core.high60) <= -10;
+  return warning ? scaled(weights, config.warningExposurePct) : weights;
+}
+
 function markEquity(state, row, field = 'close') {
   const unsettled = state.unsettled.reduce((sum, item) => sum + item.amount, 0);
   const positions = [...state.positions.entries()].reduce((sum, [symbol, position]) => {
@@ -399,7 +438,7 @@ function makeIntent(date, symbol, action, config, price, budget, reason) {
     symbol,
     action,
     strategyId: `deployable_multi_asset_rotation_v1:${config.id}`,
-    setup: ['0050 長趨勢與 60 日動能確認', '0050／0052 固定週期再平衡', '急跌與帳戶風控均未封鎖'],
+    setup: ['0050 長趨勢與 60 日動能確認', '0050／0052 固定週期再平衡', '60 日高點回落警戒與帳戶風控均未封鎖'],
     trigger: ['T 日收盤確認訊號', 'T+1 開盤以可成交限價委託'],
     invalidation: ['0050 跌破 MA120 且 60 日動能低於 0%', '帳戶或單月損失觸發熔斷'],
     entryPlan: {
@@ -576,6 +615,8 @@ function simulate(rows, schedule, startDate, endDate, emitIntents = false) {
             ? leveragedOverlayWeights(signal, state.config)
             : state.config.kind === 'scheduled_trend_core'
               ? coreSatelliteWeights(signal, state.config)
+              : state.config.kind === 'staged_trend_core'
+                ? stagedTrendWeights(signal, state.config)
                 : {});
     const coreMetric = signal.metrics.get('0050.TW');
     if (Number.isFinite(state.config.shockMomentum)
@@ -661,7 +702,7 @@ function selectConfig(rows, fold, family = null) {
     const score = scoreSummary(summary, annual);
     return { config, summary, score };
   }).sort((left, right) => right.score - left.score);
-  const fallback = family === PRIMARY_FAMILY ? MARKET_FALLBACK_CONFIG : CASH_CONFIG;
+  const fallback = [PRIMARY_FAMILY, 'staged_trend_core'].includes(family) ? MARKET_FALLBACK_CONFIG : CASH_CONFIG;
   return evaluated.find(row => Number.isFinite(row.score)) || {
     config: fallback,
     summary: simulate(rows, () => fallback, fold.trainStart, fold.trainEnd).summary,
@@ -785,9 +826,9 @@ async function main() {
     && metrics.maximumDrawdownPct > benchmark.maximumDrawdownPct;
   const minimumPassed = beats0050 && metrics.trades >= 100 && metrics.profitFactor > 1.15 && metrics.maximumDrawdownPct > -20;
   const iterationBaseline = {
-    averageMonthlyEquityReturnPct: 0.9092,
-    maximumDrawdownPct: -25.3691,
-    trades: 297
+    averageMonthlyEquityReturnPct: 1.0568,
+    maximumDrawdownPct: -26.1375,
+    trades: 287
   };
   const result = {
     generatedAt: new Date().toISOString(),
@@ -911,7 +952,7 @@ async function main() {
   await appendExperiment({
     strategyId: 'deployable_multi_asset_rotation_v1_long_validation',
     dataSources: ASSETS.map(asset => `${asset.name}_twse_daily`),
-    setupRules: ['0050 位於 MA120 上方', '0050 60 日動能不低於 0%', '0050／0052 固定週期再平衡'],
+    setupRules: ['0050 位於 MA120 上方', '0050 60 日動能不低於 0%', '0050／0052 固定週期再平衡', '跌破 MA20 且距 60 日高點回落 10% 時分段降曝險'],
     triggerRules: ['T 日收盤確認趨勢與急跌保護', 'T+1 開盤調整到目標權重'],
     invalidationRules: ['0050 跌破 MA120 且 60 日動能低於 0%', '20 日跌幅觸發急跌保護'],
     exitRules: ['權重切換', '月損失封鎖', '帳戶回撤熔斷', '結束驗證視窗'],

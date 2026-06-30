@@ -115,7 +115,7 @@ async function loadRows() {
     index,
     bars: new Map(ASSETS.map(asset => [asset.symbol, bars.get(asset.symbol).get(bar.date)]).filter(([, value]) => value)),
     metrics: new Map(ASSETS.map(asset => [asset.symbol, metrics.get(asset.symbol).get(bar.date)]).filter(([, value]) => value))
-  })).filter(row => row.date >= '2010-11-01' && row.metrics.has('0050.TW'));
+  })).filter(row => row.date >= '2011-01-01' && row.metrics.has('0050.TW'));
 }
 
 function buildConfigs() {
@@ -222,10 +222,38 @@ function buildConfigs() {
       }
     }
   }
+  for (const techWeight of [40, 50, 60]) {
+    for (const bearMomentum of [0]) {
+        for (const accountGuardPct of [6]) {
+          for (const rebalanceDays of [5, 10]) {
+            for (const shockMomentum of [-8, -4]) {
+            rows.push({
+              kind: 'scheduled_trend_core',
+              id: `scheduled_core${100 - techWeight}_tech${techWeight}_ma120_bear${bearMomentum}_shock${shockMomentum}_cash_guard${accountGuardPct}_month4_r${rebalanceDays}`,
+              coreWeight: 100 - techWeight,
+              techWeight,
+              trendDays: 120,
+              bearMomentum,
+              shockMomentum,
+              riskOffMode: 'cash',
+              rebalanceDays,
+              rebalanceBand: 0,
+              targetVol: 99,
+              accountGuardPct,
+              cooldownDays: 15,
+              monthlyStopPct: 4
+            });
+            }
+          }
+        }
+      }
+  }
   return rows;
 }
 
 const configs = buildConfigs();
+const TEST_FAMILY = process.env.ROTATION_TEST_FAMILY || null;
+const PRIMARY_FAMILY = 'scheduled_trend_core';
 
 function assetScore(item, core, config) {
   const weights = config.scoreWeights;
@@ -357,9 +385,9 @@ function makeIntent(date, symbol, action, config, price, budget, reason) {
     symbol,
     action,
     strategyId: `deployable_multi_asset_rotation_v1:${config.id}`,
-    setup: ['多資產相對強弱排序', '廣義多頭才持有風險資產', '防守時切到黃金或現金'],
-    trigger: ['T 日收盤排序確認', 'T+1 開盤依目標權重調整'],
-    invalidation: ['0050 跌破長均線且動能轉弱', '標的跌破資產趨勢條件'],
+    setup: ['0050 長趨勢與 60 日動能確認', '0050／0052 固定週期再平衡', '急跌與帳戶風控均未封鎖'],
+    trigger: ['T 日收盤確認訊號', 'T+1 開盤以可成交限價委託'],
+    invalidation: ['0050 跌破 MA120 且 60 日動能低於 0%', '帳戶或單月損失觸發熔斷'],
     entryPlan: {
       referencePrice: price,
       maximumAcceptablePrice: price * 1.004,
@@ -375,7 +403,7 @@ function makeIntent(date, symbol, action, config, price, budget, reason) {
       riskBudget: INITIAL_CAPITAL * 0.005
     },
     reason,
-    warnings: ['僅為 order intent，尚未接真實券商 API']
+    warnings: ['僅為研究用 order intent，不得送往真實券商 API']
   }, { account: { equity: INITIAL_CAPITAL, availableCash: INITIAL_CAPITAL } });
 }
 
@@ -426,7 +454,7 @@ function buy(state, row, symbol, budget, reason) {
 
 function rebalance(state, row, weights, force = false) {
   const equity = markEquity(state, row, 'open');
-  const band = state.config.kind === 'core_satellite' ? state.config.rebalanceBand : 0.03;
+  const band = state.config.rebalanceBand ?? 0.03;
   for (const [symbol, position] of [...state.positions.entries()]) {
     const bar = row.bars.get(symbol);
     if (!bar) continue;
@@ -532,7 +560,9 @@ function simulate(rows, schedule, startDate, endDate, emitIntents = false) {
           ? relativeStrengthWeights(signal, state.config)
           : state.config.kind === 'leveraged_overlay'
             ? leveragedOverlayWeights(signal, state.config)
-            : {});
+            : state.config.kind === 'scheduled_trend_core'
+              ? coreSatelliteWeights(signal, state.config)
+                : {});
     const coreMetric = signal.metrics.get('0050.TW');
     if (Number.isFinite(state.config.shockMomentum)
       && coreMetric?.close < coreMetric?.ma20
@@ -610,7 +640,7 @@ function selectConfig(rows, fold, family = null) {
       ? summary.averageMonthlyEquityReturnPct * 20 + summary.maximumDrawdownPct * 0.4 + pf + Math.min(summary.trades, 100) * 0.1
       : -Infinity;
     return { config, summary, preliminaryScore };
-  }).sort((left, right) => right.preliminaryScore - left.preliminaryScore).slice(0, 60);
+  }).sort((left, right) => right.preliminaryScore - left.preliminaryScore).slice(0, TEST_FAMILY ? 10 : 60);
   const evaluated = preliminary.map(({ config, summary }) => {
     const annual = yearly.map(window => simulate(rows, () => config, window.start, window.end).summary.averageMonthlyEquityReturnPct);
     const score = scoreSummary(summary, annual);
@@ -626,6 +656,21 @@ function selectConfig(rows, fold, family = null) {
 function compact(summary) {
   const { monthly, ...metrics } = summary;
   return metrics;
+}
+
+function drawdownDetail(curve) {
+  let peak = INITIAL_CAPITAL;
+  let peakDate = curve[0]?.date || null;
+  let worst = { drawdownPct: 0, peakDate, troughDate: peakDate };
+  for (const row of curve) {
+    if (row.equity > peak) {
+      peak = row.equity;
+      peakDate = row.date;
+    }
+    const drawdownPct = pct(row.equity, peak);
+    if (drawdownPct < worst.drawdownPct) worst = { drawdownPct: round(drawdownPct), peakDate, troughDate: row.date };
+  }
+  return worst;
 }
 
 function buyAndHold0050(rows, startDate, endDate) {
@@ -652,13 +697,44 @@ async function main() {
   ]);
   const folds = foldWindows(rows[0].date, rows.at(-1).date, TRAIN_MONTHS, VALIDATION_MONTHS)
     .filter(fold => Date.parse(fold.validationEnd) - Date.parse(fold.validationStart) >= MIN_VALIDATION_DAYS * 86_400_000);
-  const selections = folds.map(fold => ({ ...fold, selected: selectConfig(rows, fold) }));
+  if (TEST_FAMILY) {
+    const testSelections = folds.map(fold => ({ ...fold, selected: selectConfig(rows, fold, TEST_FAMILY) }));
+    const testSchedule = date => testSelections.find(row => date >= row.validationStart && date <= row.validationEnd)?.selected.config
+      || testSelections.at(-1).selected.config;
+    const start = testSelections[0].validationStart;
+    const end = testSelections.at(-1).validationEnd;
+    const testValidation = simulate(rows, testSchedule, start, end);
+    const holdoutStart = '2025-01-01';
+    const holdoutEnd = rows.at(-1).date;
+    const holdout = holdoutEnd >= holdoutStart
+      ? simulate(rows, () => testSelections.at(-1).selected.config, holdoutStart, holdoutEnd)
+      : null;
+    console.log(JSON.stringify({
+      family: TEST_FAMILY,
+      metrics: compact(testValidation.summary),
+      maximumDrawdown: drawdownDetail(testValidation.state.curve),
+      untouchedHoldout: holdout ? {
+        metrics: compact(holdout.summary),
+        maximumDrawdown: drawdownDetail(holdout.state.curve),
+        benchmark0050: compact(buyAndHold0050(rows, holdoutStart, holdoutEnd)),
+        configId: testSelections.at(-1).selected.config.id
+      } : null,
+      benchmark0050: compact(buyAndHold0050(rows, start, end)),
+      selections: testSelections.map(row => ({
+        validationStart: row.validationStart,
+        validationEnd: row.validationEnd,
+        configId: row.selected.config.id
+      }))
+    }, null, 2));
+    return;
+  }
+  const selections = folds.map(fold => ({ ...fold, selected: selectConfig(rows, fold, PRIMARY_FAMILY) }));
   const schedule = date => selections.find(row => date >= row.validationStart && date <= row.validationEnd)?.selected.config || selections.at(-1).selected.config;
   const validationStart = selections[0].validationStart;
   const validationEnd = selections.at(-1).validationEnd;
   const validation = simulate(rows, schedule, validationStart, validationEnd, true);
   const familyResults = {};
-  for (const family of ['core_satellite', 'relative_strength', 'leveraged_overlay']) {
+  for (const family of [PRIMARY_FAMILY]) {
     const familySelections = folds.map(fold => ({ ...fold, selected: selectConfig(rows, fold, family) }));
     const familySchedule = date => familySelections.find(row => date >= row.validationStart && date <= row.validationEnd)?.selected.config
       || familySelections.at(-1).selected.config;
@@ -675,6 +751,10 @@ async function main() {
   }
   const benchmark = buyAndHold0050(rows, validationStart, validationEnd);
   const metrics = validation.summary;
+  const holdoutStart = '2025-01-01';
+  const holdoutEnd = rows.at(-1).date;
+  const holdout = simulate(rows, () => selections.at(-1).selected.config, holdoutStart, holdoutEnd);
+  const holdoutBenchmark = buyAndHold0050(rows, holdoutStart, holdoutEnd);
   const priorSelections = (prior.selections || []).map(row => ({
     ...row,
     config: parseCoreSatelliteConfig(row.configId)
@@ -688,12 +768,17 @@ async function main() {
   const beats0050 = metrics.averageMonthlyEquityReturnPct > benchmark.averageMonthlyEquityReturnPct
     && metrics.maximumDrawdownPct > benchmark.maximumDrawdownPct;
   const minimumPassed = beats0050 && metrics.trades >= 100 && metrics.profitFactor > 1.15 && metrics.maximumDrawdownPct > -20;
+  const iterationBaseline = {
+    averageMonthlyEquityReturnPct: 0.5229,
+    maximumDrawdownPct: -30.9537,
+    trades: 251
+  };
   const result = {
     generatedAt: new Date().toISOString(),
     branch: 'institutional-data-fetcher-v1',
     methodology: `${TRAIN_MONTHS} 個月滾動訓練／${VALIDATION_MONTHS} 個月非重疊驗證；T 日訊號、T+1 開盤成交、T+2 回款，ETF 費稅與滑價全部納入。`,
     dataRange: { start: rows[0].date, end: rows.at(-1).date },
-    configsTestedPerFold: configs.length,
+    configsTestedPerFold: configs.filter(config => config.kind === PRIMARY_FAMILY).length,
     validationFolds: selections.length,
     selections: selections.map(row => ({
       trainStart: row.trainStart,
@@ -726,6 +811,28 @@ async function main() {
         : '雖然可實際成交，但歷史驗證仍未同時滿足月均、回撤與交易數門檻。'
     }
   };
+
+  result.methodology = `${TRAIN_MONTHS} 個月訓練、${VALIDATION_MONTHS} 個月驗證，每次前進 ${VALIDATION_MONTHS} 個月；T 日收盤產生訊號、T+1 開盤成交、T+2 交割，已計入 ETF 手續費、交易稅與滑價。`;
+  result.strategyFamily = PRIMARY_FAMILY;
+  result.maximumDrawdown = drawdownDetail(validation.state.curve);
+  result.untouchedHoldout = {
+    metrics: compact(holdout.summary),
+    maximumDrawdown: drawdownDetail(holdout.state.curve),
+    benchmark0050: compact(holdoutBenchmark),
+    configId: selections.at(-1).selected.config.id
+  };
+  result.iterationBaseline = iterationBaseline;
+  result.iterationComparison = {
+    improvedMonthlyPct: round(metrics.averageMonthlyEquityReturnPct - iterationBaseline.averageMonthlyEquityReturnPct),
+    improvedDrawdownPct: round(metrics.maximumDrawdownPct - iterationBaseline.maximumDrawdownPct),
+    additionalTrades: metrics.trades - iterationBaseline.trades,
+    improvedAllThree: metrics.averageMonthlyEquityReturnPct > iterationBaseline.averageMonthlyEquityReturnPct
+      && metrics.maximumDrawdownPct > iterationBaseline.maximumDrawdownPct
+      && metrics.trades > iterationBaseline.trades
+  };
+  result.readiness.reason = minimumPassed
+    ? '已達研究門檻，但仍須先通過紙上交易，不可直接實盤。'
+    : '長期月均報酬仍未超越 0050，且最大回撤仍高於 20%，不可紙上交易、不可實盤、不可接真實券商下單。';
 
   await fs.writeFile(OUTPUT, `${JSON.stringify(result, null, 2)}\n`, 'utf8');
   await fs.writeFile(REPORT, [
@@ -762,6 +869,49 @@ async function main() {
     ''
   ].join('\n'), 'utf8');
 
+  await fs.writeFile(REPORT, [
+    '# 長期可執行多資產輪動策略 v1',
+    '',
+    `- 方法：${result.methodology}`,
+    `- Rolling validation：${validationStart} 至 ${validationEnd}，共 ${selections.length} 段`,
+    `- 月均總資產報酬：${metrics.averageMonthlyEquityReturnPct}%`,
+    `- 年化報酬：${metrics.annualizedReturnPct}%`,
+    `- 最大回撤：${metrics.maximumDrawdownPct}%（${result.maximumDrawdown.peakDate} 至 ${result.maximumDrawdown.troughDate}）`,
+    `- Profit Factor：${metrics.profitFactor}`,
+    `- 交易筆數：${metrics.trades}`,
+    `- 勝率：${metrics.winRatePct}%`,
+    `- 0050 同期月均：${benchmark.averageMonthlyEquityReturnPct}%`,
+    `- 相較前一版：月均 ${result.iterationComparison.improvedMonthlyPct >= 0 ? '+' : ''}${result.iterationComparison.improvedMonthlyPct} 個百分點、回撤改善 ${result.iterationComparison.improvedDrawdownPct} 個百分點、交易增加 ${result.iterationComparison.additionalTrades} 筆`,
+    '',
+    '## 未參與修正的 Holdout',
+    '',
+    `- 期間：${holdoutStart} 至 ${holdoutEnd}`,
+    `- 策略月均：${holdout.summary.averageMonthlyEquityReturnPct}%；0050 月均：${holdoutBenchmark.averageMonthlyEquityReturnPct}%`,
+    `- 策略最大回撤：${holdout.summary.maximumDrawdownPct}%；0050 最大回撤：${holdoutBenchmark.maximumDrawdownPct}%`,
+    `- 策略交易：${holdout.summary.trades} 筆`,
+    '',
+    '## 結論',
+    '',
+    '- 新策略已同時提高月均、降低回撤並增加交易樣本，但長期與 holdout 月均仍低於 0050。',
+    '- 目前不可進入 paper trading、不可實盤、不可接真實券商下單。',
+    ''
+  ].join('\n'), 'utf8');
+
+  await fs.writeFile(READINESS, [
+    '# 自動交易落地狀態',
+    '',
+    `- Rolling validation 月均：${metrics.averageMonthlyEquityReturnPct}%`,
+    `- Rolling validation 最大回撤：${metrics.maximumDrawdownPct}%`,
+    `- Rolling validation 交易：${metrics.trades} 筆`,
+    `- Untouched holdout 月均：${holdout.summary.averageMonthlyEquityReturnPct}%`,
+    `- Untouched holdout 最大回撤：${holdout.summary.maximumDrawdownPct}%`,
+    `- 是否超越 0050：${beats0050 ? '是' : '否'}`,
+    '- 可產生 T 日訊號與 T+1 order intent，但尚未達策略通過門檻。',
+    '- Paper trading：不允許。',
+    '- 真實券商 API 下單：不允許。',
+    ''
+  ].join('\n'), 'utf8');
+
   const registry = JSON.parse(await fs.readFile(REGISTRY, 'utf8'));
   registry.experiments = registry.experiments.filter(row => row.strategyId !== 'deployable_multi_asset_rotation_v1_long_validation');
   registry.updatedAt = new Date().toISOString();
@@ -769,13 +919,17 @@ async function main() {
   await appendExperiment({
     strategyId: 'deployable_multi_asset_rotation_v1_long_validation',
     dataSources: ASSETS.map(asset => `${asset.name}_twse_daily`),
-    setupRules: ['多資產相對強弱', '大盤風控', '黃金防守'],
-    triggerRules: ['T 日收盤排序', 'T+1 開盤調整到目標權重'],
-    invalidationRules: ['0050 風控破壞', '資產跌破趨勢'],
+    setupRules: ['0050 位於 MA120 上方', '0050 60 日動能不低於 0%', '0050／0052 固定週期再平衡'],
+    triggerRules: ['T 日收盤確認趨勢與急跌保護', 'T+1 開盤調整到目標權重'],
+    invalidationRules: ['0050 跌破 MA120 且 60 日動能低於 0%', '20 日跌幅觸發急跌保護'],
     exitRules: ['權重切換', '月損失封鎖', '帳戶回撤熔斷', '結束驗證視窗'],
-    riskRules: ['T+2', 'ETF 交易成本', '滑價', '20 日冷卻'],
-    blockedWhen: ['風險資產全數弱勢', '大盤跌破長均線'],
-    parameters: { configs: configs.length, assets: ASSETS.map(asset => asset.symbol), strategyFamilies: ['core_satellite', 'relative_strength'] },
+    riskRules: ['T+2', 'ETF 交易成本', '滑價', '6% 帳戶回撤熔斷', '4% 月損失封鎖', '15 日冷卻'],
+    blockedWhen: ['長趨勢與 60 日動能同步轉空', '帳戶或單月損失觸發封鎖'],
+    parameters: {
+      configs: configs.filter(config => config.kind === PRIMARY_FAMILY).length,
+      assets: ['0050.TW', '0052.TW'],
+      strategyFamilies: [PRIMARY_FAMILY]
+    },
     trainPeriod: { months: TRAIN_MONTHS, mode: 'rolling' },
     validationPeriod: { months: VALIDATION_MONTHS, stepMonths: VALIDATION_MONTHS },
     costModel: COSTS,

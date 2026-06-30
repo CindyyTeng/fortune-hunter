@@ -1,9 +1,11 @@
-# 自動交易準備度
+# 自動交易落地狀態
 
-跨市場 ETF 輪動 48/24 長期 validation：月均 0.3059%、年化 3.2835%、最大回撤 -21.7459%、交易 60 筆。
-同期 0050 買進持有：月均 1.0102%、最大回撤 -36.365%。
-歷史最低門檻：未通過。
-結論：未通過 validation，Paper trading 不得自動啟用。
-真實券商 API：禁止送單，只能保留 order intent dry-run。
-
-正式交易前仍須補足新期間紙上交易、配息調整、即時報價品質、部分成交、漲跌停與斷線復原測試。
+- Rolling validation 月均：0.9092%
+- Rolling validation 最大回撤：-25.3691%
+- Rolling validation 交易：297 筆
+- Untouched holdout 月均：4.368%
+- Untouched holdout 最大回撤：-10.2384%
+- 是否超越 0050：否
+- 可產生 T 日訊號與 T+1 order intent，但尚未達策略通過門檻。
+- Paper trading：不允許。
+- 真實券商 API 下單：不允許。

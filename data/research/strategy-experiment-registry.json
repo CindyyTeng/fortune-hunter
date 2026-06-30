@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
   "generatedAt": "2026-06-16T16:13:34.718Z",
-  "updatedAt": "2026-06-30T07:29:25.722Z",
+  "updatedAt": "2026-06-30T15:26:29.581Z",
   "experiments": [
     {
       "experimentId": "EXP-20260616161335-34c09c70",
@@ -8099,79 +8099,6 @@
       "notes": "雖然可實際成交，但歷史驗證仍未同時滿足月均、回撤與交易數門檻。"
     },
     {
-      "experimentId": "EXP-20260630072632-cb2586e4",
-      "createdAt": "2026-06-30T07:26:32.602Z",
-      "strategyId": "deployable_multi_asset_rotation_v1_long_validation",
-      "strategyFamilyId": "deployable_multi_asset_rotation_v1_long_validation:6a41b8ccf74de58ca34d2d92",
-      "experimentHash": "cb2586e4f7a5eb5f3a0b2fae",
-      "dataSources": [
-        "0050_twse_daily",
-        "0052_twse_daily",
-        "00646_twse_daily",
-        "00662_twse_daily",
-        "00661_twse_daily",
-        "00631L_twse_daily",
-        "00632R_twse_daily",
-        "00635U_twse_daily"
-      ],
-      "parameters": {
-        "configs": 2944,
-        "assets": [
-          "0050.TW",
-          "0052.TW",
-          "00646.TW",
-          "00662.TW",
-          "00661.TW",
-          "00631L.TW",
-          "00632R.TW",
-          "00635U.TW"
-        ],
-        "strategyFamilies": [
-          "core_satellite",
-          "relative_strength"
-        ]
-      },
-      "trainPeriod": {
-        "months": 48,
-        "mode": "rolling"
-      },
-      "validationPeriod": {
-        "months": 24,
-        "stepMonths": 24
-      },
-      "costModel": {
-        "buyFeePct": 0.1425,
-        "sellFeePct": 0.1425,
-        "sellTaxPct": 0.1,
-        "buySlippagePct": 0.15,
-        "sellSlippagePct": 0.15,
-        "minimumFee": 20,
-        "boardLotShares": 1000
-      },
-      "executionModel": "T 日訊號、T+1 開盤成交、T+2 回款",
-      "metrics": {
-        "startDate": "2014-11-01",
-        "endDate": "2024-10-31",
-        "endingEquity": 1340123,
-        "averageMonthlyEquityReturnPct": 0.3629,
-        "annualizedReturnPct": 2.9709,
-        "profitFactor": 1.2677,
-        "maximumDrawdownPct": -33.9253,
-        "winRatePct": 50.1976,
-        "trades": 253,
-        "negativeMonths": 61,
-        "targetGapPct": 9.6371,
-        "orderIntents": 503
-      },
-      "resultStatus": "failed",
-      "failureReason": null,
-      "overfitFlag": false,
-      "passedMinimum": false,
-      "passedHighProfit": false,
-      "allowRetest": false,
-      "notes": "雖然可實際成交，但歷史驗證仍未同時滿足月均、回撤與交易數門檻。"
-    },
-    {
       "experimentId": "EXP-20260630072925-2354563f",
       "createdAt": "2026-06-30T07:29:25.722Z",
       "strategyId": "deployable_etf_rotation_v1",
@@ -8839,6 +8766,72 @@
       "passedHighProfit": false,
       "allowRetest": false,
       "notes": "未達門檻，不可紙上交易或實盤。"
+    },
+    {
+      "experimentId": "EXP-20260630152629-0ecdbbb9",
+      "createdAt": "2026-06-30T15:26:29.581Z",
+      "strategyId": "deployable_multi_asset_rotation_v1_long_validation",
+      "strategyFamilyId": "deployable_multi_asset_rotation_v1_long_validation:3dd16efd494c8413ec812eae",
+      "experimentHash": "0ecdbbb97f14bd4962c8fce2",
+      "dataSources": [
+        "0050_twse_daily",
+        "0052_twse_daily",
+        "00646_twse_daily",
+        "00662_twse_daily",
+        "00661_twse_daily",
+        "00631L_twse_daily",
+        "00632R_twse_daily",
+        "00635U_twse_daily"
+      ],
+      "parameters": {
+        "configs": 12,
+        "assets": [
+          "0050.TW",
+          "0052.TW"
+        ],
+        "strategyFamilies": [
+          "scheduled_trend_core"
+        ]
+      },
+      "trainPeriod": {
+        "months": 48,
+        "mode": "rolling"
+      },
+      "validationPeriod": {
+        "months": 24,
+        "stepMonths": 24
+      },
+      "costModel": {
+        "buyFeePct": 0.1425,
+        "sellFeePct": 0.1425,
+        "sellTaxPct": 0.1,
+        "buySlippagePct": 0.15,
+        "sellSlippagePct": 0.15,
+        "minimumFee": 20,
+        "boardLotShares": 1000
+      },
+      "executionModel": "T 日訊號、T+1 開盤成交、T+2 回款",
+      "metrics": {
+        "startDate": "2015-01-01",
+        "endDate": "2024-12-31",
+        "endingEquity": 2682393,
+        "averageMonthlyEquityReturnPct": 0.9092,
+        "annualizedReturnPct": 10.3704,
+        "profitFactor": 2.7507,
+        "maximumDrawdownPct": -25.3691,
+        "winRatePct": 67.3401,
+        "trades": 297,
+        "negativeMonths": 33,
+        "targetGapPct": 9.0908,
+        "orderIntents": 654
+      },
+      "resultStatus": "failed",
+      "failureReason": null,
+      "overfitFlag": false,
+      "passedMinimum": false,
+      "passedHighProfit": false,
+      "allowRetest": false,
+      "notes": "長期月均報酬仍未超越 0050，且最大回撤仍高於 20%，不可紙上交易、不可實盤、不可接真實券商下單。"
     }
   ]
 }

@@ -5,6 +5,7 @@ import { foldWindows, mean, round } from './research-core.mjs';
 import { appendExperiment } from './strategy-experiment-registry.mjs';
 
 const HISTORY = new URL('../../data/research/deployable-etf-rotation-history.json', import.meta.url);
+const LEVERAGED_HISTORY = new URL('../../data/research/deployable-etf-history.json', import.meta.url);
 const OUTPUT = new URL('../../data/research/deployable-multi-asset-rotation-v1.json', import.meta.url);
 const REPORT = new URL('../../docs/DEPLOYABLE_MULTI_ASSET_ROTATION_V1.md', import.meta.url);
 const READINESS = new URL('../../docs/AUTO_TRADING_READINESS.md', import.meta.url);
@@ -13,6 +14,9 @@ const REGISTRY = new URL('../../data/research/strategy-experiment-registry.json'
 
 const INITIAL_CAPITAL = 1_000_000;
 const TARGET_MONTHLY = 10;
+const TRAIN_MONTHS = 48;
+const VALIDATION_MONTHS = 24;
+const MIN_VALIDATION_DAYS = 660;
 const COSTS = Object.freeze({
   buyFeePct: 0.1425,
   sellFeePct: 0.1425,
@@ -29,11 +33,23 @@ const ASSETS = Object.freeze([
   { symbol: '00646.TW', name: '00646', type: 'risk' },
   { symbol: '00662.TW', name: '00662', type: 'risk' },
   { symbol: '00661.TW', name: '00661', type: 'risk' },
+  { symbol: '00631L.TW', name: '00631L', type: 'leverage' },
+  { symbol: '00632R.TW', name: '00632R', type: 'inverse' },
   { symbol: '00635U.TW', name: '00635U', type: 'defense' }
 ]);
 
 const RISK_SYMBOLS = ASSETS.filter(asset => asset.type === 'risk').map(asset => asset.symbol);
 const DEFENSE_SYMBOL = '00635U.TW';
+const CASH_CONFIG = Object.freeze({
+  kind: 'cash',
+  id: 'cash_when_train_has_no_edge',
+  rebalanceDays: 5,
+  rebalanceBand: 0.05,
+  accountGuardPct: 8,
+  cooldownDays: 20,
+  monthlyStopPct: 4,
+  targetVol: 0
+});
 
 const average = values => values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : null;
 const pct = (value, base) => Number.isFinite(value) && base ? (value / base - 1) * 100 : 0;
@@ -81,11 +97,16 @@ function enrich(rows) {
 }
 
 async function loadRows() {
-  const payload = JSON.parse(await fs.readFile(HISTORY, 'utf8'));
+  const [payload, leveragedPayload] = await Promise.all([
+    fs.readFile(HISTORY, 'utf8').then(JSON.parse),
+    fs.readFile(LEVERAGED_HISTORY, 'utf8').then(JSON.parse)
+  ]);
   const bars = new Map();
   const metrics = new Map();
   for (const asset of ASSETS) {
-    const series = payload.series[asset.symbol] || [];
+    const series = asset.type === 'leverage'
+      ? leveragedPayload.series?.[asset.symbol] || []
+      : payload.series[asset.symbol] || [];
     bars.set(asset.symbol, new Map(series.map(row => [row.date, row])));
     metrics.set(asset.symbol, new Map(enrich(series).map(row => [row.date, { ...row, symbol: asset.symbol }])));
   }
@@ -94,47 +115,105 @@ async function loadRows() {
     index,
     bars: new Map(ASSETS.map(asset => [asset.symbol, bars.get(asset.symbol).get(bar.date)]).filter(([, value]) => value)),
     metrics: new Map(ASSETS.map(asset => [asset.symbol, metrics.get(asset.symbol).get(bar.date)]).filter(([, value]) => value))
-  })).filter(row => row.date >= '2010-11-01' && row.metrics.has('0050.TW') && row.metrics.has('0052.TW'));
+  })).filter(row => row.date >= '2010-11-01' && row.metrics.has('0050.TW'));
 }
 
 function buildConfigs() {
   const rows = [];
-  for (const baseCoreWeight of [50, 60]) {
-    for (const satelliteWeight of [20, 40]) {
-      for (const broadTrendDays of [120, 200]) {
-        for (const assetTrendDays of [60, 120]) {
-          for (const broadMomentumFloor of [-8, -4]) {
-            for (const leaderRelativeFloor of [0, 2, 4]) {
-              for (const leaderBoostPct of [0, 10]) {
-                for (const hedgePct of [0, 10]) {
-                  for (const riskOffMode of ['cash', 'gold', 'core50']) {
-                    for (const satelliteFallback of ['core', 'cash']) {
-                      for (const rebalanceDays of [10, 20]) {
-                        for (const accountGuardPct of [12, 16]) {
-                          rows.push({
-                            kind: 'multi_asset',
-                            id: `core${baseCoreWeight}_sat${satelliteWeight}_bma${broadTrendDays}_ama${assetTrendDays}_mom${broadMomentumFloor}_rs${leaderRelativeFloor}_boost${leaderBoostPct}_hedge${hedgePct}_${riskOffMode}_${satelliteFallback}_r${rebalanceDays}_guard${accountGuardPct}`,
-                            baseCoreWeight,
-                            satelliteWeight,
-                            broadTrendDays,
-                            assetTrendDays,
-                            broadMomentumFloor,
-                            leaderRelativeFloor,
-                            leaderBoostPct,
-                            hedgePct,
-                            riskOffMode,
-                            satelliteFallback,
-                            rebalanceDays,
-                            accountGuardPct,
-                            cooldownDays: 20,
-                            monthlyStopPct: 5,
-                            assetBuffer: 0.12,
-                            scoreWeights: { w20: 0.35, w60: 0.4, w120: 0.25, volPenalty: 0.08 }
-                          });
-                        }
-                      }
+  for (const techWeight of [40, 60]) {
+    for (const trendDays of [60, 120, 200]) {
+      for (const bearMomentum of [-4, 0]) {
+        for (const riskOffMode of ['cash', 'core50', 'inverse30', 'inverse50']) {
+          for (const rebalanceDays of [5, 10]) {
+            for (const rebalanceBand of [0.05, 0.1]) {
+              for (const accountGuardPct of [8, 12]) {
+                for (const monthlyStopPct of [6, 999]) {
+                  for (const targetVol of [99]) {
+                    for (const shockMomentum of [-8, -4, null]) {
+                      rows.push({
+                      kind: 'core_satellite',
+                      id: `core${100 - techWeight}_tech${techWeight}_ma${trendDays}_bear${bearMomentum}_${riskOffMode}_guard${accountGuardPct}_month${monthlyStopPct}_vol${targetVol}_shock${shockMomentum ?? 'off'}_r${rebalanceDays}_b${rebalanceBand}`,
+                      coreWeight: 100 - techWeight,
+                      techWeight,
+                      trendDays,
+                      bearMomentum,
+                      riskOffMode,
+                      accountGuardPct,
+                      rebalanceDays,
+                      rebalanceBand,
+                      cooldownDays: 20,
+                      monthlyStopPct,
+                      targetVol,
+                      shockMomentum
+                      });
                     }
                   }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  for (const broadTrendDays of [120, 200]) {
+    for (const broadMomentumFloor of [-4, 0]) {
+      for (const assetTrendDays of [60, 120]) {
+        for (const leaderRelativeFloor of [0, 2]) {
+          for (const topCount of [1, 2]) {
+            for (const riskOffMode of ['cash', 'core50', 'gold']) {
+              for (const rebalanceDays of [5, 10]) {
+                for (const accountGuardPct of [10, 15]) {
+                  for (const targetVol of [99]) {
+                    rows.push({
+                      kind: 'relative_strength',
+                      id: `rs_bma${broadTrendDays}_mom${broadMomentumFloor}_ama${assetTrendDays}_gap${leaderRelativeFloor}_top${topCount}_${riskOffMode}_vol${targetVol}_r${rebalanceDays}_guard${accountGuardPct}`,
+                      broadTrendDays,
+                      broadMomentumFloor,
+                      assetTrendDays,
+                      leaderRelativeFloor,
+                      topCount,
+                      riskOffMode,
+                      rebalanceDays,
+                      accountGuardPct,
+                      cooldownDays: 20,
+                      monthlyStopPct: 5,
+                      targetVol,
+                      scoreWeights: { w20: 0.35, w60: 0.4, w120: 0.25, volPenalty: 0.08 }
+                    });
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  for (const techWeight of [20, 40]) {
+    for (const trendDays of [60, 120]) {
+      for (const strongMomentum of [2, 5]) {
+        for (const maximumVolatility of [20, 25]) {
+          for (const leveragedWeight of [20, 30]) {
+            for (const riskOffMode of ['cash', 'core50']) {
+              for (const rebalanceDays of [5, 10]) {
+                for (const accountGuardPct of [8, 12]) {
+                  rows.push({
+                    kind: 'leveraged_overlay',
+                    id: `overlay_tech${techWeight}_ma${trendDays}_mom${strongMomentum}_maxvol${maximumVolatility}_lev${leveragedWeight}_${riskOffMode}_r${rebalanceDays}_guard${accountGuardPct}`,
+                    techWeight,
+                    trendDays,
+                    strongMomentum,
+                    maximumVolatility,
+                    leveragedWeight,
+                    riskOffMode,
+                    rebalanceDays,
+                    rebalanceBand: 0.05,
+                    accountGuardPct,
+                    cooldownDays: 20,
+                    monthlyStopPct: 6,
+                    targetVol: 24
+                  });
                 }
               }
             }
@@ -159,6 +238,8 @@ function assetScore(item, core, config) {
 
 function riskOffWeights(row, config) {
   if (config.riskOffMode === 'core50') return { '0050.TW': 50 };
+  if (config.riskOffMode === 'inverse30' && row.metrics.has('00632R.TW')) return { '00632R.TW': 30 };
+  if (config.riskOffMode === 'inverse50' && row.metrics.has('00632R.TW')) return { '00632R.TW': 50 };
   const gold = row.metrics.get(DEFENSE_SYMBOL);
   if (config.riskOffMode === 'gold' && gold && gold.close > gold.ma120 && gold.mom20 > 0) {
     return { [DEFENSE_SYMBOL]: 100 };
@@ -170,6 +251,11 @@ function scaled(weights, usedPct) {
   const entries = Object.entries(weights);
   const total = entries.reduce((sum, [, value]) => sum + value, 0) || 1;
   return Object.fromEntries(entries.map(([symbol, value]) => [symbol, value * usedPct / total]));
+}
+
+function capExposure(weights, capPct) {
+  const total = Object.values(weights).reduce((sum, value) => sum + value, 0);
+  return total > capPct ? scaled(weights, capPct) : weights;
 }
 
 function desiredWeights(row, config) {
@@ -208,10 +294,49 @@ function desiredWeights(row, config) {
   return weights;
 }
 
+function relativeStrengthWeights(row, config) {
+  const core = row.metrics.get('0050.TW');
+  if (!core) return {};
+  const broadBull = core.close > core[`ma${config.broadTrendDays}`]
+    && core.mom60 > config.broadMomentumFloor;
+  if (!broadBull) return riskOffWeights(row, config);
+
+  const ranked = RISK_SYMBOLS
+    .map(symbol => row.metrics.get(symbol))
+    .filter(Boolean)
+    .filter(item => item.close > item[`ma${config.assetTrendDays}`] && item.mom20 > 0)
+    .map(item => ({ item, score: assetScore(item, core, config) }))
+    .filter(({ item }) => item.symbol === '0050.TW' || item.mom20 - core.mom20 >= config.leaderRelativeFloor)
+    .sort((left, right) => right.score - left.score)
+    .slice(0, config.topCount);
+  if (!ranked.length) return { '0050.TW': 100 };
+  const weight = 100 / ranked.length;
+  return Object.fromEntries(ranked.map(({ item }) => [item.symbol, weight]));
+}
+
+function leveragedOverlayWeights(row, config) {
+  const core = row.metrics.get('0050.TW');
+  const leverage = row.metrics.get('00631L.TW');
+  if (!core) return {};
+  const broadBull = core.close > core[`ma${config.trendDays}`] && core.mom60 > -4;
+  if (!broadBull) return riskOffWeights(row, config);
+  const strongBull = leverage
+    && core.close > core.ma20
+    && core.ma20 > core.ma60
+    && core.mom20 >= config.strongMomentum
+    && core.vol20 <= config.maximumVolatility
+    && leverage.close > leverage.ma60;
+  if (!strongBull) return { '0050.TW': 100 - config.techWeight, '0052.TW': config.techWeight };
+  return {
+    '0050.TW': Math.max(0, 100 - config.techWeight - config.leveragedWeight),
+    '0052.TW': config.techWeight,
+    '00631L.TW': config.leveragedWeight
+  };
+}
+
 function coreSatelliteWeights(row, config) {
   const core = row.metrics.get('0050.TW');
-  const tech = row.metrics.get('0052.TW');
-  if (!core || !tech) return {};
+  if (!core) return {};
   const bear = core.close < core[`ma${config.trendDays}`] && core.mom60 < config.bearMomentum;
   if (bear) return config.riskOffMode === 'core50' ? { '0050.TW': 50 } : {};
   return { '0050.TW': config.coreWeight, '0052.TW': config.techWeight };
@@ -372,7 +497,8 @@ function simulate(rows, schedule, startDate, endDate, emitIntents = false) {
     cooldown: 0,
     currentMonth: null,
     monthStart: INITIAL_CAPITAL,
-    monthlyBlocked: false
+    monthlyBlocked: false,
+    riskScalePct: 100
   };
   for (let offset = 1; offset < slice.length; offset += 1) {
     const signal = slice[offset - 1];
@@ -388,7 +514,7 @@ function simulate(rows, schedule, startDate, endDate, emitIntents = false) {
       state.currentMonth = month;
       state.monthStart = priorEquity;
       state.monthlyBlocked = false;
-    } else if (state.config.kind !== 'core_satellite' && pct(priorEquity, state.monthStart) <= -state.config.monthlyStopPct) {
+    } else if (pct(priorEquity, state.monthStart) <= -state.config.monthlyStopPct) {
       state.monthlyBlocked = true;
     }
     state.peak = Math.max(state.peak, priorEquity);
@@ -398,13 +524,26 @@ function simulate(rows, schedule, startDate, endDate, emitIntents = false) {
     } else if (pct(priorEquity, state.peak) <= -state.config.accountGuardPct) {
       state.cooldown = state.config.cooldownDays;
     }
-    const weights = state.cooldown > 0 || state.monthlyBlocked
-      ? (state.config.kind === 'core_satellite'
-        ? {}
-        : riskOffWeights(signal, state.config))
+    let weights = state.cooldown > 0 || state.monthlyBlocked
+      ? {}
       : (state.config.kind === 'core_satellite'
         ? coreSatelliteWeights(signal, state.config)
-        : desiredWeights(signal, state.config));
+        : state.config.kind === 'relative_strength'
+          ? relativeStrengthWeights(signal, state.config)
+          : state.config.kind === 'leveraged_overlay'
+            ? leveragedOverlayWeights(signal, state.config)
+            : {});
+    const coreMetric = signal.metrics.get('0050.TW');
+    if (Number.isFinite(state.config.shockMomentum)
+      && coreMetric?.close < coreMetric?.ma20
+      && coreMetric?.mom20 < state.config.shockMomentum) {
+      weights = riskOffWeights(signal, state.config);
+    }
+    const coreVol = coreMetric?.vol20;
+    const volatilityCap = state.config.targetVol >= 90 || !Number.isFinite(coreVol)
+      ? 100
+      : Math.min(100, state.config.targetVol / Math.max(10, coreVol) * 100);
+    weights = capExposure(weights, Math.min(state.riskScalePct, volatilityCap));
     const key = `${state.config.id}:${JSON.stringify(weights)}`;
     const due = key !== state.targetKey || state.days >= state.config.rebalanceDays || released.length;
     if (due) {
@@ -438,38 +577,50 @@ function dayBefore(dateText) {
 }
 
 function scoreSummary(summary, annual) {
-  const stable = annual.filter(value => value > 0).length >= 2;
+  const stable = annual.filter(value => value > 0).length >= Math.ceil(annual.length * 0.5);
   const pf = Number.isFinite(summary.profitFactor) ? Math.min(4, summary.profitFactor) : 4;
-  const tradeScore = Math.min(summary.trades, 50) * 0.05;
-  return stable && summary.trades >= 8 && summary.maximumDrawdownPct > -25 && summary.averageMonthlyEquityReturnPct > 0.2
-    ? summary.averageMonthlyEquityReturnPct * 20 + Math.min(...annual) * 2 + summary.maximumDrawdownPct * 0.28 + pf + tradeScore
+  const tradeScore = Math.min(summary.trades, 100) * 0.1;
+  return stable && summary.trades >= 20 && summary.maximumDrawdownPct > -35 && summary.averageMonthlyEquityReturnPct > 0.15
+    ? summary.averageMonthlyEquityReturnPct * 20 + Math.min(...annual) * 2 + summary.maximumDrawdownPct * 0.4 + pf + tradeScore
     : -Infinity;
 }
 
-function selectConfig(rows, fold, baselineConfig) {
-  const yearly = [0, 1, 2].map(index => ({
+function selectConfig(rows, fold, family = null) {
+  const years = Math.max(4, Math.ceil((Date.parse(fold.trainEnd) - Date.parse(fold.trainStart)) / (365.25 * 86_400_000)));
+  const yearly = Array.from({ length: years }, (_, index) => ({
     start: addYears(fold.trainStart, index),
-    end: index === 2 ? fold.trainEnd : dayBefore(addYears(fold.trainStart, index + 1))
+    end: index === years - 1 ? fold.trainEnd : dayBefore(addYears(fold.trainStart, index + 1))
   }));
-  const evaluated = configs.map(config => {
+  const leveragedTrainingDays = rows.filter(row => row.date >= fold.trainStart
+    && row.date <= fold.trainEnd
+    && row.metrics.has('00631L.TW')).length;
+  const inverseTrainingDays = rows.filter(row => row.date >= fold.trainStart
+    && row.date <= fold.trainEnd
+    && row.metrics.has('00632R.TW')).length;
+  const eligibleConfigs = configs.filter(config => (!family || config.kind === family)
+    && (config.kind !== 'leveraged_overlay' || leveragedTrainingDays >= 252)
+    && (!config.riskOffMode?.startsWith('inverse') || inverseTrainingDays >= 252));
+  const preliminary = eligibleConfigs.map(config => {
     const summary = simulate(rows, () => config, fold.trainStart, fold.trainEnd).summary;
+    const eligible = summary.trades >= 20
+      && summary.maximumDrawdownPct > -35
+      && summary.averageMonthlyEquityReturnPct > 0.15;
+    const pf = Number.isFinite(summary.profitFactor) ? Math.min(4, summary.profitFactor) : 4;
+    const preliminaryScore = eligible
+      ? summary.averageMonthlyEquityReturnPct * 20 + summary.maximumDrawdownPct * 0.4 + pf + Math.min(summary.trades, 100) * 0.1
+      : -Infinity;
+    return { config, summary, preliminaryScore };
+  }).sort((left, right) => right.preliminaryScore - left.preliminaryScore).slice(0, 60);
+  const evaluated = preliminary.map(({ config, summary }) => {
     const annual = yearly.map(window => simulate(rows, () => config, window.start, window.end).summary.averageMonthlyEquityReturnPct);
     const score = scoreSummary(summary, annual);
     return { config, summary, score };
   }).sort((left, right) => right.score - left.score);
-  const selected = evaluated.find(row => Number.isFinite(row.score));
-  const baselineSummary = simulate(rows, () => baselineConfig, fold.trainStart, fold.trainEnd).summary;
-  const baselineAnnual = yearly.map(window => simulate(rows, () => baselineConfig, window.start, window.end).summary.averageMonthlyEquityReturnPct);
-  const baselineScore = scoreSummary(baselineSummary, baselineAnnual);
-  const keepBaseline = !selected
-    || selected.score < baselineScore + 1.5
-    || selected.summary.averageMonthlyEquityReturnPct <= baselineSummary.averageMonthlyEquityReturnPct + 0.15
-    || selected.summary.maximumDrawdownPct < baselineSummary.maximumDrawdownPct - 1.5
-    || selected.summary.trades < baselineSummary.trades + 8;
-  if (keepBaseline) {
-    return { config: baselineConfig, summary: baselineSummary, score: baselineScore };
-  }
-  return selected;
+  return evaluated.find(row => Number.isFinite(row.score)) || {
+    config: CASH_CONFIG,
+    summary: simulate(rows, () => CASH_CONFIG, fold.trainStart, fold.trainEnd).summary,
+    score: 0
+  };
 }
 
 function compact(summary) {
@@ -499,30 +650,48 @@ async function main() {
     loadRows(),
     fs.readFile(PRIOR, 'utf8').then(JSON.parse)
   ]);
-  const folds = foldWindows(rows[0].date, rows.at(-1).date, 36, 12)
-    .filter(fold => Date.parse(fold.validationEnd) - Date.parse(fold.validationStart) >= 330 * 86_400_000);
-  const priorSelectionMap = new Map((prior.selections || []).map(row => [row.trainStart, parseCoreSatelliteConfig(row.configId)]).filter(([, value]) => value));
-  const selections = folds.map(fold => {
-    const baselineConfig = priorSelectionMap.get(fold.trainStart) || parseCoreSatelliteConfig('core50_tech50_ma120_bear-8_cash_guard20_r20_b0.1');
-    return { ...fold, selected: selectConfig(rows, fold, baselineConfig) };
-  });
+  const folds = foldWindows(rows[0].date, rows.at(-1).date, TRAIN_MONTHS, VALIDATION_MONTHS)
+    .filter(fold => Date.parse(fold.validationEnd) - Date.parse(fold.validationStart) >= MIN_VALIDATION_DAYS * 86_400_000);
+  const selections = folds.map(fold => ({ ...fold, selected: selectConfig(rows, fold) }));
   const schedule = date => selections.find(row => date >= row.validationStart && date <= row.validationEnd)?.selected.config || selections.at(-1).selected.config;
   const validationStart = selections[0].validationStart;
   const validationEnd = selections.at(-1).validationEnd;
   const validation = simulate(rows, schedule, validationStart, validationEnd, true);
+  const familyResults = {};
+  for (const family of ['core_satellite', 'relative_strength', 'leveraged_overlay']) {
+    const familySelections = folds.map(fold => ({ ...fold, selected: selectConfig(rows, fold, family) }));
+    const familySchedule = date => familySelections.find(row => date >= row.validationStart && date <= row.validationEnd)?.selected.config
+      || familySelections.at(-1).selected.config;
+    familyResults[family] = {
+      metrics: compact(simulate(rows, familySchedule, validationStart, validationEnd).summary),
+      selections: familySelections.map(row => ({
+        trainStart: row.trainStart,
+        trainEnd: row.trainEnd,
+        validationStart: row.validationStart,
+        validationEnd: row.validationEnd,
+        configId: row.selected.config.id
+      }))
+    };
+  }
   const benchmark = buyAndHold0050(rows, validationStart, validationEnd);
   const metrics = validation.summary;
-  const priorMetrics = prior.metrics;
+  const priorSelections = (prior.selections || []).map(row => ({
+    ...row,
+    config: parseCoreSatelliteConfig(row.configId)
+  })).filter(row => row.config);
+  const priorSchedule = date => priorSelections.find(row => date >= row.validationStart && date <= row.validationEnd)?.config
+    || parseCoreSatelliteConfig('core50_tech50_ma120_bear-8_cash_guard20_r20_b0.1');
+  const priorMetrics = simulate(rows, priorSchedule, validationStart, validationEnd).summary;
   const improved = metrics.averageMonthlyEquityReturnPct > priorMetrics.averageMonthlyEquityReturnPct
     && metrics.maximumDrawdownPct > priorMetrics.maximumDrawdownPct
     && metrics.trades > priorMetrics.trades;
   const beats0050 = metrics.averageMonthlyEquityReturnPct > benchmark.averageMonthlyEquityReturnPct
     && metrics.maximumDrawdownPct > benchmark.maximumDrawdownPct;
-  const minimumPassed = beats0050 && metrics.trades >= 80 && metrics.profitFactor > 1.15 && metrics.maximumDrawdownPct > -20;
+  const minimumPassed = beats0050 && metrics.trades >= 100 && metrics.profitFactor > 1.15 && metrics.maximumDrawdownPct > -20;
   const result = {
     generatedAt: new Date().toISOString(),
     branch: 'institutional-data-fetcher-v1',
-    methodology: '36 個月訓練、12 個月驗證、連續 12 段 rolling walk-forward；T 日訊號、T+1 開盤成交、T+2 回款、ETF 成本與滑價全部納入。',
+    methodology: `${TRAIN_MONTHS} 個月滾動訓練／${VALIDATION_MONTHS} 個月非重疊驗證；T 日訊號、T+1 開盤成交、T+2 回款，ETF 費稅與滑價全部納入。`,
     dataRange: { start: rows[0].date, end: rows.at(-1).date },
     configsTestedPerFold: configs.length,
     validationFolds: selections.length,
@@ -539,6 +708,7 @@ async function main() {
     metrics: { ...metrics, targetGapPct: round(TARGET_MONTHLY - metrics.averageMonthlyEquityReturnPct), orderIntents: validation.state.intents.length },
     benchmark0050: compact(benchmark),
     priorBest: compact(priorMetrics),
+    familyResults,
     comparison: {
       improvedMonthlyVsPriorPct: round(metrics.averageMonthlyEquityReturnPct - priorMetrics.averageMonthlyEquityReturnPct),
       improvedDrawdownVsPriorPct: round(metrics.maximumDrawdownPct - priorMetrics.maximumDrawdownPct),
@@ -559,8 +729,9 @@ async function main() {
 
   await fs.writeFile(OUTPUT, `${JSON.stringify(result, null, 2)}\n`, 'utf8');
   await fs.writeFile(REPORT, [
-    '# 多資產輪動可部署候選 v1',
+    '# 多資產輪動長驗證研究 v1',
     '',
+    `- 驗證方法：${TRAIN_MONTHS} 個月滾動訓練／${VALIDATION_MONTHS} 個月非重疊驗證`,
     `- Validation 段數：${selections.length}`,
     `- 月均總資產報酬：${metrics.averageMonthlyEquityReturnPct}%`,
     `- 距離月均 10%：${result.metrics.targetGapPct} 個百分點`,
@@ -576,26 +747,27 @@ async function main() {
     `- 相較前版交易數變化：${result.comparison.improvedTradesVsPrior}`,
     `- 可進 paper trading：${result.readiness.paperTradingAllowed ? '是' : '否'}`,
     `- 可直接實盤：${result.readiness.liveTradingAllowed ? '是' : '否'}`,
+    '- 結論：交易數雖增加，但報酬輸給 0050 且回撤過高，不可視為可實盤策略。',
     '',
-    '策略邏輯摘要：用 0050 當大盤風控，風險資產在台灣、美股、日股 ETF 間做相對強弱輪動；當大盤趨弱時退到黃金或現金；用較密集的 5/10/20 日再平衡拉高交易數，但仍保留月損失與帳戶回撤熔斷。',
+    '策略邏輯摘要：同時比較核心配置與相對強弱輪動；用 0050 判斷大盤風險，風險資產在台灣、美股、日股 ETF 間輪動，大盤轉弱時退到黃金、0050 半倉或現金。訓練期只選規則，後續兩年驗證期固定不改參數。',
     ''
   ].join('\n'), 'utf8');
 
   await fs.writeFile(READINESS, [
     '# 自動交易可落地狀態',
     '',
-    `目前最佳可執行候選為多資產輪動候選，validation 月均 ${metrics.averageMonthlyEquityReturnPct}% 、年化 ${metrics.annualizedReturnPct}% 、最大回撤 ${metrics.maximumDrawdownPct}% 、交易 ${metrics.trades} 筆。`,
+    `多資產輪動 48/24 長期 validation：月均 ${metrics.averageMonthlyEquityReturnPct}% 、年化 ${metrics.annualizedReturnPct}% 、最大回撤 ${metrics.maximumDrawdownPct}% 、交易 ${metrics.trades} 筆。`,
     `雖然已納入 T+1、T+2、手續費、交易稅、滑價與 order intent，但仍未因這次結果自動放行實盤。`,
-    '只要沒有通過更嚴格的新鮮期間 paper trading，就不可直接接真實券商 API 下單。',
+    '結論：未通過 validation，不可啟用 paper trading，也不可接真實券商 API 下單。',
     ''
   ].join('\n'), 'utf8');
 
   const registry = JSON.parse(await fs.readFile(REGISTRY, 'utf8'));
-  registry.experiments = registry.experiments.filter(row => row.strategyId !== 'deployable_multi_asset_rotation_v1');
+  registry.experiments = registry.experiments.filter(row => row.strategyId !== 'deployable_multi_asset_rotation_v1_long_validation');
   registry.updatedAt = new Date().toISOString();
   await fs.writeFile(REGISTRY, `${JSON.stringify(registry, null, 2)}\n`, 'utf8');
   await appendExperiment({
-    strategyId: 'deployable_multi_asset_rotation_v1',
+    strategyId: 'deployable_multi_asset_rotation_v1_long_validation',
     dataSources: ASSETS.map(asset => `${asset.name}_twse_daily`),
     setupRules: ['多資產相對強弱', '大盤風控', '黃金防守'],
     triggerRules: ['T 日收盤排序', 'T+1 開盤調整到目標權重'],
@@ -603,9 +775,9 @@ async function main() {
     exitRules: ['權重切換', '月損失封鎖', '帳戶回撤熔斷', '結束驗證視窗'],
     riskRules: ['T+2', 'ETF 交易成本', '滑價', '20 日冷卻'],
     blockedWhen: ['風險資產全數弱勢', '大盤跌破長均線'],
-    parameters: { configs: configs.length, assets: ASSETS.map(asset => asset.symbol) },
-    trainPeriod: { months: 36 },
-    validationPeriod: { months: 12, stepMonths: 12 },
+    parameters: { configs: configs.length, assets: ASSETS.map(asset => asset.symbol), strategyFamilies: ['core_satellite', 'relative_strength'] },
+    trainPeriod: { months: TRAIN_MONTHS, mode: 'rolling' },
+    validationPeriod: { months: VALIDATION_MONTHS, stepMonths: VALIDATION_MONTHS },
     costModel: COSTS,
     executionModel: 'T 日訊號、T+1 開盤成交、T+2 回款',
     metrics: compact(result.metrics),

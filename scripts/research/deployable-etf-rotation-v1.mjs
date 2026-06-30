@@ -11,10 +11,13 @@ const READINESS = new URL('../../docs/AUTO_TRADING_READINESS.md', import.meta.ur
 const PRIOR = new URL('../../data/research/deployable-etf-hunter-v1.json', import.meta.url);
 const REGISTRY = new URL('../../data/research/strategy-experiment-registry.json', import.meta.url);
 
-const START_DATE = '2015-06-01';
+const START_DATE = '2010-01-01';
 const INITIAL_CAPITAL = 1_000_000;
 const SETTLEMENT_DAYS = 2;
 const TARGET_MONTHLY = 10;
+const TRAIN_MONTHS = 48;
+const VALIDATION_MONTHS = 24;
+const MIN_VALIDATION_DAYS = 660;
 const COSTS = Object.freeze({
   buyFeePct: 0.1425,
   sellFeePct: 0.1425,
@@ -25,11 +28,12 @@ const COSTS = Object.freeze({
   boardLotShares: 1000
 });
 const ASSETS = Object.freeze([
-  { symbol: '0050.TW', stockNo: '0050', name: '元大台灣50', group: '台灣大型股', startMonth: '20150601' },
-  { symbol: '0052.TW', stockNo: '0052', name: '富邦科技', group: '台灣科技', startMonth: '20150601' },
-  { symbol: '00646.TW', stockNo: '00646', name: '元大S&P500', group: '美國大型股', startMonth: '20150901' },
+  { symbol: '0050.TW', stockNo: '0050', name: '元大台灣50', group: '台灣大型股', startMonth: '20100101' },
+  { symbol: '0052.TW', stockNo: '0052', name: '富邦科技', group: '台灣科技', startMonth: '20100101' },
+  { symbol: '00646.TW', stockNo: '00646', name: '元大S&P500', group: '美國大型股', startMonth: '20151201' },
   { symbol: '00662.TW', stockNo: '00662', name: '富邦NASDAQ', group: '美國科技', startMonth: '20160601' },
   { symbol: '00661.TW', stockNo: '00661', name: '元大日經225', group: '日本股票', startMonth: '20160601' },
+  { symbol: '00632R.TW', stockNo: '00632R', name: '元大台灣50反1', group: '台灣反向', startMonth: '20150601' },
   { symbol: '00635U.TW', stockNo: '00635U', name: '期元大S&P黃金', group: '黃金', startMonth: '20151201' }
 ]);
 
@@ -50,9 +54,10 @@ function months() {
   return rows;
 }
 
-async function fetchMonth(stockNo, date, attempt = 1) {
+async function fetchMonth(stockNo, date, expectRows = false, attempt = 1) {
   const host = attempt % 2 ? 'https://wwwc.twse.com.tw' : 'https://www.twse.com.tw';
-  const url = `${host}/rwd/zh/afterTrading/STOCK_DAY?date=${date}&stockNo=${stockNo}&response=json`;
+  const path = attempt % 2 ? 'rwd/zh/afterTrading/STOCK_DAY' : 'exchangeReport/STOCK_DAY';
+  const url = `${host}/${path}?date=${date}&stockNo=${stockNo}&response=json`;
   try {
     const response = await fetch(url, {
       headers: { 'user-agent': 'Mozilla/5.0', accept: 'application/json' },
@@ -60,11 +65,13 @@ async function fetchMonth(stockNo, date, attempt = 1) {
     });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const payload = await response.json();
-    return payload.stat === 'OK' ? payload.data || [] : [];
+    const rows = payload.stat === 'OK' ? payload.data || [] : [];
+    if (expectRows && !rows.length) throw new Error('歷史月份回傳空資料');
+    return rows;
   } catch (error) {
     if (attempt >= 6) throw new Error(`${stockNo} ${date} 下載失敗：${error.message}`);
     await wait(5_000 * attempt);
-    return fetchMonth(stockNo, date, attempt + 1);
+    return fetchMonth(stockNo, date, expectRows, attempt + 1);
   }
 }
 
@@ -72,9 +79,19 @@ function adjustSplits(rows) {
   const adjusted = rows.map(row => ({ ...row }));
   for (let index = 1; index < adjusted.length; index += 1) {
     const ratio = adjusted[index].open / adjusted[index - 1].close;
-    if (ratio >= 0.4) continue;
+    if (ratio > 1.5) {
+      const multiplier = Math.round(ratio);
+      if (multiplier >= 2 && multiplier <= 30 && Math.abs(ratio - multiplier) <= 0.2 * multiplier) {
+        for (let prior = 0; prior < index; prior += 1) {
+          for (const field of ['open', 'high', 'low', 'close']) adjusted[prior][field] *= multiplier;
+        }
+      }
+      continue;
+    }
+    if (ratio >= 0.65) continue;
     const divisor = Math.round(1 / ratio);
     if (divisor < 2 || divisor > 30) continue;
+    if (Math.abs(ratio - 1 / divisor) > 0.08) continue;
     for (let prior = 0; prior < index; prior += 1) {
       for (const field of ['open', 'high', 'low', 'close']) adjusted[prior][field] /= divisor;
     }
@@ -98,32 +115,68 @@ function appendRows(unique, raw) {
 
 async function fetchAsset(asset, existingRows, completedRows, saveProgress) {
   const unique = new Map(existingRows.map(row => [row.date, row]));
-  const completed = new Set(completedRows);
+  const firstKnownMonth = existingRows[0] ? `${existingRows[0].date.slice(0, 7).replace('-', '')}01` : null;
+  const populatedMonths = new Set(existingRows.map(row => `${row.date.slice(0, 7).replace('-', '')}01`));
+  const completed = new Set(completedRows.filter(date => date < firstKnownMonth || populatedMonths.has(date)));
   const dates = months().filter(date => date >= asset.startMonth);
+  let pendingSaves = 0;
   for (const date of dates) {
     if (completed.has(date)) continue;
-    appendRows(unique, await fetchMonth(asset.stockNo, date));
+    appendRows(unique, await fetchMonth(asset.stockNo, date, true));
     completed.add(date);
+    pendingSaves += 1;
+    if (pendingSaves >= 12) {
+      const rows = [...unique.values()].sort((left, right) => left.date.localeCompare(right.date));
+      await saveProgress(rows, [...completed]);
+      pendingSaves = 0;
+    }
+    await wait(250);
+  }
+  if (pendingSaves) {
     const rows = [...unique.values()].sort((left, right) => left.date.localeCompare(right.date));
     await saveProgress(rows, [...completed]);
-    await wait(600);
   }
   return adjustSplits([...unique.values()].sort((left, right) => left.date.localeCompare(right.date)));
 }
 
+function assertPriceContinuity(payload) {
+  for (const [symbol, rows] of Object.entries(payload.series || {})) {
+    for (let index = 1; index < rows.length; index += 1) {
+      const changePct = Math.abs(rows[index].close / rows[index - 1].close - 1) * 100;
+      if (changePct > 25) throw new Error(`${symbol} ${rows[index].date} 出現 ${changePct.toFixed(2)}% 異常價格跳動`);
+    }
+  }
+}
+
 async function loadHistory() {
   const complete = (payload, asset) => {
-    const required = months().filter(date => date >= asset.startMonth).length;
-    return (payload.completedMonths?.[asset.symbol]?.length || 0) >= required;
+    const rows = payload.series?.[asset.symbol] || [];
+    const firstKnownMonth = rows[0] ? `${rows[0].date.slice(0, 7).replace('-', '')}01` : null;
+    const populatedMonths = new Set(rows.map(row => `${row.date.slice(0, 7).replace('-', '')}01`));
+    const completed = new Set(payload.completedMonths?.[asset.symbol] || []);
+    return months().filter(date => date >= asset.startMonth).every(date => (
+      completed.has(date) && (date < firstKnownMonth || populatedMonths.has(date))
+    ));
   };
   let payload;
+  if (process.env.REBUILD_ETF_ROTATION_DATA === '1') {
+    payload = {
+      generatedAt: null,
+      source: 'TWSE STOCK_DAY 官方月行情',
+      assets: ASSETS,
+      series: {},
+      completedMonths: {}
+    };
+  }
   try {
-    payload = JSON.parse(await fs.readFile(CACHE, 'utf8'));
+    payload ||= JSON.parse(await fs.readFile(CACHE, 'utf8'));
     for (const [symbol, rows] of Object.entries(payload.series || {})) {
       payload.series[symbol] = rows.filter(row => [row.open, row.high, row.low, row.close].every(value => Number.isFinite(value) && value > 0));
     }
+    payload.assets = ASSETS;
     if (process.env.REFRESH_ETF_ROTATION_DATA !== '1'
       && ASSETS.every(asset => complete(payload, asset))) {
+      assertPriceContinuity(payload);
       return payload;
     }
   } catch {
@@ -136,6 +189,7 @@ async function loadHistory() {
     };
   }
   payload.completedMonths ||= {};
+  payload.assets = ASSETS;
   for (const asset of ASSETS) {
     if (complete(payload, asset)) continue;
     payload.series[asset.symbol] = await fetchAsset(
@@ -152,6 +206,9 @@ async function loadHistory() {
     payload.generatedAt = new Date().toISOString();
     await fs.writeFile(CACHE, `${JSON.stringify(payload)}\n`, 'utf8');
   }
+  payload.generatedAt = new Date().toISOString();
+  await fs.writeFile(CACHE, `${JSON.stringify(payload)}\n`, 'utf8');
+  assertPriceContinuity(payload);
   return payload;
 }
 
@@ -194,7 +251,7 @@ function buildTimeline(payload) {
     }
   }
   return [...new Set(payload.series['0050.TW'].map(row => row.date))]
-    .filter(date => date >= '2016-03-01')
+    .filter(date => date >= '2010-11-01')
     .map((date, index) => ({
       date,
       index,
@@ -233,6 +290,33 @@ function buildConfigs() {
                 drawdownGuardPct: 8
               });
             }
+          }
+        }
+      }
+    }
+  }
+  for (const weighting of weights) {
+    for (const coreTrendDays of [60, 120, 200]) {
+      for (const coreMomentum of [-6, -2, 2]) {
+        for (const rebalanceDays of [10, 20, 40]) {
+          for (const defensivePositionPct of [30, 50]) {
+            rows.push({
+              ...weighting,
+              id: `hedged_tactical_${weighting.id}_ma${coreTrendDays}_r${rebalanceDays}_m${coreMomentum}_def${defensivePositionPct}`,
+              name: `hedged_tactical／MA${coreTrendDays}／反向 ${defensivePositionPct}%`,
+              family: 'hedged_tactical',
+              coreTrendDays,
+              coreMomentum,
+              rebalanceDays,
+              targetVol: 24,
+              riskPositionPct: 100,
+              defensivePositionPct,
+              stopLossPct: 6,
+              trailingStopPct: 10,
+              switchBuffer: 4,
+              monthlyStopPct: 3,
+              drawdownGuardPct: 8
+            });
           }
         }
       }
@@ -283,7 +367,9 @@ function targetFor(row, config, state) {
   const riskSymbols = config.family === 'taiwan_satellite'
     ? ['0050.TW', '0052.TW']
     : ['0050.TW', '0052.TW', '00646.TW', '00662.TW', '00661.TW'];
-  const defensiveSymbols = ['00635U.TW', '00646.TW', '00661.TW'];
+  const defensiveSymbols = config.family === 'hedged_tactical'
+    ? ['00632R.TW', '00635U.TW']
+    : ['00635U.TW', '00646.TW', '00661.TW'];
   if (!riskOn && config.defensivePositionPct === 0) return { symbol: null, reason: '台股趨勢轉弱，防守期持有現金' };
   const ranked = rankAssets(row, config, riskOn ? riskSymbols : defensiveSymbols, !riskOn);
   if (!ranked.length) return { symbol: null, reason: riskOn ? '風險資產趨勢不足' : '防守資產趨勢不足，持有現金' };
@@ -493,8 +579,8 @@ function dayBefore(dateText) {
 }
 
 function trainScore(summary, yearly) {
-  if (summary.trades < 8 || summary.maximumDrawdownPct < -25 || summary.averageMonthlyEquityReturnPct <= 0) return -Infinity;
-  if (yearly.filter(value => value > 0).length < 2) return -Infinity;
+  if (summary.trades < 10 || summary.averageMonthlyEquityReturnPct <= 0) return -Infinity;
+  if (yearly.filter(value => value > 0).length < Math.ceil(yearly.length * 0.4)) return -Infinity;
   const center = average(yearly);
   const dispersion = Math.sqrt(average(yearly.map(value => (value - center) ** 2)));
   const pf = Number.isFinite(summary.profitFactor) ? Math.min(4, summary.profitFactor) : 4;
@@ -502,16 +588,21 @@ function trainScore(summary, yearly) {
     + Math.min(...yearly) * 2
     + center * 2
     - dispersion
-    + summary.maximumDrawdownPct * 0.3
+    + summary.maximumDrawdownPct * 0.5
     + pf;
 }
 
 function selectConfig(rows, fold) {
-  const yearly = [0, 1, 2].map(index => ({
+  const years = Math.max(4, Math.ceil((Date.parse(fold.trainEnd) - Date.parse(fold.trainStart)) / (365.25 * 86_400_000)));
+  const yearly = Array.from({ length: years }, (_, index) => ({
     start: addYears(fold.trainStart, index),
-    end: index === 2 ? fold.trainEnd : dayBefore(addYears(fold.trainStart, index + 1))
+    end: index === years - 1 ? fold.trainEnd : dayBefore(addYears(fold.trainStart, index + 1))
   }));
-  const evaluated = configs.map(config => {
+  const inverseTrainingDays = rows.filter(row => row.date >= fold.trainStart
+    && row.date <= fold.trainEnd
+    && row.metrics.has('00632R.TW')).length;
+  const eligibleConfigs = configs.filter(config => config.family !== 'hedged_tactical' || inverseTrainingDays >= 252);
+  const evaluated = eligibleConfigs.map(config => {
     const summary = simulate(rows, () => config, fold.trainStart, fold.trainEnd).summary;
     const yearlyReturns = yearly.map(window => simulate(rows, () => config, window.start, window.end).summary.averageMonthlyEquityReturnPct);
     return { config, summary, score: trainScore(summary, yearlyReturns) };
@@ -530,8 +621,8 @@ const compact = summary => Object.fromEntries(Object.entries(summary).filter(([k
 async function main() {
   const [payload, prior] = await Promise.all([loadHistory(), fs.readFile(PRIOR, 'utf8').then(JSON.parse)]);
   const rows = buildTimeline(payload);
-  const folds = foldWindows(rows[0].date, rows.at(-1).date, 36, 12)
-    .filter(fold => Date.parse(fold.validationEnd) - Date.parse(fold.validationStart) >= 330 * 86_400_000);
+  const folds = foldWindows(rows[0].date, rows.at(-1).date, TRAIN_MONTHS, VALIDATION_MONTHS)
+    .filter(fold => Date.parse(fold.validationEnd) - Date.parse(fold.validationStart) >= MIN_VALIDATION_DAYS * 86_400_000);
   const selections = folds.map(fold => {
     const selected = selectConfig(rows, fold);
     return { ...fold, selected };
@@ -553,7 +644,7 @@ async function main() {
     generatedAt: new Date().toISOString(),
     branch: 'institutional-data-fetcher-v1',
     status: improved ? 'IMPROVED_MONTHLY_AND_DRAWDOWN' : 'NO_DUAL_IMPROVEMENT',
-    methodology: '36 個月訓練／12 個月驗證／12 個月前移；validation 連續資產且每段參數固定',
+    methodology: `${TRAIN_MONTHS} 個月滾動訓練／${VALIDATION_MONTHS} 個月非重疊驗證；validation 參數固定`,
     dataRange: { start: rows[0].date, end: rows.at(-1).date },
     assets: ASSETS,
     configsTestedPerFold: configs.length,
@@ -571,7 +662,7 @@ async function main() {
     })),
     metrics: { ...metrics, targetGapPct: round(TARGET_MONTHLY - metrics.averageMonthlyEquityReturnPct), orderIntents: validation.state.intents.length },
     yearlyValidation: yearlyFromMonthly(metrics.monthly),
-    frozenSevenYearValidation: {
+    frozenFirstConfigValidation: {
       selectedOnlyFrom: `${selections[0].trainStart} 至 ${selections[0].trainEnd}`,
       configId: frozenConfig.id,
       metrics: compact(frozenValidation.summary)
@@ -596,7 +687,7 @@ async function main() {
   };
   await fs.writeFile(OUTPUT, `${JSON.stringify(result, null, 2)}\n`, 'utf8');
   await fs.writeFile(REPORT, [
-    '# 可執行跨市場 ETF 輪動 v1',
+    '# 跨市場 ETF 輪動長驗證 v1',
     '',
     `- 長期 validation：${selections.length} 段`,
     `- 月均總資產報酬：${metrics.averageMonthlyEquityReturnPct}%`,
@@ -605,8 +696,8 @@ async function main() {
     `- Profit Factor：${metrics.profitFactor}`,
     `- 交易數：${metrics.trades}`,
     `- 勝率：${metrics.winRatePct}%`,
-    `- 首段訓練後七年完全凍結月均：${frozenValidation.summary.averageMonthlyEquityReturnPct}%`,
-    `- 首段訓練後七年完全凍結回撤：${frozenValidation.summary.maximumDrawdownPct}%`,
+    `- 首段規則固定於完整驗證月均：${frozenValidation.summary.averageMonthlyEquityReturnPct}%`,
+    `- 首段規則固定於完整驗證回撤：${frozenValidation.summary.maximumDrawdownPct}%`,
     `- 同期 0050 買進持有月均：${buyAndHold.averageMonthlyEquityReturnPct}%`,
     `- 同期 0050 買進持有回撤：${buyAndHold.maximumDrawdownPct}%`,
     `- 與前版月均差：${result.comparison.monthlyImprovementPct} 個百分點`,
@@ -614,6 +705,7 @@ async function main() {
     `- 距離月均 10%：${result.metrics.targetGapPct} 個百分點`,
     `- Paper trading：${result.readiness.paperTradingAllowed ? '允許' : '不允許'}`,
     `- 實盤：${result.readiness.liveTradingAllowed ? '允許' : '不允許'}`,
+    '- 結論：未通過長期 validation，不可作為可實盤策略。',
     '',
     '策略只使用 T 日收盤以前資料；台股核心趨勢允許時，從台灣、美國與日本股票 ETF 中挑選相對動能較強者；趨勢轉弱則持有現金，T+1 開盤執行。',
     '已計入 ETF 交易稅 0.1%、手續費、雙邊滑價、T+2、6% 收盤停損、移動停利、月損熔斷與帳戶回撤冷卻。',
@@ -623,11 +715,11 @@ async function main() {
   await fs.writeFile(READINESS, [
     '# 自動交易準備度',
     '',
-    `跨市場 ETF 輪動長期 validation：月均 ${metrics.averageMonthlyEquityReturnPct}%、年化 ${metrics.annualizedReturnPct}%、最大回撤 ${metrics.maximumDrawdownPct}%、交易 ${metrics.trades} 筆。`,
+    `跨市場 ETF 輪動 48/24 長期 validation：月均 ${metrics.averageMonthlyEquityReturnPct}%、年化 ${metrics.annualizedReturnPct}%、最大回撤 ${metrics.maximumDrawdownPct}%、交易 ${metrics.trades} 筆。`,
     `同期 0050 買進持有：月均 ${buyAndHold.averageMonthlyEquityReturnPct}%、最大回撤 ${buyAndHold.maximumDrawdownPct}%。`,
     `歷史最低門檻：${minimumPassed ? '通過' : '未通過'}。`,
-    'Paper trading：目前禁止自動啟用。',
-    '真實券商 API：禁止送單，只能產生 order intent。',
+    '結論：未通過 validation，Paper trading 不得自動啟用。',
+    '真實券商 API：禁止送單，只能保留 order intent dry-run。',
     '',
     '正式交易前仍須補足新期間紙上交易、配息調整、即時報價品質、部分成交、漲跌停與斷線復原測試。',
     ''
@@ -646,8 +738,8 @@ async function main() {
     riskRules: ['不借款', 'T+2', 'ETF 交易稅 0.1%', '雙邊滑價'],
     blockedWhen: ['台股核心趨勢轉弱', '月損或帳戶回撤熔斷'],
     parameters: { configs: configs.length, assets: ASSETS.map(asset => asset.symbol) },
-    trainPeriod: { months: 36 },
-    validationPeriod: { months: 12, stepMonths: 12 },
+    trainPeriod: { months: TRAIN_MONTHS, mode: 'rolling' },
+    validationPeriod: { months: VALIDATION_MONTHS, stepMonths: VALIDATION_MONTHS },
     costModel: COSTS,
     executionModel: 'T 日收盤訊號、T+1 開盤、T+2 可用資金',
     metrics: result.metrics,

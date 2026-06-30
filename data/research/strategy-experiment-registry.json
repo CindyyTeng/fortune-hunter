@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
   "generatedAt": "2026-06-16T16:13:34.718Z",
-  "updatedAt": "2026-06-29T19:18:39.364Z",
+  "updatedAt": "2026-06-30T03:42:50.185Z",
   "experiments": [
     {
       "experimentId": "EXP-20260616161335-34c09c70",
@@ -8484,6 +8484,70 @@
       "passedHighProfit": false,
       "allowRetest": false,
       "notes": "歷史門檻通過，但同一 validation 已反覆研究，只能進入全新期間紙上驗證。"
+    },
+    {
+      "experimentId": "EXP-20260630034250-d3d4863b",
+      "createdAt": "2026-06-30T03:42:50.185Z",
+      "strategyId": "deployable_multi_asset_rotation_v1",
+      "strategyFamilyId": "deployable_multi_asset_rotation_v1:e5e10993c704de88b9b39ee4",
+      "experimentHash": "d3d4863bec94c5d3411b917c",
+      "dataSources": [
+        "0050_twse_daily",
+        "0052_twse_daily",
+        "00646_twse_daily",
+        "00662_twse_daily",
+        "00661_twse_daily",
+        "00635U_twse_daily"
+      ],
+      "parameters": {
+        "configs": 9216,
+        "assets": [
+          "0050.TW",
+          "0052.TW",
+          "00646.TW",
+          "00662.TW",
+          "00661.TW",
+          "00635U.TW"
+        ]
+      },
+      "trainPeriod": {
+        "months": 36
+      },
+      "validationPeriod": {
+        "months": 12,
+        "stepMonths": 12
+      },
+      "costModel": {
+        "buyFeePct": 0.1425,
+        "sellFeePct": 0.1425,
+        "sellTaxPct": 0.1,
+        "buySlippagePct": 0.15,
+        "sellSlippagePct": 0.15,
+        "minimumFee": 20,
+        "boardLotShares": 1000
+      },
+      "executionModel": "T 日訊號、T+1 開盤成交、T+2 回款",
+      "metrics": {
+        "startDate": "2013-11-01",
+        "endDate": "2025-10-31",
+        "endingEquity": 6220617,
+        "averageMonthlyEquityReturnPct": 1.6417,
+        "annualizedReturnPct": 19.5218,
+        "profitFactor": 8.1114,
+        "maximumDrawdownPct": -24.6705,
+        "winRatePct": 49.1228,
+        "trades": 57,
+        "negativeMonths": 48,
+        "targetGapPct": 8.3583,
+        "orderIntents": 115
+      },
+      "resultStatus": "failed",
+      "failureReason": null,
+      "overfitFlag": false,
+      "passedMinimum": false,
+      "passedHighProfit": false,
+      "allowRetest": false,
+      "notes": "雖然可實際成交，但歷史驗證仍未同時滿足月均、回撤與交易數門檻。"
     }
   ]
 }

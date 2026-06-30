@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
   "generatedAt": "2026-06-16T16:13:34.718Z",
-  "updatedAt": "2026-06-30T20:03:32.461Z",
+  "updatedAt": "2026-06-30T20:20:30.110Z",
   "experiments": [
     {
       "experimentId": "EXP-20260616161335-34c09c70",
@@ -8768,11 +8768,11 @@
       "notes": "未達門檻，不可紙上交易或實盤。"
     },
     {
-      "experimentId": "EXP-20260630200332-a463d889",
-      "createdAt": "2026-06-30T20:03:32.461Z",
+      "experimentId": "EXP-20260630202030-a292dc14",
+      "createdAt": "2026-06-30T20:20:30.110Z",
       "strategyId": "deployable_multi_asset_rotation_v1_long_validation",
-      "strategyFamilyId": "deployable_multi_asset_rotation_v1_long_validation:f42838cc72e95c60e24da890",
-      "experimentHash": "a463d889ba5fcf388cf8b80a",
+      "strategyFamilyId": "deployable_multi_asset_rotation_v1_long_validation:d5d889d5357c147d59c57a86",
+      "experimentHash": "a292dc14023dd4c9dca0e8bd",
       "dataSources": [
         "0050_twse_daily",
         "0052_twse_daily",
@@ -8784,13 +8784,13 @@
         "00635U_twse_daily"
       ],
       "parameters": {
-        "configs": 288,
+        "configs": 24,
         "assets": [
           "0050.TW",
           "0052.TW"
         ],
         "strategyFamilies": [
-          "staged_trend_core"
+          "hedged_staged_core"
         ]
       },
       "trainPeriod": {
@@ -8814,16 +8814,16 @@
       "metrics": {
         "startDate": "2015-01-01",
         "endDate": "2024-12-31",
-        "endingEquity": 3161041,
-        "averageMonthlyEquityReturnPct": 1.0792,
-        "annualizedReturnPct": 12.1975,
-        "profitFactor": 3.5387,
-        "maximumDrawdownPct": -24.436,
-        "winRatePct": 59.9034,
-        "trades": 207,
-        "negativeMonths": 44,
-        "targetGapPct": 8.9208,
-        "orderIntents": 451
+        "endingEquity": 3465388,
+        "averageMonthlyEquityReturnPct": 1.1608,
+        "annualizedReturnPct": 13.2336,
+        "profitFactor": 3.6562,
+        "maximumDrawdownPct": -24.3944,
+        "winRatePct": 63.2479,
+        "trades": 117,
+        "negativeMonths": 47,
+        "targetGapPct": 8.8392,
+        "orderIntents": 263
       },
       "resultStatus": "failed",
       "failureReason": null,
@@ -8831,7 +8831,7 @@
       "passedMinimum": false,
       "passedHighProfit": false,
       "allowRetest": false,
-      "notes": "10 年 rolling validation 已超越 0050 且回撤較低，但最大回撤仍高於 20%，額外評估期亦未超越 0050，不可紙上交易或實盤。"
+      "notes": "10 年 rolling validation 已超越 0050 且回撤較低，但最大回撤仍高於 20%，額外評估期已超越 0050，仍不可紙上交易或實盤。"
     }
   ]
 }

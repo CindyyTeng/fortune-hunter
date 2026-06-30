@@ -291,12 +291,41 @@ function buildConfigs() {
       }
     }
   }
+  for (const techWeight of [90, 100]) {
+    for (const warningExposurePct of [70]) {
+      for (const hedgePct of [20, 40, 60]) {
+        for (const bearMode of ['drawdown10', 'ma120']) {
+          for (const bearMomentum of [-4, 0]) {
+            rows.push({
+              kind: 'hedged_staged_core',
+              id: `hedged_core${100 - techWeight}_tech${techWeight}_warning${warningExposurePct}_hedge${hedgePct}_${bearMode}_bear${bearMomentum}`,
+              coreWeight: 100 - techWeight,
+              techWeight,
+              warningExposurePct,
+              hedgePct,
+              bearMode,
+              trendDays: 120,
+              bearMomentum,
+              shockMomentum: -8,
+              riskOffMode: 'cash',
+              rebalanceDays: 10,
+              rebalanceBand: 0,
+              targetVol: 99,
+              accountGuardPct: 6,
+              cooldownDays: 15,
+              monthlyStopPct: 4
+            });
+          }
+        }
+      }
+    }
+  }
   return rows;
 }
 
 const configs = buildConfigs();
 const TEST_FAMILY = process.env.ROTATION_TEST_FAMILY || null;
-const PRIMARY_FAMILY = 'staged_trend_core';
+const PRIMARY_FAMILY = 'hedged_staged_core';
 
 function assetScore(item, core, config) {
   const weights = config.scoreWeights;
@@ -431,6 +460,23 @@ function stagedTrendWeights(row, config) {
   return warning ? scaled(weights, config.warningExposurePct) : weights;
 }
 
+function hedgedStagedWeights(row, config) {
+  const core = row.metrics.get('0050.TW');
+  const inverse = row.metrics.get('00632R.TW');
+  if (!core) return {};
+  const bear = config.bearMode === 'drawdown10'
+    ? core.close < core.ma20 && pct(core.close, core.high60) <= -10
+    : core.close < core.ma120 && core.mom60 < config.bearMomentum;
+  if (bear) {
+    return inverse && inverse.close > inverse.ma20 && inverse.mom20 > 0
+      ? { '00632R.TW': config.hedgePct }
+      : {};
+  }
+  const weights = { '0050.TW': config.coreWeight, '0052.TW': config.techWeight };
+  const warning = core.close < core.ma20 && pct(core.close, core.high60) <= -5;
+  return warning ? scaled(weights, config.warningExposurePct) : weights;
+}
+
 function markEquity(state, row, field = 'close') {
   const unsettled = state.unsettled.reduce((sum, item) => sum + item.amount, 0);
   const positions = [...state.positions.entries()].reduce((sum, [symbol, position]) => {
@@ -446,9 +492,9 @@ function makeIntent(date, symbol, action, config, price, budget, reason) {
     symbol,
     action,
     strategyId: `deployable_multi_asset_rotation_v1:${config.id}`,
-    setup: ['0050 長趨勢與 60 日動能確認', '0050／0052 固定週期再平衡', '60 日高點回落警戒與帳戶風控均未封鎖'],
+    setup: ['0050／0052 趨勢參與', '60 日高點回落警戒與帳戶風控均未封鎖', '空頭時僅在 00632R 趨勢為正時對沖'],
     trigger: ['T 日收盤確認訊號', 'T+1 開盤以可成交限價委託'],
-    invalidation: ['0050 跌破 MA120 且 60 日動能低於 0%', '帳戶或單月損失觸發熔斷'],
+    invalidation: ['趨勢或對沖條件失效即切換權重', '帳戶或單月損失觸發熔斷'],
     entryPlan: {
       referencePrice: price,
       maximumAcceptablePrice: price * 1.004,
@@ -625,6 +671,8 @@ function simulate(rows, schedule, startDate, endDate, emitIntents = false) {
               ? coreSatelliteWeights(signal, state.config)
               : state.config.kind === 'staged_trend_core'
                 ? stagedTrendWeights(signal, state.config)
+                : state.config.kind === 'hedged_staged_core'
+                  ? hedgedStagedWeights(signal, state.config)
                 : {});
     const coreMetric = signal.metrics.get('0050.TW');
     if (Number.isFinite(state.config.shockMomentum)
@@ -710,7 +758,7 @@ function selectConfig(rows, fold, family = null) {
     const score = scoreSummary(summary, annual);
     return { config, summary, score };
   }).sort((left, right) => right.score - left.score);
-  const fallback = [PRIMARY_FAMILY, 'staged_trend_core'].includes(family) ? MARKET_FALLBACK_CONFIG : CASH_CONFIG;
+  const fallback = [PRIMARY_FAMILY, 'staged_trend_core', 'hedged_staged_core'].includes(family) ? MARKET_FALLBACK_CONFIG : CASH_CONFIG;
   return evaluated.find(row => Number.isFinite(row.score)) || {
     config: fallback,
     summary: simulate(rows, () => fallback, fold.trainStart, fold.trainEnd).summary,
@@ -820,6 +868,7 @@ async function main() {
   const holdoutEnd = rows.at(-1).date;
   const holdout = simulate(rows, () => selections.at(-1).selected.config, holdoutStart, holdoutEnd);
   const holdoutBenchmark = buyAndHold0050(rows, holdoutStart, holdoutEnd);
+  const extraEvaluationBeats0050 = holdout.summary.averageMonthlyEquityReturnPct > holdoutBenchmark.averageMonthlyEquityReturnPct;
   const priorSelections = (prior.selections || []).map(row => ({
     ...row,
     config: parseCoreSatelliteConfig(row.configId)
@@ -834,9 +883,9 @@ async function main() {
     && metrics.maximumDrawdownPct > benchmark.maximumDrawdownPct;
   const minimumPassed = beats0050 && metrics.trades >= 100 && metrics.profitFactor > 1.15 && metrics.maximumDrawdownPct > -20;
   const iterationBaseline = {
-    averageMonthlyEquityReturnPct: 1.0755,
-    maximumDrawdownPct: -26.1356,
-    trades: 214
+    averageMonthlyEquityReturnPct: 1.0792,
+    maximumDrawdownPct: -24.436,
+    trades: 207
   };
   const result = {
     generatedAt: new Date().toISOString(),
@@ -898,7 +947,7 @@ async function main() {
   result.readiness.reason = minimumPassed
     ? '已達研究門檻，但仍須先通過紙上交易，不可直接實盤。'
     : beats0050
-      ? '10 年 rolling validation 已超越 0050 且回撤較低，但最大回撤仍高於 20%，額外評估期亦未超越 0050，不可紙上交易或實盤。'
+      ? `10 年 rolling validation 已超越 0050 且回撤較低，但最大回撤仍高於 20%，額外評估期${extraEvaluationBeats0050 ? '已' : '未'}超越 0050，仍不可紙上交易或實盤。`
       : '長期月均報酬仍未超越 0050，且最大回撤仍高於 20%，不可紙上交易、不可實盤、不可接真實券商下單。';
 
   await fs.writeFile(OUTPUT, `${JSON.stringify(result, null, 2)}\n`, 'utf8');
@@ -930,7 +979,7 @@ async function main() {
     '## 結論',
     '',
     `- 10 年 rolling validation 月均${beats0050 ? '已' : '未'}超越 0050，最大回撤較 0050 低 ${round(metrics.maximumDrawdownPct - benchmark.maximumDrawdownPct)} 個百分點。`,
-    `- 額外評估期月均${holdout.summary.averageMonthlyEquityReturnPct > holdoutBenchmark.averageMonthlyEquityReturnPct ? '已' : '未'}超越 0050。`,
+    `- 額外評估期月均${extraEvaluationBeats0050 ? '已' : '未'}超越 0050。`,
     '- 目前不可進入 paper trading、不可實盤、不可接真實券商下單。',
     ''
   ].join('\n'), 'utf8');
@@ -947,7 +996,7 @@ async function main() {
     `- 額外評估期最大回撤：${holdout.summary.maximumDrawdownPct}%`,
     '- 此期間已在多輪研究中反覆觀察，不再視為純粹未觸碰 holdout。',
     `- 10 年 validation 是否超越 0050：${beats0050 ? '是' : '否'}`,
-    `- 額外評估期是否超越 0050：${holdout.summary.averageMonthlyEquityReturnPct > holdoutBenchmark.averageMonthlyEquityReturnPct ? '是' : '否'}`,
+    `- 額外評估期是否超越 0050：${extraEvaluationBeats0050 ? '是' : '否'}`,
     '- 可產生 T 日訊號與 T+1 order intent，但尚未達策略通過門檻。',
     '- Paper trading：不允許。',
     '- 真實券商 API 下單：不允許。',
@@ -961,9 +1010,9 @@ async function main() {
   await appendExperiment({
     strategyId: 'deployable_multi_asset_rotation_v1_long_validation',
     dataSources: ASSETS.map(asset => `${asset.name}_twse_daily`),
-    setupRules: ['0050 位於 MA120 上方', '0050 60 日動能不低於 0%', '0050／0052 固定週期再平衡', '跌破 MA20 且距 60 日高點回落 5% 時分段降曝險'],
+    setupRules: ['0050／0052 多頭參與', '跌破 MA20 且距 60 日高點回落 5% 時降至 70% 曝險', '空頭確認且 00632R 趨勢為正時才啟用現金擔保對沖'],
     triggerRules: ['T 日收盤確認趨勢與急跌保護', 'T+1 開盤調整到目標權重'],
-    invalidationRules: ['0050 跌破 MA120 且 60 日動能低於 0%', '20 日跌幅觸發急跌保護'],
+    invalidationRules: ['0050 跌破 MA120 且 60 日動能低於門檻', '00632R 未站上 MA20 或 20 日動能不為正時不對沖'],
     exitRules: ['權重切換', '月損失封鎖', '帳戶回撤熔斷', '結束驗證視窗'],
     riskRules: ['T+2', 'ETF 交易成本', '滑價', '6% 帳戶回撤熔斷', '4% 月損失封鎖', '15 日冷卻'],
     blockedWhen: ['長趨勢與 60 日動能同步轉空', '帳戶或單月損失觸發封鎖'],

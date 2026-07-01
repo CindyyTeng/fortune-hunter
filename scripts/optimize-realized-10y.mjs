@@ -36,6 +36,7 @@ const MIN_FEE = 20;
 const MIN_ORDER_VALUE = 20_000;
 const LOT = 1000;
 const SETTLEMENT_DAYS = 2;
+const ETF_INITIAL_COST_PCT = BUY_FEE_PCT + BUY_SLIPPAGE_PCT;
 
 function stableValue(value) {
   if (Array.isArray(value)) return value.map(stableValue);
@@ -236,7 +237,7 @@ function plannedPositionPct(trade, config) {
       pct *= config.momentumCrashMultiplier;
     }
   }
-  return pct;
+  return Math.min(config.maxPositionPct, pct);
 }
 
 function buildDays(trades) {
@@ -470,6 +471,7 @@ function simulate(allDays, months, config, marketRegimes = new Map()) {
   const monthlyStartEquity = new Map([[activeMonth, INITIAL_CAPITAL]]);
   const monthlyEndEquity = new Map();
   const closedTrades = config.collectTrades ? [] : null;
+  const dailyCurve = config.collectCurve ? [] : null;
   const closePosition = (position, exitPrice, exitDate, month, index, exitReason) => {
     open = open.filter(item => item.trade.tradeId !== position.trade.tradeId);
     cooldownUntilBySymbol.set(position.trade.symbol, index + 5);
@@ -663,6 +665,7 @@ function simulate(allDays, months, config, marketRegimes = new Map()) {
     peak = Math.max(peak, equity);
     maxDrawdownPct = Math.min(maxDrawdownPct, (equity / peak - 1) * 100);
     monthlyEndEquity.set(month, equity);
+    if (dailyCurve) dailyCurve.push({ date, equity: round(equity, 0) });
   }
 
   let capital = INITIAL_CAPITAL;
@@ -708,6 +711,7 @@ function simulate(allDays, months, config, marketRegimes = new Map()) {
     test: stats(test)
   };
   if (closedTrades) result.closedTrades = closedTrades;
+  if (dailyCurve) result.dailyCurve = dailyCurve;
   return result;
 }
 
@@ -1320,6 +1324,7 @@ function rollingRegimeConfigs(base) {
               momentumCrashMultiplier: crashRule[2],
               accountDrawdownBrakePct,
               accountCooldownDays: 10,
+              monthlyEquityBrakePct: -5,
               collectTrades: false
             });
           }
@@ -1336,7 +1341,15 @@ function shiftMonth(month, offset) {
   return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, '0')}`;
 }
 
-function simulateRange(days, config, marketRegimes, startMonth, endMonth, collectTrades = false) {
+function simulateRange(
+  days,
+  config,
+  marketRegimes,
+  startMonth,
+  endMonth,
+  collectTrades = false,
+  collectCurve = false
+) {
   const paddedMonths = monthKeys(
     `${shiftMonth(startMonth, -1)}-01`,
     `${shiftMonth(endMonth, 1)}-28`
@@ -1344,7 +1357,51 @@ function simulateRange(days, config, marketRegimes, startMonth, endMonth, collec
   const rangeDays = days.filter(([date]) => (
     date.slice(0, 7) >= startMonth && date.slice(0, 7) <= endMonth
   ));
-  return simulate(rangeDays, paddedMonths, { ...config, collectTrades }, marketRegimes);
+  return simulate(rangeDays, paddedMonths, { ...config, collectTrades, collectCurve }, marketRegimes);
+}
+
+function allocationFrontier(foldCurves, marketRegimes) {
+  return [70, 80, 90, 100].map(stockWeightPct => {
+    const etf0050WeightPct = 100 - stockWeightPct;
+    let equity = INITIAL_CAPITAL;
+    let peak = INITIAL_CAPITAL;
+    let maximumDrawdownPct = 0;
+    const monthEnd = new Map();
+    for (const curve of foldCurves) {
+      const firstClose = marketRegimes.get(curve[0]?.date)?.close;
+      let previousFoldValue = INITIAL_CAPITAL;
+      for (const row of curve) {
+        const marketClose = marketRegimes.get(row.date)?.close;
+        if (!firstClose || !marketClose) continue;
+        const stockValue = row.equity * stockWeightPct / 100;
+        const etfValue = INITIAL_CAPITAL * etf0050WeightPct / 100
+          * (1 - ETF_INITIAL_COST_PCT / 100)
+          * marketClose / firstClose;
+        const foldValue = stockValue + etfValue;
+        equity *= foldValue / previousFoldValue;
+        previousFoldValue = foldValue;
+        peak = Math.max(peak, equity);
+        maximumDrawdownPct = Math.min(maximumDrawdownPct, (equity / peak - 1) * 100);
+        monthEnd.set(row.date.slice(0, 7), equity);
+      }
+    }
+    let prior = INITIAL_CAPITAL;
+    const monthly = [...monthEnd].map(([month, endingEquity]) => {
+      const returnPct = (endingEquity / prior - 1) * 100;
+      prior = endingEquity;
+      return { month, returnPct };
+    });
+    const growth = monthly.reduce((value, row) => value * (1 + row.returnPct / 100), 1);
+    return {
+      stockWeightPct,
+      etf0050WeightPct,
+      months: monthly.length,
+      averageMonthlyReturnPct: round(monthly.reduce((sum, row) => sum + row.returnPct, 0) / monthly.length),
+      annualizedReturnPct: round((growth ** (12 / monthly.length) - 1) * 100),
+      maximumDrawdownPct: round(maximumDrawdownPct),
+      negativeMonths: monthly.filter(row => row.returnPct < 0).length
+    };
+  });
 }
 
 function rollingValidation(days, configs, marketRegimes) {
@@ -1357,6 +1414,7 @@ function rollingValidation(days, configs, marketRegimes) {
   const folds = [];
   const closedTrades = [];
   const monthly = [];
+  const foldCurves = [];
   for (const [trainStart, trainEnd, validationStart, validationEnd] of periods) {
     const trained = configs.map(config => (
       simulateRange(days, config, marketRegimes, trainStart, trainEnd)
@@ -1370,10 +1428,12 @@ function rollingValidation(days, configs, marketRegimes) {
       marketRegimes,
       validationStart,
       validationEnd,
+      true,
       true
     );
     monthly.push(...validation.monthly.slice(1, -1));
     closedTrades.push(...(validation.closedTrades || []));
+    foldCurves.push(validation.dailyCurve || []);
     folds.push({
       trainPeriod: `${trainStart}～${trainEnd}`,
       validationPeriod: `${validationStart}～${validationEnd}`,
@@ -1386,6 +1446,15 @@ function rollingValidation(days, configs, marketRegimes) {
       validationQuality: tradeQuality(validation)
     });
   }
+  const allocations = allocationFrontier(foldCurves, marketRegimes);
+  const stockOnlyAllocation = allocations.find(row => row.stockWeightPct === 100);
+  const improvedAllocations = allocations.filter(row => (
+    row.averageMonthlyReturnPct > 2.89
+    && row.maximumDrawdownPct > stockOnlyAllocation.maximumDrawdownPct
+  ));
+  const selectedAllocation = [...(improvedAllocations.length ? improvedAllocations : allocations)]
+    .sort((a, b) => b.averageMonthlyReturnPct - a.averageMonthlyReturnPct
+      || b.maximumDrawdownPct - a.maximumDrawdownPct)[0];
   let combinedEquity = INITIAL_CAPITAL;
   let combinedPeak = INITIAL_CAPITAL;
   let combinedMaximumDrawdownPct = 0;
@@ -1413,12 +1482,15 @@ function rollingValidation(days, configs, marketRegimes) {
       { returnPct: 0 }
     ]),
     validationWorstFoldDrawdownPct: Math.min(...folds.map(fold => fold.validationMaxDrawdownPct)),
-    validationCombinedMaximumDrawdownPct: round(Math.min(
+    validationMonthEndAndFoldMaximumDrawdownPct: round(Math.min(
       combinedMaximumDrawdownPct,
       ...folds.map(fold => fold.validationMaxDrawdownPct)
     )),
+    validationCombinedMaximumDrawdownPct: stockOnlyAllocation.maximumDrawdownPct,
     validationTrades: closedTrades.length,
     validationQuality: tradeQuality(pseudoResult),
+    allocationFrontier: allocations,
+    selectedAllocation,
     monthly,
     folds
   };

@@ -1,75 +1,55 @@
 {
-  "generatedAt": "2026-07-01T09:23:26.248Z",
-  "methodology": "個股與 0050 使用獨立資金袖套；初始配置後不強制再平衡，0050 計入首次買進手續費與滑價，個股袖套沿用已含費稅、滑價與 T+2 的 rolling validation 月報酬。",
+  "generatedAt": "2026-07-01T11:10:59.484Z",
+  "methodology": "個股與 0050 使用獨立資金袖套，以每日收盤總資產串接四段 rolling validation；0050 計入每段首次買進手續費與滑價，個股交易已含費稅、滑價與 T+2。",
   "validationPeriod": "2021-01～2026-05",
   "validationMonths": 65,
-  "stockValidationTrades": 169,
-  "currentStrategyClarification": {
-    "deployableMultiAssetEstimated0050TargetPct": 42,
-    "deployableCoreSatelliteEstimated0050TargetPct": 53.3,
-    "stockExposureFrontier0050Pct": 0
-  },
+  "stockValidationTrades": 190,
   "frontier": [
     {
-      "stockWeightPct": 60,
-      "etf0050InitialWeightPct": 40,
-      "months": 65,
-      "endingEquity": 4762979,
-      "averageMonthlyReturnPct": 2.5725,
-      "annualizedReturnPct": 33.426,
-      "monthEndMaximumDrawdownPct": -10.7467,
-      "negativeMonths": 26
-    },
-    {
       "stockWeightPct": 70,
-      "etf0050InitialWeightPct": 30,
+      "etf0050WeightPct": 30,
       "months": 65,
-      "endingEquity": 4983711,
-      "averageMonthlyReturnPct": 2.6548,
-      "annualizedReturnPct": 34.5394,
-      "monthEndMaximumDrawdownPct": -11.0741,
-      "negativeMonths": 27
+      "averageMonthlyReturnPct": 3.01,
+      "annualizedReturnPct": 40.39,
+      "maximumDrawdownPct": -15.93,
+      "negativeMonths": 24
     },
     {
       "stockWeightPct": 80,
-      "etf0050InitialWeightPct": 20,
+      "etf0050WeightPct": 20,
       "months": 65,
-      "endingEquity": 5204444,
-      "averageMonthlyReturnPct": 2.736,
-      "annualizedReturnPct": 35.6127,
-      "monthEndMaximumDrawdownPct": -11.3574,
-      "negativeMonths": 27
+      "averageMonthlyReturnPct": 3.09,
+      "annualizedReturnPct": 41.63,
+      "maximumDrawdownPct": -14.71,
+      "negativeMonths": 24
     },
     {
       "stockWeightPct": 90,
-      "etf0050InitialWeightPct": 10,
+      "etf0050WeightPct": 10,
       "months": 65,
-      "endingEquity": 5425176,
-      "averageMonthlyReturnPct": 2.8157,
-      "annualizedReturnPct": 36.6493,
-      "monthEndMaximumDrawdownPct": -11.605,
-      "negativeMonths": 27
+      "averageMonthlyReturnPct": 3.17,
+      "annualizedReturnPct": 42.7,
+      "maximumDrawdownPct": -14.08,
+      "negativeMonths": 24
     },
     {
       "stockWeightPct": 100,
-      "etf0050InitialWeightPct": 0,
+      "etf0050WeightPct": 0,
       "months": 65,
-      "endingEquity": 5645909,
-      "averageMonthlyReturnPct": 2.8938,
-      "annualizedReturnPct": 37.6517,
-      "monthEndMaximumDrawdownPct": -12.757,
-      "negativeMonths": 23
+      "averageMonthlyReturnPct": 3.25,
+      "annualizedReturnPct": 43.6,
+      "maximumDrawdownPct": -14.68,
+      "negativeMonths": 22
     }
   ],
   "selected": {
-    "stockWeightPct": 100,
-    "etf0050InitialWeightPct": 0,
+    "stockWeightPct": 90,
+    "etf0050WeightPct": 10,
     "months": 65,
-    "endingEquity": 5645909,
-    "averageMonthlyReturnPct": 2.8938,
-    "annualizedReturnPct": 37.6517,
-    "monthEndMaximumDrawdownPct": -12.757,
-    "negativeMonths": 23
+    "averageMonthlyReturnPct": 3.17,
+    "annualizedReturnPct": 42.7,
+    "maximumDrawdownPct": -14.08,
+    "negativeMonths": 24
   },
-  "conclusion": "本段長期驗證沒有證據支持配置 0050；保留 100% 個股策略資金、0050 為 0% 的結果較佳。"
+  "conclusion": "目前風險調整後配置為個股 90%、0050 10%。"
 }

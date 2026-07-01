@@ -17,6 +17,7 @@
     "test:execution": "node scripts/test-execution-simulator.mjs",
     "optimize:risk": "node scripts/optimize-risk-rules.mjs",
     "optimize:realized10y": "node scripts/optimize-realized-10y.mjs",
+    "research:exposure-frontier10y": "node scripts/optimize-realized-10y.mjs --exposure-frontier",
     "optimize:indicators10y": "node scripts/optimize-realized-10y.mjs --indicators-only",
     "optimize:portfolio10y": "node scripts/optimize-realized-10y.mjs --risk-only",
     "optimize:exits10y": "node scripts/optimize-realized-10y.mjs --exits-only",

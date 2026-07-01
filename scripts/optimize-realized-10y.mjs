@@ -12,6 +12,8 @@ const OUTPUT = new URL('../data/realized-strategy-search-10y.json', import.meta.
 const DIAGNOSTIC_OUTPUT = new URL('../data/realized-strategy-diagnostics-10y.json', import.meta.url);
 const MARKET_HISTORY = new URL('../data/market-regime-history-10y.json', import.meta.url);
 const SEARCH_LEDGER = new URL('../data/strategy-search-ledger-10y.json', import.meta.url);
+const EXPOSURE_FRONTIER_OUTPUT = new URL('../data/realized-exposure-frontier-10y.json', import.meta.url);
+const ETF_HISTORY = new URL('../data/research/deployable-etf-rotation-history.json', import.meta.url);
 const QUICK = process.argv.includes('--quick');
 const TESTS = Number(process.env.OPTIMIZE_REALIZED_TESTS || (QUICK ? 2000 : 12000));
 const BROAD_TESTS = Number(process.env.OPTIMIZE_REALIZED_BROAD_TESTS || (QUICK ? 500 : 2000));
@@ -437,6 +439,8 @@ function simulate(allDays, months, config, marketRegimes = new Map()) {
   let open = [];
   let equity = INITIAL_CAPITAL;
   let peak = INITIAL_CAPITAL;
+  let accountRiskPeak = INITIAL_CAPITAL;
+  let accountCooldownUntil = -1;
   let maxDrawdownPct = 0;
   let trades = 0;
   let realizedCapital = INITIAL_CAPITAL;
@@ -559,6 +563,15 @@ function simulate(allDays, months, config, marketRegimes = new Map()) {
     equity = availableCash
       + unsettled.reduce((sum, item) => sum + item.amount, 0)
       + open.reduce((sum, item) => sum + item.markValue, 0);
+    if (index === accountCooldownUntil + 1) accountRiskPeak = equity;
+    accountRiskPeak = Math.max(accountRiskPeak, equity);
+    const accountDrawdownPct = (equity / accountRiskPeak - 1) * 100;
+    if (config.accountDrawdownBrakePct
+      && index > accountCooldownUntil
+      && accountDrawdownPct <= config.accountDrawdownBrakePct) {
+      accountCooldownUntil = index + (config.accountCooldownDays || 20);
+      liquidateNextOpen = open.length > 0;
+    }
     const monthReturnPct = (monthlyPnl.get(month) || 0) / monthStartCapital * 100;
     const monthEquityReturnPct = (equity / monthStartEquity - 1) * 100;
     monthPeakReturnPct = Math.max(monthPeakReturnPct, monthReturnPct);
@@ -590,6 +603,7 @@ function simulate(allDays, months, config, marketRegimes = new Map()) {
         || drawdownLocked
         || blackSwanToday
         || monthTradingHalted
+        || index <= accountCooldownUntil
         || liquidateNextOpen) continue;
       if (monthReturnPct < 0 && (
         rewardRisk(trade) < config.recoveryMinRewardRisk
@@ -1108,6 +1122,104 @@ function compareBalanced(a, b) {
     || b.full.average - a.full.average;
 }
 
+function tradeQuality(result) {
+  const rows = result.closedTrades || [];
+  const wins = rows.filter(row => row.realizedPnl > 0);
+  const grossProfit = wins.reduce((sum, row) => sum + row.realizedPnl, 0);
+  const grossLoss = Math.abs(rows
+    .filter(row => row.realizedPnl < 0)
+    .reduce((sum, row) => sum + row.realizedPnl, 0));
+  const symbolPnl = new Map();
+  for (const row of rows) {
+    symbolPnl.set(row.symbol, (symbolPnl.get(row.symbol) || 0) + row.realizedPnl);
+  }
+  const positivePnl = [...symbolPnl.values()].filter(value => value > 0).sort((a, b) => b - a);
+  return {
+    winRatePct: rows.length ? round(wins.length / rows.length * 100) : 0,
+    profitFactor: grossLoss ? round(grossProfit / grossLoss) : null,
+    topFiveProfitContributionPct: grossProfit
+      ? round(positivePnl.slice(0, 5).reduce((sum, value) => sum + value, 0) / grossProfit * 100)
+      : 0
+  };
+}
+
+function annualizedReturn(monthly) {
+  const complete = monthly.slice(1, -1);
+  const growth = complete.reduce((value, row) => value * (1 + row.returnPct / 100), 1);
+  return complete.length ? round((growth ** (12 / complete.length) - 1) * 100) : 0;
+}
+
+function benchmarkStats(series, startDate, endDate) {
+  const rows = series.filter(row => row.date >= startDate && row.date <= endDate);
+  const monthlyCloses = new Map();
+  for (const row of rows) monthlyCloses.set(row.date.slice(0, 7), row.close);
+  const closes = [...monthlyCloses.values()];
+  const monthlyReturns = closes.slice(1).map((close, index) => (
+    (close / closes[index] - 1) * 100
+  ));
+  let peak = rows[0]?.close || 0;
+  let maxDrawdownPct = 0;
+  for (const row of rows) {
+    peak = Math.max(peak, row.close);
+    maxDrawdownPct = Math.min(maxDrawdownPct, (row.close / peak - 1) * 100);
+  }
+  const totalReturn = rows.length > 1 ? rows.at(-1).close / rows[0].close : 1;
+  const years = rows.length > 1
+    ? (Date.parse(rows.at(-1).date) - Date.parse(rows[0].date)) / (365.25 * 86400000)
+    : 0;
+  return {
+    startDate: rows[0]?.date || null,
+    endDate: rows.at(-1)?.date || null,
+    months: monthlyReturns.length,
+    averageMonthlyReturnPct: monthlyReturns.length
+      ? round(monthlyReturns.reduce((sum, value) => sum + value, 0) / monthlyReturns.length)
+      : 0,
+    annualizedReturnPct: years ? round((totalReturn ** (1 / years) - 1) * 100) : 0,
+    maxDrawdownPct: round(maxDrawdownPct)
+  };
+}
+
+function exposureFrontierConfigs(base) {
+  const rows = [];
+  for (const positionPct of [10, 15, 20, 25, 30, 35]) {
+    for (const accountRiskPct of [0.5, 0.75, 1, 1.25]) {
+      for (const maxOpenPositions of [3, 4, 5]) {
+        for (const monthlyEquityBrakePct of [null, -3, -5]) {
+          for (const transitionPositionMultiplier of [0.25, 0.5, 0.75, 1]) {
+            rows.push({
+              ...base,
+              standardPct: positionPct,
+              defensivePct: positionPct,
+              exploratoryPct: positionPct,
+              maxPositionPct: positionPct,
+              accountRiskPct,
+              starterRiskPct: accountRiskPct,
+              maxOpenPositions,
+              monthlyEquityBrakePct,
+              transitionPositionMultiplier,
+              collectTrades: false
+            });
+          }
+        }
+      }
+    }
+  }
+  return rows;
+}
+
+function riskConfig(config) {
+  return {
+    positionPct: config.standardPct,
+    accountRiskPct: config.accountRiskPct,
+    maxOpenPositions: config.maxOpenPositions,
+    maxPositionsPerTheme: config.maxPositionsPerTheme,
+    monthlyEquityBrakePct: config.monthlyEquityBrakePct,
+    transitionPositionMultiplier: config.transitionPositionMultiplier,
+    accountDrawdownBrakePct: config.accountDrawdownBrakePct,
+    accountCooldownDays: config.accountCooldownDays
+  };
+}
+
 async function main() {
   const payload = JSON.parse(await fs.readFile(INPUT, 'utf8'));
   const candidates = payload.candidateTrades || [];
@@ -1149,6 +1261,122 @@ async function main() {
     trail: null,
     noFollow: false
   })));
+  if (process.argv.includes('--exposure-frontier')) {
+    const search = JSON.parse(await fs.readFile(OUTPUT, 'utf8'));
+    const base = { ...search.bestBalanced.config };
+    delete base.collectTrades;
+    const sourceDays = buildDays(broadCandidates.map(trade => applyExitRule(trade, base.exitRule)));
+    const evaluated = exposureFrontierConfigs(base).map(config => (
+      simulate(sourceDays, months, config, marketRegimes)
+    ));
+    const eligible = evaluated.filter(result => (
+      result.maxDrawdownPct >= -24
+      && result.trades >= 250
+      && result.test.average > 0
+    ));
+    const ranked = [...eligible].sort((a, b) => (
+      b.test.average - a.test.average
+      || b.full.average - a.full.average
+      || b.maxDrawdownPct - a.maxDrawdownPct
+    ));
+    const returnLeader = ranked[0] || [...evaluated].sort((a, b) => (
+      b.maxDrawdownPct - a.maxDrawdownPct || b.test.average - a.test.average
+    ))[0];
+    const safetyEvaluated = [null, -8, -10, -12, -15].flatMap(accountDrawdownBrakePct => (
+      [10, 20, 40].map(accountCooldownDays => simulate(sourceDays, months, {
+        ...returnLeader.config,
+        accountDrawdownBrakePct,
+        accountCooldownDays,
+        collectTrades: false
+      }, marketRegimes))
+    ));
+    const selected = [...safetyEvaluated]
+      .filter(result => result.maxDrawdownPct >= -20 && result.trades >= 250)
+      .sort((a, b) => b.test.average - a.test.average || b.full.average - a.full.average)[0]
+      || returnLeader;
+    const best = simulate(sourceDays, months, { ...selected.config, collectTrades: true }, marketRegimes);
+    const validationMonths = monthKeys('2021-12-01', '2026-06-30');
+    const validationDays = sourceDays.filter(([date]) => date >= '2021-12-01');
+    const validation = simulate(
+      validationDays,
+      validationMonths,
+      { ...selected.config, collectTrades: true },
+      marketRegimes
+    );
+    const etfHistory = JSON.parse(await fs.readFile(ETF_HISTORY, 'utf8'));
+    const benchmark = benchmarkStats(
+      etfHistory.series['0050.TW'] || [],
+      '2022-01-01',
+      '2026-05-31'
+    );
+    const { closedTrades: bestTrades, ...bestSummary } = best;
+    const { closedTrades: validationTrades, ...validationSummary } = validation;
+    const output = {
+      generatedAt: new Date().toISOString(),
+      sourceGeneratedAt: payload.generatedAt,
+      period: {
+        full: `${months[1]}～${months.at(-2)}`,
+        training: `${months[1]}～2021-12`,
+        validation: `2022-01～${months.at(-2)}`
+      },
+      testedCombinations: evaluated.length,
+      testedSafetyCombinations: safetyEvaluated.length,
+      eligibility: {
+        maxDrawdownPct: -24,
+        minimumTrades: 250,
+        positiveValidationAverage: true
+      },
+      base: {
+        full: search.bestBalanced.full,
+        test: search.bestBalanced.test,
+        maxDrawdownPct: search.bestBalanced.maxDrawdownPct,
+        trades: search.bestBalanced.trades,
+        risk: riskConfig(search.bestBalanced.config)
+      },
+      best: {
+        ...bestSummary,
+        quality: tradeQuality(best)
+      },
+      validation: {
+        ...validationSummary,
+        annualizedReturnPct: annualizedReturn(validation.monthly),
+        quality: tradeQuality(validation)
+      },
+      benchmark,
+      frontier: ranked.slice(0, 10).map(result => ({
+        risk: riskConfig(result.config),
+        full: result.full,
+        train: result.train,
+        test: result.test,
+        maxDrawdownPct: result.maxDrawdownPct,
+        trades: result.trades
+      }))
+    };
+    await fs.writeFile(EXPOSURE_FRONTIER_OUTPUT, `${JSON.stringify(output, null, 2)}\n`, 'utf8');
+    console.log(JSON.stringify({
+      output: EXPOSURE_FRONTIER_OUTPUT.pathname,
+      testedCombinations: output.testedCombinations,
+      period: output.period,
+      best: {
+        full: best.full,
+        train: best.train,
+        validation: validation.full,
+        validationAnnualizedReturnPct: output.validation.annualizedReturnPct,
+        validationMaxDrawdownPct: validation.maxDrawdownPct,
+        benchmark,
+        maxDrawdownPct: best.maxDrawdownPct,
+        trades: best.trades,
+        quality: output.best.quality,
+        validationQuality: output.validation.quality,
+        validationTrades: validation.trades,
+        positionPct: best.config.standardPct,
+        accountRiskPct: best.config.accountRiskPct,
+        maxOpenPositions: best.config.maxOpenPositions,
+        monthlyEquityBrakePct: best.config.monthlyEquityBrakePct
+      }
+    }, null, 2));
+    return;
+  }
   if (process.argv.includes('--diagnose-best')) {
     const search = JSON.parse(await fs.readFile(OUTPUT, 'utf8'));
     const configs = {

@@ -1386,6 +1386,17 @@ function rollingValidation(days, configs, marketRegimes) {
       validationQuality: tradeQuality(validation)
     });
   }
+  let combinedEquity = INITIAL_CAPITAL;
+  let combinedPeak = INITIAL_CAPITAL;
+  let combinedMaximumDrawdownPct = 0;
+  for (const row of monthly) {
+    combinedEquity *= 1 + row.returnPct / 100;
+    combinedPeak = Math.max(combinedPeak, combinedEquity);
+    combinedMaximumDrawdownPct = Math.min(
+      combinedMaximumDrawdownPct,
+      (combinedEquity / combinedPeak - 1) * 100
+    );
+  }
   const pseudoResult = { closedTrades };
   return {
     trainingMonthsPerFold: 54,
@@ -1402,8 +1413,13 @@ function rollingValidation(days, configs, marketRegimes) {
       { returnPct: 0 }
     ]),
     validationWorstFoldDrawdownPct: Math.min(...folds.map(fold => fold.validationMaxDrawdownPct)),
+    validationCombinedMaximumDrawdownPct: round(Math.min(
+      combinedMaximumDrawdownPct,
+      ...folds.map(fold => fold.validationMaxDrawdownPct)
+    )),
     validationTrades: closedTrades.length,
     validationQuality: tradeQuality(pseudoResult),
+    monthly,
     folds
   };
 }
@@ -1923,7 +1939,7 @@ async function main() {
   }, null, 2));
 }
 
-main().catch(error => {
+await main().catch(error => {
   console.error(error);
   process.exit(1);
 });

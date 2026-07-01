@@ -467,6 +467,8 @@ function simulate(allDays, months, config, marketRegimes = new Map()) {
   const cooldownUntilBySymbol = new Map();
   const monthlyPnl = new Map(months.map(month => [month, 0]));
   const monthlyTrades = new Map(months.map(month => [month, 0]));
+  const monthlyStartEquity = new Map([[activeMonth, INITIAL_CAPITAL]]);
+  const monthlyEndEquity = new Map();
   const closedTrades = config.collectTrades ? [] : null;
   const closePosition = (position, exitPrice, exitDate, month, index, exitReason) => {
     open = open.filter(item => item.trade.tradeId !== position.trade.tradeId);
@@ -534,6 +536,7 @@ function simulate(allDays, months, config, marketRegimes = new Map()) {
       activeMonth = month;
       monthStartCapital = realizedCapital;
       monthStartEquity = equity;
+      monthlyStartEquity.set(month, equity);
       monthPeakReturnPct = 0;
       monthTradingHalted = false;
     }
@@ -659,6 +662,7 @@ function simulate(allDays, months, config, marketRegimes = new Map()) {
       + open.reduce((sum, item) => sum + item.markValue, 0);
     peak = Math.max(peak, equity);
     maxDrawdownPct = Math.min(maxDrawdownPct, (equity / peak - 1) * 100);
+    monthlyEndEquity.set(month, equity);
   }
 
   let capital = INITIAL_CAPITAL;
@@ -666,10 +670,17 @@ function simulate(allDays, months, config, marketRegimes = new Map()) {
     const pnl = monthlyPnl.get(month) || 0;
     const startCapital = capital;
     capital += pnl;
+    const startEquity = monthlyStartEquity.get(month);
+    const endEquity = monthlyEndEquity.get(month);
+    const equityReturnPct = startEquity && endEquity
+      ? (endEquity / startEquity - 1) * 100
+      : 0;
     return {
       month,
-      returnPct: round(pnl / startCapital * 100),
+      returnPct: round(equityReturnPct),
+      realizedReturnPct: round(pnl / startCapital * 100),
       realizedPnl: round(pnl, 0),
+      endingEquity: endEquity ? round(endEquity, 0) : null,
       trades: monthlyTrades.get(month) || 0
     };
   });
@@ -687,8 +698,9 @@ function simulate(allDays, months, config, marketRegimes = new Map()) {
   const result = {
     config,
     monthly,
-    finalCapital: round(capital, 0),
-    portfolioReturnPct: round((capital / INITIAL_CAPITAL - 1) * 100),
+    finalCapital: round(equity, 0),
+    realizedCapital: round(capital, 0),
+    portfolioReturnPct: round((equity / INITIAL_CAPITAL - 1) * 100),
     maxDrawdownPct: round(maxDrawdownPct),
     trades,
     full: stats(complete),
@@ -1240,7 +1252,8 @@ function riskConfig(config) {
     regimeMode: config.regimeMode,
     regimeSlowMa: config.regimeSlowMa,
     regimeMomentumDays: config.regimeMomentumDays,
-    regimeMomentumThreshold: config.regimeMomentumThreshold
+    regimeMomentumThreshold: config.regimeMomentumThreshold,
+    rankMode: config.rankMode
   };
 }
 
@@ -1377,6 +1390,7 @@ function rollingValidation(days, configs, marketRegimes) {
   return {
     trainingMonthsPerFold: 54,
     plannedValidationMonthsPerFold: 18,
+    trainingSelectionObjective: '月均總資產報酬最高且最大回撤不超過 25%',
     validationPeriod: '2021-01～2026-05',
     validationMonths: monthly.length,
     validationAverageMonthlyReturnPct: round(

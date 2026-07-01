@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-01T03:03:14.706Z",
+  "generatedAt": "2026-07-01T04:04:04.742Z",
   "sourceGeneratedAt": "2026-06-11T14:50:08.922Z",
   "period": {
     "full": "2016-07～2026-05",
@@ -8,6 +8,7 @@
   },
   "testedCombinations": 864,
   "testedSafetyCombinations": 15,
+  "testedVolatilityCombinations": 240,
   "eligibility": {
     "maxDrawdownPct": -24,
     "minimumTrades": 250,
@@ -37,7 +38,11 @@
       "accountRiskPct": 1.5,
       "maxOpenPositions": 4,
       "maxPositionsPerTheme": 2,
-      "monthlyEquityBrakePct": null
+      "monthlyEquityBrakePct": null,
+      "regimeMode": "none",
+      "regimeSlowMa": 40,
+      "regimeMomentumDays": 10,
+      "regimeMomentumThreshold": -1
     }
   },
   "best": {
@@ -121,7 +126,13 @@
       "transitionPositionMultiplier": 0.5,
       "collectTrades": true,
       "accountDrawdownBrakePct": -10,
-      "accountCooldownDays": 10
+      "accountCooldownDays": 10,
+      "targetMarketVolPct": 24,
+      "minimumVolatilityMultiplier": 0.25,
+      "maximumVolatilityMultiplier": 1,
+      "momentumCrashMom20Pct": -3,
+      "momentumCrashReboundPct": 1,
+      "momentumCrashMultiplier": 0
     },
     "monthly": [
       {
@@ -246,44 +257,44 @@
       },
       {
         "month": "2018-02",
-        "returnPct": -0.45,
-        "realizedPnl": -6095,
-        "trades": 1
+        "returnPct": 0,
+        "realizedPnl": 0,
+        "trades": 0
       },
       {
         "month": "2018-03",
         "returnPct": 1.57,
-        "realizedPnl": 21267,
+        "realizedPnl": 21459,
         "trades": 3
       },
       {
         "month": "2018-04",
         "returnPct": -2.46,
-        "realizedPnl": -33919,
+        "realizedPnl": -34072,
         "trades": 2
       },
       {
         "month": "2018-05",
         "returnPct": 16.46,
-        "realizedPnl": 221249,
+        "realizedPnl": 222263,
         "trades": 3
       },
       {
         "month": "2018-06",
         "returnPct": -0.89,
-        "realizedPnl": -13901,
+        "realizedPnl": -13965,
         "trades": 1
       },
       {
         "month": "2018-07",
         "returnPct": -2.26,
-        "realizedPnl": -35041,
+        "realizedPnl": -35204,
         "trades": 2
       },
       {
         "month": "2018-08",
         "returnPct": -1.76,
-        "realizedPnl": -26759,
+        "realizedPnl": -26876,
         "trades": 1
       },
       {
@@ -301,37 +312,37 @@
       {
         "month": "2018-11",
         "returnPct": -0.72,
-        "realizedPnl": -10731,
+        "realizedPnl": -10780,
         "trades": 1
       },
       {
         "month": "2018-12",
         "returnPct": -0.68,
-        "realizedPnl": -10028,
+        "realizedPnl": -10071,
         "trades": 1
       },
       {
         "month": "2019-01",
         "returnPct": -3.43,
-        "realizedPnl": -50439,
+        "realizedPnl": -50665,
         "trades": 1
       },
       {
         "month": "2019-02",
         "returnPct": 6.63,
-        "realizedPnl": 94093,
+        "realizedPnl": 94528,
         "trades": 2
       },
       {
         "month": "2019-03",
         "returnPct": 3.28,
-        "realizedPnl": 49557,
+        "realizedPnl": 49798,
         "trades": 3
       },
       {
         "month": "2019-04",
         "returnPct": -5.72,
-        "realizedPnl": -89405,
+        "realizedPnl": -89812,
         "trades": 4
       },
       {
@@ -343,56 +354,56 @@
       {
         "month": "2019-06",
         "returnPct": 0.28,
-        "realizedPnl": 4082,
+        "realizedPnl": 4101,
         "trades": 1
       },
       {
         "month": "2019-07",
         "returnPct": 1.67,
-        "realizedPnl": 24704,
+        "realizedPnl": 24813,
         "trades": 1
       },
       {
         "month": "2019-08",
         "returnPct": -1.94,
-        "realizedPnl": -29113,
+        "realizedPnl": -29247,
         "trades": 2
       },
       {
         "month": "2019-09",
         "returnPct": -3.03,
-        "realizedPnl": -44610,
+        "realizedPnl": -44780,
         "trades": 3
       },
       {
         "month": "2019-10",
         "returnPct": -1.79,
-        "realizedPnl": -25496,
+        "realizedPnl": -25617,
         "trades": 1
       },
       {
         "month": "2019-11",
         "returnPct": -4.13,
-        "realizedPnl": -57899,
+        "realizedPnl": -58152,
         "trades": 3
       },
       {
         "month": "2019-12",
         "returnPct": -3.78,
-        "realizedPnl": -50806,
+        "realizedPnl": -51046,
         "trades": 2
       },
       {
         "month": "2020-01",
         "returnPct": 0.35,
-        "realizedPnl": 4575,
+        "realizedPnl": 4597,
         "trades": 1
       },
       {
         "month": "2020-02",
-        "returnPct": -0.82,
-        "realizedPnl": -10638,
-        "trades": 1
+        "returnPct": 0,
+        "realizedPnl": 0,
+        "trades": 0
       },
       {
         "month": "2020-03",
@@ -403,157 +414,157 @@
       {
         "month": "2020-04",
         "returnPct": -1.28,
-        "realizedPnl": -16536,
+        "realizedPnl": -16743,
         "trades": 1
       },
       {
         "month": "2020-05",
-        "returnPct": 21.98,
-        "realizedPnl": 279277,
+        "returnPct": 21.97,
+        "realizedPnl": 282866,
         "trades": 3
       },
       {
         "month": "2020-06",
-        "returnPct": 0.12,
-        "realizedPnl": 1784,
+        "returnPct": 0.11,
+        "realizedPnl": 1776,
         "trades": 3
       },
       {
         "month": "2020-07",
-        "returnPct": 4.51,
-        "realizedPnl": 70035,
+        "returnPct": 4.52,
+        "realizedPnl": 71056,
         "trades": 8
       },
       {
         "month": "2020-08",
-        "returnPct": 12.3,
-        "realizedPnl": 199491,
+        "returnPct": 12.31,
+        "realizedPnl": 202197,
         "trades": 5
       },
       {
         "month": "2020-09",
         "returnPct": -2.16,
-        "realizedPnl": -39306,
+        "realizedPnl": -39848,
         "trades": 6
       },
       {
         "month": "2020-10",
         "returnPct": 7.16,
-        "realizedPnl": 127533,
+        "realizedPnl": 129194,
         "trades": 4
       },
       {
         "month": "2020-11",
-        "returnPct": 12.14,
-        "realizedPnl": 231818,
+        "returnPct": 12.12,
+        "realizedPnl": 234485,
         "trades": 3
       },
       {
         "month": "2020-12",
         "returnPct": 10.53,
-        "realizedPnl": 225468,
+        "realizedPnl": 228330,
         "trades": 5
       },
       {
         "month": "2021-01",
-        "returnPct": 13.98,
-        "realizedPnl": 331003,
+        "returnPct": 13.99,
+        "realizedPnl": 335283,
         "trades": 4
       },
       {
         "month": "2021-02",
-        "returnPct": -3.58,
-        "realizedPnl": -96493,
+        "returnPct": -3.1,
+        "realizedPnl": -84719,
         "trades": 2
       },
       {
         "month": "2021-03",
-        "returnPct": 29.3,
-        "realizedPnl": 762280,
+        "returnPct": 25.02,
+        "realizedPnl": 662583,
         "trades": 3
       },
       {
         "month": "2021-04",
-        "returnPct": 18.49,
-        "realizedPnl": 621827,
+        "returnPct": 18.48,
+        "realizedPnl": 611871,
         "trades": 2
       },
       {
         "month": "2021-05",
-        "returnPct": -2.06,
-        "realizedPnl": -82148,
+        "returnPct": -1.9,
+        "realizedPnl": -74566,
         "trades": 3
       },
       {
         "month": "2021-06",
-        "returnPct": 22.81,
-        "realizedPnl": 890466,
-        "trades": 5
+        "returnPct": -1.97,
+        "realizedPnl": -75615,
+        "trades": 1
       },
       {
         "month": "2021-07",
-        "returnPct": 10.57,
-        "realizedPnl": 506836,
-        "trades": 2
+        "returnPct": 11.15,
+        "realizedPnl": 420460,
+        "trades": 4
       },
       {
         "month": "2021-08",
         "returnPct": -6.31,
-        "realizedPnl": -334488,
+        "realizedPnl": -264535,
         "trades": 4
       },
       {
         "month": "2021-09",
         "returnPct": 1.73,
-        "realizedPnl": 85897,
+        "realizedPnl": 67929,
         "trades": 5
       },
       {
         "month": "2021-10",
         "returnPct": -1.87,
-        "realizedPnl": -94587,
+        "realizedPnl": -74822,
         "trades": 1
       },
       {
         "month": "2021-11",
-        "returnPct": -3.82,
-        "realizedPnl": -189546,
-        "trades": 6
+        "returnPct": -1.84,
+        "realizedPnl": -72067,
+        "trades": 5
       },
       {
         "month": "2021-12",
-        "returnPct": 3.47,
-        "realizedPnl": 165663,
-        "trades": 3
+        "returnPct": 11.77,
+        "realizedPnl": 453067,
+        "trades": 5
       },
       {
         "month": "2022-01",
-        "returnPct": -3.32,
-        "realizedPnl": -164002,
-        "trades": 4
+        "returnPct": -0.29,
+        "realizedPnl": -12304,
+        "trades": 1
       },
       {
         "month": "2022-02",
         "returnPct": -2.6,
-        "realizedPnl": -123866,
+        "realizedPnl": -111413,
         "trades": 2
       },
       {
         "month": "2022-03",
-        "returnPct": -1.1,
-        "realizedPnl": -51066,
+        "returnPct": -0.68,
+        "realizedPnl": -28266,
         "trades": 3
       },
       {
         "month": "2022-04",
-        "returnPct": -0.64,
-        "realizedPnl": -29500,
-        "trades": 1
+        "returnPct": 3.26,
+        "realizedPnl": 135132,
+        "trades": 2
       },
       {
         "month": "2022-05",
-        "returnPct": -1.34,
-        "realizedPnl": -60991,
+        "returnPct": -0.88,
+        "realizedPnl": -37731,
         "trades": 1
       },
       {
@@ -571,193 +582,193 @@
       {
         "month": "2022-08",
         "returnPct": 10.95,
-        "realizedPnl": 493097,
+        "realizedPnl": 465017,
         "trades": 3
       },
       {
         "month": "2022-09",
-        "returnPct": -1.04,
-        "realizedPnl": -51928,
-        "trades": 1
+        "returnPct": 0,
+        "realizedPnl": 0,
+        "trades": 0
       },
       {
         "month": "2022-10",
         "returnPct": -0.77,
-        "realizedPnl": -37911,
+        "realizedPnl": -36125,
         "trades": 1
       },
       {
         "month": "2022-11",
-        "returnPct": -0.3,
-        "realizedPnl": -14697,
-        "trades": 2
+        "returnPct": 0.8,
+        "realizedPnl": 37393,
+        "trades": 1
       },
       {
         "month": "2022-12",
-        "returnPct": 11.14,
-        "realizedPnl": 545208,
-        "trades": 1
+        "returnPct": 21.28,
+        "realizedPnl": 1003202,
+        "trades": 2
       },
       {
         "month": "2023-01",
         "returnPct": 5.35,
-        "realizedPnl": 290973,
+        "realizedPnl": 305915,
         "trades": 1
       },
       {
         "month": "2023-02",
         "returnPct": 12.64,
-        "realizedPnl": 724178,
+        "realizedPnl": 761469,
         "trades": 4
       },
       {
         "month": "2023-03",
         "returnPct": -1.87,
-        "realizedPnl": -120816,
+        "realizedPnl": -127020,
         "trades": 1
       },
       {
         "month": "2023-04",
         "returnPct": 9.96,
-        "realizedPnl": 630662,
+        "realizedPnl": 663038,
         "trades": 4
       },
       {
         "month": "2023-05",
         "returnPct": 15.33,
-        "realizedPnl": 1067454,
+        "realizedPnl": 1122403,
         "trades": 7
       },
       {
         "month": "2023-06",
         "returnPct": -2.19,
-        "realizedPnl": -175735,
+        "realizedPnl": -184722,
         "trades": 3
       },
       {
         "month": "2023-07",
         "returnPct": 16.64,
-        "realizedPnl": 1307266,
+        "realizedPnl": 1374402,
         "trades": 6
       },
       {
         "month": "2023-08",
         "returnPct": -1.7,
-        "realizedPnl": -156022,
+        "realizedPnl": -164077,
         "trades": 1
       },
       {
         "month": "2023-09",
         "returnPct": 2.49,
-        "realizedPnl": 224490,
+        "realizedPnl": 235974,
         "trades": 5
       },
       {
         "month": "2023-10",
         "returnPct": -4.3,
-        "realizedPnl": -396530,
+        "realizedPnl": -416849,
         "trades": 4
       },
       {
         "month": "2023-11",
         "returnPct": 7.67,
-        "realizedPnl": 677128,
+        "realizedPnl": 712035,
         "trades": 3
       },
       {
         "month": "2023-12",
         "returnPct": 0.42,
-        "realizedPnl": 40387,
+        "realizedPnl": 42423,
         "trades": 4
       },
       {
         "month": "2024-01",
         "returnPct": -4.98,
-        "realizedPnl": -475734,
+        "realizedPnl": -500167,
         "trades": 4
       },
       {
         "month": "2024-02",
         "returnPct": -0.75,
-        "realizedPnl": -68225,
+        "realizedPnl": -71754,
         "trades": 3
       },
       {
         "month": "2024-03",
         "returnPct": -1.62,
-        "realizedPnl": -145506,
+        "realizedPnl": -152999,
         "trades": 3
       },
       {
         "month": "2024-04",
-        "returnPct": 6.19,
-        "realizedPnl": 548431,
+        "returnPct": 6.33,
+        "realizedPnl": 589779,
         "trades": 5
       },
       {
         "month": "2024-05",
-        "returnPct": -5.46,
-        "realizedPnl": -513403,
-        "trades": 4
+        "returnPct": -5.77,
+        "realizedPnl": -571948,
+        "trades": 6
       },
       {
         "month": "2024-06",
         "returnPct": -3.13,
-        "realizedPnl": -278585,
+        "realizedPnl": -292302,
         "trades": 4
       },
       {
         "month": "2024-07",
         "returnPct": 20.33,
-        "realizedPnl": 1752331,
+        "realizedPnl": 1838590,
         "trades": 2
       },
       {
         "month": "2024-08",
-        "returnPct": -3.08,
-        "realizedPnl": -319197,
+        "returnPct": -2.35,
+        "realizedPnl": -255460,
         "trades": 2
       },
       {
         "month": "2024-09",
-        "returnPct": -5.93,
-        "realizedPnl": -596452,
+        "returnPct": -5.38,
+        "realizedPnl": -571862,
         "trades": 7
       },
       {
         "month": "2024-10",
-        "returnPct": 7.93,
-        "realizedPnl": 749515,
+        "returnPct": 7.81,
+        "realizedPnl": 785407,
         "trades": 5
       },
       {
         "month": "2024-11",
         "returnPct": -1.22,
-        "realizedPnl": -124837,
+        "realizedPnl": -132650,
         "trades": 3
       },
       {
         "month": "2024-12",
         "returnPct": -2.11,
-        "realizedPnl": -212935,
+        "realizedPnl": -226184,
         "trades": 2
       },
       {
         "month": "2025-01",
         "returnPct": -2.11,
-        "realizedPnl": -207769,
+        "realizedPnl": -220695,
         "trades": 2
       },
       {
         "month": "2025-02",
-        "returnPct": -1.57,
-        "realizedPnl": -152020,
+        "returnPct": -1.42,
+        "realizedPnl": -145337,
         "trades": 7
       },
       {
         "month": "2025-03",
         "returnPct": -4.83,
-        "realizedPnl": -459119,
+        "realizedPnl": -488451,
         "trades": 4
       },
       {
@@ -775,114 +786,114 @@
       {
         "month": "2025-06",
         "returnPct": 2.58,
-        "realizedPnl": 233228,
+        "realizedPnl": 248085,
         "trades": 3
       },
       {
         "month": "2025-07",
         "returnPct": -1.71,
-        "realizedPnl": -158894,
+        "realizedPnl": -169053,
         "trades": 3
       },
       {
         "month": "2025-08",
         "returnPct": 13.94,
-        "realizedPnl": 1271863,
+        "realizedPnl": 1353075,
         "trades": 4
       },
       {
         "month": "2025-09",
         "returnPct": 6.19,
-        "realizedPnl": 643161,
+        "realizedPnl": 684251,
         "trades": 5
       },
       {
         "month": "2025-10",
         "returnPct": 1.21,
-        "realizedPnl": 133396,
+        "realizedPnl": 141784,
         "trades": 4
       },
       {
         "month": "2025-11",
         "returnPct": -2.96,
-        "realizedPnl": -331154,
+        "realizedPnl": -352338,
         "trades": 2
       },
       {
         "month": "2025-12",
         "returnPct": 1.98,
-        "realizedPnl": 214455,
+        "realizedPnl": 228141,
         "trades": 4
       },
       {
         "month": "2026-01",
-        "returnPct": 17.15,
-        "realizedPnl": 1896206,
+        "returnPct": 17.16,
+        "realizedPnl": 2017462,
         "trades": 4
       },
       {
         "month": "2026-02",
         "returnPct": -0.02,
-        "realizedPnl": -2164,
+        "realizedPnl": -2351,
         "trades": 4
       },
       {
         "month": "2026-03",
-        "returnPct": 10.4,
-        "realizedPnl": 1346947,
+        "returnPct": 1.56,
+        "realizedPnl": 214280,
         "trades": 4
       },
       {
         "month": "2026-04",
-        "returnPct": 4.92,
-        "realizedPnl": 703123,
-        "trades": 5
+        "returnPct": 8.82,
+        "realizedPnl": 1233710,
+        "trades": 4
       },
       {
         "month": "2026-05",
-        "returnPct": 11.96,
-        "realizedPnl": 1793257,
-        "trades": 4
+        "returnPct": 12.64,
+        "realizedPnl": 1924454,
+        "trades": 6
       },
       {
         "month": "2026-06",
-        "returnPct": -3.15,
-        "realizedPnl": -528750,
+        "returnPct": -2.53,
+        "realizedPnl": -434307,
         "trades": 4
       }
     ],
-    "finalCapital": 16262621,
-    "portfolioReturnPct": 1526.26,
-    "maxDrawdownPct": -19.46,
-    "trades": 327,
+    "finalCapital": 16713260,
+    "portfolioReturnPct": 1571.33,
+    "maxDrawdownPct": -19.06,
+    "trades": 324,
     "full": {
       "months": 119,
-      "hit": 22,
-      "negative": 55,
-      "zero": 13,
+      "hit": 21,
+      "negative": 51,
+      "zero": 16,
       "worst": -6.31,
-      "average": 2.6298319327731092
+      "average": 2.6354621848739495
     },
     "train": {
       "months": 66,
       "hit": 12,
-      "negative": 28,
-      "zero": 9,
+      "negative": 27,
+      "zero": 11,
       "worst": -6.31,
-      "average": 2.7004545454545457
+      "average": 2.4533333333333336
     },
     "test": {
       "months": 53,
-      "hit": 10,
-      "negative": 27,
-      "zero": 4,
-      "worst": -5.93,
-      "average": 2.5418867924528312
+      "hit": 9,
+      "negative": 24,
+      "zero": 5,
+      "worst": -5.77,
+      "average": 2.862264150943396
     },
     "quality": {
-      "winRatePct": 42.2,
-      "profitFactor": 2.02,
-      "topFiveProfitContributionPct": 20.77
+      "winRatePct": 42.9,
+      "profitFactor": 2.06,
+      "topFiveProfitContributionPct": 18.94
     }
   },
   "validation": {
@@ -966,7 +977,13 @@
       "transitionPositionMultiplier": 0.5,
       "collectTrades": true,
       "accountDrawdownBrakePct": -10,
-      "accountCooldownDays": 10
+      "accountCooldownDays": 10,
+      "targetMarketVolPct": 24,
+      "minimumVolatilityMultiplier": 0.25,
+      "maximumVolatilityMultiplier": 1,
+      "momentumCrashMom20Pct": -3,
+      "momentumCrashReboundPct": 1,
+      "momentumCrashMultiplier": 0
     },
     "monthly": [
       {
@@ -990,20 +1007,20 @@
       {
         "month": "2022-03",
         "returnPct": -0.68,
-        "realizedPnl": -7395,
+        "realizedPnl": -7350,
         "trades": 3
       },
       {
         "month": "2022-04",
-        "returnPct": 2.88,
-        "realizedPnl": 31002,
-        "trades": 3
+        "returnPct": 3.25,
+        "realizedPnl": 35091,
+        "trades": 2
       },
       {
         "month": "2022-05",
-        "returnPct": -2.21,
-        "realizedPnl": -24472,
-        "trades": 2
+        "returnPct": -0.88,
+        "realizedPnl": -9803,
+        "trades": 1
       },
       {
         "month": "2022-06",
@@ -1020,193 +1037,193 @@
       {
         "month": "2022-08",
         "returnPct": 10.94,
-        "realizedPnl": 118634,
+        "realizedPnl": 120711,
         "trades": 3
       },
       {
         "month": "2022-09",
-        "returnPct": -1.04,
-        "realizedPnl": -12502,
-        "trades": 1
+        "returnPct": 0,
+        "realizedPnl": 0,
+        "trades": 0
       },
       {
         "month": "2022-10",
         "returnPct": -0.77,
-        "realizedPnl": -9128,
+        "realizedPnl": -9385,
         "trades": 1
       },
       {
         "month": "2022-11",
-        "returnPct": -0.3,
-        "realizedPnl": -3594,
-        "trades": 2
+        "returnPct": 0.8,
+        "realizedPnl": 9712,
+        "trades": 1
       },
       {
         "month": "2022-12",
-        "returnPct": 11.11,
-        "realizedPnl": 130930,
-        "trades": 1
+        "returnPct": 21.28,
+        "realizedPnl": 260551,
+        "trades": 2
       },
       {
         "month": "2023-01",
         "returnPct": 5.35,
-        "realizedPnl": 70032,
+        "realizedPnl": 79446,
         "trades": 1
       },
       {
         "month": "2023-02",
         "returnPct": 12.64,
-        "realizedPnl": 174336,
+        "realizedPnl": 197748,
         "trades": 4
       },
       {
         "month": "2023-03",
         "returnPct": -1.87,
-        "realizedPnl": -29082,
+        "realizedPnl": -32976,
         "trades": 1
       },
       {
         "month": "2023-04",
         "returnPct": 9.96,
-        "realizedPnl": 151823,
+        "realizedPnl": 172235,
         "trades": 4
       },
       {
         "month": "2023-05",
         "returnPct": 15.33,
-        "realizedPnl": 256945,
+        "realizedPnl": 291481,
         "trades": 7
       },
       {
         "month": "2023-06",
         "returnPct": -2.19,
-        "realizedPnl": -42295,
+        "realizedPnl": -48039,
         "trades": 3
       },
       {
         "month": "2023-07",
         "returnPct": 16.64,
-        "realizedPnl": 314665,
+        "realizedPnl": 356958,
         "trades": 6
       },
       {
         "month": "2023-08",
         "returnPct": -1.7,
-        "realizedPnl": -37553,
+        "realizedPnl": -42603,
         "trades": 1
       },
       {
         "month": "2023-09",
         "returnPct": 2.49,
-        "realizedPnl": 53987,
+        "realizedPnl": 61260,
         "trades": 5
       },
       {
         "month": "2023-10",
         "returnPct": -4.3,
-        "realizedPnl": -95432,
+        "realizedPnl": -108262,
         "trades": 4
       },
       {
         "month": "2023-11",
-        "returnPct": 7.66,
-        "realizedPnl": 162912,
+        "returnPct": 7.67,
+        "realizedPnl": 184915,
         "trades": 3
       },
       {
         "month": "2023-12",
         "returnPct": 0.43,
-        "realizedPnl": 9775,
+        "realizedPnl": 11043,
         "trades": 4
       },
       {
         "month": "2024-01",
         "returnPct": -4.98,
-        "realizedPnl": -114478,
+        "realizedPnl": -129871,
         "trades": 4
       },
       {
         "month": "2024-02",
-        "returnPct": -0.75,
-        "realizedPnl": -16453,
+        "returnPct": -0.76,
+        "realizedPnl": -18714,
         "trades": 3
       },
       {
         "month": "2024-03",
         "returnPct": -1.61,
-        "realizedPnl": -35015,
+        "realizedPnl": -39710,
         "trades": 3
       },
       {
         "month": "2024-04",
-        "returnPct": 6.19,
-        "realizedPnl": 131947,
+        "returnPct": 6.33,
+        "realizedPnl": 153105,
         "trades": 5
       },
       {
         "month": "2024-05",
-        "returnPct": -5.46,
-        "realizedPnl": -123596,
-        "trades": 4
+        "returnPct": -5.77,
+        "realizedPnl": -148533,
+        "trades": 6
       },
       {
         "month": "2024-06",
         "returnPct": -3.13,
-        "realizedPnl": -67064,
+        "realizedPnl": -75936,
         "trades": 4
       },
       {
         "month": "2024-07",
         "returnPct": 20.33,
-        "realizedPnl": 421689,
+        "realizedPnl": 477529,
         "trades": 2
       },
       {
         "month": "2024-08",
-        "returnPct": -3.08,
-        "realizedPnl": -76815,
+        "returnPct": -2.35,
+        "realizedPnl": -66321,
         "trades": 2
       },
       {
         "month": "2024-09",
-        "returnPct": -5.94,
-        "realizedPnl": -143590,
+        "returnPct": -5.38,
+        "realizedPnl": -148565,
         "trades": 7
       },
       {
         "month": "2024-10",
-        "returnPct": 7.92,
-        "realizedPnl": 180272,
+        "returnPct": 7.81,
+        "realizedPnl": 203970,
         "trades": 5
       },
       {
         "month": "2024-11",
         "returnPct": -1.22,
-        "realizedPnl": -30027,
+        "realizedPnl": -34419,
         "trades": 3
       },
       {
         "month": "2024-12",
         "returnPct": -2.11,
-        "realizedPnl": -51245,
+        "realizedPnl": -58739,
         "trades": 2
       },
       {
         "month": "2025-01",
         "returnPct": -2.11,
-        "realizedPnl": -50031,
+        "realizedPnl": -57342,
         "trades": 2
       },
       {
         "month": "2025-02",
-        "returnPct": -1.59,
-        "realizedPnl": -36849,
+        "returnPct": -1.42,
+        "realizedPnl": -37796,
         "trades": 7
       },
       {
         "month": "2025-03",
         "returnPct": -4.83,
-        "realizedPnl": -110472,
+        "realizedPnl": -126903,
         "trades": 4
       },
       {
@@ -1223,94 +1240,94 @@
       },
       {
         "month": "2025-06",
-        "returnPct": 2.57,
-        "realizedPnl": 56000,
+        "returnPct": 2.58,
+        "realizedPnl": 64423,
         "trades": 3
       },
       {
         "month": "2025-07",
         "returnPct": -1.71,
-        "realizedPnl": -38233,
+        "realizedPnl": -43905,
         "trades": 3
       },
       {
         "month": "2025-08",
         "returnPct": 13.96,
-        "realizedPnl": 306382,
+        "realizedPnl": 351872,
         "trades": 3
       },
       {
         "month": "2025-09",
-        "returnPct": 6.17,
-        "realizedPnl": 154269,
+        "returnPct": 6.19,
+        "realizedPnl": 177747,
         "trades": 5
       },
       {
         "month": "2025-10",
         "returnPct": 1.2,
-        "realizedPnl": 31866,
+        "realizedPnl": 36677,
         "trades": 4
       },
       {
         "month": "2025-11",
         "returnPct": -2.96,
-        "realizedPnl": -79664,
+        "realizedPnl": -91517,
         "trades": 2
       },
       {
         "month": "2025-12",
         "returnPct": 1.98,
-        "realizedPnl": 51571,
+        "realizedPnl": 59251,
         "trades": 4
       },
       {
         "month": "2026-01",
         "returnPct": 17.15,
-        "realizedPnl": 456240,
+        "realizedPnl": 523996,
         "trades": 4
       },
       {
         "month": "2026-02",
         "returnPct": -0.02,
-        "realizedPnl": -549,
+        "realizedPnl": -562,
         "trades": 4
       },
       {
         "month": "2026-03",
-        "returnPct": 10.4,
-        "realizedPnl": 324009,
+        "returnPct": 1.55,
+        "realizedPnl": 55597,
         "trades": 4
       },
       {
         "month": "2026-04",
-        "returnPct": 4.92,
-        "realizedPnl": 169073,
-        "trades": 5
+        "returnPct": 8.82,
+        "realizedPnl": 320440,
+        "trades": 4
       },
       {
         "month": "2026-05",
-        "returnPct": 11.96,
-        "realizedPnl": 431532,
-        "trades": 4
+        "returnPct": 12.64,
+        "realizedPnl": 499953,
+        "trades": 6
       },
       {
         "month": "2026-06",
-        "returnPct": -3.15,
-        "realizedPnl": -127195,
+        "returnPct": -2.53,
+        "realizedPnl": -112810,
         "trades": 4
       }
     ],
-    "finalCapital": 3912704,
-    "portfolioReturnPct": 291.27,
-    "maxDrawdownPct": -16.01,
+    "finalCapital": 4341192,
+    "portfolioReturnPct": 334.12,
+    "maxDrawdownPct": -15.87,
     "trades": 173,
     "full": {
       "months": 53,
-      "hit": 10,
-      "negative": 26,
-      "zero": 4,
-      "worst": -5.94,
-      "average": 2.6552830188679253
+      "hit": 9,
+      "negative": 24,
+      "zero": 5,
+      "worst": -5.77,
+      "average": 2.86188679245283
     },
     "train": {
       "months": 0,
@@ -1322,17 +1339,17 @@
     },
     "test": {
       "months": 53,
-      "hit": 10,
-      "negative": 26,
-      "zero": 4,
-      "worst": -5.94,
-      "average": 2.6552830188679253
+      "hit": 9,
+      "negative": 24,
+      "zero": 5,
+      "worst": -5.77,
+      "average": 2.86188679245283
     },
-    "annualizedReturnPct": 33.77,
+    "annualizedReturnPct": 36.75,
     "quality": {
-      "winRatePct": 42.77,
-      "profitFactor": 1.98,
-      "topFiveProfitContributionPct": 25.69
+      "winRatePct": 43.93,
+      "profitFactor": 2.03,
+      "topFiveProfitContributionPct": 22.67
     }
   },
   "benchmark": {
@@ -1343,6 +1360,223 @@
     "annualizedReturnPct": 27.18,
     "maxDrawdownPct": -36.38
   },
+  "rollingValidation": {
+    "trainingMonthsPerFold": 54,
+    "plannedValidationMonthsPerFold": 18,
+    "validationPeriod": "2021-01～2026-05",
+    "validationMonths": 65,
+    "validationAverageMonthlyReturnPct": 3.21,
+    "validationAnnualizedReturnPct": 41.58,
+    "validationWorstFoldDrawdownPct": -15.45,
+    "validationTrades": 196,
+    "validationQuality": {
+      "winRatePct": 41.84,
+      "profitFactor": 2.3,
+      "topFiveProfitContributionPct": 19.57
+    },
+    "folds": [
+      {
+        "trainPeriod": "2016-07～2020-12",
+        "validationPeriod": "2021-01～2022-06",
+        "selectedRisk": {
+          "positionPct": 35,
+          "accountRiskPct": 1.25,
+          "maxOpenPositions": 3,
+          "maxPositionsPerTheme": 2,
+          "monthlyEquityBrakePct": -5,
+          "transitionPositionMultiplier": 0.5,
+          "accountDrawdownBrakePct": -10,
+          "accountCooldownDays": 10,
+          "targetMarketVolPct": 24,
+          "minimumVolatilityMultiplier": 0.25,
+          "maximumVolatilityMultiplier": 1.25,
+          "momentumCrashMom20Pct": -3,
+          "momentumCrashReboundPct": 1,
+          "momentumCrashMultiplier": 0,
+          "regimeMode": "avoid_both",
+          "regimeSlowMa": 40,
+          "regimeMomentumDays": 10,
+          "regimeMomentumThreshold": -1
+        },
+        "train": {
+          "months": 54,
+          "hit": 7,
+          "negative": 18,
+          "zero": 14,
+          "worst": -5.72,
+          "average": 2.157777777777778
+        },
+        "trainMaxDrawdownPct": -10.84,
+        "validation": {
+          "months": 18,
+          "hit": 3,
+          "negative": 10,
+          "zero": 1,
+          "worst": -3.9,
+          "average": 2.983333333333333
+        },
+        "validationMaxDrawdownPct": -9.65,
+        "validationTrades": 43,
+        "validationQuality": {
+          "winRatePct": 41.86,
+          "profitFactor": 2.13,
+          "topFiveProfitContributionPct": 59.47
+        }
+      },
+      {
+        "trainPeriod": "2018-01～2022-06",
+        "validationPeriod": "2022-07～2023-12",
+        "selectedRisk": {
+          "positionPct": 35,
+          "accountRiskPct": 1.25,
+          "maxOpenPositions": 3,
+          "maxPositionsPerTheme": 2,
+          "monthlyEquityBrakePct": -5,
+          "transitionPositionMultiplier": 0.5,
+          "accountDrawdownBrakePct": -8,
+          "accountCooldownDays": 10,
+          "targetMarketVolPct": 24,
+          "minimumVolatilityMultiplier": 0.25,
+          "maximumVolatilityMultiplier": 1.25,
+          "momentumCrashMom20Pct": -5,
+          "momentumCrashReboundPct": 1,
+          "momentumCrashMultiplier": 0.25,
+          "regimeMode": "none",
+          "regimeSlowMa": 40,
+          "regimeMomentumDays": 10,
+          "regimeMomentumThreshold": -1
+        },
+        "train": {
+          "months": 54,
+          "hit": 11,
+          "negative": 25,
+          "zero": 5,
+          "worst": -6.94,
+          "average": 3.2064814814814815
+        },
+        "trainMaxDrawdownPct": -19.93,
+        "validation": {
+          "months": 18,
+          "hit": 6,
+          "negative": 7,
+          "zero": 1,
+          "worst": -4.73,
+          "average": 5.189444444444444
+        },
+        "validationMaxDrawdownPct": -7.04,
+        "validationTrades": 52,
+        "validationQuality": {
+          "winRatePct": 57.69,
+          "profitFactor": 3.56,
+          "topFiveProfitContributionPct": 38.91
+        }
+      },
+      {
+        "trainPeriod": "2019-07～2023-12",
+        "validationPeriod": "2024-01～2025-06",
+        "selectedRisk": {
+          "positionPct": 35,
+          "accountRiskPct": 1.25,
+          "maxOpenPositions": 3,
+          "maxPositionsPerTheme": 2,
+          "monthlyEquityBrakePct": -5,
+          "transitionPositionMultiplier": 0.5,
+          "accountDrawdownBrakePct": -8,
+          "accountCooldownDays": 10,
+          "targetMarketVolPct": 24,
+          "minimumVolatilityMultiplier": 0.25,
+          "maximumVolatilityMultiplier": 1.25,
+          "momentumCrashMom20Pct": -5,
+          "momentumCrashReboundPct": 1,
+          "momentumCrashMultiplier": 0.25,
+          "regimeMode": "none",
+          "regimeSlowMa": 40,
+          "regimeMomentumDays": 10,
+          "regimeMomentumThreshold": -1
+        },
+        "train": {
+          "months": 54,
+          "hit": 15,
+          "negative": 22,
+          "zero": 3,
+          "worst": -6.94,
+          "average": 4.598888888888889
+        },
+        "trainMaxDrawdownPct": -9.52,
+        "validation": {
+          "months": 18,
+          "hit": 1,
+          "negative": 11,
+          "zero": 2,
+          "worst": -5.78,
+          "average": 0.2161111111111111
+        },
+        "validationMaxDrawdownPct": -15.45,
+        "validationTrades": 62,
+        "validationQuality": {
+          "winRatePct": 27.42,
+          "profitFactor": 1.02,
+          "topFiveProfitContributionPct": 64.63
+        }
+      },
+      {
+        "trainPeriod": "2021-01～2025-06",
+        "validationPeriod": "2025-07～2026-05",
+        "selectedRisk": {
+          "positionPct": 35,
+          "accountRiskPct": 1.25,
+          "maxOpenPositions": 3,
+          "maxPositionsPerTheme": 2,
+          "monthlyEquityBrakePct": -5,
+          "transitionPositionMultiplier": 0.5,
+          "accountDrawdownBrakePct": -8,
+          "accountCooldownDays": 10,
+          "targetMarketVolPct": 24,
+          "minimumVolatilityMultiplier": 0.25,
+          "maximumVolatilityMultiplier": 1.25,
+          "momentumCrashMom20Pct": -5,
+          "momentumCrashReboundPct": 1,
+          "momentumCrashMultiplier": 0.25,
+          "regimeMode": "require_above_ma",
+          "regimeSlowMa": 60,
+          "regimeMomentumDays": 10,
+          "regimeMomentumThreshold": -1
+        },
+        "train": {
+          "months": 54,
+          "hit": 12,
+          "negative": 21,
+          "zero": 13,
+          "worst": -7.65,
+          "average": 3.2764814814814818
+        },
+        "trainMaxDrawdownPct": -15.28,
+        "validation": {
+          "months": 11,
+          "hit": 4,
+          "negative": 4,
+          "zero": 0,
+          "worst": -5.49,
+          "average": 5.254545454545454
+        },
+        "validationMaxDrawdownPct": -9.8,
+        "validationTrades": 39,
+        "validationQuality": {
+          "winRatePct": 43.59,
+          "profitFactor": 2.72,
+          "topFiveProfitContributionPct": 49.49
+        }
+      }
+    ]
+  },
+  "rollingBenchmark": {
+    "startDate": "2021-01-04",
+    "endDate": "2026-05-29",
+    "months": 64,
+    "averageMonthlyReturnPct": 2.1,
+    "annualizedReturnPct": 25.39,
+    "maxDrawdownPct": -36.38
+  },
   "frontier": [
     {
       "risk": {
@@ -1351,7 +1585,11 @@
         "maxOpenPositions": 3,
         "maxPositionsPerTheme": 2,
         "monthlyEquityBrakePct": -5,
-        "transitionPositionMultiplier": 0.5
+        "transitionPositionMultiplier": 0.5,
+        "regimeMode": "none",
+        "regimeSlowMa": 40,
+        "regimeMomentumDays": 10,
+        "regimeMomentumThreshold": -1
       },
       "full": {
         "months": 119,
@@ -1387,7 +1625,11 @@
         "maxOpenPositions": 3,
         "maxPositionsPerTheme": 2,
         "monthlyEquityBrakePct": -3,
-        "transitionPositionMultiplier": 1
+        "transitionPositionMultiplier": 1,
+        "regimeMode": "none",
+        "regimeSlowMa": 40,
+        "regimeMomentumDays": 10,
+        "regimeMomentumThreshold": -1
       },
       "full": {
         "months": 119,
@@ -1423,7 +1665,11 @@
         "maxOpenPositions": 3,
         "maxPositionsPerTheme": 2,
         "monthlyEquityBrakePct": -3,
-        "transitionPositionMultiplier": 1
+        "transitionPositionMultiplier": 1,
+        "regimeMode": "none",
+        "regimeSlowMa": 40,
+        "regimeMomentumDays": 10,
+        "regimeMomentumThreshold": -1
       },
       "full": {
         "months": 119,
@@ -1459,7 +1705,11 @@
         "maxOpenPositions": 3,
         "maxPositionsPerTheme": 2,
         "monthlyEquityBrakePct": -3,
-        "transitionPositionMultiplier": 0.75
+        "transitionPositionMultiplier": 0.75,
+        "regimeMode": "none",
+        "regimeSlowMa": 40,
+        "regimeMomentumDays": 10,
+        "regimeMomentumThreshold": -1
       },
       "full": {
         "months": 119,
@@ -1495,7 +1745,11 @@
         "maxOpenPositions": 5,
         "maxPositionsPerTheme": 2,
         "monthlyEquityBrakePct": -5,
-        "transitionPositionMultiplier": 0.5
+        "transitionPositionMultiplier": 0.5,
+        "regimeMode": "none",
+        "regimeSlowMa": 40,
+        "regimeMomentumDays": 10,
+        "regimeMomentumThreshold": -1
       },
       "full": {
         "months": 119,
@@ -1531,7 +1785,11 @@
         "maxOpenPositions": 4,
         "maxPositionsPerTheme": 2,
         "monthlyEquityBrakePct": -5,
-        "transitionPositionMultiplier": 0.5
+        "transitionPositionMultiplier": 0.5,
+        "regimeMode": "none",
+        "regimeSlowMa": 40,
+        "regimeMomentumDays": 10,
+        "regimeMomentumThreshold": -1
       },
       "full": {
         "months": 119,
@@ -1567,7 +1825,11 @@
         "maxOpenPositions": 3,
         "maxPositionsPerTheme": 2,
         "monthlyEquityBrakePct": -5,
-        "transitionPositionMultiplier": 0.75
+        "transitionPositionMultiplier": 0.75,
+        "regimeMode": "none",
+        "regimeSlowMa": 40,
+        "regimeMomentumDays": 10,
+        "regimeMomentumThreshold": -1
       },
       "full": {
         "months": 119,
@@ -1603,7 +1865,11 @@
         "maxOpenPositions": 5,
         "maxPositionsPerTheme": 2,
         "monthlyEquityBrakePct": -5,
-        "transitionPositionMultiplier": 0.75
+        "transitionPositionMultiplier": 0.75,
+        "regimeMode": "none",
+        "regimeSlowMa": 40,
+        "regimeMomentumDays": 10,
+        "regimeMomentumThreshold": -1
       },
       "full": {
         "months": 119,
@@ -1639,7 +1905,11 @@
         "maxOpenPositions": 4,
         "maxPositionsPerTheme": 2,
         "monthlyEquityBrakePct": -5,
-        "transitionPositionMultiplier": 0.75
+        "transitionPositionMultiplier": 0.75,
+        "regimeMode": "none",
+        "regimeSlowMa": 40,
+        "regimeMomentumDays": 10,
+        "regimeMomentumThreshold": -1
       },
       "full": {
         "months": 119,
@@ -1675,7 +1945,11 @@
         "maxOpenPositions": 3,
         "maxPositionsPerTheme": 2,
         "monthlyEquityBrakePct": null,
-        "transitionPositionMultiplier": 1
+        "transitionPositionMultiplier": 1,
+        "regimeMode": "none",
+        "regimeSlowMa": 40,
+        "regimeMomentumDays": 10,
+        "regimeMomentumThreshold": -1
       },
       "full": {
         "months": 119,

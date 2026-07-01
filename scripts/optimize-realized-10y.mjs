@@ -222,6 +222,20 @@ function plannedPositionPct(trade, config) {
       && regime.mom20 > 0;
     if (!upContinuation) pct *= config.transitionPositionMultiplier;
   }
+  if (config.targetMarketVolPct && trade.marketRegime?.vol20) {
+    const volatilityMultiplier = config.targetMarketVolPct / trade.marketRegime.vol20;
+    pct *= Math.max(
+      config.minimumVolatilityMultiplier,
+      Math.min(config.maximumVolatilityMultiplier, volatilityMultiplier)
+    );
+  }
+  if (config.momentumCrashMultiplier !== undefined && trade.marketRegime) {
+    const regime = trade.marketRegime;
+    if (regime.mom20 <= config.momentumCrashMom20Pct
+      && regime.mom5 >= config.momentumCrashReboundPct) {
+      pct *= config.momentumCrashMultiplier;
+    }
+  }
   return pct;
 }
 
@@ -1216,7 +1230,167 @@ function riskConfig(config) {
     monthlyEquityBrakePct: config.monthlyEquityBrakePct,
     transitionPositionMultiplier: config.transitionPositionMultiplier,
     accountDrawdownBrakePct: config.accountDrawdownBrakePct,
-    accountCooldownDays: config.accountCooldownDays
+    accountCooldownDays: config.accountCooldownDays,
+    targetMarketVolPct: config.targetMarketVolPct,
+    minimumVolatilityMultiplier: config.minimumVolatilityMultiplier,
+    maximumVolatilityMultiplier: config.maximumVolatilityMultiplier,
+    momentumCrashMom20Pct: config.momentumCrashMom20Pct,
+    momentumCrashReboundPct: config.momentumCrashReboundPct,
+    momentumCrashMultiplier: config.momentumCrashMultiplier,
+    regimeMode: config.regimeMode,
+    regimeSlowMa: config.regimeSlowMa,
+    regimeMomentumDays: config.regimeMomentumDays,
+    regimeMomentumThreshold: config.regimeMomentumThreshold
+  };
+}
+
+function volatilityManagedConfigs(base) {
+  const rows = [];
+  for (const targetMarketVolPct of [12, 15, 18, 21, 24]) {
+    for (const minimumVolatilityMultiplier of [0.25, 0.5]) {
+      for (const maximumVolatilityMultiplier of [1, 1.25]) {
+        for (const momentumCrashMom20Pct of [-3, -5]) {
+          for (const momentumCrashReboundPct of [1, 2]) {
+            for (const momentumCrashMultiplier of [0, 0.25, 0.5]) {
+              rows.push({
+                ...base,
+                targetMarketVolPct,
+                minimumVolatilityMultiplier,
+                maximumVolatilityMultiplier,
+                momentumCrashMom20Pct,
+                momentumCrashReboundPct,
+                momentumCrashMultiplier,
+                collectTrades: false
+              });
+            }
+          }
+        }
+      }
+    }
+  }
+  return rows;
+}
+
+function rollingRegimeConfigs(base) {
+  const regimes = [
+    { regimeMode: 'none' },
+    { regimeMode: 'require_above_ma', regimeSlowMa: 40 },
+    { regimeMode: 'require_above_ma', regimeSlowMa: 60 },
+    { regimeMode: 'require_up_continuation', regimeSlowMa: 40 },
+    {
+      regimeMode: 'avoid_both',
+      regimeSlowMa: 40,
+      regimeMomentumDays: 10,
+      regimeMomentumThreshold: -1
+    },
+    {
+      regimeMode: 'avoid_both',
+      regimeSlowMa: 60,
+      regimeMomentumDays: 20,
+      regimeMomentumThreshold: 0
+    }
+  ];
+  const rows = [];
+  for (const regime of regimes) {
+    for (const targetMarketVolPct of [18, 24]) {
+      for (const maximumVolatilityMultiplier of [1, 1.25]) {
+        for (const accountDrawdownBrakePct of [-8, -10]) {
+          for (const crashRule of [[-3, 1, 0], [-5, 1, 0.25]]) {
+            rows.push({
+              ...base,
+              ...regime,
+              targetMarketVolPct,
+              minimumVolatilityMultiplier: 0.25,
+              maximumVolatilityMultiplier,
+              momentumCrashMom20Pct: crashRule[0],
+              momentumCrashReboundPct: crashRule[1],
+              momentumCrashMultiplier: crashRule[2],
+              accountDrawdownBrakePct,
+              accountCooldownDays: 10,
+              collectTrades: false
+            });
+          }
+        }
+      }
+    }
+  }
+  return rows;
+}
+
+function shiftMonth(month, offset) {
+  const [year, value] = month.split('-').map(Number);
+  const date = new Date(Date.UTC(year, value - 1 + offset, 1));
+  return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, '0')}`;
+}
+
+function simulateRange(days, config, marketRegimes, startMonth, endMonth, collectTrades = false) {
+  const paddedMonths = monthKeys(
+    `${shiftMonth(startMonth, -1)}-01`,
+    `${shiftMonth(endMonth, 1)}-28`
+  );
+  const rangeDays = days.filter(([date]) => (
+    date.slice(0, 7) >= startMonth && date.slice(0, 7) <= endMonth
+  ));
+  return simulate(rangeDays, paddedMonths, { ...config, collectTrades }, marketRegimes);
+}
+
+function rollingValidation(days, configs, marketRegimes) {
+  const periods = [
+    ['2016-07', '2020-12', '2021-01', '2022-06'],
+    ['2018-01', '2022-06', '2022-07', '2023-12'],
+    ['2019-07', '2023-12', '2024-01', '2025-06'],
+    ['2021-01', '2025-06', '2025-07', '2026-05']
+  ];
+  const folds = [];
+  const closedTrades = [];
+  const monthly = [];
+  for (const [trainStart, trainEnd, validationStart, validationEnd] of periods) {
+    const trained = configs.map(config => (
+      simulateRange(days, config, marketRegimes, trainStart, trainEnd)
+    )).filter(result => result.trades >= 80 && result.maxDrawdownPct >= -25)
+      .sort((a, b) => b.full.average - a.full.average
+        || b.maxDrawdownPct - a.maxDrawdownPct)[0];
+    if (!trained) continue;
+    const validation = simulateRange(
+      days,
+      trained.config,
+      marketRegimes,
+      validationStart,
+      validationEnd,
+      true
+    );
+    monthly.push(...validation.monthly.slice(1, -1));
+    closedTrades.push(...(validation.closedTrades || []));
+    folds.push({
+      trainPeriod: `${trainStart}～${trainEnd}`,
+      validationPeriod: `${validationStart}～${validationEnd}`,
+      selectedRisk: riskConfig(trained.config),
+      train: trained.full,
+      trainMaxDrawdownPct: trained.maxDrawdownPct,
+      validation: validation.full,
+      validationMaxDrawdownPct: validation.maxDrawdownPct,
+      validationTrades: validation.trades,
+      validationQuality: tradeQuality(validation)
+    });
+  }
+  const pseudoResult = { closedTrades };
+  return {
+    trainingMonthsPerFold: 54,
+    plannedValidationMonthsPerFold: 18,
+    validationPeriod: '2021-01～2026-05',
+    validationMonths: monthly.length,
+    validationAverageMonthlyReturnPct: round(
+      monthly.reduce((sum, row) => sum + row.returnPct, 0) / monthly.length
+    ),
+    validationAnnualizedReturnPct: annualizedReturn([
+      { returnPct: 0 },
+      ...monthly,
+      { returnPct: 0 }
+    ]),
+    validationWorstFoldDrawdownPct: Math.min(...folds.map(fold => fold.validationMaxDrawdownPct)),
+    validationTrades: closedTrades.length,
+    validationQuality: tradeQuality(pseudoResult),
+    folds
   };
 }
 
@@ -1290,10 +1464,21 @@ async function main() {
         collectTrades: false
       }, marketRegimes))
     ));
-    const selected = [...safetyEvaluated]
+    const safetySelected = [...safetyEvaluated]
       .filter(result => result.maxDrawdownPct >= -20 && result.trades >= 250)
       .sort((a, b) => b.test.average - a.test.average || b.full.average - a.full.average)[0]
       || returnLeader;
+    const volatilityEvaluated = volatilityManagedConfigs(safetySelected.config).map(config => (
+      simulate(sourceDays, months, config, marketRegimes)
+    ));
+    const selected = [...volatilityEvaluated]
+      .filter(result => (
+        result.maxDrawdownPct > safetySelected.maxDrawdownPct
+        && result.test.average > safetySelected.test.average
+        && result.trades >= 250
+      ))
+      .sort((a, b) => b.test.average - a.test.average || b.maxDrawdownPct - a.maxDrawdownPct)[0]
+      || safetySelected;
     const best = simulate(sourceDays, months, { ...selected.config, collectTrades: true }, marketRegimes);
     const validationMonths = monthKeys('2021-12-01', '2026-06-30');
     const validationDays = sourceDays.filter(([date]) => date >= '2021-12-01');
@@ -1309,6 +1494,16 @@ async function main() {
       '2022-01-01',
       '2026-05-31'
     );
+    const rolling = rollingValidation(
+      sourceDays,
+      rollingRegimeConfigs(safetySelected.config),
+      marketRegimes
+    );
+    const rollingBenchmark = benchmarkStats(
+      etfHistory.series['0050.TW'] || [],
+      '2021-01-01',
+      '2026-05-31'
+    );
     const { closedTrades: bestTrades, ...bestSummary } = best;
     const { closedTrades: validationTrades, ...validationSummary } = validation;
     const output = {
@@ -1321,6 +1516,7 @@ async function main() {
       },
       testedCombinations: evaluated.length,
       testedSafetyCombinations: safetyEvaluated.length,
+      testedVolatilityCombinations: volatilityEvaluated.length,
       eligibility: {
         maxDrawdownPct: -24,
         minimumTrades: 250,
@@ -1343,6 +1539,8 @@ async function main() {
         quality: tradeQuality(validation)
       },
       benchmark,
+      rollingValidation: rolling,
+      rollingBenchmark,
       frontier: ranked.slice(0, 10).map(result => ({
         risk: riskConfig(result.config),
         full: result.full,
@@ -1369,6 +1567,8 @@ async function main() {
         quality: output.best.quality,
         validationQuality: output.validation.quality,
         validationTrades: validation.trades,
+        rollingValidation: rolling,
+        rollingBenchmark,
         positionPct: best.config.standardPct,
         accountRiskPct: best.config.accountRiskPct,
         maxOpenPositions: best.config.maxOpenPositions,

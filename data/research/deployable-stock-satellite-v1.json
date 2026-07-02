@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-01T11:10:59.484Z",
+  "generatedAt": "2026-07-02T10:22:06.901Z",
   "methodology": "個股與 0050 使用獨立資金袖套，以每日收盤總資產串接四段 rolling validation；0050 計入每段首次買進手續費與滑價，個股交易已含費稅、滑價與 T+2。",
   "validationPeriod": "2021-01～2026-05",
   "validationMonths": 65,
@@ -11,7 +11,7 @@
       "months": 65,
       "averageMonthlyReturnPct": 3.01,
       "annualizedReturnPct": 40.39,
-      "maximumDrawdownPct": -15.93,
+      "maximumDrawdownPct": -17.62,
       "negativeMonths": 24
     },
     {
@@ -20,7 +20,7 @@
       "months": 65,
       "averageMonthlyReturnPct": 3.09,
       "annualizedReturnPct": 41.63,
-      "maximumDrawdownPct": -14.71,
+      "maximumDrawdownPct": -15.86,
       "negativeMonths": 24
     },
     {
@@ -29,7 +29,7 @@
       "months": 65,
       "averageMonthlyReturnPct": 3.17,
       "annualizedReturnPct": 42.7,
-      "maximumDrawdownPct": -14.08,
+      "maximumDrawdownPct": -14.66,
       "negativeMonths": 24
     },
     {
@@ -42,14 +42,51 @@
       "negativeMonths": 22
     }
   ],
-  "selected": {
+  "staticAllocation": {
     "stockWeightPct": 90,
     "etf0050WeightPct": 10,
     "months": 65,
     "averageMonthlyReturnPct": 3.17,
     "annualizedReturnPct": 42.7,
-    "maximumDrawdownPct": -14.08,
+    "maximumDrawdownPct": -14.66,
     "negativeMonths": 24
   },
-  "conclusion": "目前風險調整後配置為個股 90%、0050 10%。"
+  "tacticalAllocation": {
+    "months": 65,
+    "averageMonthlyReturnPct": 3,
+    "annualizedReturnPct": 39.87,
+    "maximumDrawdownPct": -13.43,
+    "negativeMonths": 22,
+    "selectedRules": [
+      {
+        "validationPeriod": "2021-01～2022-06",
+        "ruleId": "cash",
+        "ruleName": "現金",
+        "tacticalSleeveWeightPct": 10,
+        "stockWeightPct": 90
+      },
+      {
+        "validationPeriod": "2022-07～2023-12",
+        "ruleId": "leveraged_trend",
+        "ruleName": "正向槓桿趨勢／現金",
+        "tacticalSleeveWeightPct": 10,
+        "stockWeightPct": 90
+      },
+      {
+        "validationPeriod": "2024-01～2025-06",
+        "ruleId": "cash",
+        "ruleName": "現金",
+        "tacticalSleeveWeightPct": 10,
+        "stockWeightPct": 90
+      },
+      {
+        "validationPeriod": "2025-07～2026-05",
+        "ruleId": "cash",
+        "ruleName": "現金",
+        "tacticalSleeveWeightPct": 10,
+        "stockWeightPct": 90
+      }
+    ]
+  },
+  "conclusion": "沒有配置能同時大幅提高目前月均報酬並降低最大回撤；尚無可直接實盤的新策略。"
 }

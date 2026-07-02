@@ -14,6 +14,7 @@ const MARKET_HISTORY = new URL('../data/market-regime-history-10y.json', import.
 const SEARCH_LEDGER = new URL('../data/strategy-search-ledger-10y.json', import.meta.url);
 const EXPOSURE_FRONTIER_OUTPUT = new URL('../data/realized-exposure-frontier-10y.json', import.meta.url);
 const ETF_HISTORY = new URL('../data/research/deployable-etf-rotation-history.json', import.meta.url);
+const LEVERAGED_ETF_HISTORY = new URL('../data/research/deployable-etf-history.json', import.meta.url);
 const QUICK = process.argv.includes('--quick');
 const TESTS = Number(process.env.OPTIMIZE_REALIZED_TESTS || (QUICK ? 2000 : 12000));
 const BROAD_TESTS = Number(process.env.OPTIMIZE_REALIZED_BROAD_TESTS || (QUICK ? 500 : 2000));
@@ -37,6 +38,15 @@ const MIN_ORDER_VALUE = 20_000;
 const LOT = 1000;
 const SETTLEMENT_DAYS = 2;
 const ETF_INITIAL_COST_PCT = BUY_FEE_PCT + BUY_SLIPPAGE_PCT;
+const ETF_COSTS = Object.freeze({
+  buyFeePct: BUY_FEE_PCT,
+  sellFeePct: SELL_FEE_PCT,
+  sellTaxPct: 0.1,
+  buySlippagePct: BUY_SLIPPAGE_PCT,
+  sellSlippagePct: SELL_SLIPPAGE_PCT,
+  minimumFee: MIN_FEE,
+  boardLotShares: LOT
+});
 
 function stableValue(value) {
   if (Array.isArray(value)) return value.map(stableValue);
@@ -1368,12 +1378,20 @@ function allocationFrontier(foldCurves, marketRegimes) {
     let maximumDrawdownPct = 0;
     const monthEnd = new Map();
     for (const curve of foldCurves) {
-      const firstClose = marketRegimes.get(curve[0]?.date)?.close;
+      const firstDate = curve[0]?.date;
+      const lastDate = curve.at(-1)?.date;
+      const firstClose = marketRegimes.get(firstDate)?.close;
+      const stockByDate = new Map(curve.map(row => [row.date, row.equity]));
+      const tradingDates = [...marketRegimes.keys()].filter(date => (
+        date >= firstDate && date <= lastDate
+      ));
       let previousFoldValue = INITIAL_CAPITAL;
-      for (const row of curve) {
-        const marketClose = marketRegimes.get(row.date)?.close;
+      let stockEquity = INITIAL_CAPITAL;
+      for (const date of tradingDates) {
+        stockEquity = stockByDate.get(date) ?? stockEquity;
+        const marketClose = marketRegimes.get(date)?.close;
         if (!firstClose || !marketClose) continue;
-        const stockValue = row.equity * stockWeightPct / 100;
+        const stockValue = stockEquity * stockWeightPct / 100;
         const etfValue = INITIAL_CAPITAL * etf0050WeightPct / 100
           * (1 - ETF_INITIAL_COST_PCT / 100)
           * marketClose / firstClose;
@@ -1382,7 +1400,7 @@ function allocationFrontier(foldCurves, marketRegimes) {
         previousFoldValue = foldValue;
         peak = Math.max(peak, equity);
         maximumDrawdownPct = Math.min(maximumDrawdownPct, (equity / peak - 1) * 100);
-        monthEnd.set(row.date.slice(0, 7), equity);
+        monthEnd.set(date.slice(0, 7), equity);
       }
     }
     let prior = INITIAL_CAPITAL;
@@ -1404,7 +1422,154 @@ function allocationFrontier(foldCurves, marketRegimes) {
   });
 }
 
-function rollingValidation(days, configs, marketRegimes) {
+const TACTICAL_RULES = Object.freeze([
+  { id: 'cash', name: '現金' },
+  { id: '0050_trend', name: '0050 趨勢／現金', bull: '0050.TW', ma: 60, mom: 0, maxVol: 35 },
+  { id: 'leveraged_trend', name: '正向槓桿趨勢／現金', bull: '00631L.TW', ma: 60, mom: 0, maxVol: 30 },
+  { id: 'leveraged_strict', name: '正向槓桿強趨勢／現金', bull: '00631L.TW', ma: 120, mom: 3, maxVol: 25 },
+  {
+    id: 'leveraged_inverse',
+    name: '正向槓桿／反向防守／現金',
+    bull: '00631L.TW',
+    bear: '00632R.TW',
+    ma: 60,
+    mom: 0,
+    bearMom: -3,
+    maxVol: 30
+  }
+]);
+
+function tacticalTarget(rule, regime) {
+  if (!regime || rule.id === 'cash') return null;
+  if (regime.close >= regime[`ma${rule.ma}`]
+    && regime.mom20 > rule.mom
+    && regime.vol20 <= rule.maxVol) return rule.bull;
+  if (rule.bear && regime.close < regime[`ma${rule.ma}`] && regime.mom20 < rule.bearMom) {
+    return rule.bear;
+  }
+  return null;
+}
+
+function simulateTacticalSleeve(
+  startDate,
+  endDate,
+  rule,
+  marketRegimes,
+  barsBySymbol,
+  sleeveWeightPct
+) {
+  const dates = [...(barsBySymbol.get('0050.TW')?.keys() || [])]
+    .filter(date => date >= startDate && date <= endDate);
+  const initialCapital = INITIAL_CAPITAL * sleeveWeightPct / 100;
+  let cash = initialCapital;
+  let unsettled = [];
+  let position = null;
+  const curve = [];
+  for (let index = 0; index < dates.length; index += 1) {
+    const date = dates[index];
+    const released = unsettled.filter(item => item.releaseIndex <= index);
+    cash += released.reduce((sum, item) => sum + item.amount, 0);
+    unsettled = unsettled.filter(item => item.releaseIndex > index);
+    const target = tacticalTarget(rule, marketRegimes.get(dates[index - 1]));
+    if (position && position.symbol !== target) {
+      const bar = barsBySymbol.get(position.symbol)?.get(date);
+      if (bar) {
+        const sell = sharedSellExecution(bar.open, position.quantity, ETF_COSTS);
+        unsettled.push({ releaseIndex: index + SETTLEMENT_DAYS, amount: sell.net });
+        position = null;
+      }
+    }
+    if (!position && target && cash > 0) {
+      const bar = barsBySymbol.get(target)?.get(date);
+      if (bar) {
+        let quantity = Math.floor(cash / (bar.open * (1 + BUY_SLIPPAGE_PCT / 100)));
+        let buy = sharedBuyExecution(bar.open, quantity, ETF_COSTS);
+        while (quantity > 0 && buy.total > cash) {
+          quantity -= 1;
+          buy = sharedBuyExecution(bar.open, quantity, ETF_COSTS);
+        }
+        if (quantity > 0) {
+          cash -= buy.total;
+          position = { symbol: target, quantity };
+        }
+      }
+    }
+    const bar = position ? barsBySymbol.get(position.symbol)?.get(date) : null;
+    const positionValue = bar
+      ? sharedSellExecution(bar.close, position.quantity, ETF_COSTS).net
+      : 0;
+    const equity = cash + unsettled.reduce((sum, item) => sum + item.amount, 0) + positionValue;
+    curve.push({ date, equity: round(equity, 0) });
+  }
+  return curve;
+}
+
+function combineStockAndSleeve(stockCurve, sleeveCurve, stockWeightPct) {
+  const stockByDate = new Map(stockCurve.map(row => [row.date, row.equity]));
+  let stockEquity = INITIAL_CAPITAL;
+  return sleeveCurve.map(row => {
+    stockEquity = stockByDate.get(row.date) ?? stockEquity;
+    return { date: row.date, equity: stockEquity * stockWeightPct / 100 + row.equity };
+  });
+}
+
+function summarizeContinuousCurves(curves) {
+  let equity = INITIAL_CAPITAL;
+  let peak = INITIAL_CAPITAL;
+  let maximumDrawdownPct = 0;
+  const monthEnd = new Map();
+  for (const curve of curves) {
+    let previousFoldValue = INITIAL_CAPITAL;
+    for (const row of curve) {
+      equity *= row.equity / previousFoldValue;
+      previousFoldValue = row.equity;
+      peak = Math.max(peak, equity);
+      maximumDrawdownPct = Math.min(maximumDrawdownPct, (equity / peak - 1) * 100);
+      monthEnd.set(row.date.slice(0, 7), equity);
+    }
+  }
+  let prior = INITIAL_CAPITAL;
+  const monthly = [...monthEnd].map(([month, endingEquity]) => {
+    const returnPct = (endingEquity / prior - 1) * 100;
+    prior = endingEquity;
+    return { month, returnPct };
+  });
+  const growth = monthly.reduce((value, row) => value * (1 + row.returnPct / 100), 1);
+  return {
+    months: monthly.length,
+    averageMonthlyReturnPct: round(monthly.reduce((sum, row) => sum + row.returnPct, 0) / monthly.length),
+    annualizedReturnPct: round((growth ** (12 / monthly.length) - 1) * 100),
+    maximumDrawdownPct: round(maximumDrawdownPct),
+    negativeMonths: monthly.filter(row => row.returnPct < 0).length
+  };
+}
+
+function selectTacticalRule(stockCurve, startDate, endDate, marketRegimes, barsBySymbol) {
+  const candidates = [10, 20, 30].flatMap(sleeveWeightPct => TACTICAL_RULES.map(rule => {
+    const sleeve = simulateTacticalSleeve(
+      startDate,
+      endDate,
+      rule,
+      marketRegimes,
+      barsBySymbol,
+      sleeveWeightPct
+    );
+    const curve = combineStockAndSleeve(stockCurve, sleeve, 100 - sleeveWeightPct);
+    return { rule, sleeveWeightPct, curve, metrics: summarizeContinuousCurves([curve]) };
+  }));
+  return candidates.filter(row => (
+    row.rule.id !== 'cash'
+    && row.metrics.averageMonthlyReturnPct > candidates.find(candidate => (
+      candidate.rule.id === 'cash' && candidate.sleeveWeightPct === row.sleeveWeightPct
+    )).metrics.averageMonthlyReturnPct
+    && row.metrics.maximumDrawdownPct > candidates.find(candidate => (
+      candidate.rule.id === 'cash' && candidate.sleeveWeightPct === row.sleeveWeightPct
+    )).metrics.maximumDrawdownPct
+  )).sort((a, b) => b.metrics.averageMonthlyReturnPct - a.metrics.averageMonthlyReturnPct)[0]
+    || candidates.find(row => row.rule.id === 'cash' && row.sleeveWeightPct === 10);
+}
+
+function rollingValidation(days, configs, marketRegimes, barsBySymbol) {
   const periods = [
     ['2016-07', '2020-12', '2021-01', '2022-06'],
     ['2018-01', '2022-06', '2022-07', '2023-12'],
@@ -1415,6 +1580,7 @@ function rollingValidation(days, configs, marketRegimes) {
   const closedTrades = [];
   const monthly = [];
   const foldCurves = [];
+  const tacticalCurves = [];
   for (const [trainStart, trainEnd, validationStart, validationEnd] of periods) {
     const trained = configs.map(config => (
       simulateRange(days, config, marketRegimes, trainStart, trainEnd)
@@ -1422,6 +1588,22 @@ function rollingValidation(days, configs, marketRegimes) {
       .sort((a, b) => b.full.average - a.full.average
         || b.maxDrawdownPct - a.maxDrawdownPct)[0];
     if (!trained) continue;
+    const trainedCurve = simulateRange(
+      days,
+      trained.config,
+      marketRegimes,
+      trainStart,
+      trainEnd,
+      false,
+      true
+    );
+    const tactical = selectTacticalRule(
+      trainedCurve.dailyCurve || [],
+      `${trainStart}-01`,
+      `${trainEnd}-31`,
+      marketRegimes,
+      barsBySymbol
+    );
     const validation = simulateRange(
       days,
       trained.config,
@@ -1434,6 +1616,19 @@ function rollingValidation(days, configs, marketRegimes) {
     monthly.push(...validation.monthly.slice(1, -1));
     closedTrades.push(...(validation.closedTrades || []));
     foldCurves.push(validation.dailyCurve || []);
+    const validationSleeve = simulateTacticalSleeve(
+      `${validationStart}-01`,
+      `${validationEnd}-31`,
+      tactical.rule,
+      marketRegimes,
+      barsBySymbol,
+      tactical.sleeveWeightPct
+    );
+    tacticalCurves.push(combineStockAndSleeve(
+      validation.dailyCurve || [],
+      validationSleeve,
+      100 - tactical.sleeveWeightPct
+    ));
     folds.push({
       trainPeriod: `${trainStart}～${trainEnd}`,
       validationPeriod: `${validationStart}～${validationEnd}`,
@@ -1443,7 +1638,11 @@ function rollingValidation(days, configs, marketRegimes) {
       validation: validation.full,
       validationMaxDrawdownPct: validation.maxDrawdownPct,
       validationTrades: validation.trades,
-      validationQuality: tradeQuality(validation)
+      validationQuality: tradeQuality(validation),
+      selectedTacticalRule: tactical.rule.id,
+      selectedTacticalRuleName: tactical.rule.name,
+      selectedTacticalSleeveWeightPct: tactical.sleeveWeightPct,
+      trainTacticalMetrics: tactical.metrics
     });
   }
   const allocations = allocationFrontier(foldCurves, marketRegimes);
@@ -1455,6 +1654,21 @@ function rollingValidation(days, configs, marketRegimes) {
   const selectedAllocation = [...(improvedAllocations.length ? improvedAllocations : allocations)]
     .sort((a, b) => b.averageMonthlyReturnPct - a.averageMonthlyReturnPct
       || b.maximumDrawdownPct - a.maximumDrawdownPct)[0];
+  const tacticalAllocation = {
+    ...summarizeContinuousCurves(tacticalCurves),
+    selectedRules: folds.map(fold => ({
+      validationPeriod: fold.validationPeriod,
+      ruleId: fold.selectedTacticalRule,
+      ruleName: fold.selectedTacticalRuleName,
+      tacticalSleeveWeightPct: fold.selectedTacticalSleeveWeightPct,
+      stockWeightPct: 100 - fold.selectedTacticalSleeveWeightPct
+    }))
+  };
+  const tacticalImproved = tacticalAllocation.averageMonthlyReturnPct > selectedAllocation.averageMonthlyReturnPct
+    && tacticalAllocation.maximumDrawdownPct > selectedAllocation.maximumDrawdownPct;
+  const selectedPortfolio = tacticalImproved
+    ? { type: 'tactical_sleeve', ...tacticalAllocation }
+    : { type: 'static_0050', ...selectedAllocation };
   let combinedEquity = INITIAL_CAPITAL;
   let combinedPeak = INITIAL_CAPITAL;
   let combinedMaximumDrawdownPct = 0;
@@ -1491,6 +1705,8 @@ function rollingValidation(days, configs, marketRegimes) {
     validationQuality: tradeQuality(pseudoResult),
     allocationFrontier: allocations,
     selectedAllocation,
+    tacticalAllocation,
+    selectedPortfolio,
     monthly,
     folds
   };
@@ -1590,7 +1806,16 @@ async function main() {
       { ...selected.config, collectTrades: true },
       marketRegimes
     );
-    const etfHistory = JSON.parse(await fs.readFile(ETF_HISTORY, 'utf8'));
+    const [etfHistory, leveragedEtfHistory] = await Promise.all([
+      fs.readFile(ETF_HISTORY, 'utf8').then(JSON.parse),
+      fs.readFile(LEVERAGED_ETF_HISTORY, 'utf8').then(JSON.parse)
+    ]);
+    const tacticalBars = new Map(
+      ['0050.TW', '00631L.TW', '00632R.TW'].map(symbol => [
+        symbol,
+        new Map((leveragedEtfHistory.series[symbol] || []).map(row => [row.date, row]))
+      ])
+    );
     const benchmark = benchmarkStats(
       etfHistory.series['0050.TW'] || [],
       '2022-01-01',
@@ -1599,7 +1824,8 @@ async function main() {
     const rolling = rollingValidation(
       sourceDays,
       rollingRegimeConfigs(safetySelected.config),
-      marketRegimes
+      marketRegimes,
+      tacticalBars
     );
     const rollingBenchmark = benchmarkStats(
       etfHistory.series['0050.TW'] || [],

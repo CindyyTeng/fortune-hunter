@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-01T11:09:35.826Z",
+  "generatedAt": "2026-07-02T10:20:35.715Z",
   "sourceGeneratedAt": "2026-06-11T14:50:08.922Z",
   "period": {
     "full": "2016-07～2026-05",
@@ -1739,7 +1739,7 @@
         "months": 65,
         "averageMonthlyReturnPct": 3.01,
         "annualizedReturnPct": 40.39,
-        "maximumDrawdownPct": -15.93,
+        "maximumDrawdownPct": -17.62,
         "negativeMonths": 24
       },
       {
@@ -1748,7 +1748,7 @@
         "months": 65,
         "averageMonthlyReturnPct": 3.09,
         "annualizedReturnPct": 41.63,
-        "maximumDrawdownPct": -14.71,
+        "maximumDrawdownPct": -15.86,
         "negativeMonths": 24
       },
       {
@@ -1757,7 +1757,7 @@
         "months": 65,
         "averageMonthlyReturnPct": 3.17,
         "annualizedReturnPct": 42.7,
-        "maximumDrawdownPct": -14.08,
+        "maximumDrawdownPct": -14.66,
         "negativeMonths": 24
       },
       {
@@ -1776,7 +1776,54 @@
       "months": 65,
       "averageMonthlyReturnPct": 3.17,
       "annualizedReturnPct": 42.7,
-      "maximumDrawdownPct": -14.08,
+      "maximumDrawdownPct": -14.66,
+      "negativeMonths": 24
+    },
+    "tacticalAllocation": {
+      "months": 65,
+      "averageMonthlyReturnPct": 3,
+      "annualizedReturnPct": 39.87,
+      "maximumDrawdownPct": -13.43,
+      "negativeMonths": 22,
+      "selectedRules": [
+        {
+          "validationPeriod": "2021-01～2022-06",
+          "ruleId": "cash",
+          "ruleName": "現金",
+          "tacticalSleeveWeightPct": 10,
+          "stockWeightPct": 90
+        },
+        {
+          "validationPeriod": "2022-07～2023-12",
+          "ruleId": "leveraged_trend",
+          "ruleName": "正向槓桿趨勢／現金",
+          "tacticalSleeveWeightPct": 10,
+          "stockWeightPct": 90
+        },
+        {
+          "validationPeriod": "2024-01～2025-06",
+          "ruleId": "cash",
+          "ruleName": "現金",
+          "tacticalSleeveWeightPct": 10,
+          "stockWeightPct": 90
+        },
+        {
+          "validationPeriod": "2025-07～2026-05",
+          "ruleId": "cash",
+          "ruleName": "現金",
+          "tacticalSleeveWeightPct": 10,
+          "stockWeightPct": 90
+        }
+      ]
+    },
+    "selectedPortfolio": {
+      "type": "static_0050",
+      "stockWeightPct": 90,
+      "etf0050WeightPct": 10,
+      "months": 65,
+      "averageMonthlyReturnPct": 3.17,
+      "annualizedReturnPct": 42.7,
+      "maximumDrawdownPct": -14.66,
       "negativeMonths": 24
     },
     "monthly": [
@@ -2349,6 +2396,16 @@
           "winRatePct": 43.48,
           "profitFactor": 2.16,
           "topFiveProfitContributionPct": 52.58
+        },
+        "selectedTacticalRule": "cash",
+        "selectedTacticalRuleName": "現金",
+        "selectedTacticalSleeveWeightPct": 10,
+        "trainTacticalMetrics": {
+          "months": 54,
+          "averageMonthlyReturnPct": 1.99,
+          "annualizedReturnPct": 24.8,
+          "maximumDrawdownPct": -11.07,
+          "negativeMonths": 18
         }
       },
       {
@@ -2398,6 +2455,16 @@
           "winRatePct": 57.69,
           "profitFactor": 3.5,
           "topFiveProfitContributionPct": 37.4
+        },
+        "selectedTacticalRule": "leveraged_trend",
+        "selectedTacticalRuleName": "正向槓桿趨勢／現金",
+        "selectedTacticalSleeveWeightPct": 10,
+        "trainTacticalMetrics": {
+          "months": 54,
+          "averageMonthlyReturnPct": 2.87,
+          "annualizedReturnPct": 36.97,
+          "maximumDrawdownPct": -17.32,
+          "negativeMonths": 23
         }
       },
       {
@@ -2447,6 +2514,16 @@
           "winRatePct": 31.37,
           "profitFactor": 1.13,
           "topFiveProfitContributionPct": 61.84
+        },
+        "selectedTacticalRule": "cash",
+        "selectedTacticalRuleName": "現金",
+        "selectedTacticalSleeveWeightPct": 10,
+        "trainTacticalMetrics": {
+          "months": 54,
+          "averageMonthlyReturnPct": 4,
+          "annualizedReturnPct": 56.1,
+          "maximumDrawdownPct": -14.97,
+          "negativeMonths": 13
         }
       },
       {
@@ -2496,6 +2573,16 @@
           "winRatePct": 41.46,
           "profitFactor": 2.62,
           "topFiveProfitContributionPct": 50.09
+        },
+        "selectedTacticalRule": "cash",
+        "selectedTacticalRuleName": "現金",
+        "selectedTacticalSleeveWeightPct": 10,
+        "trainTacticalMetrics": {
+          "months": 54,
+          "averageMonthlyReturnPct": 2.9,
+          "annualizedReturnPct": 37.51,
+          "maximumDrawdownPct": -16.26,
+          "negativeMonths": 17
         }
       }
     ]

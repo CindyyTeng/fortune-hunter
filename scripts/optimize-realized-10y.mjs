@@ -15,6 +15,7 @@ const SEARCH_LEDGER = new URL('../data/strategy-search-ledger-10y.json', import.
 const EXPOSURE_FRONTIER_OUTPUT = new URL('../data/realized-exposure-frontier-10y.json', import.meta.url);
 const ETF_HISTORY = new URL('../data/research/deployable-etf-rotation-history.json', import.meta.url);
 const LEVERAGED_ETF_HISTORY = new URL('../data/research/deployable-etf-history.json', import.meta.url);
+const ROLLING_SELECTION_MODE = process.env.ROLLING_SELECTION_MODE || 'highest_average';
 const QUICK = process.argv.includes('--quick');
 const TESTS = Number(process.env.OPTIMIZE_REALIZED_TESTS || (QUICK ? 2000 : 12000));
 const BROAD_TESTS = Number(process.env.OPTIMIZE_REALIZED_BROAD_TESTS || (QUICK ? 500 : 2000));
@@ -466,6 +467,8 @@ function simulate(allDays, months, config, marketRegimes = new Map()) {
   let peak = INITIAL_CAPITAL;
   let accountRiskPeak = INITIAL_CAPITAL;
   let accountCooldownUntil = -1;
+  let consecutiveLosses = 0;
+  let lossStreakCooldownUntil = -1;
   let maxDrawdownPct = 0;
   let trades = 0;
   let realizedCapital = INITIAL_CAPITAL;
@@ -487,6 +490,12 @@ function simulate(allDays, months, config, marketRegimes = new Map()) {
     cooldownUntilBySymbol.set(position.trade.symbol, index + 5);
     const sell = sellExecution(exitPrice, position.quantity);
     const pnl = sell.net - position.buy.total;
+    consecutiveLosses = pnl < 0 ? consecutiveLosses + 1 : 0;
+    if (config.consecutiveLossLimit
+      && consecutiveLosses >= config.consecutiveLossLimit) {
+      lossStreakCooldownUntil = index + (config.lossStreakCooldownDays || 10);
+      consecutiveLosses = 0;
+    }
     realizedCapital += pnl;
     unsettled.push({ releaseIndex: index + SETTLEMENT_DAYS, amount: sell.net });
     monthlyPnl.set(month, (monthlyPnl.get(month) || 0) + pnl);
@@ -633,6 +642,7 @@ function simulate(allDays, months, config, marketRegimes = new Map()) {
         || blackSwanToday
         || monthTradingHalted
         || index <= accountCooldownUntil
+        || index <= lossStreakCooldownUntil
         || liquidateNextOpen) continue;
       if (monthReturnPct < 0 && (
         rewardRisk(trade) < config.recoveryMinRewardRisk
@@ -1257,6 +1267,8 @@ function riskConfig(config) {
     transitionPositionMultiplier: config.transitionPositionMultiplier,
     accountDrawdownBrakePct: config.accountDrawdownBrakePct,
     accountCooldownDays: config.accountCooldownDays,
+    consecutiveLossLimit: config.consecutiveLossLimit,
+    lossStreakCooldownDays: config.lossStreakCooldownDays,
     targetMarketVolPct: config.targetMarketVolPct,
     minimumVolatilityMultiplier: config.minimumVolatilityMultiplier,
     maximumVolatilityMultiplier: config.maximumVolatilityMultiplier,
@@ -1582,11 +1594,68 @@ function rollingValidation(days, configs, marketRegimes, barsBySymbol) {
   const foldCurves = [];
   const tacticalCurves = [];
   for (const [trainStart, trainEnd, validationStart, validationEnd] of periods) {
-    const trained = configs.map(config => (
+    const fullTrainRows = configs.map(config => (
       simulateRange(days, config, marketRegimes, trainStart, trainEnd)
-    )).filter(result => result.trades >= 80 && result.maxDrawdownPct >= -25)
-      .sort((a, b) => b.full.average - a.full.average
-        || b.maxDrawdownPct - a.maxDrawdownPct)[0];
+    ));
+    const lossDefenseRows = ROLLING_SELECTION_MODE === 'loss_cluster_defense'
+      ? fullTrainRows.filter(result => result.trades >= 80 && result.maxDrawdownPct >= -25)
+        .sort((a, b) => b.full.average - a.full.average
+          || b.maxDrawdownPct - a.maxDrawdownPct)
+        .slice(0, 12)
+        .flatMap(result => [
+          result,
+          simulateRange(days, {
+            ...result.config,
+            consecutiveLossLimit: 2,
+            lossStreakCooldownDays: 5
+          }, marketRegimes, trainStart, trainEnd),
+          simulateRange(days, {
+            ...result.config,
+            consecutiveLossLimit: 3,
+            lossStreakCooldownDays: 10
+          }, marketRegimes, trainStart, trainEnd)
+        ])
+      : fullTrainRows;
+    const shortlist = ROLLING_SELECTION_MODE === 'subperiod_stability'
+      ? fullTrainRows.filter(result => result.trades >= 80 && result.maxDrawdownPct >= -25)
+        .sort((a, b) => b.full.average - a.full.average
+          || b.maxDrawdownPct - a.maxDrawdownPct)
+        .slice(0, 24)
+      : lossDefenseRows;
+    const trainedRows = shortlist.map(result => {
+      if (ROLLING_SELECTION_MODE !== 'subperiod_stability') return result;
+      const config = result.config;
+      const segments = [0, 18, 36].map(offset => simulateRange(
+        days,
+        config,
+        marketRegimes,
+        shiftMonth(trainStart, offset),
+        shiftMonth(trainStart, offset + 17)
+      ));
+      const averages = segments.map(segment => segment.full.average).sort((a, b) => a - b);
+      return {
+        ...result,
+        stableSegments: segments.map(segment => ({
+          averageMonthlyReturnPct: round(segment.full.average),
+          maximumDrawdownPct: segment.maxDrawdownPct,
+          trades: segment.trades
+        })),
+        stabilityScore: result.full.average * 0.5
+          + averages[1]
+          + averages[0] * 0.5
+          + result.maxDrawdownPct * 0.05
+      };
+    });
+    const trained = trainedRows.filter(result => (
+      result.trades >= 80
+      && result.maxDrawdownPct >= -25
+      && (ROLLING_SELECTION_MODE !== 'subperiod_stability'
+        || result.stableSegments.every(segment => segment.trades >= 15))
+    )).sort((a, b) => (
+      ROLLING_SELECTION_MODE === 'subperiod_stability'
+        ? b.stabilityScore - a.stabilityScore
+        : b.full.average - a.full.average
+    ) || b.maxDrawdownPct - a.maxDrawdownPct)[0];
     if (!trained) continue;
     const trainedCurve = simulateRange(
       days,
@@ -1635,6 +1704,10 @@ function rollingValidation(days, configs, marketRegimes, barsBySymbol) {
       selectedRisk: riskConfig(trained.config),
       train: trained.full,
       trainMaxDrawdownPct: trained.maxDrawdownPct,
+      trainStableSegments: trained.stableSegments,
+      trainStabilityScore: trained.stabilityScore === undefined
+        ? undefined
+        : round(trained.stabilityScore),
       validation: validation.full,
       validationMaxDrawdownPct: validation.maxDrawdownPct,
       validationTrades: validation.trades,
@@ -1684,7 +1757,12 @@ function rollingValidation(days, configs, marketRegimes, barsBySymbol) {
   return {
     trainingMonthsPerFold: 54,
     plannedValidationMonthsPerFold: 18,
-    trainingSelectionObjective: '月均總資產報酬最高且最大回撤不超過 25%',
+    trainingSelectionMode: ROLLING_SELECTION_MODE,
+    trainingSelectionObjective: ROLLING_SELECTION_MODE === 'subperiod_stability'
+      ? '三個 18 個月子區間穩定度與整體回撤綜合分數'
+      : ROLLING_SELECTION_MODE === 'loss_cluster_defense'
+        ? '月均報酬最高，並由訓練期選擇是否啟用連敗熔斷'
+        : '月均總資產報酬最高且最大回撤不超過 25%',
     validationPeriod: '2021-01～2026-05',
     validationMonths: monthly.length,
     validationAverageMonthlyReturnPct: round(

@@ -7,7 +7,10 @@ import {
   trailingStopPrice
 } from './lib/execution-simulator.mjs';
 
-const INPUT = new URL('../data/tw-backtest-10y.json', import.meta.url);
+const INPUT = new URL(
+  process.env.OPTIMIZE_REALIZED_INPUT || '../data/tw-backtest-10y.json',
+  import.meta.url
+);
 const OUTPUT = new URL('../data/realized-strategy-search-10y.json', import.meta.url);
 const DIAGNOSTIC_OUTPUT = new URL('../data/realized-strategy-diagnostics-10y.json', import.meta.url);
 const MARKET_HISTORY = new URL('../data/market-regime-history-10y.json', import.meta.url);
@@ -1329,15 +1332,26 @@ function rollingRegimeConfigs(base) {
       regimeMomentumThreshold: 0
     }
   ];
+  const capacities = [
+    { maxOpenPositions: 3, positionPct: 30 },
+    { maxOpenPositions: 4, positionPct: 25 },
+    { maxOpenPositions: 5, positionPct: 20 }
+  ];
   const rows = [];
   for (const regime of regimes) {
-    for (const targetMarketVolPct of [18, 24]) {
-      for (const maximumVolatilityMultiplier of [1, 1.25]) {
-        for (const accountDrawdownBrakePct of [-8, -10]) {
-          for (const crashRule of [[-3, 1, 0], [-5, 1, 0.25]]) {
+    for (const capacity of capacities) {
+      for (const targetMarketVolPct of [18, 24]) {
+        for (const maximumVolatilityMultiplier of [1, 1.25]) {
+          for (const accountDrawdownBrakePct of [-8, -10]) {
+            for (const crashRule of [[-3, 1, 0], [-5, 1, 0.25]]) {
             rows.push({
               ...base,
               ...regime,
+              standardPct: capacity.positionPct,
+              defensivePct: capacity.positionPct,
+              exploratoryPct: capacity.positionPct,
+              maxPositionPct: capacity.positionPct,
+              maxOpenPositions: capacity.maxOpenPositions,
               targetMarketVolPct,
               minimumVolatilityMultiplier: 0.25,
               maximumVolatilityMultiplier,
@@ -1349,6 +1363,7 @@ function rollingRegimeConfigs(base) {
               monthlyEquityBrakePct: -5,
               collectTrades: false
             });
+            }
           }
         }
       }
@@ -1582,7 +1597,21 @@ function selectTacticalRule(stockCurve, startDate, endDate, marketRegimes, barsB
 }
 
 function rollingValidation(days, configs, marketRegimes, barsBySymbol) {
-  const periods = [
+  const minimumTrainTrades = Number(process.env.ROLLING_MIN_TRAIN_TRADES || 80);
+  const minimumSegmentTrades = Number(process.env.ROLLING_MIN_SEGMENT_TRADES || 15);
+  const usesSegmentEvidence = [
+    'subperiod_stability',
+    'evidence_gated_return',
+    'evidence_gated_loss_defense'
+  ]
+    .includes(ROLLING_SELECTION_MODE);
+  const periods = process.env.ROLLING_EXTENDED === '1' ? [
+    ['2014-05', '2018-10', '2018-11', '2020-04'],
+    ['2015-11', '2020-04', '2020-05', '2021-10'],
+    ['2017-05', '2021-10', '2021-11', '2023-04'],
+    ['2018-11', '2023-04', '2023-05', '2024-10'],
+    ['2020-05', '2024-10', '2024-11', '2026-04']
+  ] : [
     ['2016-07', '2020-12', '2021-01', '2022-06'],
     ['2018-01', '2022-06', '2022-07', '2023-12'],
     ['2019-07', '2023-12', '2024-01', '2025-06'],
@@ -1597,8 +1626,9 @@ function rollingValidation(days, configs, marketRegimes, barsBySymbol) {
     const fullTrainRows = configs.map(config => (
       simulateRange(days, config, marketRegimes, trainStart, trainEnd)
     ));
-    const lossDefenseRows = ROLLING_SELECTION_MODE === 'loss_cluster_defense'
-      ? fullTrainRows.filter(result => result.trades >= 80 && result.maxDrawdownPct >= -25)
+    const lossDefenseRows = ['loss_cluster_defense', 'evidence_gated_loss_defense']
+      .includes(ROLLING_SELECTION_MODE)
+      ? fullTrainRows.filter(result => result.trades >= minimumTrainTrades && result.maxDrawdownPct >= -25)
         .sort((a, b) => b.full.average - a.full.average
           || b.maxDrawdownPct - a.maxDrawdownPct)
         .slice(0, 12)
@@ -1616,14 +1646,14 @@ function rollingValidation(days, configs, marketRegimes, barsBySymbol) {
           }, marketRegimes, trainStart, trainEnd)
         ])
       : fullTrainRows;
-    const shortlist = ROLLING_SELECTION_MODE === 'subperiod_stability'
-      ? fullTrainRows.filter(result => result.trades >= 80 && result.maxDrawdownPct >= -25)
+    const shortlist = usesSegmentEvidence
+      ? fullTrainRows.filter(result => result.trades >= minimumTrainTrades && result.maxDrawdownPct >= -25)
         .sort((a, b) => b.full.average - a.full.average
           || b.maxDrawdownPct - a.maxDrawdownPct)
         .slice(0, 24)
       : lossDefenseRows;
     const trainedRows = shortlist.map(result => {
-      if (ROLLING_SELECTION_MODE !== 'subperiod_stability') return result;
+      if (!usesSegmentEvidence) return result;
       const config = result.config;
       const segments = [0, 18, 36].map(offset => simulateRange(
         days,
@@ -1647,16 +1677,41 @@ function rollingValidation(days, configs, marketRegimes, barsBySymbol) {
       };
     });
     const trained = trainedRows.filter(result => (
-      result.trades >= 80
+      result.trades >= minimumTrainTrades
       && result.maxDrawdownPct >= -25
-      && (ROLLING_SELECTION_MODE !== 'subperiod_stability'
-        || result.stableSegments.every(segment => segment.trades >= 15))
+      && (!usesSegmentEvidence
+        || result.stableSegments.every(segment => segment.trades >= minimumSegmentTrades))
     )).sort((a, b) => (
       ROLLING_SELECTION_MODE === 'subperiod_stability'
         ? b.stabilityScore - a.stabilityScore
         : b.full.average - a.full.average
     ) || b.maxDrawdownPct - a.maxDrawdownPct)[0];
-    if (!trained) continue;
+    if (!trained) {
+      const cashMonths = Array.from({ length: 18 }, (_, offset) => shiftMonth(validationStart, offset));
+      monthly.push(...cashMonths.map(month => ({ month, returnPct: 0, realizedPnl: 0, trades: 0 })));
+      const cashCurve = [...marketRegimes.keys()]
+        .filter(date => date.slice(0, 7) >= validationStart && date.slice(0, 7) <= validationEnd)
+        .map(date => ({ date, equity: INITIAL_CAPITAL }));
+      foldCurves.push(cashCurve);
+      tacticalCurves.push(cashCurve);
+      folds.push({
+        trainPeriod: `${trainStart}～${trainEnd}`,
+        validationPeriod: `${validationStart}～${validationEnd}`,
+        status: 'cash_insufficient_training_evidence',
+        selectedRisk: null,
+        train: null,
+        trainMaxDrawdownPct: 0,
+        validation: { months: 18, hit: 0, negative: 0, zero: 18, worst: 0, average: 0 },
+        validationMaxDrawdownPct: 0,
+        validationTrades: 0,
+        validationQuality: { winRatePct: 0, profitFactor: null, topFiveProfitContributionPct: 0 },
+        selectedTacticalRule: 'cash',
+        selectedTacticalRuleName: '現金',
+        selectedTacticalSleeveWeightPct: 100,
+        trainTacticalMetrics: null
+      });
+      continue;
+    }
     const trainedCurve = simulateRange(
       days,
       trained.config,
@@ -1757,13 +1812,19 @@ function rollingValidation(days, configs, marketRegimes, barsBySymbol) {
   return {
     trainingMonthsPerFold: 54,
     plannedValidationMonthsPerFold: 18,
+    minimumTrainTrades,
+    minimumSegmentTrades,
     trainingSelectionMode: ROLLING_SELECTION_MODE,
     trainingSelectionObjective: ROLLING_SELECTION_MODE === 'subperiod_stability'
       ? '三個 18 個月子區間穩定度與整體回撤綜合分數'
+      : ROLLING_SELECTION_MODE === 'evidence_gated_return'
+        ? '三個子區間皆有足夠樣本後，選訓練期月均報酬最高策略；不足則持有現金'
+      : ROLLING_SELECTION_MODE === 'evidence_gated_loss_defense'
+        ? '子區間證據門檻通過後，由訓練期選擇連敗熔斷；不足則持有現金'
       : ROLLING_SELECTION_MODE === 'loss_cluster_defense'
         ? '月均報酬最高，並由訓練期選擇是否啟用連敗熔斷'
         : '月均總資產報酬最高且最大回撤不超過 25%',
-    validationPeriod: '2021-01～2026-05',
+    validationPeriod: `${folds[0]?.validationPeriod.split('～')[0]}～${folds.at(-1)?.validationPeriod.split('～')[1]}`,
     validationMonths: monthly.length,
     validationAverageMonthlyReturnPct: round(
       monthly.reduce((sum, row) => sum + row.returnPct, 0) / monthly.length
@@ -1907,8 +1968,8 @@ async function main() {
     );
     const rollingBenchmark = benchmarkStats(
       etfHistory.series['0050.TW'] || [],
-      '2021-01-01',
-      '2026-05-31'
+      process.env.ROLLING_EXTENDED === '1' ? '2018-11-01' : '2021-01-01',
+      process.env.ROLLING_EXTENDED === '1' ? '2026-04-30' : '2026-05-31'
     );
     const { closedTrades: bestTrades, ...bestSummary } = best;
     const { closedTrades: validationTrades, ...validationSummary } = validation;

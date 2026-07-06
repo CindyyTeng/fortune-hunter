@@ -1,6 +1,8 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { gunzip } from 'node:zlib';
+import { promisify } from 'node:util';
 import {
   buyExecution as sharedBuyExecution,
   netReturnPct as sharedNetReturnPct,
@@ -12,6 +14,9 @@ import {
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
 const SOURCE_PATH = path.join(ROOT, 'scripts', 'generate-data.mjs');
+const gunzipAsync = promisify(gunzip);
+const HISTORY_SOURCE = process.env.BACKTEST_HISTORY_SOURCE || 'yahoo';
+const OFFICIAL_HISTORY_DIR = path.join(ROOT, 'data', 'market-history', 'processed');
 const yearsArg = process.argv.find(arg => arg.startsWith('--years='));
 const BACKTEST_YEARS = Number(yearsArg?.split('=')[1] || process.env.BACKTEST_YEARS || 10);
 const OUTPUT_LABEL = `${BACKTEST_YEARS}y`;
@@ -398,6 +403,56 @@ function buyExecution(price, quantity) {
   });
 }
 
+async function loadOfficialHistories(startDate, endDate) {
+  const marketFilter = process.env.BACKTEST_OFFICIAL_MARKET || 'ALL';
+  const histories = new Map();
+  const names = new Map();
+  const files = (await fs.readdir(OFFICIAL_HISTORY_DIR, { withFileTypes: true }))
+    .filter(entry => entry.isFile() && /^\d{4}\.json\.gz$/.test(entry.name))
+    .filter(entry => {
+      const year = entry.name.slice(0, 4);
+      return year >= startDate.slice(0, 4) && year <= endDate.slice(0, 4);
+    })
+    .sort((a, b) => a.name.localeCompare(b.name));
+  for (const entry of files) {
+    const payload = JSON.parse((await gunzipAsync(
+      await fs.readFile(path.join(OFFICIAL_HISTORY_DIR, entry.name))
+    )).toString('utf8'));
+    for (const [symbol, rows] of Object.entries(payload.symbols || {})) {
+      if (marketFilter === 'TWSE' && !symbol.endsWith('.TW')) continue;
+      if (marketFilter === 'TPEX' && !symbol.endsWith('.TWO')) continue;
+      if (!histories.has(symbol)) histories.set(symbol, []);
+      const selected = rows.filter(row => row.date >= startDate && row.date <= endDate);
+      histories.get(symbol).push(...selected.map(row => ({
+        date: row.date,
+        open: row.open,
+        high: row.high,
+        low: row.low,
+        close: row.close,
+        volume: row.volume,
+        tradeValue: row.tradeValue,
+        corporateActionSuspected: row.corporateActionSuspected
+      })));
+      const latest = selected.at(-1);
+      if (latest) names.set(symbol, latest);
+    }
+  }
+  return [...histories].map(([yahooSymbol, history]) => {
+    history.sort((a, b) => a.date.localeCompare(b.date));
+    const latest = names.get(yahooSymbol) || {};
+    return {
+      stock: {
+        code: latest.id || yahooSymbol.split('.')[0],
+        name: latest.name || yahooSymbol,
+        market: latest.market === 'TPEX' ? '上櫃' : '上市',
+        yahooSymbol,
+        tradeValue: latest.tradeValue || 0
+      },
+      history
+    };
+  });
+}
+
 function sellExecution(price, quantity) {
   return sharedSellExecution(price, quantity, {
     sellFeePct: SELL_FEE_PCT,
@@ -502,6 +557,7 @@ function buildTailwindMaps(items) {
 }
 
 async function buildGlobalRiskMap() {
+  if (process.env.BACKTEST_SKIP_GLOBAL_HISTORY === '1') return new Map();
   const histories = {};
   await Promise.all(Object.entries(GLOBAL_SYMBOLS).map(async ([key, symbol]) => {
     try {
@@ -937,6 +993,7 @@ function backtestStock(history, stock, analyzeWindow, startDate, tailwindMaps) {
   let cooldownUntil = -1;
   for (let i = startIndex; i < history.length - 2; i += 1) {
     if (i <= cooldownUntil) continue;
+    if (history.slice(Math.max(0, i - 5), i + 1).some(day => day.corporateActionSuspected)) continue;
     const analysis = analyzeWindow(history.slice(0, i + 1), stock, null, false);
     if (analysis.score < CANDIDATE_MIN_SCORE) continue;
     const tailwind = tailwindFor(stock, history[i].date, tailwindMaps);
@@ -1639,23 +1696,31 @@ th{position:sticky;top:0;background:#fff}
 async function main() {
   const core = await loadStrategyCore();
   const startDate = process.env.BACKTEST_START_DATE || yearsAgoTaipeiText();
-  const endDate = todayTaipeiText();
+  const endDate = process.env.BACKTEST_END_DATE || todayTaipeiText();
   const warnings = [];
-  const [twse, tpex] = await Promise.all([
-    core.fetchTwseUniverse(),
-    core.fetchTpexUniverse().catch(error => {
-      warnings.push(`TPEx fetch failed: ${error.message}`);
-      return [];
-    })
-  ]);
-  const universe = FULL_UNIVERSE
-    ? [...twse, ...tpex]
-    : [...twse.slice(0, SYMBOLS_PER_MARKET), ...tpex.slice(0, SYMBOLS_PER_MARKET)];
-  const pool = universe.sort((a, b) => b.tradeValue - a.tradeValue);
-  const historyResults = await core.mapLimit(pool, CONCURRENCY, async stock => {
-    const history = await fetchYahooHistory(stock.yahooSymbol);
-    return { stock, history };
-  });
+  let pool;
+  let historyResults;
+  if (HISTORY_SOURCE === 'official') {
+    historyResults = await loadOfficialHistories(startDate, endDate);
+    pool = historyResults.map(item => item.stock).sort((a, b) => b.tradeValue - a.tradeValue);
+    warnings.push('官方歷史股票池已啟用；疑似公司行動後五個交易日禁止進場，但公司行動事件仍待完整資料源驗證。');
+  } else {
+    const [twse, tpex] = await Promise.all([
+      core.fetchTwseUniverse(),
+      core.fetchTpexUniverse().catch(error => {
+        warnings.push(`TPEx fetch failed: ${error.message}`);
+        return [];
+      })
+    ]);
+    const universe = FULL_UNIVERSE
+      ? [...twse, ...tpex]
+      : [...twse.slice(0, SYMBOLS_PER_MARKET), ...tpex.slice(0, SYMBOLS_PER_MARKET)];
+    pool = universe.sort((a, b) => b.tradeValue - a.tradeValue);
+    historyResults = await core.mapLimit(pool, CONCURRENCY, async stock => {
+      const history = await fetchYahooHistory(stock.yahooSymbol);
+      return { stock, history };
+    });
+  }
   const validHistoryResults = historyResults.filter(item => item.history.length >= 120);
   if (validHistoryResults.length < pool.length) {
     warnings.push(`有效日線 ${validHistoryResults.length}/${pool.length} 檔；其餘資料不足或抓取失敗。`);
@@ -1697,6 +1762,10 @@ async function main() {
     historyRange: HISTORY_RANGE,
     fullUniverse: FULL_UNIVERSE,
     assumptions: {
+      historySource: HISTORY_SOURCE,
+      corporateActionPolicy: HISTORY_SOURCE === 'official'
+        ? '疑似公司行動後五個交易日禁止進場；完整事件資料仍待補齊'
+        : 'Yahoo 原始行情事件處理',
       signal: BUY_SIGNAL,
       entryMode: ENTRY_MODE,
       exitMode: EXIT_MODE,

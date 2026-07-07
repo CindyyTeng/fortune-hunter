@@ -642,7 +642,8 @@ export function simulateSignalMap(context, signalMap, options = {}) {
   });
   for (let dayIndex = 0; dayIndex < dates.length; dayIndex += 1) {
     const date = dates[dayIndex];
-    const regime = context.marketByDate.get(date)?.regime;
+    // 開盤交易只能使用前一交易日收盤後已知的市場狀態。
+    const regime = context.marketByDate.get(dates[dayIndex - 1])?.regime;
     settleCash(portfolio, dayIndex);
     beginPortfolioDay(portfolio, date, dayIndex, regime);
     for (const position of [...portfolio.positions]) {
@@ -664,6 +665,15 @@ export function simulateSignalMap(context, signalMap, options = {}) {
         }, dayIndex);
         continue;
       }
+      if (heldDays >= (position.maxHoldingDays ?? options.holdingDays ?? 5)) {
+        closePosition(portfolio, position, {
+          date,
+          price: bar.open ?? bar.price,
+          reason: '研究固定持有期結束，於開盤出場',
+          type: 'holding_period'
+        }, dayIndex);
+        continue;
+      }
       const exit = simulateExit({
         day: bar,
         stopLoss: position.stopLoss,
@@ -673,12 +683,12 @@ export function simulateSignalMap(context, signalMap, options = {}) {
       });
       if (exit?.price) {
         closePosition(portfolio, position, { ...exit, date }, dayIndex);
-      } else if (heldDays >= (position.maxHoldingDays ?? options.holdingDays ?? 5) || bar === position.bars.at(-1)) {
+      } else if (bar === position.bars.at(-1)) {
         closePosition(portfolio, position, {
           date,
           price: bar.price,
-          reason: '研究固定持有期結束',
-          type: 'holding_period'
+          reason: '可用價格資料結束',
+          type: 'data_end'
         }, dayIndex);
       }
     }
@@ -733,7 +743,7 @@ export function simulateSignalMap(context, signalMap, options = {}) {
   }
   const finalDate = dates.at(-1);
   const finalIndex = dates.length - 1;
-  beginPortfolioDay(portfolio, finalDate, finalIndex, context.marketByDate.get(finalDate)?.regime);
+  beginPortfolioDay(portfolio, finalDate, finalIndex, context.marketByDate.get(dates[finalIndex - 1])?.regime);
   for (const position of [...portfolio.positions]) {
     closePosition(portfolio, position, {
       date: finalDate,
@@ -746,7 +756,7 @@ export function simulateSignalMap(context, signalMap, options = {}) {
   portfolio.previousEquity = portfolio.equityCurve.at(-1)?.equity ?? portfolio.initialCapital;
   recordEquity(portfolio, finalDate, {
     dayIndex: finalIndex,
-    regime: context.marketByDate.get(finalDate)?.regime
+    regime: context.marketByDate.get(dates[finalIndex - 1])?.regime
   });
   return {
     summary: summarizePerformance(portfolio, startDate, endDate),

@@ -276,6 +276,29 @@ function buildDays(trades) {
   return [...days.entries()].sort(([a], [b]) => a.localeCompare(b));
 }
 
+function executableCandidates(trades, entryMode) {
+  if (entryMode !== 'close_confirm') return trades;
+  return trades.flatMap(trade => {
+    const nextBar = trade.forwardPrices?.[1];
+    if (!nextBar?.open) return [];
+    return [{
+      ...trade,
+      signalDate: trade.entryDate,
+      entryDate: nextBar.date,
+      entryPrice: nextBar.open,
+      forwardPrices: trade.forwardPrices.slice(1),
+      markPrices: trade.forwardPrices.slice(1).map(row => ({
+        date: row.date,
+        open: row.open,
+        price: row.price,
+        high: row.high,
+        low: row.low
+      })),
+      executionTimingPolicy: '收盤確認後下一交易日開盤成交'
+    }];
+  });
+}
+
 function buildMarketRegimes(history) {
   const closes = [];
   const returns = [];
@@ -1853,14 +1876,20 @@ function rollingValidation(days, configs, marketRegimes, barsBySymbol) {
 
 async function main() {
   const payload = JSON.parse(await fs.readFile(INPUT, 'utf8'));
-  const candidates = payload.candidateTrades || [];
+  const candidates = executableCandidates(
+    payload.candidateTrades || [],
+    payload.assumptions?.entryMode
+  );
   const datasetSignature = hash({
     searchSpaceVersion: SEARCH_SPACE_VERSION,
     sourceGeneratedAt: payload.generatedAt,
     startDate: payload.startDate,
     endDate: payload.endDate,
     entryMode: payload.assumptions?.entryMode,
-    candidates: candidates.length
+    candidates: candidates.length,
+    executionTimingPolicy: payload.assumptions?.entryMode === 'close_confirm'
+      ? '收盤確認後下一交易日開盤成交'
+      : payload.assumptions?.entryMode
   });
   let ledger = { version: 1, datasets: {} };
   try {

@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
   "generatedAt": "2026-06-16T16:13:34.718Z",
-  "updatedAt": "2026-06-30T20:20:30.110Z",
+  "updatedAt": "2026-07-08T15:51:49.630Z",
   "experiments": [
     {
       "experimentId": "EXP-20260616161335-34c09c70",
@@ -8832,6 +8832,57 @@
       "passedHighProfit": false,
       "allowRetest": false,
       "notes": "10 年 rolling validation 已超越 0050 且回撤較低，但最大回撤仍高於 20%，額外評估期已超越 0050，仍不可紙上交易或實盤。"
+    },
+    {
+      "experimentId": "EXP-20260708155149-d3a606a7",
+      "createdAt": "2026-07-08T15:51:49.630Z",
+      "strategyId": "deployable_leveraged_staged_crash_v1",
+      "strategyFamilyId": "deployable_leveraged_staged_crash_v1:499cfbff2d964f11a3e26fce",
+      "experimentHash": "d3a606a7dca457a92fddfd4a",
+      "dataSources": [
+        "0050_daily_ohlcv",
+        "00631L_daily_ohlcv"
+      ],
+      "parameters": {
+        "family": "fine_staged_crash",
+        "maximumGuardPct": 18
+      },
+      "trainPeriod": {
+        "months": 36
+      },
+      "validationPeriod": {
+        "months": 12,
+        "stepMonths": 12
+      },
+      "costModel": {
+        "buyFeePct": 0.1425,
+        "sellFeePct": 0.1425,
+        "sellTaxPct": 0.1,
+        "buySlippagePct": 0.15,
+        "sellSlippagePct": 0.15,
+        "minimumFee": 20,
+        "boardLotShares": 1000
+      },
+      "executionModel": "T 日收盤訊號、T+1 開盤成交、T+2 資金交割",
+      "metrics": {
+        "startDate": "2019-03-01",
+        "endDate": "2026-02-28",
+        "endingEquity": 14669491,
+        "averageMonthlyEquityReturnPct": 3.5426,
+        "annualizedReturnPct": 46.7678,
+        "profitFactor": 8.3852,
+        "maximumDrawdownPct": -20.1693,
+        "winRatePct": 72.1649,
+        "trades": 97,
+        "negativeMonths": 33
+      },
+      "resultStatus": "inconclusive",
+      "failureReason": null,
+      "overfitFlag": false,
+      "passedMinimum": true,
+      "passedHighProfit": true,
+      "allowRetest": false,
+      "notes": "長期 walk-forward 已達研究目標，但 97 筆仍低於 300 筆實盤證據門檻；下一步只能做全新期間紙上觀察。"
     }
   ]
 }

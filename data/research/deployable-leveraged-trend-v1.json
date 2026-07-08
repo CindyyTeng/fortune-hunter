@@ -1,0 +1,189 @@
+{
+  "generatedAt": "2026-07-08T15:51:49.621Z",
+  "strategyId": "deployable_leveraged_staged_crash_v1",
+  "methodology": "36 個月訓練／12 個月驗證／每次前進 12 個月；T 日訊號、T+1 開盤成交、T+2 交割",
+  "executionCosts": {
+    "buyFeePct": 0.1425,
+    "sellFeePct": 0.1425,
+    "sellTaxPct": 0.1,
+    "buySlippagePct": 0.15,
+    "sellSlippagePct": 0.15,
+    "minimumFee": 20,
+    "boardLotShares": 1000
+  },
+  "selections": [
+    {
+      "validationStart": "2019-03-01",
+      "validationEnd": "2020-02-29",
+      "configId": "fine_dd8_warning5_60_guard18_cool40_reentry2",
+      "metrics": {
+        "startDate": "2019-03-01",
+        "endDate": "2020-02-29",
+        "endingEquity": 1251744,
+        "averageMonthlyEquityReturnPct": 2.0917,
+        "annualizedReturnPct": 25.1744,
+        "profitFactor": 7.2744,
+        "maximumDrawdownPct": -14.4019,
+        "winRatePct": 66.6667,
+        "trades": 9,
+        "negativeMonths": 4
+      }
+    },
+    {
+      "validationStart": "2020-03-01",
+      "validationEnd": "2021-02-28",
+      "configId": "fine_dd9_warning5_50_guard18_cool40_reentry0",
+      "metrics": {
+        "startDate": "2020-03-01",
+        "endDate": "2021-02-28",
+        "endingEquity": 2224320,
+        "averageMonthlyEquityReturnPct": 7.2844,
+        "annualizedReturnPct": 122.432,
+        "profitFactor": 15.5551,
+        "maximumDrawdownPct": -11.2163,
+        "winRatePct": 92.8571,
+        "trades": 14,
+        "negativeMonths": 5
+      }
+    },
+    {
+      "validationStart": "2021-03-01",
+      "validationEnd": "2022-02-28",
+      "configId": "fine_dd9_warning5_60_guard18_cool30_reentry0",
+      "metrics": {
+        "startDate": "2021-03-01",
+        "endDate": "2022-02-28",
+        "endingEquity": 1030095,
+        "averageMonthlyEquityReturnPct": 0.4652,
+        "annualizedReturnPct": 3.0095,
+        "profitFactor": 1.2854,
+        "maximumDrawdownPct": -17.1481,
+        "winRatePct": 63.1579,
+        "trades": 19,
+        "negativeMonths": 6
+      }
+    },
+    {
+      "validationStart": "2022-03-01",
+      "validationEnd": "2023-02-28",
+      "configId": "fine_dd9_warning5_60_guard18_cool30_reentry0",
+      "metrics": {
+        "startDate": "2022-03-01",
+        "endDate": "2023-02-28",
+        "endingEquity": 1201554,
+        "averageMonthlyEquityReturnPct": 1.7458,
+        "annualizedReturnPct": 20.1554,
+        "profitFactor": 4.0392,
+        "maximumDrawdownPct": -9.5194,
+        "winRatePct": 81.8182,
+        "trades": 11,
+        "negativeMonths": 4
+      }
+    },
+    {
+      "validationStart": "2023-03-01",
+      "validationEnd": "2024-02-29",
+      "configId": "fine_dd8_warning5_55_guard18_cool30_reentry0",
+      "metrics": {
+        "startDate": "2023-03-01",
+        "endDate": "2024-02-29",
+        "endingEquity": 1322921,
+        "averageMonthlyEquityReturnPct": 2.5724,
+        "annualizedReturnPct": 32.2921,
+        "profitFactor": 4.3189,
+        "maximumDrawdownPct": -16.4991,
+        "winRatePct": 56.25,
+        "trades": 16,
+        "negativeMonths": 6
+      }
+    },
+    {
+      "validationStart": "2024-03-01",
+      "validationEnd": "2025-02-28",
+      "configId": "fine_dd8_warning6_55_guard18_cool30_reentry0",
+      "metrics": {
+        "startDate": "2024-03-01",
+        "endDate": "2025-02-28",
+        "endingEquity": 1211481,
+        "averageMonthlyEquityReturnPct": 1.812,
+        "annualizedReturnPct": 21.1481,
+        "profitFactor": 2.2395,
+        "maximumDrawdownPct": -20.1693,
+        "winRatePct": 68.75,
+        "trades": 16,
+        "negativeMonths": 5
+      }
+    },
+    {
+      "validationStart": "2025-03-01",
+      "validationEnd": "2026-02-28",
+      "configId": "fine_dd8_warning4_60_guard18_cool30_reentry0",
+      "metrics": {
+        "startDate": "2025-03-01",
+        "endDate": "2026-02-28",
+        "endingEquity": 2656019,
+        "averageMonthlyEquityReturnPct": 8.8265,
+        "annualizedReturnPct": 165.6019,
+        "profitFactor": 85.2397,
+        "maximumDrawdownPct": -10.3525,
+        "winRatePct": 83.3333,
+        "trades": 12,
+        "negativeMonths": 1
+      }
+    }
+  ],
+  "aggregate": {
+    "startDate": "2019-03-01",
+    "endDate": "2026-02-28",
+    "endingEquity": 14669491,
+    "averageMonthlyEquityReturnPct": 3.5426,
+    "annualizedReturnPct": 46.7678,
+    "profitFactor": 8.3852,
+    "maximumDrawdownPct": -20.1693,
+    "winRatePct": 72.1649,
+    "trades": 97,
+    "negativeMonths": 33
+  },
+  "benchmark0050": {
+    "startDate": "2019-03-01",
+    "endDate": "2026-02-28",
+    "endingEquity": 4205175,
+    "averageMonthlyEquityReturnPct": 1.8967,
+    "annualizedReturnPct": 22.7756,
+    "profitFactor": null,
+    "maximumDrawdownPct": -36.3622,
+    "winRatePct": 100,
+    "trades": 1,
+    "negativeMonths": 32
+  },
+  "benchmark00631L": {
+    "startDate": "2019-03-01",
+    "endDate": "2026-02-28",
+    "endingEquity": 15199174,
+    "averageMonthlyEquityReturnPct": 3.8971,
+    "annualizedReturnPct": 47.5134,
+    "profitFactor": null,
+    "maximumDrawdownPct": -55.1364,
+    "winRatePct": 100,
+    "trades": 1,
+    "negativeMonths": 29
+  },
+  "strategyRules": {
+    "instrument": "00631L.TW",
+    "normalExposurePct": 100,
+    "warningExposurePct": "由訓練期在 50%／55%／60% 中選擇",
+    "warning": "0050 跌破 MA20，或距 60 日高點達預警回撤時降曝險",
+    "crashExit": "0050 跌破 MA20、距 60 日高點達 7%～9%，且 5 日動能低於 -2% 時清倉",
+    "reentry": "0050 重新站上 MA20，且 5 日動能恢復後加回",
+    "accountGuard": "帳戶自高點回撤達 18% 時清倉並冷卻 30～40 個交易日"
+  },
+  "readiness": {
+    "targetMonthlyThreePctPassed": true,
+    "beats0050": true,
+    "drawdownImprovedVsPrior": true,
+    "tradesImprovedVsPrior": true,
+    "paperTradingAllowed": false,
+    "liveTradingAllowed": false,
+    "reason": "長期 walk-forward 已達研究目標，但 97 筆仍低於 300 筆實盤證據門檻；下一步只能做全新期間紙上觀察。"
+  }
+}

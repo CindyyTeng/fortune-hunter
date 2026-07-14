@@ -57,7 +57,7 @@ const PROFIT5_REFINEMENT_ONLY = process.argv.includes('--profit5-refine-only')
   || MARKET_BAND_ONLY
   || MONTHLY_PYRAMID_ONLY;
 const SEARCH_SPACE_VERSION = 5;
-const RESULT_LOGIC_VERSION = 2;
+const RESULT_LOGIC_VERSION = 4;
 const BUY_SIGNAL = '買入候選';
 const WAIT_SIGNAL = '等待進場';
 const INITIAL_CAPITAL = 1_000_000;
@@ -738,7 +738,10 @@ function simulate(allDays, months, config, marketRegimes = new Map()) {
     equity = availableCash
       + unsettled.reduce((sum, item) => sum + item.amount, 0)
       + open.reduce((sum, item) => sum + item.markValue, 0);
-    if (index === accountCooldownUntil + 1) accountRiskPeak = equity;
+    if (accountCooldownUntil >= 0 && index > accountCooldownUntil) {
+      accountRiskPeak = equity;
+      accountCooldownUntil = -1;
+    }
     accountRiskPeak = Math.max(accountRiskPeak, equity);
     const accountDrawdownPct = (equity / accountRiskPeak - 1) * 100;
     if (config.accountDrawdownBrakePct
@@ -814,14 +817,18 @@ function simulate(allDays, months, config, marketRegimes = new Map()) {
       if (!quantity) continue;
       const buy = buyExecution(trade.entryPrice, quantity);
       availableCash -= buy.total;
-      open.push({
+      const position = {
         trade,
         quantity,
         buy,
         entryEquity: equity,
         markPrice: trade.entryPrice,
         markValue: sellExecution(trade.entryPrice, quantity).net
-      });
+      };
+      open.push(position);
+      if (trade.exitDate === date) {
+        closePosition(position, trade.exitPrice, date, month, index, trade.exitReason);
+      }
       equity = availableCash
         + unsettled.reduce((sum, item) => sum + item.amount, 0)
         + open.reduce((sum, item) => sum + item.markValue, 0);
@@ -2467,7 +2474,7 @@ function targetedMarketBandConfigs(base) {
 }
 
 function targetedMonthlyPyramidConfigs(base) {
-  return [{
+  const core = {
     ...base,
     buyOnly: false,
     minScore: 65,
@@ -2511,16 +2518,42 @@ function targetedMonthlyPyramidConfigs(base) {
     blackSwanDayDropPct: -2,
     blackSwanFiveDayDropPct: -4,
     blackSwanVol20Pct: 35,
-    exitRule: {
-      holdDays: 10,
-      trail: null,
-      noFollow: false,
-      stopLossPct: 10,
-      stopMode: 'close'
-    },
     collectTrades: false,
     researchVariant: 'profit5_stock_winner_continuation_v1'
-  }];
+  };
+  const rows = [];
+  for (const standardPct of [12, 18, 22, 30]) {
+    for (const accountRiskPct of [1.5, 2.5, 4]) {
+      for (const maxOpenPositions of [4, 8, 12]) {
+        for (const accountDrawdownBrakePct of [null, -12, -18]) {
+          for (const monthlyEquityBrakePct of [null, -6]) {
+            rows.push({
+              ...core,
+              standardPct,
+              defensivePct: standardPct,
+              exploratoryPct: standardPct,
+              maxPositionPct: Math.min(40, standardPct * 1.5),
+              accountRiskPct,
+              starterRiskPct: accountRiskPct,
+              maxOpenPositions,
+              accountDrawdownBrakePct,
+              monthlyEquityBrakePct,
+              exitRule: {
+                holdDays: 20,
+                trail: null,
+                noFollow: false,
+                stopLossPct: 10,
+                stopMode: 'close'
+              },
+              researchVariant: 'profit5_stock_winner_risk_frontier_v1',
+              collectTrades: false
+            });
+          }
+        }
+      }
+    }
+  }
+  return rows;
 }
 
 function targetedMarketMomentumSizingConfigs(base) {
@@ -4473,7 +4506,8 @@ async function main() {
   const turnoverSeedSource = [
     ...(previousOutput?.variantTop?.profit5_high_turnover_momentum_v1 || []),
     ...(previousOutput?.top || [])
-  ].find(result => result.config?.researchVariant === 'profit5_high_turnover_momentum_v1');
+  ].find(result => result.config?.researchVariant === 'profit5_high_turnover_momentum_v1')
+    || previousOutput?.bestBalanced;
   if (STOCK_OBJECTIVE === 'profit5' && turnoverSeedSource?.config) {
     const turnoverSeed = { ...turnoverSeedSource.config };
     delete turnoverSeed.collectTrades;

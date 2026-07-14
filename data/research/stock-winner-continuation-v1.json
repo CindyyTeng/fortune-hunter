@@ -1,53 +1,57 @@
 {
-  "generatedAt": "2026-07-14T00:00:00+08:00",
+  "generatedAt": "2026-07-14T23:59:00+08:00",
   "strategyId": "stock_winner_continuation_v1",
-  "universe": "台股普通股，不含 ETF 與 0050",
+  "universe": "台股四位數普通股，排除 ETF 與 0050",
   "status": "research_candidate_not_deployable",
   "targetMonthlyReturnPct": 5,
   "targetMet": false,
-  "fullPeriod": {
-    "startMonth": "2016-06",
+  "returnFocused": {
+    "startMonth": "2016-08",
     "endMonth": "2026-06",
     "months": 119,
-    "averageMonthlyEquityReturnPct": 2.1546,
-    "maximumDrawdownPct": -19.83,
-    "trades": 395,
-    "winRatePct": 50.38,
-    "profitFactor": 2.389,
-    "portfolioReturnPct": 923.4
+    "averageMonthlyEquityReturnPct": 2.3036,
+    "maximumDrawdownPct": -26.52,
+    "trades": 523
   },
-  "validation": {
+  "riskControlledFixedValidation": {
     "startMonth": "2022-01",
     "endMonth": "2026-06",
     "months": 53,
-    "averageMonthlyEquityReturnPct": 3.6232,
-    "targetGapPct": 1.3768,
-    "maximumDrawdownPct": -19.83,
-    "trades": 184,
-    "winRatePct": 58.15,
-    "profitFactor": 2.713
+    "averageMonthlyEquityReturnPct": 1.7036,
+    "annualizedReturnPct": 21.11,
+    "maximumDrawdownPct": -16.52,
+    "trades": 171,
+    "winRatePct": 49.12,
+    "profitFactor": 2.25,
+    "benchmarkAverageMonthlyReturnPct": 2.38
   },
-  "rules": {
-    "selection": "普通股、評分至少 65、20 日大盤動能至少 3%、接近一年高點、20 日均成交值至少 3,000 萬元，排除爆量出貨",
-    "ranking": "推薦分數、RSI、量比與 20 日波動的品質排序",
-    "entry": "訊號確認後依資料集的可成交進場價買進，納入手續費與滑價",
-    "exit": "最多持有 10 個交易日；收盤跌破 10% 停損；黑天鵝期間停止新倉",
-    "position": "一般單檔 22%，單檔上限 30%，最多 12 檔；單筆帳戶風險 2.5%",
-    "profitContinuation": "當月已實現報酬達 2% 後，部位與風險最多放大 1.5 倍；達 20% 後停止新倉",
-    "risk": "連續 6 筆虧損暫停 8 個交易日；不使用融資、不以 ETF 作為主要標的"
+  "riskControlledRollingValidation": {
+    "startMonth": "2021-01",
+    "endMonth": "2026-05",
+    "months": 65,
+    "trainMonthsPerFold": 54,
+    "validationMonthsPerFold": 18,
+    "averageMonthlyEquityReturnPct": 1.2,
+    "annualizedReturnPct": 14.27,
+    "maximumDrawdownPct": -13.49,
+    "trades": 163,
+    "winRatePct": 45.4,
+    "profitFactor": 1.78,
+    "benchmarkAverageMonthlyReturnPct": 2.1
   },
   "execution": {
+    "forwardPriceDays": 20,
     "settlement": "T+2",
     "buyFeePct": 0.1425,
     "sellFeePct": 0.1425,
     "sellTaxPct": 0.3,
     "buySlippagePct": 0.15,
-    "sellSlippagePct": 0.15
+    "sellSlippagePct": 0.15,
+    "sameDayExitSupported": true,
+    "duplicatePositionBlocked": true
   },
-  "warnings": [
-    "未達月均 5% 目標",
-    "策略是在同一後段驗證區間多次研究後選出，仍有驗證集過度擬合風險",
-    "目前歷史股票池仍可能有倖存者偏差",
-    "未完成全新未碰觸區間與即時紙上交易驗證，因此不可直接實盤或接真實券商下單"
-  ]
+  "passed": false,
+  "paperTradingReady": false,
+  "liveTradingReady": false,
+  "conclusion": "尚未找到月均 5% 的可實盤純個股策略；風控方案雖將最大回撤壓到 20% 以下，但報酬仍輸給同期 0050／大盤。"
 }

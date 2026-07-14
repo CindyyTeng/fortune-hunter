@@ -706,6 +706,7 @@ export function simulateSignalMap(context, signalMap, options = {}) {
     }
     const dayEntries = [...(entries.get(date) || [])].sort((a, b) => b.score - a.score);
     for (const candidate of dayEntries) {
+      if (portfolio.positions.some(position => position.symbol === candidate.symbol)) continue;
       const nextDay = candidate.futureBars[0];
       const fill = simulateEntry({ mode: 'next_open_market', nextDay });
       if (!fill) continue;

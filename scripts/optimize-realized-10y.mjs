@@ -16,6 +16,11 @@ const DIAGNOSTIC_OUTPUT = new URL('../data/realized-strategy-diagnostics-10y.jso
 const MARKET_HISTORY = new URL('../data/market-regime-history-10y.json', import.meta.url);
 const SEARCH_LEDGER = new URL('../data/strategy-search-ledger-10y.json', import.meta.url);
 const EXPOSURE_FRONTIER_OUTPUT = new URL('../data/realized-exposure-frontier-10y.json', import.meta.url);
+const STOCK_META_OUTPUT = new URL('../data/research/stock-meta-selector-v1.json', import.meta.url);
+const STOCK_VARIANT_DIAGNOSTIC_OUTPUT = new URL(
+  '../data/research/stock-variant-trade-diagnostics-v1.json',
+  import.meta.url
+);
 const ETF_HISTORY = new URL('../data/research/deployable-etf-rotation-history.json', import.meta.url);
 const LEVERAGED_ETF_HISTORY = new URL('../data/research/deployable-etf-history.json', import.meta.url);
 const ROLLING_SELECTION_MODE = process.env.ROLLING_SELECTION_MODE || 'highest_average';
@@ -28,7 +33,31 @@ const CAPITAL_ONLY = process.argv.includes('--capital-only');
 const INDICATORS_ONLY = process.argv.includes('--indicators-only');
 const RISK_ONLY = process.argv.includes('--risk-only');
 const EXITS_ONLY = process.argv.includes('--exits-only');
-const SEARCH_SPACE_VERSION = 3;
+const CORE_WEAK_ONLY = process.argv.includes('--core-weak-only');
+const STRONG_CORE_FRONTIER_ONLY = process.argv.includes('--strong-core-frontier-only');
+const SELECTED_ALPHA_ONLY = process.argv.includes('--selected-alpha-only');
+const ALPHA_RANKING_ONLY = process.argv.includes('--alpha-ranking-only');
+const ALPHA_RISK_FRONTIER_ONLY = process.argv.includes('--alpha-risk-frontier-only');
+const ALPHA_BREADTH_ONLY = process.argv.includes('--alpha-breadth-only');
+const BREADTH_RISK_ONLY = process.argv.includes('--breadth-risk-only');
+const BREADTH_EXIT_ONLY = process.argv.includes('--breadth-exit-only');
+const MARKET_BAND_ONLY = process.argv.includes('--market-band-only');
+const MONTHLY_PYRAMID_ONLY = process.argv.includes('--monthly-pyramid-only');
+const STOCK_OBJECTIVE = process.argv.find(argument => argument.startsWith('--stock-objective='))
+  ?.split('=')[1] || process.env.STOCK_OBJECTIVE;
+const PROFIT5_REFINEMENT_ONLY = process.argv.includes('--profit5-refine-only')
+  || CORE_WEAK_ONLY
+  || STRONG_CORE_FRONTIER_ONLY
+  || SELECTED_ALPHA_ONLY
+  || ALPHA_RANKING_ONLY
+  || ALPHA_RISK_FRONTIER_ONLY
+  || ALPHA_BREADTH_ONLY
+  || BREADTH_RISK_ONLY
+  || BREADTH_EXIT_ONLY
+  || MARKET_BAND_ONLY
+  || MONTHLY_PYRAMID_ONLY;
+const SEARCH_SPACE_VERSION = 5;
+const RESULT_LOGIC_VERSION = 2;
 const BUY_SIGNAL = '買入候選';
 const WAIT_SIGNAL = '等待進場';
 const INITIAL_CAPITAL = 1_000_000;
@@ -157,6 +186,21 @@ function isBlackSwan(regime, config) {
 }
 
 function passes(trade, config) {
+  if (config.conditionalRegimeStrategy) {
+    const strongMarket = trade.marketRegime?.mom20 >= config.strongMarketMom20Pct;
+    if (strongMarket) {
+      return passes(trade, {
+        ...config,
+        conditionalRegimeStrategy: false,
+        minNearYearHigh: config.strongMarketMinNearYearHigh
+      });
+    }
+    return trade.signalScore >= config.weakMarketMinScore
+      && trade.avg20TradeValue >= config.minTradeValue
+      && trade.return5Pct >= config.weakMarketMinReturn5Pct
+      && trade.volumeRatio1To20 <= config.weakMarketMaxVolumeRatio1To20
+      && !isBlackSwan(trade.marketRegime, config);
+  }
   if (config.buyOnly && trade.signal !== BUY_SIGNAL) return false;
   if (trade.signalScore < config.minScore) return false;
   const required = trade.signal === BUY_SIGNAL ? config.buyConfirmations : config.watchConfirmations;
@@ -170,8 +214,11 @@ function passes(trade, config) {
   if (rewardRisk(trade) < config.minRewardRisk) return false;
   if (trade.marketMovePct < config.marketFloor) return false;
   if (trade.themeMovePct < config.themeFloor) return false;
+  if (trade.themeMovePct > (config.maxThemeMovePct ?? 100)) return false;
   if (trade.globalCompositePct < config.globalFloor) return false;
+  if (trade.globalCompositePct > (config.maxGlobalCompositePct ?? 100)) return false;
   if (trade.asiaCompositePct < config.asiaFloor) return false;
+  if (trade.asiaCompositePct > (config.maxAsiaCompositePct ?? 100)) return false;
   if (config.requireMa20Rising && !trade.ma20Rising) return false;
   if (config.excludeHighVolumeDistribution && trade.highVolumeDistribution) return false;
   if (trade.distanceToMa20Pct < (config.minDistanceToMa20Pct ?? -100)) return false;
@@ -179,6 +226,7 @@ function passes(trade, config) {
   if (trade.volumeRatio1To20 < (config.minVolumeRatio1To20 ?? 0)) return false;
   if (trade.volumeRatio1To20 > (config.maxVolumeRatio1To20 ?? 100)) return false;
   if (trade.intradayMomentum20Pct < (config.minIntradayMomentum20Pct ?? -100)) return false;
+  if (trade.intradayMomentum20Pct > (config.maxIntradayMomentum20Pct ?? 100)) return false;
   if (trade.overnightMomentum20Pct > (config.maxOvernightMomentum20Pct ?? 100)) return false;
   if (trade.nearYearHigh < (config.minNearYearHigh ?? 0)) return false;
   if (trade.nearYearHigh > (config.maxNearYearHigh ?? 100)) return false;
@@ -191,10 +239,16 @@ function passes(trade, config) {
   if (trade.volatilityCompression5To20 > (config.maxVolatilityCompression ?? 100)) return false;
   if (trade.stochastic14 < (config.minStochastic14 ?? 0)) return false;
   if (trade.stochastic14 > (config.maxStochastic14 ?? 100)) return false;
+  if (trade.upperWickRatio > (config.maxUpperWickRatio ?? 100)) return false;
   if (config.requireDirectionalTrend && !trade.directionalTrendUp) return false;
   if (config.requireDonchianBreakout && !trade.donchian20Breakout) return false;
+  if (config.excludeDonchianBreakout && trade.donchian20Breakout) return false;
   if (config.priceVolumeMode === 'exclude_flat_down'
     && trade.priceVolumeState === 'flat_volume_down') return false;
+  if (config.priceVolumeMode === 'exclude_weak_volume'
+    && ['price_up_volume_down', 'flat_down_volume_up', 'flat_volume_down'].includes(trade.priceVolumeState)) {
+    return false;
+  }
   if (config.priceVolumeMode === 'momentum_only'
     && !['price_up_volume_up', 'neutral'].includes(trade.priceVolumeState)) return false;
   if (config.priceVolumeMode === 'price_volume_up'
@@ -213,6 +267,16 @@ function passes(trade, config) {
     }
   }
   if ((config.blackSwanMode ?? 'none') !== 'none' && !trade.marketRegime) return false;
+  if (trade.marketRegime) {
+    if (trade.marketRegime.mom1 < (config.minMarketMom1Pct ?? -100)) return false;
+    if (trade.marketRegime.mom1 > (config.maxMarketMom1Pct ?? 100)) return false;
+    if (trade.marketRegime.mom5 < (config.minMarketMom5Pct ?? -100)) return false;
+    if (trade.marketRegime.mom5 > (config.maxMarketMom5Pct ?? 100)) return false;
+    if (trade.marketRegime.mom20 < (config.minMarketMom20Pct ?? -100)) return false;
+    if (trade.marketRegime.mom20 > (config.maxMarketMom20Pct ?? 100)) return false;
+    if (trade.marketRegime.vol20 < (config.minMarketVol20Pct ?? 0)) return false;
+    if (trade.marketRegime.vol20 > (config.maxMarketVol20Pct ?? 100)) return false;
+  }
   if (isBlackSwan(trade.marketRegime, config)) return false;
   return true;
 }
@@ -250,6 +314,23 @@ function plannedPositionPct(trade, config) {
       && regime.mom5 >= config.momentumCrashReboundPct) {
       pct *= config.momentumCrashMultiplier;
     }
+  }
+  if (config.marketMomentumPositioning && trade.marketRegime) {
+    const strong = trade.marketRegime.mom5 >= config.strongMarketMom5Pct
+      && trade.marketRegime.mom20 >= config.strongMarketMom20Pct;
+    pct *= strong
+      ? config.strongMarketPositionMultiplier
+      : config.weakMarketPositionMultiplier;
+  }
+  if (config.conditionalRegimeStrategy && trade.marketRegime) {
+    pct = trade.marketRegime.mom20 >= config.strongMarketMom20Pct
+      ? config.strongMarketPositionPct
+      : config.weakMarketPositionPct;
+  }
+  if (config.marketBandPositioning && trade.marketRegime) {
+    pct = trade.marketRegime.mom20 <= config.marketBandUpperMom20Pct
+      ? config.marketBandCorePositionPct
+      : config.marketBandHotPositionPct;
   }
   return Math.min(config.maxPositionPct, pct);
 }
@@ -386,10 +467,18 @@ function applyExitRule(trade, rule) {
   const stopLoss = stopLossPct
     ? Math.max(trade.stopLoss, trade.entryPrice * (1 - stopLossPct / 100))
     : trade.stopLoss;
-  const endIndex = Math.min(rule.holdDays - 1, forward.length - 1);
+  const takeProfit = rule.takeProfitPct
+    ? trade.entryPrice * (1 + rule.takeProfitPct / 100)
+    : null;
+  const holdDays = rule.conditionalRegime
+    ? trade.marketRegime?.mom20 >= rule.strongMarketMom20Pct
+      ? rule.strongHoldDays
+      : rule.weakHoldDays
+    : rule.holdDays;
+  const endIndex = Math.min(holdDays - 1, forward.length - 1);
   let exitIndex = endIndex;
   let exitPrice = forward[endIndex].price;
-  let exitReason = `固定持有 ${rule.holdDays} 天`;
+  let exitReason = `固定持有 ${holdDays} 天`;
   let maxHigh = trade.entryPrice;
 
   for (let index = 0; index <= endIndex; index += 1) {
@@ -399,6 +488,7 @@ function applyExitRule(trade, rule) {
     const executionExit = simulateExit({
       day,
       stopLoss,
+      takeProfit,
       trailingStop: trailPrice,
       closeStop: rule.stopMode === 'close'
     });
@@ -479,6 +569,27 @@ function rank(entries, mode) {
       return trade.signalScore
         + (trade.return20Pct || 0) / Math.max(trade.atr14Pct || 1, 1) * 10
         + (trade.nearYearHigh || 0) * 20;
+    }
+    if (mode === 'volumeRsiQuality') {
+      return trade.signalScore
+        + (trade.rsi14 || 0) * 0.5
+        + Math.min(trade.volumeRatio1To20 || 0, 4) * 10
+        - (trade.std20Pct || 0) * 5
+        - Math.max((trade.stochastic14 || 0) - 80, 0);
+    }
+    if (mode === 'controlledBreakout') {
+      return trade.signalScore
+        + Math.min(trade.volumeRatio1To20 || 0, 4) * 8
+        + Math.min(trade.distanceToMa20Pct || 0, 12) * 2
+        - (trade.std20Pct || 0) * 4
+        - Math.abs(trade.overnightMomentum20Pct || 0)
+        - (trade.upperWickRatio || 0) * 20;
+    }
+    if (mode === 'intradayReversalQuality') {
+      return trade.signalScore
+        + Math.min(trade.volumeRatio1To20 || 0, 4) * 8
+        - (trade.intradayMomentum20Pct || 0) * 1.5
+        - (trade.std20Pct || 0) * 3;
     }
     return trade.gapUpPct * 20 + confirmations(trade) * 5 + trade.signalScore;
   };
@@ -683,11 +794,22 @@ function simulate(allDays, months, config, marketRegimes = new Map()) {
         )).length >= config.maxPositionsPerTheme);
         if (themeConcentration) continue;
       }
-      const plannedPct = plannedPositionPct(trade, config);
+      let plannedPct = plannedPositionPct(trade, config);
+      if (config.monthPerformancePositioning) {
+        plannedPct *= monthReturnPct >= config.monthPerformanceTriggerPct
+          ? config.positiveMonthPositionMultiplier
+          : config.negativeMonthPositionMultiplier;
+        plannedPct = Math.min(config.maxPositionPct, plannedPct);
+      }
       const budget = Math.min(availableCash, equity * plannedPct / 100);
-      const activeRiskPct = monthReturnPct < config.riskBoostAfterPct
+      let activeRiskPct = monthReturnPct < config.riskBoostAfterPct
         ? config.starterRiskPct
         : config.accountRiskPct;
+      if (config.monthPerformancePositioning) {
+        activeRiskPct *= monthReturnPct >= config.monthPerformanceTriggerPct
+          ? config.positiveMonthRiskMultiplier
+          : config.negativeMonthRiskMultiplier;
+      }
       const quantity = affordableQuantity(trade, budget, equity * activeRiskPct / 100);
       if (!quantity) continue;
       const buy = buyExecution(trade.entryPrice, quantity);
@@ -762,6 +884,12 @@ function simulate(allDays, months, config, marketRegimes = new Map()) {
 }
 
 function compare(a, b) {
+  if (STOCK_OBJECTIVE === 'profit5') {
+    return profit5StockScore(b) - profit5StockScore(a);
+  }
+  if (STOCK_OBJECTIVE === 'deployable') {
+    return deployableStockScore(b) - deployableStockScore(a);
+  }
   return Math.min(b.train.hit / b.train.months, b.test.hit / b.test.months)
       - Math.min(a.train.hit / a.train.months, a.test.hit / a.test.months)
     || b.full.hit - a.full.hit
@@ -772,6 +900,12 @@ function compare(a, b) {
 }
 
 function compareCashFirst(a, b) {
+  if (STOCK_OBJECTIVE === 'profit5') {
+    return profit5StockScore(b) - profit5StockScore(a);
+  }
+  if (STOCK_OBJECTIVE === 'deployable') {
+    return deployableStockScore(b) - deployableStockScore(a);
+  }
   return a.full.negative - b.full.negative
     || b.full.worst - a.full.worst
     || Math.min(b.train.hit / b.train.months, b.test.hit / b.test.months)
@@ -779,6 +913,50 @@ function compareCashFirst(a, b) {
     || b.full.hit - a.full.hit
     || b.full.average - a.full.average
     || b.maxDrawdownPct - a.maxDrawdownPct;
+}
+
+function deployableStockScore(result) {
+  const trades = result.trades || 0;
+  const drawdown = result.maxDrawdownPct || -100;
+  const tradePenalty = trades < 300 ? (300 - trades) * 0.08 : 0;
+  const drawdownPenalty = drawdown < -20 ? Math.abs(drawdown + 20) * 0.55 : 0;
+  const worstMonthPenalty = result.full.worst < -8 ? Math.abs(result.full.worst + 8) * 0.35 : 0;
+  const consistency = Math.min(
+    result.train.hit / Math.max(1, result.train.months),
+    result.test.hit / Math.max(1, result.test.months)
+  ) * 12;
+  const negativeMonthPenalty = result.full.negative * 0.08;
+  return result.test.average * 3
+    + result.full.average
+    + consistency
+    + Math.min(trades, 600) / 120
+    + drawdown * 0.08
+    - tradePenalty
+    - drawdownPenalty
+    - worstMonthPenalty
+    - negativeMonthPenalty;
+}
+
+function profit5StockScore(result) {
+  const trades = result.trades || 0;
+  const drawdown = result.maxDrawdownPct || -100;
+  const tradePenalty = trades < 300 ? (300 - trades) * 0.12 : 0;
+  const drawdownPenalty = drawdown < -20 ? Math.abs(drawdown + 20) * 1.2 : 0;
+  const worstMonthPenalty = result.test.worst < -8 ? Math.abs(result.test.worst + 8) * 0.7 : 0;
+  const negativeMonthPenalty = result.test.negative * 0.1 + result.full.negative * 0.03;
+  const consistency = Math.min(
+    result.train.average,
+    result.test.average
+  );
+  return result.test.average * 7
+    + result.full.average * 1.5
+    + consistency * 2
+    + Math.min(trades, 800) / 90
+    + Math.max(drawdown, -25) * 0.08
+    - tradePenalty
+    - drawdownPenalty
+    - worstMonthPenalty
+    - negativeMonthPenalty;
 }
 
 function random(seed = 20260609) {
@@ -835,7 +1013,7 @@ function randomConfig(rand) {
     maxStochastic14: pick(rand, [80, 90, 100]),
     requireDirectionalTrend: pick(rand, [false, false, true]),
     requireDonchianBreakout: pick(rand, [false, false, true]),
-    priceVolumeMode: pick(rand, ['none', 'none', 'exclude_flat_down', 'momentum_only', 'price_volume_up']),
+    priceVolumeMode: pick(rand, ['none', 'none', 'exclude_flat_down', 'exclude_weak_volume', 'momentum_only', 'price_volume_up']),
     regimeMode: pick(rand, ['none', 'none', 'avoid_both', 'require_above_ma', 'require_momentum', 'require_up_continuation']),
     regimeSlowMa: pick(rand, [20, 40, 60, 120, 200]),
     regimeMomentumDays: pick(rand, [1, 3, 5, 10, 20]),
@@ -920,7 +1098,7 @@ function refineConfig(rand, base) {
     maxStochastic14: pick(rand, [80, 90, 100]),
     requireDirectionalTrend: pick(rand, [false, false, true]),
     requireDonchianBreakout: pick(rand, [false, false, true]),
-    priceVolumeMode: pick(rand, ['none', 'exclude_flat_down', 'momentum_only', 'price_volume_up']),
+    priceVolumeMode: pick(rand, ['none', 'exclude_flat_down', 'exclude_weak_volume', 'momentum_only', 'price_volume_up']),
     regimeMode: pick(rand, ['none', 'none', 'avoid_both', 'require_up_continuation']),
     regimeSlowMa: pick(rand, [20, 40, 60, 120]),
     regimeMomentumDays: pick(rand, [3, 5, 10, 20]),
@@ -962,7 +1140,7 @@ function targetedFactorConfigs(base) {
           for (const minScore of [65, 75]) {
             for (const minGap of [0, 2]) {
               for (const rankMode of ['gap', 'technicalMomentum']) {
-                for (const priceVolumeMode of ['none', 'exclude_flat_down']) {
+                for (const priceVolumeMode of ['none', 'exclude_flat_down', 'exclude_weak_volume']) {
                   rows.push({
                     ...base,
                     buyOnly: false,
@@ -1005,10 +1183,10 @@ function targetedFactorConfigs(base) {
               }
             }
           }
+          }
         }
       }
     }
-  }
   return rows;
 }
 
@@ -1076,20 +1254,71 @@ function targetedIndicatorConfigs(base) {
     { requireDonchianBreakout: true, requireDirectionalTrend: true },
     { minBollingerPercentB: 1, maxVolatilityCompression: 0.9 }
   ];
+  const stockMomentumFilters = [
+    {},
+    {
+      minMarketMom20Pct: 0.5,
+      maxMarketMom20Pct: 4,
+      minMarketVol20Pct: 10,
+      maxMarketVol20Pct: 22,
+      minStd: 1.8,
+      minAtr14Pct: 2.5,
+      minDistanceToMa20Pct: 5,
+      maxDistanceToMa20Pct: 13,
+      themeFloor: 0.25,
+      maxThemeMovePct: 1.1,
+      maxGlobalCompositePct: 0.8
+    },
+    {
+      minMarketMom20Pct: 0.5,
+      maxMarketMom20Pct: 7,
+      minMarketMom1Pct: 0.2,
+      maxMarketMom1Pct: 1.5,
+      minAtr14Pct: 4,
+      minBollingerBandwidthPct: 10,
+      minStochastic14: 80,
+      maxDistanceToMa20Pct: 16,
+      maxAsiaCompositePct: 1.2
+    },
+    {
+      minMarketMom20Pct: 0.8,
+      maxMarketMom20Pct: 4,
+      minBollingerPercentB: 0.9,
+      maxBollingerPercentB: 1.25,
+      minVolumeRatio1To20: 0.7,
+      maxVolumeRatio1To20: 5,
+      maxOvernightMomentum20Pct: 20,
+      minNearYearHigh: 0.9
+    },
+    {
+      minMarketMom20Pct: 0.8,
+      maxMarketMom20Pct: 4,
+      minAtr14Pct: 2.5,
+      maxAtr14Pct: 8,
+      minBollingerBandwidthPct: 10,
+      maxBollingerBandwidthPct: 30,
+      minDistanceToMa20Pct: 6,
+      maxDistanceToMa20Pct: 14,
+      priceVolumeMode: 'exclude_flat_down'
+    }
+  ];
   for (const indicators of indicatorSets) {
-    for (const blackSwanMode of ['none', 'cash']) {
-      for (const blackSwanDayDropPct of [-2, -3, -5]) {
-        for (const blackSwanFiveDayDropPct of [-5, -8, -12]) {
-          for (const blackSwanVol20Pct of [25, 35, 50]) {
-            rows.push({
-              ...base,
-              ...indicators,
-              collectTrades: false,
-              blackSwanMode,
-              blackSwanDayDropPct,
-              blackSwanFiveDayDropPct,
-              blackSwanVol20Pct
-            });
+    for (const stockFilter of stockMomentumFilters) {
+      for (const blackSwanMode of ['none', 'cash']) {
+        for (const blackSwanDayDropPct of [-2, -3, -5]) {
+          for (const blackSwanFiveDayDropPct of [-5, -8, -12]) {
+            for (const blackSwanVol20Pct of [25, 35, 50]) {
+              rows.push({
+                ...base,
+                ...indicators,
+                ...stockFilter,
+                collectTrades: false,
+                blackSwanMode,
+                blackSwanDayDropPct,
+                blackSwanFiveDayDropPct,
+                blackSwanVol20Pct
+              });
+            }
           }
         }
       }
@@ -1161,19 +1390,1513 @@ function targetedBlackSwanConfigs(base) {
 
 function targetedPortfolioRiskConfigs(base) {
   const rows = [];
-  for (const maxOpenPositions of [2, 3, 4]) {
+  for (const maxOpenPositions of [2, 3, 4, 5]) {
     for (const maxPositionsPerTheme of [1, 2]) {
       for (const accountRiskPct of [1, 1.5, 2]) {
         for (const monthlyEquityBrakePct of [null, -2, -3, -5]) {
+          for (const accountDrawdownBrakePct of [null, -8, -12]) {
+            rows.push({
+              ...base,
+              maxOpenPositions,
+              maxPositionsPerTheme,
+              accountRiskPct,
+              starterRiskPct: accountRiskPct,
+              monthlyEquityBrakePct,
+              accountDrawdownBrakePct,
+              accountCooldownDays: 15,
+              collectTrades: false
+            });
+          }
+        }
+      }
+    }
+  }
+  return rows;
+}
+
+function targetedProfitExpansionConfigs(base) {
+  const rows = [];
+  const overlays = [
+    { minIntradayMomentum20Pct: 3, maxOvernightMomentum20Pct: 12, minNearYearHigh: 0.9 },
+    { minIntradayMomentum20Pct: 6, maxOvernightMomentum20Pct: 10, minNearYearHigh: 0.97 },
+    {
+      minIntradayMomentum20Pct: 0,
+      maxOvernightMomentum20Pct: 8,
+      minNearYearHigh: 0.85,
+      priceVolumeMode: 'momentum_only'
+    }
+  ];
+  for (const overlay of overlays) {
+    for (const rankMode of ['gap', 'intradayEdge']) {
+      for (const standardPct of [40, 50]) {
+        for (const maxOpenPositions of [5, 6, 8]) {
+          for (const accountRiskPct of [1.5, 2]) {
+            for (const monthlyEquityBrakePct of [null, -5]) {
+              for (const accountDrawdownBrakePct of [null, -10]) {
+                rows.push({
+                  ...base,
+                  ...overlay,
+                  rankMode,
+                  buyOnly: false,
+                  minScore: Math.min(base.minScore ?? 65, 65),
+                  buyConfirmations: 1,
+                  watchConfirmations: 2,
+                  minTradeValue: Math.max(30e6, base.minTradeValue || 30e6),
+                  maxRange: Math.min(20, base.maxRange || 20),
+                  standardPct,
+                  defensivePct: Math.min(standardPct, 25),
+                  exploratoryPct: Math.min(standardPct, 30),
+                  maxPositionPct: Math.min(60, Math.max(standardPct, 50)),
+                  accountRiskPct,
+                  starterRiskPct: accountRiskPct,
+                  maxOpenPositions,
+                  monthlyEquityBrakePct,
+                  accountDrawdownBrakePct,
+                  accountCooldownDays: 15,
+                  consecutiveLossLimit: 5,
+                  lossStreakCooldownDays: 8,
+                  lossBrakePct: null,
+                  profitLockPct: null,
+                  collectTrades: false
+                });
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  return rows;
+}
+
+function targetedProfitRiskTradeoffConfigs(base) {
+  const rows = [];
+  const qualityOverlays = [
+    {},
+    { minIntradayMomentum20Pct: 3, maxOvernightMomentum20Pct: 12, minNearYearHigh: 0.9 },
+    { minIntradayMomentum20Pct: 6, maxOvernightMomentum20Pct: 10, minNearYearHigh: 0.97 },
+    { priceVolumeMode: 'exclude_flat_down', maxDistanceToMa20Pct: 16 },
+    { minMarketMom20Pct: 0 },
+    { minMarketMom20Pct: 0, maxMarketMom20Pct: 10 },
+    { minMarketMom20Pct: -1, maxMarketMom20Pct: 8 },
+    {
+      minIntradayMomentum20Pct: 10,
+      minNearYearHigh: 0.99,
+      minAtr14Pct: 2,
+      maxAtr14Pct: 8,
+      priceVolumeMode: 'exclude_weak_volume'
+    }
+  ];
+  for (const overlay of qualityOverlays) {
+    for (const rankMode of ['technicalMomentum', 'riskAdjustedMomentum', 'breakoutQuality']) {
+      for (const standardPct of [25, 30, 35]) {
+        for (const maxOpenPositions of [4, 6]) {
+          for (const accountRiskPct of [1.25, 1.5, 2]) {
+            for (const monthlyEquityBrakePct of [null, -5]) {
+              for (const accountDrawdownBrakePct of [null, -10]) {
+                for (const blackSwanMode of ['none', 'cash']) {
+                  rows.push({
+                    ...base,
+                    ...overlay,
+                    buyOnly: false,
+                    rankMode,
+                    standardPct,
+                    defensivePct: Math.min(standardPct, 30),
+                    exploratoryPct: Math.min(standardPct, 30),
+                    maxPositionPct: Math.min(standardPct, 40),
+                    maxOpenPositions,
+                    accountRiskPct,
+                    starterRiskPct: accountRiskPct,
+                    monthlyEquityBrakePct,
+                    accountDrawdownBrakePct,
+                    accountCooldownDays: 20,
+                    consecutiveLossLimit: 4,
+                    lossStreakCooldownDays: 10,
+                    blackSwanMode,
+                    blackSwanAction: 'exit_next_open',
+                    blackSwanDayDropPct: -2,
+                    blackSwanFiveDayDropPct: -5,
+                    blackSwanVol20Pct: 35,
+                    collectTrades: false
+                  });
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  return rows;
+}
+
+function targetedHighReturnBaseRiskConfigs(base) {
+  const rows = [];
+  for (const monthlyEquityBrakePct of [null, -4, -6, -8]) {
+    for (const accountDrawdownBrakePct of [null, -12, -16, -20]) {
+      for (const consecutiveLossLimit of [3, 4, 5]) {
+        rows.push({
+          ...base,
+          monthlyEquityBrakePct,
+          accountDrawdownBrakePct,
+          accountCooldownDays: 15,
+          consecutiveLossLimit,
+          lossStreakCooldownDays: 8,
+          collectTrades: false
+        });
+      }
+    }
+  }
+  return rows;
+}
+
+function targetedHighReturnDrawdownLimiterConfigs(base) {
+  const rows = [];
+  const overlays = [
+    {},
+    { minVolumeRatio1To20: 0.7, maxVolumeRatio1To20: 5 },
+    { maxOvernightMomentum20Pct: 12 },
+    { priceVolumeMode: 'exclude_flat_down', maxUpperWickRatio: 0.7 }
+  ];
+  const exits = [
+    base.exitRule,
+    { holdDays: 10, trail: null, noFollow: false, stopLossPct: 5, stopMode: 'close' }
+  ].filter(Boolean);
+  for (const overlay of overlays) {
+    for (const exitRule of exits) {
+      for (const standardPct of [32, 40]) {
+        for (const maxOpenPositions of [4, 6]) {
+          for (const monthlyEquityBrakePct of [-4, -6]) {
+            for (const accountDrawdownBrakePct of [-14, -18]) {
+              for (const consecutiveLossLimit of [3, 4]) {
+                rows.push({
+                  ...base,
+                  ...overlay,
+                  exitRule,
+                  standardPct,
+                  defensivePct: Math.min(standardPct, 30),
+                  exploratoryPct: Math.min(standardPct, 30),
+                  maxPositionPct: Math.min(standardPct, 45),
+                  maxOpenPositions,
+                  accountRiskPct: 1.5,
+                  starterRiskPct: 1.5,
+                  monthlyEquityBrakePct,
+                  accountDrawdownBrakePct,
+                  accountCooldownDays: 20,
+                  consecutiveLossLimit,
+                  lossStreakCooldownDays: 12,
+                  blackSwanMode: 'cash',
+                  blackSwanAction: 'exit_next_open',
+                  blackSwanDayDropPct: -2,
+                  blackSwanFiveDayDropPct: -4,
+                  blackSwanVol20Pct: 35,
+                  collectTrades: false
+                });
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  return rows;
+}
+
+function targetedStatAlphaConfigs(base) {
+  const rows = [];
+  const alphaFilters = [
+    {
+      minNearYearHigh: 0.99,
+      minIntradayMomentum20Pct: 10,
+      minAtr14Pct: 2,
+      maxAtr14Pct: 8,
+      priceVolumeMode: 'exclude_weak_volume'
+    },
+    {
+      minNearYearHigh: 0.99,
+      minIntradayMomentum20Pct: 10,
+      minTradeValue: 100e6,
+      priceVolumeMode: 'exclude_weak_volume'
+    },
+    {
+      minNearYearHigh: 0.95,
+      minIntradayMomentum20Pct: 10,
+      minTradeValue: 300e6,
+      maxUpperWickRatio: 0.6,
+      minAtr14Pct: 2,
+      maxAtr14Pct: 8
+    },
+    {
+      minNearYearHigh: 0.99,
+      minIntradayMomentum20Pct: 6,
+      minAtr14Pct: 2,
+      maxAtr14Pct: 8,
+      requireMa20Rising: true,
+      priceVolumeMode: 'exclude_weak_volume'
+    }
+  ];
+  const exits = [
+    { holdDays: 5, trail: null, noFollow: true, stopLossPct: 5, stopMode: 'close' },
+    { holdDays: 7, trail: { triggerPct: 5, givebackPct: 4, lockPct: 1 }, noFollow: false, stopLossPct: 5, stopMode: 'close' },
+    { holdDays: 10, trail: null, noFollow: false, stopLossPct: 10, stopMode: 'close' },
+    { holdDays: 10, trail: { triggerPct: 8, givebackPct: 5, lockPct: 2 }, noFollow: false, stopLossPct: 'volatility', stopMode: 'close' }
+  ];
+  for (const filter of alphaFilters) {
+    for (const exitRule of exits) {
+      for (const rankMode of ['riskAdjustedMomentum', 'technicalMomentum', 'breakoutQuality']) {
+        for (const standardPct of [25, 30, 35, 40]) {
+          for (const maxOpenPositions of [4, 6, 8]) {
+            for (const monthlyEquityBrakePct of [null, -5]) {
+              rows.push({
+                ...base,
+                ...filter,
+                buyOnly: false,
+                minScore: 65,
+                buyConfirmations: 1,
+                watchConfirmations: 2,
+                maxRange: 20,
+                minRsi: 45,
+                maxRsi: 95,
+                excludeHighVolumeDistribution: true,
+                rankMode,
+                standardPct,
+                defensivePct: Math.min(standardPct, 30),
+                exploratoryPct: Math.min(standardPct, 30),
+                maxPositionPct: Math.min(standardPct, 40),
+                maxOpenPositions,
+                accountRiskPct: 2,
+                starterRiskPct: 2,
+                monthlyEquityBrakePct,
+                accountDrawdownBrakePct: null,
+                blackSwanMode: 'cash',
+                blackSwanAction: 'block',
+                blackSwanDayDropPct: -2,
+                blackSwanFiveDayDropPct: -4,
+                blackSwanVol20Pct: 35,
+                exitRule,
+                collectTrades: false,
+                researchVariant: 'profit5_stat_alpha_v1'
+              });
+            }
+          }
+        }
+      }
+    }
+  }
+  return rows;
+}
+
+function targetedHighTurnoverMomentumConfigs(base) {
+  const rows = [];
+  const filters = [
+    {
+      minScore: 65,
+      minNearYearHigh: 0.95,
+      minTradeValue: 30e6,
+      marketFloor: -1,
+      themeFloor: -1
+    }
+  ];
+  const exits = [
+    { holdDays: 10, trail: null, noFollow: false, stopLossPct: 10, stopMode: 'close' }
+  ];
+  for (const filter of filters) {
+    for (const exitRule of exits) {
+      for (const rankMode of ['score', 'riskAdjustedMomentum']) {
+        for (const standardPct of [15, 20, 25]) {
+          for (const maxOpenPositions of [8, 12]) {
+            for (const monthlyEquityBrakePct of [null, -6]) {
+              for (const accountDrawdownBrakePct of [null, -14]) {
+                rows.push({
+                  ...base,
+                  ...filter,
+                  buyOnly: false,
+                  buyConfirmations: 1,
+                  watchConfirmations: 2,
+                  minGap: 0,
+                  maxGap: 12,
+                  minStd: 1.5,
+                  maxStd: 10,
+                  maxRange: 20,
+                  maxChasePct: 100,
+                  minRewardRisk: -99,
+                  marketFloor: -1,
+                  themeFloor: -1,
+                  globalFloor: -1.5,
+                  asiaFloor: -1.2,
+                  rankMode,
+                  standardPct,
+                  defensivePct: Math.min(standardPct, 25),
+                  exploratoryPct: Math.min(standardPct, 25),
+                  maxPositionPct: Math.min(standardPct, 30),
+                  maxOpenPositions,
+                  accountRiskPct: 2,
+                  starterRiskPct: 2,
+                  monthlyEquityBrakePct,
+                  accountDrawdownBrakePct,
+                  accountCooldownDays: 15,
+                  consecutiveLossLimit: 5,
+                  lossStreakCooldownDays: 8,
+                  blackSwanMode: 'cash',
+                  blackSwanAction: 'block',
+                  blackSwanDayDropPct: -2,
+                  blackSwanFiveDayDropPct: -4,
+                  blackSwanVol20Pct: 35,
+                  exitRule,
+                  collectTrades: false,
+                  researchVariant: 'profit5_high_turnover_momentum_v1'
+                });
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  return rows;
+}
+
+function targetedHighTurnoverRefinementConfigs(base) {
+  const rows = [];
+  const filters = [
+    {},
+    { maxRsi: 85 },
+    { maxRsi: 85, maxVolumeRatio1To20: 5 },
+    { priceVolumeMode: 'exclude_flat_down' },
+    { minNearYearHigh: 0.97 },
+    { maxVolumeRatio1To20: 2 },
+    { minAtr14Pct: 4, maxAtr14Pct: 6 },
+    { minNearYearHigh: 0.95, maxNearYearHigh: 0.99 },
+    { minDistanceToMa20Pct: 0, maxDistanceToMa20Pct: 5 },
+    { maxIntradayMomentum20Pct: 20, maxVolumeRatio1To20: 2 }
+  ];
+  const exits = [
+    { holdDays: 5, trail: null, noFollow: false, stopLossPct: 7, stopMode: 'close', takeProfitPct: 9 },
+    { holdDays: 10, trail: null, noFollow: false, stopLossPct: 10, stopMode: 'close' },
+    { holdDays: 10, trail: { triggerPct: 8, givebackPct: 5, lockPct: 2 }, noFollow: false, stopLossPct: 8, stopMode: 'close' }
+  ];
+  for (const filter of filters) {
+    for (const exitRule of exits) {
+      for (const rankMode of ['score', 'riskAdjustedMomentum']) {
+        for (const standardPct of [10, 15, 18]) {
+          for (const maxOpenPositions of [8, 12]) {
+            for (const blackSwanAction of ['block']) {
+              rows.push({
+                ...base,
+                ...filter,
+                buyOnly: false,
+                minScore: 65,
+                buyConfirmations: 1,
+                watchConfirmations: 2,
+                minTradeValue: Math.max(30e6, base.minTradeValue || 30e6),
+                minNearYearHigh: filter.minNearYearHigh ?? base.minNearYearHigh ?? 0.95,
+                maxRange: Math.min(20, base.maxRange || 20),
+                excludeHighVolumeDistribution: true,
+                rankMode,
+                standardPct,
+                defensivePct: standardPct,
+                exploratoryPct: standardPct,
+                maxPositionPct: standardPct,
+                maxOpenPositions,
+                accountRiskPct: 1.5,
+                starterRiskPct: 1.5,
+                monthlyEquityBrakePct: null,
+                accountDrawdownBrakePct: null,
+                consecutiveLossLimit: 5,
+                lossStreakCooldownDays: 8,
+                blackSwanMode: 'cash',
+                blackSwanAction,
+                blackSwanDayDropPct: -2,
+                blackSwanFiveDayDropPct: -4,
+                blackSwanVol20Pct: 35,
+                exitRule,
+                collectTrades: false,
+                researchVariant: 'profit5_stock_turnover_refine_v1'
+              });
+            }
+          }
+        }
+      }
+    }
+  }
+  return rows;
+}
+
+function targetedAggressiveQualityStockConfigs(base) {
+  const rows = [];
+  const filters = [
+    { maxVolumeRatio1To20: 2 },
+    { minAtr14Pct: 4, maxAtr14Pct: 6 },
+    { minNearYearHigh: 0.95, maxNearYearHigh: 0.99 },
+    { minDistanceToMa20Pct: 0, maxDistanceToMa20Pct: 5 },
+    { maxIntradayMomentum20Pct: 20, maxVolumeRatio1To20: 2 }
+  ];
+  const exits = [
+    { holdDays: 7, trail: null, noFollow: false, stopLossPct: 8, stopMode: 'close', takeProfitPct: 12 },
+    { holdDays: 10, trail: null, noFollow: false, stopLossPct: 10, stopMode: 'close' },
+    { holdDays: 10, trail: { triggerPct: 8, givebackPct: 5, lockPct: 2 }, noFollow: false, stopLossPct: 8, stopMode: 'close' }
+  ];
+  for (const filter of filters) {
+    for (const exitRule of exits) {
+      for (const rankMode of ['score', 'riskAdjustedMomentum']) {
+        for (const standardPct of [20, 25, 30]) {
+          for (const maxOpenPositions of [6, 8]) {
+            for (const monthlyEquityBrakePct of [-5, -8]) {
+              rows.push({
+                ...base,
+                ...filter,
+                buyOnly: false,
+                minScore: 65,
+                buyConfirmations: 1,
+                watchConfirmations: 2,
+                minTradeValue: Math.max(30e6, base.minTradeValue || 30e6),
+                maxRange: Math.min(20, base.maxRange || 20),
+                excludeHighVolumeDistribution: true,
+                rankMode,
+                standardPct,
+                defensivePct: Math.min(standardPct, 20),
+                exploratoryPct: Math.min(standardPct, 20),
+                maxPositionPct: standardPct,
+                maxOpenPositions,
+                accountRiskPct: 1.5,
+                starterRiskPct: 1.5,
+                monthlyEquityBrakePct,
+                accountDrawdownBrakePct: -18,
+                accountCooldownDays: 20,
+                consecutiveLossLimit: 4,
+                lossStreakCooldownDays: 10,
+                blackSwanMode: 'cash',
+                blackSwanAction: 'block',
+                blackSwanDayDropPct: -2,
+                blackSwanFiveDayDropPct: -4,
+                blackSwanVol20Pct: 35,
+                exitRule,
+                collectTrades: false,
+                researchVariant: 'profit5_aggressive_quality_stock_v1'
+              });
+            }
+          }
+        }
+      }
+    }
+  }
+  return rows;
+}
+
+function targetedMarketRegimeAlphaConfigs(base) {
+  const rows = [];
+  const filters = [
+    { minMarketMom5Pct: 1 },
+    { minMarketMom5Pct: 1, minMarketMom20Pct: -3 },
+    { minMarketMom5Pct: 1, minMarketMom20Pct: 0 },
+    { minMarketMom5Pct: 1, minMarketMom20Pct: 1 },
+    { minMarketMom5Pct: 1, maxRsi: 70 }
+  ];
+  const exits = [
+    { holdDays: 7, trail: null, noFollow: false, stopLossPct: 7, stopMode: 'close', takeProfitPct: 12 },
+    { holdDays: 10, trail: null, noFollow: false, stopLossPct: 10, stopMode: 'close' }
+  ];
+  for (const filter of filters) {
+    for (const exitRule of exits) {
+      for (const rankMode of ['score', 'riskAdjustedMomentum']) {
+        for (const standardPct of [18, 25, 32]) {
+          for (const maxOpenPositions of [4, 8]) {
+            for (const accountRiskPct of [1.5, 2.5]) {
+              for (const monthlyEquityBrakePct of [null]) {
+                for (const accountDrawdownBrakePct of [null, -18]) {
+                  rows.push({
+                    ...base,
+                    ...filter,
+                    buyOnly: false,
+                    minScore: 65,
+                    buyConfirmations: 1,
+                    watchConfirmations: 2,
+                    minTradeValue: Math.max(30e6, base.minTradeValue || 30e6),
+                    minNearYearHigh: Math.max(0.95, base.minNearYearHigh || 0),
+                    maxRange: Math.min(20, base.maxRange || 20),
+                    excludeHighVolumeDistribution: true,
+                    rankMode,
+                    standardPct,
+                    defensivePct: standardPct,
+                    exploratoryPct: standardPct,
+                    maxPositionPct: standardPct,
+                    maxOpenPositions,
+                    accountRiskPct,
+                    starterRiskPct: accountRiskPct,
+                    monthlyEquityBrakePct,
+                    accountDrawdownBrakePct,
+                    accountCooldownDays: 20,
+                    consecutiveLossLimit: 4,
+                    lossStreakCooldownDays: 10,
+                    blackSwanMode: 'cash',
+                    blackSwanAction: 'block',
+                    blackSwanDayDropPct: -2,
+                    blackSwanFiveDayDropPct: -4,
+                    blackSwanVol20Pct: 35,
+                    exitRule,
+                    collectTrades: false,
+                    researchVariant: 'profit5_market_regime_alpha_v1'
+                  });
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  return rows;
+}
+
+function targetedStrongCoreFrontierConfigs(base) {
+  const rows = [];
+  const filters = [
+    { minMarketMom5Pct: -100, minMarketMom20Pct: 1 },
+    { minMarketMom5Pct: -100, minMarketMom20Pct: 2 },
+    { minMarketMom5Pct: -100, minMarketMom20Pct: 3 },
+    { minMarketMom5Pct: -100, minMarketMom20Pct: 4 },
+    { minMarketMom5Pct: -100, minMarketMom20Pct: 5 }
+  ];
+  const exits = [
+    { holdDays: 5, trail: null, noFollow: false, stopLossPct: 7, stopMode: 'close' },
+    { holdDays: 7, trail: null, noFollow: false, stopLossPct: 7, stopMode: 'close' },
+    { holdDays: 10, trail: null, noFollow: false, stopLossPct: 10, stopMode: 'close' },
+    { holdDays: 15, trail: null, noFollow: false, stopLossPct: 10, stopMode: 'close' }
+  ];
+  for (const filter of filters) {
+    for (const exitRule of exits) {
+      for (const rankMode of ['score']) {
+        for (const standardPct of [20, 25, 32, 40, 50, 60]) {
+          for (const maxOpenPositions of [4, 8, 12]) {
+            for (const accountRiskPct of [2, 2.5, 3, 4, 5]) {
+              rows.push({
+                ...base,
+                ...filter,
+                buyOnly: false,
+                minScore: 65,
+                buyConfirmations: 1,
+                watchConfirmations: 2,
+                minTradeValue: 30e6,
+                minNearYearHigh: 0.95,
+                maxRange: 20,
+                excludeHighVolumeDistribution: true,
+                rankMode,
+                standardPct,
+                defensivePct: standardPct,
+                exploratoryPct: standardPct,
+                maxPositionPct: standardPct,
+                maxOpenPositions,
+                accountRiskPct,
+                starterRiskPct: accountRiskPct,
+                monthlyEquityBrakePct: null,
+                accountDrawdownBrakePct: null,
+                consecutiveLossLimit: 5,
+                lossStreakCooldownDays: 8,
+                blackSwanMode: 'cash',
+                blackSwanAction: 'block',
+                blackSwanDayDropPct: -2,
+                blackSwanFiveDayDropPct: -4,
+                blackSwanVol20Pct: 35,
+                exitRule,
+                collectTrades: false,
+                researchVariant: 'profit5_strong_stock_core_frontier_v2'
+              });
+            }
+          }
+        }
+      }
+    }
+  }
+  return rows;
+}
+
+function targetedSelectedTradeAlphaConfigs(base) {
+  const factors = [
+    { maxMarketMom20Pct: 5 },
+    { maxStochastic14: 80 },
+    { maxOvernightMomentum20Pct: 6 },
+    { maxMarketVol20Pct: 15 },
+    { minRsi: 65 },
+    { minVolumeRatio1To20: 1.5 },
+    { maxStd: 3 },
+    { maxIntradayMomentum20Pct: 0 },
+    { minMarketMom5Pct: 2 },
+    { globalFloor: 0 },
+    { maxThemeMovePct: 1 },
+    { maxBollingerPercentB: 1 },
+    { maxAtr14Pct: 4 },
+    { minGap: 1 },
+    { excludeDonchianBreakout: true }
+  ];
+  const profiles = [{}];
+  for (const factor of factors) profiles.push(factor);
+  for (let left = 0; left < factors.length; left += 1) {
+    for (let right = left + 1; right < factors.length; right += 1) {
+      profiles.push({ ...factors[left], ...factors[right] });
+    }
+  }
+  const rows = [];
+  for (const profile of profiles) {
+    for (const standardPct of [20, 25, 32]) {
+      for (const maxOpenPositions of [4, 8, 12]) {
+        for (const accountRiskPct of [2, 2.5]) {
+          for (const holdDays of [7, 10]) {
+            rows.push({
+              ...base,
+              ...profile,
+              buyOnly: false,
+              minScore: 65,
+              buyConfirmations: 1,
+              watchConfirmations: 2,
+              minTradeValue: 30e6,
+              minNearYearHigh: 0.95,
+              minMarketMom1Pct: -100,
+              minMarketMom5Pct: profile.minMarketMom5Pct ?? -100,
+              minMarketMom20Pct: 3,
+              maxMarketMom20Pct: profile.maxMarketMom20Pct ?? 100,
+              maxRange: 20,
+              excludeHighVolumeDistribution: true,
+              rankMode: 'score',
+              standardPct,
+              defensivePct: standardPct,
+              exploratoryPct: standardPct,
+              maxPositionPct: standardPct,
+              maxOpenPositions,
+              accountRiskPct,
+              starterRiskPct: accountRiskPct,
+              monthlyEquityBrakePct: null,
+              accountDrawdownBrakePct: null,
+              consecutiveLossLimit: 5,
+              lossStreakCooldownDays: 8,
+              blackSwanMode: 'cash',
+              blackSwanAction: 'block',
+              blackSwanDayDropPct: -2,
+              blackSwanFiveDayDropPct: -4,
+              blackSwanVol20Pct: 35,
+              exitRule: {
+                holdDays,
+                trail: null,
+                noFollow: false,
+                stopLossPct: 10,
+                stopMode: 'close'
+              },
+              collectTrades: false,
+              researchVariant: 'profit5_selected_trade_alpha_v1'
+            });
+          }
+        }
+      }
+    }
+  }
+  return rows;
+}
+
+function targetedAlphaRankingConfigs(base) {
+  const profiles = [
+    {},
+    { maxThemeMovePct: 1 },
+    { minVolumeRatio1To20: 1.5 },
+    { minRsi: 65 },
+    { maxStochastic14: 80 }
+  ];
+  const rows = [];
+  for (const profile of profiles) {
+    for (const rankMode of [
+      'score',
+      'volumeRsiQuality',
+      'controlledBreakout',
+      'intradayReversalQuality'
+    ]) {
+      for (const standardPct of [15, 20, 25, 32]) {
+        for (const maxOpenPositions of [8, 12, 16]) {
+          for (const accountRiskPct of [2, 2.5, 3]) {
+            for (const holdDays of [7, 10]) {
+              rows.push({
+                ...base,
+                ...profile,
+                buyOnly: false,
+                minScore: 65,
+                buyConfirmations: 1,
+                watchConfirmations: 2,
+                minTradeValue: 30e6,
+                minNearYearHigh: 0.95,
+                minMarketMom1Pct: -100,
+                minMarketMom5Pct: -100,
+                minMarketMom20Pct: 3,
+                maxMarketMom20Pct: 100,
+                maxRange: 20,
+                globalFloor: 0,
+                excludeHighVolumeDistribution: true,
+                rankMode,
+                standardPct,
+                defensivePct: standardPct,
+                exploratoryPct: standardPct,
+                maxPositionPct: standardPct,
+                maxOpenPositions,
+                accountRiskPct,
+                starterRiskPct: accountRiskPct,
+                monthlyEquityBrakePct: null,
+                accountDrawdownBrakePct: null,
+                consecutiveLossLimit: 5,
+                lossStreakCooldownDays: 8,
+                blackSwanMode: 'cash',
+                blackSwanAction: 'block',
+                blackSwanDayDropPct: -2,
+                blackSwanFiveDayDropPct: -4,
+                blackSwanVol20Pct: 35,
+                exitRule: {
+                  holdDays,
+                  trail: null,
+                  noFollow: false,
+                  stopLossPct: 10,
+                  stopMode: 'close'
+                },
+                collectTrades: false,
+                researchVariant: 'profit5_stock_alpha_ranking_v1'
+              });
+            }
+          }
+        }
+      }
+    }
+  }
+  return rows;
+}
+
+function targetedAlphaRiskFrontierConfigs(base) {
+  const rows = [];
+  for (const profile of [{}, { maxThemeMovePct: 1 }]) {
+    for (const rankMode of ['score', 'volumeRsiQuality']) {
+      for (const standardPct of [25, 32, 40, 50, 60]) {
+        for (const maxOpenPositions of [4, 8, 12]) {
+          for (const accountRiskPct of [2.5, 3, 4, 5]) {
+            rows.push({
+              ...base,
+              ...profile,
+              buyOnly: false,
+              minScore: 65,
+              buyConfirmations: 1,
+              watchConfirmations: 2,
+              minTradeValue: 30e6,
+              minNearYearHigh: 0.95,
+              minMarketMom1Pct: -100,
+              minMarketMom5Pct: -100,
+              minMarketMom20Pct: 3,
+              maxMarketMom20Pct: 100,
+              maxRange: 20,
+              globalFloor: 0,
+              excludeHighVolumeDistribution: true,
+              rankMode,
+              standardPct,
+              defensivePct: standardPct,
+              exploratoryPct: standardPct,
+              maxPositionPct: standardPct,
+              maxOpenPositions,
+              accountRiskPct,
+              starterRiskPct: accountRiskPct,
+              monthlyEquityBrakePct: null,
+              accountDrawdownBrakePct: null,
+              consecutiveLossLimit: 5,
+              lossStreakCooldownDays: 8,
+              blackSwanMode: 'cash',
+              blackSwanAction: 'block',
+              blackSwanDayDropPct: -2,
+              blackSwanFiveDayDropPct: -4,
+              blackSwanVol20Pct: 35,
+              exitRule: {
+                holdDays: 10,
+                trail: null,
+                noFollow: false,
+                stopLossPct: 10,
+                stopMode: 'close'
+              },
+              collectTrades: false,
+              researchVariant: 'profit5_stock_alpha_risk_frontier_v1'
+            });
+          }
+        }
+      }
+    }
+  }
+  return rows;
+}
+
+function targetedAlphaBreadthConfigs(base) {
+  const rows = [];
+  for (const minMarketMom20Pct of [-2, 0, 1, 2, 3]) {
+    for (const minNearYearHigh of [0.9, 0.95]) {
+      for (const globalFloor of [-1.5, 0]) {
+        for (const rankMode of ['score', 'volumeRsiQuality']) {
+          for (const standardPct of [10, 15, 20, 25]) {
+            for (const maxOpenPositions of [8, 12, 16]) {
+              for (const accountRiskPct of [1.5, 2, 2.5]) {
+                for (const holdDays of [7, 10]) {
+                  rows.push({
+                    ...base,
+                    buyOnly: false,
+                    minScore: 65,
+                    buyConfirmations: 1,
+                    watchConfirmations: 2,
+                    minTradeValue: 30e6,
+                    minNearYearHigh,
+                    minMarketMom1Pct: -100,
+                    minMarketMom5Pct: -100,
+                    minMarketMom20Pct,
+                    maxMarketMom20Pct: 100,
+                    maxRange: 20,
+                    globalFloor,
+                    excludeHighVolumeDistribution: true,
+                    rankMode,
+                    standardPct,
+                    defensivePct: standardPct,
+                    exploratoryPct: standardPct,
+                    maxPositionPct: standardPct,
+                    maxOpenPositions,
+                    accountRiskPct,
+                    starterRiskPct: accountRiskPct,
+                    monthlyEquityBrakePct: null,
+                    accountDrawdownBrakePct: null,
+                    consecutiveLossLimit: 5,
+                    lossStreakCooldownDays: 8,
+                    blackSwanMode: 'cash',
+                    blackSwanAction: 'block',
+                    blackSwanDayDropPct: -2,
+                    blackSwanFiveDayDropPct: -4,
+                    blackSwanVol20Pct: 35,
+                    exitRule: {
+                      holdDays,
+                      trail: null,
+                      noFollow: false,
+                      stopLossPct: 10,
+                      stopMode: 'close'
+                    },
+                    collectTrades: false,
+                    researchVariant: 'profit5_stock_alpha_breadth_v1'
+                  });
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  return rows;
+}
+
+function targetedBreadthRiskConfigs(base) {
+  const rows = [];
+  for (const standardPct of [15, 18, 20, 22, 25, 30, 35, 40]) {
+    for (const maxOpenPositions of [8, 12]) {
+      for (const accountRiskPct of [2, 2.5, 3, 3.5, 4, 5]) {
+        for (const consecutiveLossLimit of [4, 5, 6]) {
           rows.push({
             ...base,
+            buyOnly: false,
+            minScore: 65,
+            buyConfirmations: 1,
+            watchConfirmations: 2,
+            minTradeValue: 30e6,
+            minNearYearHigh: 0.9,
+            minMarketMom1Pct: -100,
+            minMarketMom5Pct: -100,
+            minMarketMom20Pct: 3,
+            maxMarketMom20Pct: 100,
+            maxRange: 20,
+            globalFloor: -1.5,
+            excludeHighVolumeDistribution: true,
+            rankMode: 'volumeRsiQuality',
+            standardPct,
+            defensivePct: standardPct,
+            exploratoryPct: standardPct,
+            maxPositionPct: standardPct,
             maxOpenPositions,
-            maxPositionsPerTheme,
             accountRiskPct,
             starterRiskPct: accountRiskPct,
-            monthlyEquityBrakePct,
-            collectTrades: false
+            monthlyEquityBrakePct: null,
+            accountDrawdownBrakePct: null,
+            consecutiveLossLimit,
+            lossStreakCooldownDays: 8,
+            blackSwanMode: 'cash',
+            blackSwanAction: 'block',
+            blackSwanDayDropPct: -2,
+            blackSwanFiveDayDropPct: -4,
+            blackSwanVol20Pct: 35,
+            exitRule: {
+              holdDays: 10,
+              trail: null,
+              noFollow: false,
+              stopLossPct: 10,
+              stopMode: 'close'
+            },
+            collectTrades: false,
+            researchVariant: 'profit5_stock_breadth_risk_v1'
           });
+        }
+      }
+    }
+  }
+  return rows;
+}
+
+function targetedBreadthExitConfigs(base) {
+  const rules = [];
+  for (const holdDays of [5, 7, 10, 12, 15, 20]) {
+    for (const stopLossPct of [3, 5, 7, 10, 'volatility']) {
+      for (const stopMode of ['close', 'intraday']) {
+        rules.push({ holdDays, trail: null, noFollow: false, stopLossPct, stopMode });
+      }
+    }
+  }
+  for (const holdDays of [10, 15, 20]) {
+    for (const stopLossPct of [5, 7, 10]) {
+      for (const takeProfitPct of [10, 15, 20]) {
+        rules.push({
+          holdDays,
+          trail: null,
+          noFollow: false,
+          stopLossPct,
+          stopMode: 'close',
+          takeProfitPct
+        });
+      }
+      for (const trail of [
+        { triggerPct: 3, givebackPct: 5, lockPct: 1 },
+        { triggerPct: 5, givebackPct: 4, lockPct: 1 },
+        { triggerPct: 8, givebackPct: 5, lockPct: 2 }
+      ]) {
+        rules.push({ holdDays, trail, noFollow: false, stopLossPct, stopMode: 'close' });
+      }
+    }
+  }
+  return rules.map(exitRule => ({
+    ...base,
+    buyOnly: false,
+    minScore: 65,
+    buyConfirmations: 1,
+    watchConfirmations: 2,
+    minTradeValue: 30e6,
+    minNearYearHigh: 0.9,
+    minMarketMom1Pct: -100,
+    minMarketMom5Pct: -100,
+    minMarketMom20Pct: 3,
+    maxMarketMom20Pct: 100,
+    maxRange: 20,
+    globalFloor: -1.5,
+    excludeHighVolumeDistribution: true,
+    rankMode: 'volumeRsiQuality',
+    standardPct: 22,
+    defensivePct: 22,
+    exploratoryPct: 22,
+    maxPositionPct: 22,
+    maxOpenPositions: 8,
+    accountRiskPct: 2,
+    starterRiskPct: 2,
+    monthlyEquityBrakePct: null,
+    accountDrawdownBrakePct: null,
+    consecutiveLossLimit: 6,
+    lossStreakCooldownDays: 8,
+    blackSwanMode: 'cash',
+    blackSwanAction: 'block',
+    blackSwanDayDropPct: -2,
+    blackSwanFiveDayDropPct: -4,
+    blackSwanVol20Pct: 35,
+    exitRule,
+    collectTrades: false,
+    researchVariant: 'profit5_stock_breadth_exit_v1'
+  }));
+}
+
+function targetedMarketBandConfigs(base) {
+  const rows = [];
+  for (const marketBandUpperMom20Pct of [4, 5, 6, 8]) {
+    for (const marketBandCorePositionPct of [20, 22, 25, 30, 35]) {
+      for (const marketBandHotPositionPct of [5, 10, 15, 20]) {
+        for (const accountRiskPct of [2, 2.5, 3]) {
+          rows.push({
+            ...base,
+            buyOnly: false,
+            minScore: 65,
+            buyConfirmations: 1,
+            watchConfirmations: 2,
+            minTradeValue: 30e6,
+            minNearYearHigh: 0.9,
+            minMarketMom1Pct: -100,
+            minMarketMom5Pct: -100,
+            minMarketMom20Pct: 3,
+            maxMarketMom20Pct: 100,
+            maxRange: 20,
+            globalFloor: -1.5,
+            excludeHighVolumeDistribution: true,
+            rankMode: 'volumeRsiQuality',
+            marketBandPositioning: true,
+            marketBandUpperMom20Pct,
+            marketBandCorePositionPct,
+            marketBandHotPositionPct,
+            standardPct: marketBandCorePositionPct,
+            defensivePct: marketBandCorePositionPct,
+            exploratoryPct: marketBandCorePositionPct,
+            maxPositionPct: Math.max(marketBandCorePositionPct, marketBandHotPositionPct),
+            maxOpenPositions: 8,
+            accountRiskPct,
+            starterRiskPct: accountRiskPct,
+            monthlyEquityBrakePct: null,
+            accountDrawdownBrakePct: null,
+            consecutiveLossLimit: 6,
+            lossStreakCooldownDays: 8,
+            blackSwanMode: 'cash',
+            blackSwanAction: 'block',
+            blackSwanDayDropPct: -2,
+            blackSwanFiveDayDropPct: -4,
+            blackSwanVol20Pct: 35,
+            exitRule: {
+              holdDays: 10,
+              trail: null,
+              noFollow: false,
+              stopLossPct: 10,
+              stopMode: 'close'
+            },
+            collectTrades: false,
+            researchVariant: 'profit5_stock_market_band_v1'
+          });
+        }
+      }
+    }
+  }
+  return rows;
+}
+
+function targetedMonthlyPyramidConfigs(base) {
+  return [{
+    ...base,
+    buyOnly: false,
+    minScore: 65,
+    buyConfirmations: 1,
+    watchConfirmations: 2,
+    minTradeValue: 30e6,
+    minNearYearHigh: 0.9,
+    minMarketMom1Pct: -100,
+    minMarketMom5Pct: -100,
+    minMarketMom20Pct: 3,
+    maxMarketMom20Pct: 100,
+    maxRange: 20,
+    globalFloor: -1.5,
+    excludeHighVolumeDistribution: true,
+    rankMode: 'volumeRsiQuality',
+    standardPct: 22,
+    defensivePct: 22,
+    exploratoryPct: 22,
+    maxPositionPct: 30,
+    maxOpenPositions: 12,
+    accountRiskPct: 2.5,
+    starterRiskPct: 2.5,
+    monthPerformancePositioning: true,
+    monthPerformanceTriggerPct: 2,
+    positiveMonthPositionMultiplier: 1.5,
+    negativeMonthPositionMultiplier: 1,
+    positiveMonthRiskMultiplier: 1.5,
+    negativeMonthRiskMultiplier: 1,
+    profitLockPct: 20,
+    profitLockAction: 'block',
+    monthPeakTriggerPct: null,
+    monthGivebackPct: 4,
+    monthDrawdownAction: 'block',
+    monthlyEquityBrakePct: null,
+    accountDrawdownBrakePct: null,
+    accountCooldownDays: 20,
+    consecutiveLossLimit: 6,
+    lossStreakCooldownDays: 8,
+    blackSwanMode: 'cash',
+    blackSwanAction: 'block',
+    blackSwanDayDropPct: -2,
+    blackSwanFiveDayDropPct: -4,
+    blackSwanVol20Pct: 35,
+    exitRule: {
+      holdDays: 10,
+      trail: null,
+      noFollow: false,
+      stopLossPct: 10,
+      stopMode: 'close'
+    },
+    collectTrades: false,
+    researchVariant: 'profit5_stock_winner_continuation_v1'
+  }];
+}
+
+function targetedMarketMomentumSizingConfigs(base) {
+  const rows = [];
+  const profiles = [
+    { strongMarketMom5Pct: 1, strongMarketMom20Pct: -3, strongMarketPositionMultiplier: 2, weakMarketPositionMultiplier: 0.5 },
+    { strongMarketMom5Pct: 1, strongMarketMom20Pct: 0, strongMarketPositionMultiplier: 2, weakMarketPositionMultiplier: 0.5 },
+    { strongMarketMom5Pct: 1, strongMarketMom20Pct: 1, strongMarketPositionMultiplier: 2.5, weakMarketPositionMultiplier: 0.25 },
+    { strongMarketMom5Pct: 0, strongMarketMom20Pct: 0, strongMarketPositionMultiplier: 1.75, weakMarketPositionMultiplier: 0.5 },
+    { strongMarketMom5Pct: 2, strongMarketMom20Pct: 1, strongMarketPositionMultiplier: 2.5, weakMarketPositionMultiplier: 0.5 }
+  ];
+  for (const profile of profiles) {
+    for (const standardPct of [12, 15, 18]) {
+      for (const maxOpenPositions of [8, 12]) {
+        for (const accountRiskPct of [1.5, 2, 2.5]) {
+          for (const rankMode of ['score', 'riskAdjustedMomentum']) {
+            for (const accountDrawdownBrakePct of [null, -18]) {
+              rows.push({
+                ...base,
+                ...profile,
+                marketMomentumPositioning: true,
+                buyOnly: false,
+                minScore: 65,
+                buyConfirmations: 1,
+                watchConfirmations: 2,
+                minTradeValue: Math.max(30e6, base.minTradeValue || 30e6),
+                minNearYearHigh: Math.max(0.95, base.minNearYearHigh || 0),
+                maxRange: Math.min(20, base.maxRange || 20),
+                excludeHighVolumeDistribution: true,
+                rankMode,
+                standardPct,
+                defensivePct: standardPct,
+                exploratoryPct: standardPct,
+                maxPositionPct: 45,
+                maxOpenPositions,
+                accountRiskPct,
+                starterRiskPct: accountRiskPct,
+                monthlyEquityBrakePct: null,
+                accountDrawdownBrakePct,
+                accountCooldownDays: 20,
+                consecutiveLossLimit: 5,
+                lossStreakCooldownDays: 8,
+                blackSwanMode: 'cash',
+                blackSwanAction: 'block',
+                blackSwanDayDropPct: -2,
+                blackSwanFiveDayDropPct: -4,
+                blackSwanVol20Pct: 35,
+                exitRule: { holdDays: 10, trail: null, noFollow: false, stopLossPct: 10, stopMode: 'close' },
+                collectTrades: false,
+                researchVariant: 'profit5_market_momentum_sizing_v1'
+              });
+            }
+          }
+        }
+      }
+    }
+  }
+  return rows;
+}
+
+function targetedMarketMomentumSizingRefinementConfigs(base) {
+  const rows = [];
+  const thresholds = [
+    { strongMarketMom5Pct: 0, strongMarketMom20Pct: 0 },
+    { strongMarketMom5Pct: 1, strongMarketMom20Pct: -3 }
+  ];
+  for (const threshold of thresholds) {
+    for (const strongMarketPositionMultiplier of [1.75, 2, 2.25]) {
+      for (const weakMarketPositionMultiplier of [0.4, 0.5, 0.6]) {
+        for (const standardPct of [18, 20, 22]) {
+          for (const accountRiskPct of [2.5, 3]) {
+            for (const maxPositionPct of [45, 55]) {
+              rows.push({
+                ...base,
+                ...threshold,
+                marketMomentumPositioning: true,
+                strongMarketPositionMultiplier,
+                weakMarketPositionMultiplier,
+                buyOnly: false,
+                minScore: 65,
+                buyConfirmations: 1,
+                watchConfirmations: 2,
+                minTradeValue: Math.max(30e6, base.minTradeValue || 30e6),
+                minNearYearHigh: Math.max(0.95, base.minNearYearHigh || 0),
+                maxRange: Math.min(20, base.maxRange || 20),
+                excludeHighVolumeDistribution: true,
+                rankMode: 'riskAdjustedMomentum',
+                standardPct,
+                defensivePct: standardPct,
+                exploratoryPct: standardPct,
+                maxPositionPct,
+                maxOpenPositions: 12,
+                accountRiskPct,
+                starterRiskPct: accountRiskPct,
+                monthlyEquityBrakePct: null,
+                accountDrawdownBrakePct: -18,
+                accountCooldownDays: 20,
+                consecutiveLossLimit: 5,
+                lossStreakCooldownDays: 8,
+                blackSwanMode: 'cash',
+                blackSwanAction: 'block',
+                blackSwanDayDropPct: -2,
+                blackSwanFiveDayDropPct: -4,
+                blackSwanVol20Pct: 35,
+                exitRule: { holdDays: 10, trail: null, noFollow: false, stopLossPct: 10, stopMode: 'close' },
+                collectTrades: false,
+                researchVariant: 'profit5_market_momentum_sizing_refine_v1'
+              });
+            }
+          }
+        }
+      }
+    }
+  }
+  return rows;
+}
+
+function targetedStrongMarketCoreWithSmallWeakSleeveConfigs(base) {
+  const rows = [];
+  for (const standardPct of [10, 12, 15]) {
+    for (const strongMarketPositionMultiplier of [2, 2.5, 3]) {
+      for (const weakMarketPositionMultiplier of [0.2, 0.3, 0.4]) {
+        for (const accountRiskPct of [2, 2.5, 3]) {
+          for (const maxOpenPositions of [8, 12]) {
+            for (const rankMode of ['score', 'riskAdjustedMomentum']) {
+              rows.push({
+                ...base,
+                minMarketMom1Pct: -100,
+                maxMarketMom1Pct: 100,
+                minMarketMom5Pct: -100,
+                maxMarketMom5Pct: 100,
+                minMarketMom20Pct: -100,
+                maxMarketMom20Pct: 100,
+                marketMomentumPositioning: true,
+                strongMarketMom5Pct: -100,
+                strongMarketMom20Pct: 3,
+                strongMarketPositionMultiplier,
+                weakMarketPositionMultiplier,
+                buyOnly: false,
+                minScore: 65,
+                buyConfirmations: 1,
+                watchConfirmations: 2,
+                minTradeValue: 30e6,
+                minNearYearHigh: 0.95,
+                maxNearYearHigh: 100,
+                maxRange: 20,
+                excludeHighVolumeDistribution: true,
+                rankMode,
+                standardPct,
+                defensivePct: standardPct,
+                exploratoryPct: standardPct,
+                maxPositionPct: 40,
+                maxOpenPositions,
+                accountRiskPct,
+                starterRiskPct: accountRiskPct,
+                monthlyEquityBrakePct: null,
+                accountDrawdownBrakePct: -18,
+                accountCooldownDays: 20,
+                consecutiveLossLimit: 5,
+                lossStreakCooldownDays: 8,
+                blackSwanMode: 'cash',
+                blackSwanAction: 'block',
+                blackSwanDayDropPct: -2,
+                blackSwanFiveDayDropPct: -4,
+                blackSwanVol20Pct: 35,
+                exitRule: { holdDays: 10, trail: null, noFollow: false, stopLossPct: 10, stopMode: 'close' },
+                collectTrades: false,
+                researchVariant: 'profit5_strong_market_core_weak_sleeve_v1'
+              });
+            }
+          }
+        }
+      }
+    }
+  }
+  return rows;
+}
+
+function targetedConditionalStrongAndWeakAlphaConfigs(base) {
+  const rows = [];
+  for (const strongMarketPositionPct of [20, 25, 30]) {
+    for (const weakMarketPositionPct of [5, 8, 10]) {
+      for (const maxOpenPositions of [8, 12]) {
+        for (const accountRiskPct of [2, 2.5, 3]) {
+          for (const rankMode of ['score', 'riskAdjustedMomentum']) {
+            for (const accountDrawdownBrakePct of [null, -18]) rows.push({
+              ...base,
+              minMarketMom1Pct: -100,
+              maxMarketMom1Pct: 100,
+              minMarketMom5Pct: -100,
+              maxMarketMom5Pct: 100,
+              minMarketMom20Pct: -100,
+              maxMarketMom20Pct: 100,
+              conditionalRegimeStrategy: true,
+              conditionalRegimeLogicVersion: 3,
+              strongMarketMom20Pct: 3,
+              strongMarketMinNearYearHigh: 0.95,
+              weakMarketMinScore: 65,
+              weakMarketMinReturn5Pct: 3,
+              weakMarketMaxVolumeRatio1To20: 0.8,
+              strongMarketPositionPct,
+              weakMarketPositionPct,
+              marketMomentumPositioning: false,
+              buyOnly: false,
+              minScore: 65,
+              buyConfirmations: 1,
+              watchConfirmations: 2,
+              minTradeValue: 30e6,
+              minNearYearHigh: 0,
+              maxNearYearHigh: 100,
+              minVolumeRatio1To20: 0,
+              maxVolumeRatio1To20: 100,
+              maxRange: 20,
+              excludeHighVolumeDistribution: true,
+              rankMode,
+              standardPct: strongMarketPositionPct,
+              defensivePct: strongMarketPositionPct,
+              exploratoryPct: strongMarketPositionPct,
+              maxPositionPct: strongMarketPositionPct,
+              maxOpenPositions,
+              accountRiskPct,
+              starterRiskPct: accountRiskPct,
+              monthlyEquityBrakePct: null,
+              accountDrawdownBrakePct,
+              accountCooldownDays: 20,
+              consecutiveLossLimit: 5,
+              lossStreakCooldownDays: 8,
+              blackSwanMode: 'cash',
+              blackSwanAction: 'block',
+              blackSwanDayDropPct: -2,
+              blackSwanFiveDayDropPct: -4,
+              blackSwanVol20Pct: 35,
+              exitRule: {
+                holdDays: 10,
+                conditionalRegime: true,
+                strongMarketMom20Pct: 3,
+                strongHoldDays: 10,
+                weakHoldDays: 5,
+                trail: null,
+                noFollow: false,
+                stopLossPct: 10,
+                stopMode: 'close'
+              },
+              collectTrades: false,
+              researchVariant: 'profit5_conditional_strong_weak_alpha_v3'
+            });
+          }
+        }
+      }
+    }
+  }
+  return rows;
+}
+
+function targetedBurstTakeProfitConfigs(base) {
+  const rows = [];
+  const filters = [
+    {
+      minScore: 65,
+      minNearYearHigh: 0.9,
+      minTradeValue: 30e6,
+      maxRange: 20,
+      minRsi: 45,
+      maxRsi: 95
+    },
+    {
+      minScore: 65,
+      minNearYearHigh: 0.95,
+      minIntradayMomentum20Pct: 3,
+      minTradeValue: 30e6,
+      priceVolumeMode: 'exclude_flat_down'
+    },
+    {
+      minScore: 65,
+      minNearYearHigh: 0.97,
+      minIntradayMomentum20Pct: 6,
+      maxOvernightMomentum20Pct: 12,
+      priceVolumeMode: 'exclude_flat_down'
+    }
+  ];
+  const exits = [
+    { holdDays: 5, trail: null, noFollow: false, stopLossPct: 5, stopMode: 'close', takeProfitPct: 6 },
+    { holdDays: 7, trail: null, noFollow: false, stopLossPct: 7, stopMode: 'close', takeProfitPct: 10 },
+    { holdDays: 10, trail: { triggerPct: 8, givebackPct: 5, lockPct: 2 }, noFollow: false, stopLossPct: 7, stopMode: 'close', takeProfitPct: 14 }
+  ];
+  for (const filter of filters) {
+    for (const exitRule of exits) {
+      for (const rankMode of ['technicalMomentum', 'riskAdjustedMomentum', 'breakoutQuality']) {
+        for (const standardPct of [24, 30, 36]) {
+          for (const maxOpenPositions of [5, 8]) {
+            rows.push({
+              ...base,
+              ...filter,
+              buyOnly: false,
+              buyConfirmations: 1,
+              watchConfirmations: 2,
+              minGap: 0,
+              maxGap: 12,
+              minStd: 1.5,
+              maxStd: 10,
+              maxChasePct: 100,
+              minRewardRisk: -99,
+              marketFloor: -1,
+              themeFloor: -1,
+              globalFloor: -1.5,
+              asiaFloor: -1.2,
+              rankMode,
+              standardPct,
+              defensivePct: Math.min(standardPct, 30),
+              exploratoryPct: Math.min(standardPct, 30),
+              maxPositionPct: Math.min(standardPct, 40),
+              maxOpenPositions,
+              accountRiskPct: 1.5,
+              starterRiskPct: 1.5,
+              monthlyEquityBrakePct: null,
+              accountDrawdownBrakePct: null,
+              consecutiveLossLimit: 5,
+              lossStreakCooldownDays: 8,
+              blackSwanMode: 'cash',
+              blackSwanAction: 'block',
+              blackSwanDayDropPct: -2,
+              blackSwanFiveDayDropPct: -4,
+              blackSwanVol20Pct: 35,
+              exitRule,
+              collectTrades: false,
+              researchVariant: 'profit5_burst_take_profit_v1'
+            });
+          }
+        }
+      }
+    }
+  }
+  return rows;
+}
+
+function targetedCashFirstLossCutConfigs(base) {
+  const rows = [];
+  const overlays = [
+    { maxRsi: 80, maxVolumeRatio1To20: 5 },
+    { maxRsi: 85, maxVolumeRatio1To20: 5 },
+    { maxRsi: 80, minMarketMom5Pct: -1 },
+    { maxVolumeRatio1To20: 3, minMarketMom5Pct: -1 },
+    { minNearYearHigh: 1, maxVolumeRatio1To20: 5 },
+    { minNearYearHigh: 1, maxRsi: 80 }
+  ];
+  const exits = [
+    base.exitRule,
+    { holdDays: 10, trail: null, noFollow: false, stopLossPct: 10, stopMode: 'close' },
+    { holdDays: 7, trail: null, noFollow: false, stopLossPct: 7, stopMode: 'close' }
+  ].filter(Boolean);
+  for (const overlay of overlays) {
+    for (const exitRule of exits) {
+      for (const rankMode of ['riskAdjustedMomentum', 'technicalMomentum', 'breakoutQuality']) {
+        for (const standardPct of [32, 40]) {
+          for (const maxOpenPositions of [6, 8]) {
+            for (const monthlyEquityBrakePct of [null, -5]) {
+              rows.push({
+                ...base,
+                ...overlay,
+                exitRule,
+                rankMode,
+                standardPct,
+                defensivePct: Math.min(standardPct, 30),
+                exploratoryPct: Math.min(standardPct, 30),
+                maxPositionPct: Math.min(standardPct, 45),
+                maxOpenPositions,
+                monthlyEquityBrakePct,
+                accountDrawdownBrakePct: null,
+                accountCooldownDays: 15,
+                consecutiveLossLimit: 5,
+                lossStreakCooldownDays: 8,
+                collectTrades: false,
+                researchVariant: 'profit5_cash_first_loss_cut_v1'
+              });
+            }
+          }
         }
       }
     }
@@ -1192,6 +2915,9 @@ function balancedScore(result) {
 }
 
 function compareBalanced(a, b) {
+  if (STOCK_OBJECTIVE === 'deployable') {
+    return deployableStockScore(b) - deployableStockScore(a);
+  }
   return balancedScore(b) - balancedScore(a)
     || b.full.hit - a.full.hit
     || a.full.negative - b.full.negative
@@ -1594,6 +3320,273 @@ function summarizeContinuousCurves(curves) {
   };
 }
 
+function summarizeCurve(curve) {
+  if (!curve.length) {
+    return {
+      months: 0,
+      averageMonthlyReturnPct: 0,
+      annualizedReturnPct: 0,
+      maximumDrawdownPct: 0,
+      negativeMonths: 0,
+      worstMonthPct: 0,
+      monthly: []
+    };
+  }
+  let peak = curve[0].equity;
+  let maximumDrawdownPct = 0;
+  const monthEnd = new Map();
+  for (const row of curve) {
+    peak = Math.max(peak, row.equity);
+    maximumDrawdownPct = Math.min(maximumDrawdownPct, (row.equity / peak - 1) * 100);
+    monthEnd.set(row.date.slice(0, 7), row.equity);
+  }
+  let prior = curve[0].equity;
+  const monthly = [...monthEnd].map(([month, endingEquity]) => {
+    const returnPct = (endingEquity / prior - 1) * 100;
+    prior = endingEquity;
+    return { month, returnPct: round(returnPct) };
+  });
+  const growth = monthly.reduce((value, row) => value * (1 + row.returnPct / 100), 1);
+  return {
+    months: monthly.length,
+    averageMonthlyReturnPct: round(monthly.reduce((sum, row) => sum + row.returnPct, 0) / monthly.length),
+    annualizedReturnPct: round((growth ** (12 / monthly.length) - 1) * 100),
+    maximumDrawdownPct: round(maximumDrawdownPct),
+    negativeMonths: monthly.filter(row => row.returnPct < 0).length,
+    worstMonthPct: round(Math.min(...monthly.map(row => row.returnPct))),
+    monthly
+  };
+}
+
+function combineWeightedStockCurves(rows) {
+  const dates = [...new Set(rows.flatMap(row => row.curve.map(point => point.date)))].sort();
+  const state = rows.map(row => ({
+    ...row,
+    byDate: new Map(row.curve.map(point => [point.date, point.equity])),
+    equity: INITIAL_CAPITAL
+  }));
+  return dates.map(date => {
+    for (const row of state) row.equity = row.byDate.get(date) ?? row.equity;
+    return {
+      date,
+      equity: round(state.reduce((sum, row) => sum + row.equity * row.weightPct / 100, 0), 0)
+    };
+  });
+}
+
+function strategyFamily(config) {
+  return config.researchVariant || `${config.rankMode || 'unknown'}_${config.exitRule?.holdDays || 0}`;
+}
+
+function stockMetaConfigs(search) {
+  const rows = [
+    ...(search.top || []),
+    ...(search.cashFirstTop || []),
+    ...(search.balancedTop || []),
+    ...(search.indicatorTop || [])
+  ].filter(result => (
+    result.config?.researchVariant?.startsWith('profit5_')
+    && result.trades >= 250
+    && result.maxDrawdownPct >= -25
+    && result.test?.average > 0
+  ));
+  const byFamily = new Map();
+  for (const result of rows.sort((a, b) => (
+    b.test.average - a.test.average
+    || b.maxDrawdownPct - a.maxDrawdownPct
+  ))) {
+    const family = strategyFamily(result.config);
+    const configs = byFamily.get(family) || [];
+    const configHash = hash({ ...result.config, collectTrades: undefined });
+    if (!configs.some(row => row.configHash === configHash) && configs.length < 6) {
+      configs.push({ configHash, config: { ...result.config, collectTrades: false } });
+      byFamily.set(family, configs);
+    }
+  }
+  return [...byFamily.values()].flat();
+}
+
+function stockMetaPortfolios(shortlist) {
+  const rows = shortlist.map(item => ({
+    id: `single_${item.id}`,
+    sleeves: [{ ...item, weightPct: 100 }]
+  }));
+  for (let left = 0; left < shortlist.length; left += 1) {
+    for (let right = left + 1; right < shortlist.length; right += 1) {
+      if (shortlist[left].family === shortlist[right].family) continue;
+      for (const weights of [[50, 50], [65, 35], [35, 65]]) {
+        rows.push({
+          id: `pair_${shortlist[left].id}_${weights[0]}_${shortlist[right].id}_${weights[1]}`,
+          sleeves: [
+            { ...shortlist[left], weightPct: weights[0] },
+            { ...shortlist[right], weightPct: weights[1] }
+          ]
+        });
+      }
+    }
+  }
+  for (let first = 0; first < shortlist.length; first += 1) {
+    for (let second = first + 1; second < shortlist.length; second += 1) {
+      for (let third = second + 1; third < shortlist.length; third += 1) {
+        const families = new Set([
+          shortlist[first].family,
+          shortlist[second].family,
+          shortlist[third].family
+        ]);
+        if (families.size < 3) continue;
+        rows.push({
+          id: `triple_${shortlist[first].id}_${shortlist[second].id}_${shortlist[third].id}`,
+          sleeves: [
+            { ...shortlist[first], weightPct: 40 },
+            { ...shortlist[second], weightPct: 30 },
+            { ...shortlist[third], weightPct: 30 }
+          ]
+        });
+      }
+    }
+  }
+  return rows;
+}
+
+function stockMetaSelectionScore(metrics, sleeves) {
+  const tradeEvidence = Math.min(sleeves.reduce((sum, row) => sum + row.trades, 0), 500) / 100;
+  const concentrationPenalty = sleeves.length === 1 ? 1 : 0;
+  return metrics.averageMonthlyReturnPct * 7
+    + metrics.annualizedReturnPct * 0.12
+    + metrics.maximumDrawdownPct * 0.22
+    + metrics.worstMonthPct * 0.1
+    - metrics.negativeMonths * 0.04
+    + tradeEvidence
+    - concentrationPenalty;
+}
+
+function concatenateValidationCurves(curves) {
+  let equity = INITIAL_CAPITAL;
+  const continuous = [];
+  for (const curve of curves) {
+    if (!curve.length) continue;
+    const base = INITIAL_CAPITAL;
+    for (const row of curve) continuous.push({
+      date: row.date,
+      equity: round(equity * row.equity / base, 0)
+    });
+    equity = continuous.at(-1).equity;
+  }
+  return continuous;
+}
+
+function stockMetaSelector(broadCandidates, search, marketRegimes) {
+  const configs = stockMetaConfigs(search);
+  const periods = [
+    ['2014-05', '2018-10', '2018-11', '2020-04'],
+    ['2015-11', '2020-04', '2020-05', '2021-10'],
+    ['2017-05', '2021-10', '2021-11', '2023-04'],
+    ['2018-11', '2023-04', '2023-05', '2024-10'],
+    ['2020-05', '2024-10', '2024-11', '2026-04']
+  ];
+  const daysCache = new Map();
+  const daysFor = config => {
+    const exitKey = hash(config.exitRule || null);
+    if (!daysCache.has(exitKey)) {
+      daysCache.set(exitKey, config.exitRule
+        ? buildDays(broadCandidates.map(trade => applyExitRule(trade, config.exitRule)))
+        : buildDays(broadCandidates));
+    }
+    return daysCache.get(exitKey);
+  };
+  const folds = [];
+  const validationCurves = [];
+  let validationTrades = 0;
+  for (const [trainStart, trainEnd, validationStart, validationEnd] of periods) {
+    const trained = configs.map(({ configHash, config }) => {
+      const result = simulateRange(daysFor(config), config, marketRegimes, trainStart, trainEnd, false, true);
+      return {
+        id: configHash.slice(0, 10),
+        config,
+        family: strategyFamily(config),
+        trades: result.trades,
+        curve: result.dailyCurve || [],
+        metrics: summarizeCurve(result.dailyCurve || [])
+      };
+    }).filter(row => row.trades >= 80 && row.metrics.maximumDrawdownPct >= -25);
+    const shortlist = [...trained]
+      .sort((a, b) => stockMetaSelectionScore(b.metrics, [b]) - stockMetaSelectionScore(a.metrics, [a]))
+      .filter((row, index, rows) => rows.findIndex(other => other.family === row.family) === index)
+      .slice(0, 6);
+    const portfolios = stockMetaPortfolios(shortlist).map(portfolio => {
+      const curve = combineWeightedStockCurves(portfolio.sleeves);
+      const metrics = summarizeCurve(curve);
+      return {
+        ...portfolio,
+        curve,
+        metrics,
+        selectionScore: stockMetaSelectionScore(metrics, portfolio.sleeves)
+      };
+    });
+    const selected = portfolios
+      .filter(row => row.metrics.maximumDrawdownPct >= -22 && row.metrics.averageMonthlyReturnPct > 0)
+      .sort((a, b) => b.selectionScore - a.selectionScore)[0];
+    if (!selected) {
+      const cashCurve = [...marketRegimes.keys()]
+        .filter(date => date.slice(0, 7) >= validationStart && date.slice(0, 7) <= validationEnd)
+        .map(date => ({ date, equity: INITIAL_CAPITAL }));
+      validationCurves.push(cashCurve);
+      folds.push({
+        trainPeriod: `${trainStart}～${trainEnd}`,
+        validationPeriod: `${validationStart}～${validationEnd}`,
+        status: '訓練證據不足，驗證期持有現金'
+      });
+      continue;
+    }
+    const validationSleeves = selected.sleeves.map(sleeve => {
+      const result = simulateRange(
+        daysFor(sleeve.config),
+        sleeve.config,
+        marketRegimes,
+        validationStart,
+        validationEnd,
+        true,
+        true
+      );
+      validationTrades += result.trades;
+      return {
+        ...sleeve,
+        trades: result.trades,
+        curve: result.dailyCurve || []
+      };
+    });
+    const validationCurve = combineWeightedStockCurves(validationSleeves);
+    validationCurves.push(validationCurve);
+    const validationMetrics = summarizeCurve(validationCurve);
+    folds.push({
+      trainPeriod: `${trainStart}～${trainEnd}`,
+      validationPeriod: `${validationStart}～${validationEnd}`,
+      status: '完成',
+      selectedSleeves: selected.sleeves.map(sleeve => ({
+        strategyFamily: sleeve.family,
+        weightPct: sleeve.weightPct,
+        trainTrades: sleeve.trades
+      })),
+      train: selected.metrics,
+      validation: validationMetrics,
+      validationTrades: validationSleeves.reduce((sum, row) => sum + row.trades, 0)
+    });
+  }
+  const combinedCurve = concatenateValidationCurves(validationCurves);
+  return {
+    strategyId: 'stock_meta_selector_v1',
+    universe: '台股個股；ETF 與 0050 不參與選股或交易',
+    trainingMonthsPerFold: 54,
+    validationMonthsPerFold: 18,
+    validationPeriod: '2018-11～2026-04',
+    validationMonths: 90,
+    configsConsidered: configs.length,
+    validationTrades,
+    validation: summarizeCurve(combinedCurve),
+    folds
+  };
+}
+
 function selectTacticalRule(stockCurve, startDate, endDate, marketRegimes, barsBySymbol) {
   const candidates = [10, 20, 30].flatMap(sleeveWeightPct => TACTICAL_RULES.map(rule => {
     const sleeve = simulateTacticalSleeve(
@@ -1916,11 +3909,71 @@ async function main() {
   const broadCandidates = candidates.filter(trade => trade.signalScore >= 65);
   const formalDays = buildDays(formalCandidates);
   const broadDays = buildDays(broadCandidates);
+  const broadDaysByExitRule = new Map();
+  const broadDaysForExitRule = exitRule => {
+    if (!exitRule) return broadDays;
+    const key = hash(exitRule);
+    if (!broadDaysByExitRule.has(key)) {
+      while (broadDaysByExitRule.size >= 2) {
+        broadDaysByExitRule.delete(broadDaysByExitRule.keys().next().value);
+      }
+      broadDaysByExitRule.set(
+        key,
+        buildDays(broadCandidates.map(trade => applyExitRule(trade, exitRule)))
+      );
+    }
+    return broadDaysByExitRule.get(key);
+  };
   const tenDayDays = buildDays(broadCandidates.map(trade => applyExitRule(trade, {
     holdDays: 10,
     trail: null,
     noFollow: false
   })));
+  if (process.argv.includes('--stock-meta-selector')) {
+    const search = JSON.parse(await fs.readFile(OUTPUT, 'utf8'));
+    const result = stockMetaSelector(broadCandidates, search, marketRegimes);
+    const etfHistory = JSON.parse(await fs.readFile(ETF_HISTORY, 'utf8'));
+    const benchmark = benchmarkStats(
+      etfHistory.series['0050.TW'] || [],
+      '2018-11-01',
+      '2026-04-30'
+    );
+    const output = {
+      generatedAt: new Date().toISOString(),
+      sourceGeneratedAt: payload.generatedAt,
+      resultLogicVersion: RESULT_LOGIC_VERSION,
+      targetMonthlyReturnPct: 5,
+      result,
+      benchmark,
+      passed: result.validation.averageMonthlyReturnPct >= 5
+        && result.validation.maximumDrawdownPct >= -20
+        && result.validationTrades >= 300,
+      conclusion: result.validation.averageMonthlyReturnPct >= 5
+        && result.validation.maximumDrawdownPct >= -20
+        && result.validationTrades >= 300
+        ? '通過月均 5%、最大回撤與交易樣本門檻；仍須紙上交易驗證。'
+        : '尚未找到月均至少 5% 的可實盤個股策略。'
+    };
+    await fs.writeFile(STOCK_META_OUTPUT, `${JSON.stringify(output, null, 2)}\n`, 'utf8');
+    console.log(JSON.stringify({
+      output: STOCK_META_OUTPUT.pathname,
+      targetMonthlyReturnPct: output.targetMonthlyReturnPct,
+      validationPeriod: result.validationPeriod,
+      validationMonths: result.validationMonths,
+      configsConsidered: result.configsConsidered,
+      validation: {
+        averageMonthlyReturnPct: result.validation.averageMonthlyReturnPct,
+        annualizedReturnPct: result.validation.annualizedReturnPct,
+        maximumDrawdownPct: result.validation.maximumDrawdownPct,
+        negativeMonths: result.validation.negativeMonths,
+        trades: result.validationTrades
+      },
+      benchmark,
+      passed: output.passed,
+      conclusion: output.conclusion
+    }, null, 2));
+    return;
+  }
   if (process.argv.includes('--exposure-frontier')) {
     const search = JSON.parse(await fs.readFile(OUTPUT, 'utf8'));
     const base = { ...search.bestBalanced.config };
@@ -2073,6 +4126,34 @@ async function main() {
     }, null, 2));
     return;
   }
+  const diagnoseVariantArg = process.argv.find(value => value.startsWith('--diagnose-variant='));
+  if (diagnoseVariantArg) {
+    const variant = diagnoseVariantArg.slice('--diagnose-variant='.length);
+    const search = JSON.parse(await fs.readFile(OUTPUT, 'utf8'));
+    const selected = search.variantFeasibleTop?.[variant]?.[0]
+      || search.variantMonthlyTop?.[variant]?.[0]
+      || search.variantTop?.[variant]?.[0];
+    if (!selected) throw new Error(`找不到策略家族：${variant}`);
+    const config = { ...selected.config, collectTrades: true };
+    const sourceDays = config.exitRule
+      ? buildDays(broadCandidates.map(trade => applyExitRule(trade, config.exitRule)))
+      : broadDays;
+    const result = simulate(sourceDays, months, config, marketRegimes);
+    await fs.writeFile(STOCK_VARIANT_DIAGNOSTIC_OUTPUT, `${JSON.stringify({
+      generatedAt: new Date().toISOString(),
+      variant,
+      result
+    }, null, 2)}\n`, 'utf8');
+    console.log(JSON.stringify({
+      output: STOCK_VARIANT_DIAGNOSTIC_OUTPUT.pathname,
+      variant,
+      full: result.full,
+      test: result.test,
+      maxDrawdownPct: result.maxDrawdownPct,
+      trades: result.trades
+    }, null, 2));
+    return;
+  }
   if (process.argv.includes('--diagnose-best')) {
     const search = JSON.parse(await fs.readFile(OUTPUT, 'utf8'));
     const configs = {
@@ -2173,15 +4254,19 @@ async function main() {
   const rand = random(20260609 + datasetLedger.runs.length * 100003);
   const results = [];
   let previousOutput = null;
+  let canReusePreviousResults = false;
   try {
     previousOutput = JSON.parse(await fs.readFile(OUTPUT, 'utf8'));
-    if (previousOutput.datasetSignature === datasetSignature
-      && previousOutput.inputEntryMode === payload.assumptions?.entryMode) {
+    canReusePreviousResults = previousOutput.datasetSignature === datasetSignature
+      && previousOutput.inputEntryMode === payload.assumptions?.entryMode
+      && previousOutput.resultLogicVersion === RESULT_LOGIC_VERSION;
+    if (canReusePreviousResults) {
       const historical = [
         ...(previousOutput.top || []),
         ...(previousOutput.cashFirstTop || []),
         ...(previousOutput.balancedTop || []),
-        ...(previousOutput.indicatorTop || [])
+        ...(previousOutput.indicatorTop || []),
+        ...Object.values(previousOutput.variantTop || {}).flat()
       ];
       for (const result of historical) {
         const clean = { ...result, config: { ...result.config } };
@@ -2196,6 +4281,7 @@ async function main() {
   try {
     const diagnostics = JSON.parse(await fs.readFile(DIAGNOSTIC_OUTPUT, 'utf8'));
     const rows = diagnostics.sourceGeneratedAt === payload.generatedAt
+      && diagnostics.resultLogicVersion === RESULT_LOGIC_VERSION
       ? [diagnostics.targetFirst, diagnostics.cashFirst].filter(Boolean)
       : [];
     for (const result of rows) {
@@ -2210,7 +4296,11 @@ async function main() {
   let evaluated = 0;
   let skippedDuplicates = 0;
   const evaluate = (days, config, force = false) => {
-    const configHash = hash(config);
+    const normalizedConfig = {
+      ...config,
+      resultLogicVersion: RESULT_LOGIC_VERSION
+    };
+    const configHash = hash(normalizedConfig);
     if (!force && testedHashes.has(configHash)) {
       skippedDuplicates += 1;
       return null;
@@ -2219,7 +4309,7 @@ async function main() {
       testedHashes.add(configHash);
       newHashes.push(configHash);
     }
-    const result = simulate(days, months, config, marketRegimes);
+    const result = simulate(days, months, normalizedConfig, marketRegimes);
     results.push(result);
     evaluated += 1;
     return result;
@@ -2242,10 +4332,10 @@ async function main() {
   const targetSeed = (RISK_ONLY || EXITS_ONLY)
     ? previousOutput?.bestBalanced?.config || riskSeed
     : previousOutput?.top?.[0]?.config;
-  const indicatorResults = previousOutput?.datasetSignature === datasetSignature
+  const indicatorResults = canReusePreviousResults
     ? [...(previousOutput.indicatorTop || [])]
     : [];
-  if (targetSeed) {
+  if (targetSeed && !PROFIT5_REFINEMENT_ONLY) {
     const cleanTargetSeed = { ...targetSeed };
     delete cleanTargetSeed.collectTrades;
     const targetDays = cleanTargetSeed.exitRule
@@ -2276,32 +4366,241 @@ async function main() {
         evaluate(targetDays, config);
       }
     }
+    if (STOCK_OBJECTIVE === 'profit5' && !EXITS_ONLY) {
+      for (const config of targetedProfitExpansionConfigs(cleanTargetSeed)) {
+        evaluate(targetDays, config);
+      }
+      for (const config of targetedStatAlphaConfigs(cleanTargetSeed)) {
+        const adjustedDays = config.exitRule
+          ? buildDays(broadCandidates.map(trade => applyExitRule(trade, config.exitRule)))
+          : targetDays;
+        evaluate(adjustedDays, config);
+      }
+      for (const config of targetedHighTurnoverMomentumConfigs(cleanTargetSeed)) {
+        const adjustedDays = config.exitRule
+          ? buildDays(broadCandidates.map(trade => applyExitRule(trade, config.exitRule)))
+          : targetDays;
+        evaluate(adjustedDays, config);
+      }
+      for (const config of targetedBurstTakeProfitConfigs(cleanTargetSeed)) {
+        const adjustedDays = config.exitRule
+          ? buildDays(broadCandidates.map(trade => applyExitRule(trade, config.exitRule)))
+          : targetDays;
+        evaluate(adjustedDays, config);
+      }
+    }
     if (EXITS_ONLY) {
       for (const rule of targetedExitRules()) {
         const adjustedDays = buildDays(broadCandidates.map(trade => applyExitRule(trade, rule)));
         evaluate(adjustedDays, {
           ...cleanTargetSeed,
           exitRule: rule,
+          researchVariant: STOCK_OBJECTIVE === 'profit5'
+            ? 'profit5_target_exit_v2'
+            : cleanTargetSeed.researchVariant,
           collectTrades: false
         });
       }
     }
   }
-  if (!CAPITAL_ONLY && !INDICATORS_ONLY && !RISK_ONLY && !EXITS_ONLY) {
+  if (STOCK_OBJECTIVE === 'profit5' && !PROFIT5_REFINEMENT_ONLY && previousOutput?.bestBalanced?.config) {
+    const highReturnSeed = { ...previousOutput.bestBalanced.config };
+    delete highReturnSeed.collectTrades;
+    const tagHighReturnVariant = (config, kind) => ({
+      ...config,
+      researchVariant: `profit5_high_return_${kind}_v2`
+    });
+    const highReturnDays = highReturnSeed.exitRule
+      ? buildDays(broadCandidates.map(trade => applyExitRule(trade, highReturnSeed.exitRule)))
+      : broadDays;
+    for (const config of targetedBlackSwanConfigs(highReturnSeed)) {
+      evaluate(highReturnDays, tagHighReturnVariant(config, 'black_swan'));
+    }
+    for (const config of targetedPortfolioRiskConfigs(highReturnSeed)) {
+      evaluate(highReturnDays, tagHighReturnVariant(config, 'portfolio_risk'));
+    }
+    for (const config of targetedProfitExpansionConfigs(highReturnSeed)) {
+      evaluate(highReturnDays, tagHighReturnVariant(config, 'profit_expansion'));
+    }
+    for (const config of targetedProfitRiskTradeoffConfigs(highReturnSeed)) {
+      evaluate(highReturnDays, tagHighReturnVariant(config, 'profit_risk_tradeoff'));
+    }
+    for (const config of targetedHighReturnBaseRiskConfigs(highReturnSeed)) {
+      evaluate(highReturnDays, {
+        ...config,
+        researchVariant: 'profit5_high_return_base_risk_v3'
+      });
+    }
+    for (const config of targetedHighReturnDrawdownLimiterConfigs(highReturnSeed)) {
+      const adjustedDays = config.exitRule
+        ? buildDays(broadCandidates.map(trade => applyExitRule(trade, config.exitRule)))
+        : highReturnDays;
+      evaluate(adjustedDays, {
+        ...config,
+        researchVariant: 'profit5_high_return_drawdown_limiter_v1'
+      });
+    }
+    for (const config of targetedBurstTakeProfitConfigs(highReturnSeed)) {
+      const adjustedDays = config.exitRule
+        ? buildDays(broadCandidates.map(trade => applyExitRule(trade, config.exitRule)))
+        : highReturnDays;
+      evaluate(adjustedDays, {
+        ...config,
+        researchVariant: 'profit5_high_return_burst_take_profit_v1'
+      });
+    }
+    if (EXITS_ONLY) {
+      for (const rule of targetedExitRules()) {
+        const adjustedDays = buildDays(broadCandidates.map(trade => applyExitRule(trade, rule)));
+        evaluate(adjustedDays, tagHighReturnVariant({
+          ...highReturnSeed,
+          exitRule: rule,
+          collectTrades: false
+        }, 'exit'));
+      }
+    }
+  }
+  if (STOCK_OBJECTIVE === 'profit5' && !PROFIT5_REFINEMENT_ONLY && previousOutput?.bestCashFirst?.config) {
+    const cashFirstSeed = { ...previousOutput.bestCashFirst.config };
+    delete cashFirstSeed.collectTrades;
+    for (const config of targetedCashFirstLossCutConfigs(cashFirstSeed)) {
+      const adjustedDays = config.exitRule
+        ? buildDays(broadCandidates.map(trade => applyExitRule(trade, config.exitRule)))
+        : broadDays;
+      evaluate(adjustedDays, config);
+    }
+  }
+  const turnoverSeedSource = [
+    ...(previousOutput?.variantTop?.profit5_high_turnover_momentum_v1 || []),
+    ...(previousOutput?.top || [])
+  ].find(result => result.config?.researchVariant === 'profit5_high_turnover_momentum_v1');
+  if (STOCK_OBJECTIVE === 'profit5' && turnoverSeedSource?.config) {
+    const turnoverSeed = { ...turnoverSeedSource.config };
+    delete turnoverSeed.collectTrades;
+    if (!CORE_WEAK_ONLY && !SELECTED_ALPHA_ONLY && !ALPHA_RANKING_ONLY
+      && !ALPHA_RISK_FRONTIER_ONLY && !ALPHA_BREADTH_ONLY && !BREADTH_RISK_ONLY
+      && !BREADTH_EXIT_ONLY && !MARKET_BAND_ONLY && !MONTHLY_PYRAMID_ONLY) {
+      for (const config of targetedHighTurnoverRefinementConfigs(turnoverSeed)) {
+        const adjustedDays = broadDaysForExitRule(config.exitRule);
+        evaluate(adjustedDays, config);
+      }
+      for (const config of targetedAggressiveQualityStockConfigs(turnoverSeed)) {
+        const adjustedDays = broadDaysForExitRule(config.exitRule);
+        evaluate(adjustedDays, config);
+      }
+      for (const config of targetedMarketRegimeAlphaConfigs(turnoverSeed)) {
+        const adjustedDays = broadDaysForExitRule(config.exitRule);
+        evaluate(adjustedDays, config);
+      }
+      for (const config of targetedMarketMomentumSizingConfigs(turnoverSeed)) {
+        const adjustedDays = broadDaysForExitRule(config.exitRule);
+        evaluate(adjustedDays, config);
+      }
+      for (const config of targetedMarketMomentumSizingRefinementConfigs(turnoverSeed)) {
+        const adjustedDays = broadDaysForExitRule(config.exitRule);
+        evaluate(adjustedDays, config);
+      }
+    }
+    if (!CORE_WEAK_ONLY && !SELECTED_ALPHA_ONLY && !ALPHA_RANKING_ONLY
+      && !ALPHA_RISK_FRONTIER_ONLY && !ALPHA_BREADTH_ONLY && !BREADTH_RISK_ONLY
+      && !BREADTH_EXIT_ONLY && !MARKET_BAND_ONLY && !MONTHLY_PYRAMID_ONLY) {
+      for (const config of targetedStrongCoreFrontierConfigs(turnoverSeed)) {
+        const adjustedDays = broadDaysForExitRule(config.exitRule);
+        evaluate(adjustedDays, config, STRONG_CORE_FRONTIER_ONLY);
+      }
+    }
+    if (!CORE_WEAK_ONLY && !STRONG_CORE_FRONTIER_ONLY && !ALPHA_RANKING_ONLY
+      && !ALPHA_RISK_FRONTIER_ONLY && !ALPHA_BREADTH_ONLY && !BREADTH_RISK_ONLY
+      && !BREADTH_EXIT_ONLY && !MARKET_BAND_ONLY && !MONTHLY_PYRAMID_ONLY) {
+      for (const config of targetedSelectedTradeAlphaConfigs(turnoverSeed)) {
+        const adjustedDays = broadDaysForExitRule(config.exitRule);
+        evaluate(adjustedDays, config, SELECTED_ALPHA_ONLY);
+      }
+    }
+    if (!CORE_WEAK_ONLY && !STRONG_CORE_FRONTIER_ONLY && !SELECTED_ALPHA_ONLY
+      && !ALPHA_RISK_FRONTIER_ONLY && !ALPHA_BREADTH_ONLY && !BREADTH_RISK_ONLY
+      && !BREADTH_EXIT_ONLY && !MARKET_BAND_ONLY && !MONTHLY_PYRAMID_ONLY) {
+      for (const config of targetedAlphaRankingConfigs(turnoverSeed)) {
+        const adjustedDays = broadDaysForExitRule(config.exitRule);
+        evaluate(adjustedDays, config, ALPHA_RANKING_ONLY);
+      }
+    }
+    if (!CORE_WEAK_ONLY && !STRONG_CORE_FRONTIER_ONLY && !SELECTED_ALPHA_ONLY
+      && !ALPHA_RANKING_ONLY && !ALPHA_BREADTH_ONLY && !BREADTH_RISK_ONLY
+      && !BREADTH_EXIT_ONLY && !MARKET_BAND_ONLY && !MONTHLY_PYRAMID_ONLY) {
+      for (const config of targetedAlphaRiskFrontierConfigs(turnoverSeed)) {
+        const adjustedDays = broadDaysForExitRule(config.exitRule);
+        evaluate(adjustedDays, config, ALPHA_RISK_FRONTIER_ONLY);
+      }
+    }
+    if (!CORE_WEAK_ONLY && !STRONG_CORE_FRONTIER_ONLY && !SELECTED_ALPHA_ONLY
+      && !ALPHA_RANKING_ONLY && !ALPHA_RISK_FRONTIER_ONLY && !BREADTH_RISK_ONLY
+      && !BREADTH_EXIT_ONLY && !MARKET_BAND_ONLY && !MONTHLY_PYRAMID_ONLY) {
+      for (const config of targetedAlphaBreadthConfigs(turnoverSeed)) {
+        const adjustedDays = broadDaysForExitRule(config.exitRule);
+        evaluate(adjustedDays, config, ALPHA_BREADTH_ONLY);
+      }
+    }
+    if (!CORE_WEAK_ONLY && !STRONG_CORE_FRONTIER_ONLY && !SELECTED_ALPHA_ONLY
+      && !ALPHA_RANKING_ONLY && !ALPHA_RISK_FRONTIER_ONLY && !ALPHA_BREADTH_ONLY
+      && !BREADTH_EXIT_ONLY && !MARKET_BAND_ONLY && !MONTHLY_PYRAMID_ONLY) {
+      for (const config of targetedBreadthRiskConfigs(turnoverSeed)) {
+        const adjustedDays = broadDaysForExitRule(config.exitRule);
+        evaluate(adjustedDays, config, BREADTH_RISK_ONLY);
+      }
+    }
+    if (!CORE_WEAK_ONLY && !STRONG_CORE_FRONTIER_ONLY && !SELECTED_ALPHA_ONLY
+      && !ALPHA_RANKING_ONLY && !ALPHA_RISK_FRONTIER_ONLY && !ALPHA_BREADTH_ONLY
+      && !BREADTH_RISK_ONLY && !MARKET_BAND_ONLY && !MONTHLY_PYRAMID_ONLY) {
+      for (const config of targetedBreadthExitConfigs(turnoverSeed)) {
+        const adjustedDays = broadDaysForExitRule(config.exitRule);
+        evaluate(adjustedDays, config, BREADTH_EXIT_ONLY);
+      }
+    }
+    if (!CORE_WEAK_ONLY && !STRONG_CORE_FRONTIER_ONLY && !SELECTED_ALPHA_ONLY
+      && !ALPHA_RANKING_ONLY && !ALPHA_RISK_FRONTIER_ONLY && !ALPHA_BREADTH_ONLY
+      && !BREADTH_RISK_ONLY && !BREADTH_EXIT_ONLY && !MONTHLY_PYRAMID_ONLY) {
+      for (const config of targetedMarketBandConfigs(turnoverSeed)) {
+        const adjustedDays = broadDaysForExitRule(config.exitRule);
+        evaluate(adjustedDays, config, MARKET_BAND_ONLY);
+      }
+    }
+    if (!CORE_WEAK_ONLY && !STRONG_CORE_FRONTIER_ONLY && !SELECTED_ALPHA_ONLY
+      && !ALPHA_RANKING_ONLY && !ALPHA_RISK_FRONTIER_ONLY && !ALPHA_BREADTH_ONLY
+      && !BREADTH_RISK_ONLY && !BREADTH_EXIT_ONLY && !MARKET_BAND_ONLY) {
+      for (const config of targetedMonthlyPyramidConfigs(turnoverSeed)) {
+        const adjustedDays = broadDaysForExitRule(config.exitRule);
+        evaluate(adjustedDays, config, MONTHLY_PYRAMID_ONLY);
+      }
+    }
+    if (!STRONG_CORE_FRONTIER_ONLY && !SELECTED_ALPHA_ONLY && !ALPHA_RANKING_ONLY
+      && !ALPHA_RISK_FRONTIER_ONLY && !ALPHA_BREADTH_ONLY && !BREADTH_RISK_ONLY
+      && !BREADTH_EXIT_ONLY && !MARKET_BAND_ONLY && !MONTHLY_PYRAMID_ONLY) {
+      for (const config of targetedStrongMarketCoreWithSmallWeakSleeveConfigs(turnoverSeed)) {
+        const adjustedDays = broadDaysForExitRule(config.exitRule);
+        evaluate(adjustedDays, config);
+      }
+      for (const config of targetedConditionalStrongAndWeakAlphaConfigs(turnoverSeed)) {
+        const adjustedDays = broadDaysForExitRule(config.exitRule);
+        evaluate(adjustedDays, config, true);
+      }
+    }
+  }
+  if (!PROFIT5_REFINEMENT_ONLY && !CAPITAL_ONLY && !INDICATORS_ONLY && !RISK_ONLY && !EXITS_ONLY) {
     for (const config of targetedFactorConfigs(baselineConfig)) {
       evaluate(tenDayDays, config);
     }
   }
-  for (let index = 0; index < (REFINE_ONLY || CAPITAL_ONLY || INDICATORS_ONLY || RISK_ONLY || EXITS_ONLY ? 0 : TESTS); index += 1) {
+  for (let index = 0; index < (PROFIT5_REFINEMENT_ONLY || REFINE_ONLY || CAPITAL_ONLY || INDICATORS_ONLY || RISK_ONLY || EXITS_ONLY ? 0 : TESTS); index += 1) {
     evaluate(formalDays, randomConfig(rand));
   }
-  for (let index = 0; index < (REFINE_ONLY || CAPITAL_ONLY || INDICATORS_ONLY || RISK_ONLY || EXITS_ONLY ? 0 : BROAD_TESTS); index += 1) {
+  for (let index = 0; index < (PROFIT5_REFINEMENT_ONLY || REFINE_ONLY || CAPITAL_ONLY || INDICATORS_ONLY || RISK_ONLY || EXITS_ONLY ? 0 : BROAD_TESTS); index += 1) {
     const config = randomConfig(rand);
     config.buyOnly = false;
     config.minScore = pick(rand, [65, 70]);
     evaluate(broadDays, config);
   }
-  for (let index = 0; index < (CAPITAL_ONLY || INDICATORS_ONLY || RISK_ONLY || EXITS_ONLY ? 0 : REFINE_TESTS); index += 1) {
+  for (let index = 0; index < (PROFIT5_REFINEMENT_ONLY || CAPITAL_ONLY || INDICATORS_ONLY || RISK_ONLY || EXITS_ONLY ? 0 : REFINE_TESTS); index += 1) {
     evaluate(broadDays, refineConfig(rand, seedConfig));
   }
   results.sort(compare);
@@ -2313,7 +4612,7 @@ async function main() {
     rows.findIndex(other => JSON.stringify(other.config) === JSON.stringify(result.config)) === index
   ));
   const exitResults = [];
-  if (!CAPITAL_ONLY && !INDICATORS_ONLY && !RISK_ONLY && !EXITS_ONLY) {
+  if (!PROFIT5_REFINEMENT_ONLY && !CAPITAL_ONLY && !INDICATORS_ONLY && !RISK_ONLY && !EXITS_ONLY) {
     for (const rule of exitRules()) {
       const adjustedDays = buildDays(broadCandidates.map(trade => applyExitRule(trade, rule)));
       for (const entryResult of entryTop) {
@@ -2326,6 +4625,38 @@ async function main() {
     }
   }
   const combined = [...results].sort(compare);
+  const variants = new Map();
+  for (const result of combined) {
+    const variant = result.config.researchVariant || '未分類';
+    const rows = variants.get(variant) || [];
+    if (rows.length < 5) {
+      rows.push(result);
+      variants.set(variant, rows);
+    }
+  }
+  const variantNames = [...new Set(combined.map(result => (
+    result.config.researchVariant || '未分類'
+  )))];
+  const variantMonthlyTop = Object.fromEntries(variantNames.map(variant => [
+    variant,
+    combined
+      .filter(result => (result.config.researchVariant || '未分類') === variant)
+      .sort((a, b) => b.test.average - a.test.average
+        || b.full.average - a.full.average
+        || b.maxDrawdownPct - a.maxDrawdownPct)
+      .slice(0, 10)
+  ]));
+  const variantFeasibleTop = Object.fromEntries(variantNames.map(variant => [
+    variant,
+    combined
+      .filter(result => (result.config.researchVariant || '未分類') === variant
+        && result.maxDrawdownPct >= -20
+        && result.trades >= 300)
+      .sort((a, b) => b.test.average - a.test.average
+        || b.full.average - a.full.average
+        || b.trades - a.trades)
+      .slice(0, 10)
+  ]));
   const noNegative = [...combined]
     .filter(result => result.full.negative === 0)
     .sort(compareCashFirst);
@@ -2336,6 +4667,7 @@ async function main() {
     generatedAt: new Date().toISOString(),
     sourceGeneratedAt: payload.generatedAt,
     datasetSignature,
+    resultLogicVersion: RESULT_LOGIC_VERSION,
     inputEntryMode: payload.assumptions?.entryMode || null,
     requestedTests: evaluated + skippedDuplicates,
     evaluatedTests: evaluated,
@@ -2354,6 +4686,9 @@ async function main() {
     indicatorTop: [...indicatorResults].sort(compare).slice(0, 200),
     cashFirstTop: [...combined].sort(compareCashFirst).slice(0, 100),
     balancedTop: [...combined].sort(compareBalanced).slice(0, 100),
+    variantTop: Object.fromEntries(variants),
+    variantMonthlyTop,
+    variantFeasibleTop,
     top: combined.slice(0, 100)
   };
   await fs.writeFile(OUTPUT, `${JSON.stringify(output, null, 2)}\n`, 'utf8');

@@ -1,0 +1,431 @@
+import fs from 'node:fs/promises';
+import {
+  deterministicScore,
+  foldWindows,
+  loadResearchContext,
+  round,
+  simulateSignalMap
+} from './research-core.mjs';
+import {
+  buildExperimentIdentity,
+  loadRegistry,
+  shouldSkipExperiment
+} from './strategy-experiment-registry.mjs';
+
+const REVENUE = new URL('../../data/revenue/monthly-revenue.json', import.meta.url);
+const OUTPUT = new URL('../../data/research/stock-record-revenue-drift-v1.json', import.meta.url);
+const ETF_HISTORY = new URL('../../data/research/deployable-etf-rotation-history.json', import.meta.url);
+const STRATEGY_ID = 'stock_record_revenue_drift_v1';
+const INITIAL_CAPITAL = 1_000_000;
+const COST_PCT = 0.6;
+const mean = values => values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : 0;
+
+function movingAverage(history, index, days) {
+  return mean(history.slice(index - days + 1, index + 1).map(row => row.close));
+}
+
+function firstIndexOnOrAfter(history, date) {
+  let low = 0;
+  let high = history.length;
+  while (low < high) {
+    const middle = (low + high) >> 1;
+    if (history[middle].date < date) low = middle + 1;
+    else high = middle;
+  }
+  return low < history.length ? low : -1;
+}
+
+const setups = [
+  { id: 'record12', test: row => row.revenue.revenueHigh12 },
+  { id: 'record24', test: row => row.revenue.revenueHigh24 },
+  { id: 'record24_growth20', test: row => row.revenue.revenueHigh24 && row.revenue.YoY >= 20 },
+  {
+    id: 'record12_acceleration',
+    test: row => row.revenue.revenueHigh12 && row.revenue.YoY >= 20 && row.revenue.yoyAcceleration
+  }
+];
+
+function configurations() {
+  return setups.flatMap(setup => [10, 20, 40].flatMap(holdingDays => [5, 10].flatMap(topN => [8, 12].map(stopDistancePct => ({
+    setup,
+    holdingDays,
+    topN,
+    stopDistancePct,
+    maximumEntryGapPct: 4
+  })))));
+}
+
+function baseCandidate(row, config, random = false) {
+  return {
+    signalDate: row.signalDate,
+    entryDate: row.entryDate,
+    symbol: row.symbol,
+    name: row.name,
+    market: row.market,
+    regime: row.regime,
+    score: random
+      ? deterministicScore(`${row.signalDate}|${row.symbol}|營收事件公平隨機`)
+      : row.score,
+    entryGapRange: { minimumPct: -5, maximumPct: config.maximumEntryGapPct },
+    futureBars: row.history.slice(row.historyIndex + 1, row.historyIndex + config.holdingDays + 2).map(bar => ({
+      date: bar.date,
+      open: bar.open,
+      high: bar.high,
+      low: bar.low,
+      close: bar.close,
+      price: bar.close
+    })),
+    stopDistancePct: config.stopDistancePct,
+    stopLossMode: 'close',
+    rewardRisk: 0,
+    maxHoldingDays: config.holdingDays,
+    positionPct: 10,
+    accountRiskPct: 0.5,
+    setup: random ? '同日同數量的流動性個股公平隨機' : `月營收 ${config.setup.id}`,
+    trigger: '保守有效日收盤確認後，下一交易日開盤成交；跳空超過範圍則放棄',
+    invalidation: `收盤跌破風險距離 ${config.stopDistancePct}% 後，下一交易日開盤退出`,
+    exitPlan: `最多持有 ${config.holdingDays} 個交易日`,
+    reason: random ? '公平隨機比較' : '月營收創高公告後漂移',
+    orderIntent: {
+      action: 'BUY',
+      orderType: 'MARKETABLE_LIMIT',
+      timeInForce: 'DAY',
+      earliestDate: row.entryDate
+    }
+  };
+}
+
+function signalMap(events, config) {
+  const map = new Map();
+  for (const [date, rows] of events) {
+    const selected = rows.filter(config.setup.test)
+      .sort((left, right) => right.score - left.score)
+      .slice(0, config.topN)
+      .map(row => baseCandidate(row, config));
+    if (selected.length) map.set(date, selected);
+  }
+  return map;
+}
+
+function randomSignalMap(events, randomPool, config) {
+  const map = new Map();
+  for (const [date, rows] of events) {
+    const count = Math.min(config.topN, rows.filter(config.setup.test).length);
+    if (!count) continue;
+    const selected = (randomPool.get(date) || [])
+      .sort((left, right) => deterministicScore(`${date}|${left.symbol}|公平隨機`)
+        - deterministicScore(`${date}|${right.symbol}|公平隨機`))
+      .slice(0, count)
+      .map(row => baseCandidate(row, config, true));
+    if (selected.length) map.set(date, selected);
+  }
+  return map;
+}
+
+function run(context, map, config, startDate, endDate, suffix = '') {
+  return simulateSignalMap(context, map, {
+    strategyId: `${STRATEGY_ID}${suffix}`,
+    startDate,
+    endDate,
+    initialCapital: INITIAL_CAPITAL,
+    maxOpenPositions: config.topN,
+    holdingDays: config.holdingDays,
+    accountRiskPct: 0.5,
+    riskRules: {
+      maxAccountRiskPct: 0.5,
+      maxSinglePositionPct: 10,
+      exposureLimits: {
+        BULL_TREND: 60,
+        BULL_PULLBACK: 50,
+        RANGE_BOUND: 40,
+        THEME_MOMENTUM: 60,
+        HIGH_VOLATILITY: 20,
+        BEAR_DEFENSE: 20
+      },
+      drawdownBlockPct: 8,
+      drawdownBlockDays: 20,
+      monthlyLossBlockPct: 5,
+      dailyLossBlockPct: 2,
+      losingStreakCount: 5,
+      losingStreakBlockDays: 10
+    }
+  });
+}
+
+function summarizeRuns(runs) {
+  const monthly = runs.flatMap(run => run.summary.monthly);
+  const trades = runs.flatMap(run => run.trades);
+  const curve = runs.flatMap(run => run.equityCurve);
+  let equity = INITIAL_CAPITAL;
+  let peak = equity;
+  let maximumDrawdownPct = 0;
+  for (const row of curve) {
+    equity *= 1 + row.dailyReturnPct / 100;
+    peak = Math.max(peak, equity);
+    maximumDrawdownPct = Math.min(maximumDrawdownPct, (equity / peak - 1) * 100);
+  }
+  const gains = trades.filter(row => row.realizedPnl > 0).reduce((sum, row) => sum + row.realizedPnl, 0);
+  const losses = Math.abs(trades.filter(row => row.realizedPnl <= 0).reduce((sum, row) => sum + row.realizedPnl, 0));
+  const symbols = new Map();
+  for (const trade of trades) symbols.set(trade.symbol, (symbols.get(trade.symbol) || 0) + 1);
+  return {
+    months: monthly.length,
+    averageMonthlyReturnPct: round(mean(monthly.map(row => row.equityReturnPct))),
+    annualizedReturnPct: round((equity / INITIAL_CAPITAL) ** (12 / Math.max(1, monthly.length)) * 100 - 100),
+    maximumDrawdownPct: round(maximumDrawdownPct),
+    trades: trades.length,
+    winRatePct: round(trades.filter(row => row.realizedPnl > 0).length / Math.max(1, trades.length) * 100),
+    profitFactor: losses ? round(gains / losses) : null,
+    concentrationPct: round(Math.max(0, ...symbols.values()) / Math.max(1, trades.length) * 100),
+    negativeMonths: monthly.filter(row => row.equityReturnPct < 0).length,
+    averageExposurePct: round(mean(curve.map(row => row.exposurePct || 0))),
+    investedTradingDaysPct: round(curve.filter(row => row.openPositions > 0).length / Math.max(1, curve.length) * 100)
+  };
+}
+
+function forwardSummary(values) {
+  const gains = values.filter(value => value > 0).reduce((sum, value) => sum + value, 0);
+  const losses = Math.abs(values.filter(value => value <= 0).reduce((sum, value) => sum + value, 0));
+  const sorted = [...values].sort((a, b) => a - b);
+  return {
+    samples: values.length,
+    meanPct: round(mean(values)),
+    medianPct: round(sorted[Math.floor(sorted.length / 2)] || 0),
+    winRatePct: round(values.filter(value => value > 0).length / Math.max(1, values.length) * 100),
+    profitFactor: losses ? round(gains / losses) : null
+  };
+}
+
+function benchmark(series, startDate, endDate) {
+  const rows = series.filter(row => row.date >= startDate && row.date <= endDate);
+  const monthEnds = new Map(rows.map(row => [row.date.slice(0, 7), row.close]));
+  let prior = [...series].reverse().find(row => row.date < startDate)?.close ?? rows[0]?.close;
+  const returns = [];
+  for (const close of monthEnds.values()) {
+    returns.push((close / prior - 1) * 100);
+    prior = close;
+  }
+  return { averageMonthlyReturnPct: round(mean(returns)) };
+}
+
+async function main() {
+  const identityInput = {
+    strategyId: STRATEGY_ID,
+    dataSources: ['個股 OHLCV', '月營收歷史資料（保守 T+1）'],
+    setupRules: setups.map(row => row.id),
+    triggerRules: ['有效日收盤後形成訊號，隔日開盤進場'],
+    invalidationRules: ['收盤停損 8% 或 12%'],
+    exitRules: ['固定持有 10、20、40 個交易日'],
+    riskRules: { accountRiskPct: 0.5, maxPositionPct: 10, tPlusTwo: true },
+    blockedWhen: ['隔日跳空高於 4%', '近 20 日平均成交值低於三千萬元'],
+    parameters: { trainMonths: 54, validationMonths: 18, topN: [5, 10] },
+    trainPeriod: 'rolling 54 months',
+    validationPeriod: 'rolling 18 months',
+    costModel: '共用模擬器：手續費、交易稅、滑價',
+    executionModel: '訊號排名後才檢查隔日真實跳空；跳空停損使用較差成交價'
+  };
+  const identity = buildExperimentIdentity(identityInput);
+  const registryDecision = shouldSkipExperiment(await loadRegistry(), identity, {
+    ...identityInput,
+    newDataSources: ['2015–2026 月營收歷史資料'],
+    coreRulesChanged: true
+  });
+  if (registryDecision.skip && !process.argv.includes('--force')) {
+    console.log(JSON.stringify({ skipped: true, ...registryDecision, ...identity }, null, 2));
+    return;
+  }
+
+  const [context, revenuePayload, etfHistory] = await Promise.all([
+    loadResearchContext(),
+    fs.readFile(REVENUE, 'utf8').then(JSON.parse),
+    fs.readFile(ETF_HISTORY, 'utf8').then(JSON.parse)
+  ]);
+  const stocks = new Map(context.ohlcv.stocks
+    .filter(row => /^\d{4}$/.test(row.stock.symbol) && Number(row.stock.symbol) >= 1000)
+    .map(row => [row.stock.symbol, row]));
+  const marketRows = context.marketHistory;
+  const marketIndex = new Map(marketRows.map((row, index) => [row.date, index]));
+  const events = new Map();
+  const forward = new Map(setups.flatMap(setup => [10, 20, 40].map(days => [`${setup.id}_h${days}`, []])));
+
+  for (const revenue of revenuePayload.records || []) {
+    if (!revenue.isPointInTimeSafe || !revenue.effectiveDate) continue;
+    const stockRow = stocks.get(revenue.symbol);
+    if (!stockRow) continue;
+    const { stock, history } = stockRow;
+    const index = firstIndexOnOrAfter(history, revenue.effectiveDate);
+    if (index < 60 || index + 41 >= history.length) continue;
+    const day = history[index];
+    const nextDay = history[index + 1];
+    const priorReturns = history.slice(index - 59, index + 1).map((row, offset, rows) => (
+      offset ? row.close / rows[offset - 1].close - 1 : 0
+    ));
+    if (priorReturns.some(value => Math.abs(value) > 0.15)) continue;
+    const averageTradeValue20 = mean(history.slice(index - 19, index + 1).map(row => row.close * row.volume));
+    if (day.close < 5 || averageTradeValue20 < 30_000_000) continue;
+    const ma20 = movingAverage(history, index, 20);
+    const ma60 = movingAverage(history, index, 60);
+    const marketCursor = marketIndex.get(day.date);
+    const marketReturn20 = marketCursor >= 20
+      ? (marketRows[marketCursor].close / marketRows[marketCursor - 20].close - 1) * 100
+      : 0;
+    const return20 = (day.close / history[index - 20].close - 1) * 100;
+    const row = {
+      signalDate: day.date,
+      entryDate: nextDay.date,
+      symbol: stock.symbol,
+      name: stock.name,
+      market: stock.market,
+      regime: context.marketByDate.get(day.date)?.regime,
+      revenue,
+      history,
+      historyIndex: index,
+      score: (revenue.revenueHigh24 ? 15 : 0)
+        + Math.min(40, Math.max(-20, revenue.YoY || 0)) * 0.4
+        + Math.min(25, Math.max(-15, revenue.threeMonthCumulativeYoY || 0)) * 0.2
+        + (revenue.yoyAcceleration ? 5 : 0)
+        + Math.min(15, return20 - marketReturn20)
+        + (day.close > ma20 ? 2 : 0)
+        + (ma20 > ma60 ? 2 : 0)
+    };
+    if (!setups.some(setup => setup.test(row))) continue;
+    const rows = events.get(day.date) || [];
+    rows.push(row);
+    events.set(day.date, rows);
+    for (const setup of setups) {
+      if (!setup.test(row)) continue;
+      for (const holdingDays of [10, 20, 40]) {
+        const exit = history[index + 1 + holdingDays];
+        if (!exit) continue;
+        forward.get(`${setup.id}_h${holdingDays}`).push((exit.close / nextDay.open - 1) * 100 - COST_PCT);
+      }
+    }
+  }
+
+  const eventDates = new Set(events.keys());
+  const randomPool = new Map();
+  for (const { stock, history } of stocks.values()) {
+    for (let index = 60; index + 41 < history.length; index += 1) {
+      const day = history[index];
+      if (!eventDates.has(day.date) || day.close < 5) continue;
+      const averageTradeValue20 = mean(history.slice(index - 19, index + 1).map(row => row.close * row.volume));
+      if (averageTradeValue20 < 30_000_000) continue;
+      const rows = randomPool.get(day.date) || [];
+      rows.push({
+        signalDate: day.date,
+        entryDate: history[index + 1].date,
+        symbol: stock.symbol,
+        name: stock.name,
+        market: stock.market,
+        regime: context.marketByDate.get(day.date)?.regime,
+        history,
+        historyIndex: index
+      });
+      randomPool.set(day.date, rows);
+    }
+  }
+
+  const configs = configurations();
+  const validations = [];
+  const randoms = [];
+  const folds = [];
+  for (const fold of foldWindows(context.startDate, context.endDate, 54, 18)) {
+    const trained = configs.map(config => ({
+      config,
+      result: run(context, signalMap(events, config), config, fold.trainStart, fold.trainEnd)
+    })).filter(row => row.result.summary.trades >= 30 && row.result.summary.maximumDrawdownPct >= -25)
+      .sort((left, right) => right.result.summary.averageMonthlyEquityReturnPct
+        - left.result.summary.averageMonthlyEquityReturnPct)[0];
+    if (!trained) {
+      folds.push({ ...fold, status: '訓練樣本不足' });
+      continue;
+    }
+    const realMap = signalMap(events, trained.config);
+    const validation = run(context, realMap, trained.config, fold.validationStart, fold.validationEnd);
+    const random = run(
+      context,
+      randomSignalMap(events, randomPool, trained.config),
+      trained.config,
+      fold.validationStart,
+      fold.validationEnd,
+      '_random'
+    );
+    validations.push(validation);
+    randoms.push(random);
+    folds.push({
+      ...fold,
+      status: '完成',
+      selectedConfig: {
+        setup: trained.config.setup.id,
+        holdingDays: trained.config.holdingDays,
+        topN: trained.config.topN,
+        stopDistancePct: trained.config.stopDistancePct
+      },
+      train: trained.result.summary,
+      validation: validation.summary,
+      random: random.summary
+    });
+  }
+
+  const metrics = summarizeRuns(validations);
+  const fairRandom = summarizeRuns(randoms);
+  const completed = folds.filter(row => row.status === '完成');
+  const validationStart = completed[0]?.validationStart;
+  const validationEnd = completed.at(-1)?.validationEnd;
+  const benchmark0050 = benchmark(etfHistory.series['0050.TW'] || [], validationStart, validationEnd);
+  const targetMet = metrics.averageMonthlyReturnPct >= 5
+    && metrics.maximumDrawdownPct >= -20
+    && metrics.trades >= 300
+    && metrics.profitFactor > 1.15
+    && metrics.averageMonthlyReturnPct > benchmark0050.averageMonthlyReturnPct
+    && metrics.averageMonthlyReturnPct > fairRandom.averageMonthlyReturnPct;
+  const output = {
+    generatedAt: new Date().toISOString(),
+    ...identity,
+    universe: '台股個股；ETF 與 0050 實際交易比重 0%',
+    revenueCoverage: {
+      records: revenuePayload.records?.length || 0,
+      symbols: new Set((revenuePayload.records || []).map(row => row.symbol)).size,
+      months: new Set((revenuePayload.records || []).map(row => row.revenueMonth)).size,
+      pointInTimeMode: revenuePayload.pointInTimePolicy?.mode,
+      fullyVerified: revenuePayload.pointInTimePolicy?.fullyVerified
+    },
+    testedSetups: forward.size,
+    forwardResults: [...forward].map(([id, values]) => ({ id, ...forwardSummary(values) }))
+      .sort((left, right) => right.meanPct - left.meanPct),
+    testedConfigurations: configs.length,
+    trainingMonthsPerFold: 54,
+    validationMonthsPerFold: 18,
+    validationPeriod: `${validationStart}–${validationEnd}`,
+    folds,
+    metrics,
+    benchmark0050,
+    fairRandom,
+    targetMonthlyReturnPct: 5,
+    gapToTargetPct: round(5 - metrics.averageMonthlyReturnPct),
+    targetMet,
+    paperTradingReady: false,
+    liveTradingReady: false,
+    survivorshipBiasWarning: true,
+    conclusion: targetMet
+      ? '通過本研究門檻，但仍只能先進紙上交易。'
+      : `找不到月均 5% 的可實盤純個股策略；目前月均 ${metrics.averageMonthlyReturnPct}%。`
+  };
+  await fs.writeFile(OUTPUT, `${JSON.stringify(output, null, 2)}\n`, 'utf8');
+  console.log(JSON.stringify({
+    revenueCoverage: output.revenueCoverage,
+    forwardBest: output.forwardResults.slice(0, 6),
+    testedConfigurations: output.testedConfigurations,
+    validationPeriod: output.validationPeriod,
+    metrics,
+    benchmark0050,
+    fairRandom,
+    targetMet,
+    conclusion: output.conclusion
+  }, null, 2));
+}
+
+await main().catch(error => {
+  console.error(error.stack || error.message);
+  process.exitCode = 1;
+});

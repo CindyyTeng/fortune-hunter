@@ -110,19 +110,17 @@ function configurations() {
     for (const topN of [5, 10]) {
       for (const minimumPositiveRatio of [0.5, 0.55]) {
         for (const stopDistancePct of [5, 7]) {
-          for (const holdingDays of [20, 40]) {
-            rows.push({
-              rebalanceInterval: 'weekly',
-                lookback,
-                topN,
-                minimumSignedVolumeRatio: 0.05,
-                minimumPositiveRatio,
-                stopDistancePct,
-                holdingDays,
-                maxEntryGapPct: 4,
-                minimumEntryGapPct: -5
-            });
-          }
+          rows.push({
+            rebalanceInterval: 'weekly',
+            lookback,
+            topN,
+            minimumSignedVolumeRatio: 0.05,
+            minimumPositiveRatio,
+            stopDistancePct,
+            holdingDays: 20,
+            maxEntryGapPct: 4,
+            minimumEntryGapPct: -5
+          });
         }
       }
     }
@@ -284,13 +282,13 @@ async function main() {
     setupRules: ['20／60 日帶方向成交量', '排除漲跌停日', '成交值與 MA60 過濾'],
     triggerRules: ['每週排名後下一交易日開盤'],
     invalidationRules: ['固定 5%／7%停損', '市場曝險與帳戶熔斷'],
-    exitRules: ['20／40 日固定持有，由訓練期選擇'],
+    exitRules: ['最多持有 20 個交易日'],
     riskRules: { accountRiskPct: 0.5, maxPositionPct: 9, tPlusTwo: true },
     blockedWhen: ['空頭防守', '高波動曝險限制', '跳空超過範圍'],
     parameters: {
-      testedConfigurations: 32,
+      testedConfigurations: 16,
       rebalanceIntervals: ['weekly'],
-      holdingDays: [20, 40],
+      holdingDays: [20],
       entryGapTiming: 'after_signal_rank_at_execution'
     },
     trainPeriod: 'rolling 54 months',

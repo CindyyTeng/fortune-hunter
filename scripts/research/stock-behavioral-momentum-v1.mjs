@@ -40,12 +40,16 @@ function movingAverage(history, index, days) {
   return total / days;
 }
 
-function buildWeeklyRows(context) {
-  const signalDates = weekEnds(context.marketHistory);
+function intervalDates(rows, interval) {
+  if (interval === 'weekly') return weekEnds(rows);
+  return new Set(rows.filter((_, index) => index % interval === interval - 1).map(row => row.date));
+}
+
+function buildRows(context, signalDates) {
   const rowsByDate = new Map();
   for (const { stock, history } of context.ohlcv.stocks) {
     if (!/^\d{4}$/.test(stock.symbol) || Number(stock.symbol) < 1000) continue;
-    for (let index = 60; index + 20 < history.length; index += 1) {
+    for (let index = 60; index + 1 < history.length; index += 1) {
       const day = history[index];
       if (!signalDates.has(day.date)) continue;
       const priorReturns = history.slice(index - 59, index + 1).map((row, offset) => (
@@ -89,14 +93,8 @@ function buildWeeklyRows(context) {
         ma60: movingAverage(history, index, 60),
         entryGapPct: (nextDay.open / day.close - 1) * 100,
         averageTradeValue20,
-        futureBars: history.slice(index + 1, index + 21).map(bar => ({
-          date: bar.date,
-          open: bar.open,
-          high: bar.high,
-          low: bar.low,
-          close: bar.close,
-          price: bar.close
-        }))
+        history,
+        historyIndex: index
       };
       const rows = rowsByDate.get(day.date) || [];
       rows.push(row);
@@ -112,16 +110,19 @@ function configurations() {
     for (const topN of [5, 10]) {
       for (const minimumPositiveRatio of [0.5, 0.55]) {
         for (const stopDistancePct of [5, 7]) {
-              rows.push({
+          for (const holdingDays of [20, 40]) {
+            rows.push({
+              rebalanceInterval: 'weekly',
                 lookback,
                 topN,
                 minimumSignedVolumeRatio: 0.05,
                 minimumPositiveRatio,
                 stopDistancePct,
-                exitMode: 'fixed_20',
+                holdingDays,
                 maxEntryGapPct: 4,
                 minimumEntryGapPct: -5
-              });
+            });
+          }
         }
       }
     }
@@ -134,14 +135,13 @@ function signalMap(rowsByDate, config, random = false) {
   for (const [date, rows] of rowsByDate) {
     const candidates = rows.filter(row => {
       const factor = row.factors[config.lookback];
-      const commonEligibility = row.close > row.ma60
-        && row.entryGapPct <= config.maxEntryGapPct
-        && row.entryGapPct >= config.minimumEntryGapPct;
+      const commonEligibility = row.close > row.ma60;
       if (!commonEligibility) return false;
       if (random) return true;
       return factor.signedVolumeRatio >= config.minimumSignedVolumeRatio
         && factor.positiveRatio >= config.minimumPositiveRatio;
     }).map(row => {
+      const { history, historyIndex, ...signalRow } = row;
       const factor = row.factors[config.lookback];
       const score = random
         ? deterministicScore(`${date}|${row.symbol}|持續過度反應公平隨機`)
@@ -149,22 +149,30 @@ function signalMap(rowsByDate, config, random = false) {
           + factor.positiveRatio * 20
           + factor.returnPct * 0.1;
       return {
-        ...row,
+        ...signalRow,
+        futureBars: history.slice(historyIndex + 1, historyIndex + config.holdingDays + 1).map(bar => ({
+          date: bar.date,
+          open: bar.open,
+          high: bar.high,
+          low: bar.low,
+          close: bar.close,
+          price: bar.close
+        })),
         score,
+        entryGapRange: {
+          minimumPct: config.minimumEntryGapPct,
+          maximumPct: config.maxEntryGapPct
+        },
         stopDistancePct: config.stopDistancePct,
         rewardRisk: 0,
-        maxHoldingDays: 20,
+        maxHoldingDays: config.holdingDays,
         positionPct: Math.min(9, 80 / config.topN),
         accountRiskPct: 0.5,
-        trailingStopRule: config.exitMode === 'trailing_20'
-          ? { triggerPct: 8, givebackPct: 5, lockPct: 1 }
-          : null,
+        trailingStopRule: null,
         setup: `${config.lookback} 日排除漲跌停後的帶方向成交量排名`,
         trigger: '每週最後交易日確認後，下一交易日開盤且跳空介於 -5% 至 4%',
         invalidation: `進場價下方 ${config.stopDistancePct}%`,
-        exitPlan: config.exitMode === 'trailing_20'
-          ? '最多持有 20 日，獲利 8% 後啟動移動停利'
-          : '固定最多持有 20 日',
+        exitPlan: `固定最多持有 ${config.holdingDays} 日`,
         reason: '台股投資人持續過度反應形成的中期延續',
         orderIntent: {
           action: 'BUY',
@@ -187,7 +195,7 @@ function runConfig(context, rowsByDate, config, startDate, endDate, random = fal
     endDate,
     initialCapital: INITIAL_CAPITAL,
     maxOpenPositions: config.topN,
-    holdingDays: 20,
+    holdingDays: config.holdingDays,
     accountRiskPct: 0.5,
     riskRules: {
       maxAccountRiskPct: 0.5,
@@ -205,10 +213,11 @@ function runConfig(context, rowsByDate, config, startDate, endDate, random = fal
 function aggregateRuns(runs) {
   const monthly = runs.flatMap(run => run.summary.monthly);
   const trades = runs.flatMap(run => run.trades);
+  const equityCurve = runs.flatMap(run => run.equityCurve);
   let equity = INITIAL_CAPITAL;
   let peak = equity;
   let maximumDrawdownPct = 0;
-  for (const row of runs.flatMap(run => run.equityCurve)) {
+  for (const row of equityCurve) {
     equity *= 1 + row.dailyReturnPct / 100;
     peak = Math.max(peak, equity);
     maximumDrawdownPct = Math.min(maximumDrawdownPct, (equity / peak - 1) * 100);
@@ -236,7 +245,11 @@ function aggregateRuns(runs) {
     concentrationPct: round(maximumSymbolTrades / Math.max(1, trades.length) * 100),
     topFiveProfitContributionPct: round(profits.slice(0, 5).reduce((sum, value) => sum + value, 0)
       / Math.max(1, gains) * 100),
-    negativeMonths: monthly.filter(row => row.equityReturnPct < 0).length
+    negativeMonths: monthly.filter(row => row.equityReturnPct < 0).length,
+    averageExposurePct: round(mean(equityCurve.map(row => row.exposurePct || 0))),
+    investedTradingDaysPct: round(equityCurve.filter(row => row.openPositions > 0).length
+      / Math.max(1, equityCurve.length) * 100),
+    averageOpenPositions: round(mean(equityCurve.map(row => row.openPositions || 0)))
   };
 }
 
@@ -271,10 +284,15 @@ async function main() {
     setupRules: ['20／60 日帶方向成交量', '排除漲跌停日', '成交值與 MA60 過濾'],
     triggerRules: ['每週排名後下一交易日開盤'],
     invalidationRules: ['固定 5%／7%停損', '市場曝險與帳戶熔斷'],
-    exitRules: ['20 日持有', '可選移動停利'],
+    exitRules: ['20／40 日固定持有，由訓練期選擇'],
     riskRules: { accountRiskPct: 0.5, maxPositionPct: 9, tPlusTwo: true },
     blockedWhen: ['空頭防守', '高波動曝險限制', '跳空超過範圍'],
-    parameters: { testedConfigurations: 16 },
+    parameters: {
+      testedConfigurations: 32,
+      rebalanceIntervals: ['weekly'],
+      holdingDays: [20, 40],
+      entryGapTiming: 'after_signal_rank_at_execution'
+    },
     trainPeriod: 'rolling 54 months',
     validationPeriod: 'rolling 18 months',
     costModel: '手續費、交易稅、買賣滑價、最低手續費',
@@ -294,53 +312,57 @@ async function main() {
   }
 
   const context = await loadResearchContext();
-  const rowsByDate = buildWeeklyRows(context);
   const configs = configurations();
   const folds = foldWindows(context.startDate, context.endDate, 54, 18);
+  const trainedByFold = new Map();
+  const intervals = [...new Set(configs.map(config => config.rebalanceInterval))];
+  for (const interval of intervals) {
+    const rowsByDate = buildRows(context, intervalDates(context.marketHistory, interval));
+    for (const fold of folds) {
+      for (const config of configs.filter(row => row.rebalanceInterval === interval)) {
+        const summary = runConfig(context, rowsByDate, config, fold.trainStart, fold.trainEnd).summary;
+        if (summary.trades < 150 || summary.maximumDrawdownPct < -25) continue;
+        const current = trainedByFold.get(fold.validationStart);
+        if (!current
+          || summary.averageMonthlyEquityReturnPct > current.summary.averageMonthlyEquityReturnPct
+          || (summary.averageMonthlyEquityReturnPct === current.summary.averageMonthlyEquityReturnPct
+            && summary.maximumDrawdownPct > current.summary.maximumDrawdownPct)) {
+          trainedByFold.set(fold.validationStart, { config, summary });
+        }
+      }
+    }
+  }
   const validationRuns = [];
   const randomRuns = [];
   const foldReports = [];
-  for (const fold of folds) {
-    const trained = configs.map(config => ({
-      config,
-      result: runConfig(context, rowsByDate, config, fold.trainStart, fold.trainEnd)
-    })).filter(row => row.result.summary.trades >= 150
-      && row.result.summary.maximumDrawdownPct >= -25)
-      .sort((left, right) => (
-        right.result.summary.averageMonthlyEquityReturnPct
-        - left.result.summary.averageMonthlyEquityReturnPct
-        || right.result.summary.maximumDrawdownPct - left.result.summary.maximumDrawdownPct
-      ))[0];
-    if (!trained) {
-      foldReports.push({ ...fold, status: '訓練樣本不足' });
-      continue;
+  for (const interval of intervals) {
+    const relevantFolds = folds.filter(fold => (
+      trainedByFold.get(fold.validationStart)?.config.rebalanceInterval === interval
+    ));
+    if (!relevantFolds.length) continue;
+    const rowsByDate = buildRows(context, intervalDates(context.marketHistory, interval));
+    for (const fold of relevantFolds) {
+      const trained = trainedByFold.get(fold.validationStart);
+      const validation = runConfig(context, rowsByDate, trained.config, fold.validationStart, fold.validationEnd);
+      const random = runConfig(context, rowsByDate, trained.config, fold.validationStart, fold.validationEnd, true);
+      validationRuns.push(validation);
+      randomRuns.push(random);
+      foldReports.push({
+        ...fold,
+        status: '完成',
+        selectedConfig: trained.config,
+        train: trained.summary,
+        validation: validation.summary,
+        random: random.summary
+      });
     }
-    const validation = runConfig(
-      context,
-      rowsByDate,
-      trained.config,
-      fold.validationStart,
-      fold.validationEnd
-    );
-    const random = runConfig(
-      context,
-      rowsByDate,
-      trained.config,
-      fold.validationStart,
-      fold.validationEnd,
-      true
-    );
-    validationRuns.push(validation);
-    randomRuns.push(random);
-    foldReports.push({
-      ...fold,
-      status: '完成',
-      selectedConfig: trained.config,
-      train: trained.result.summary,
-      validation: validation.summary,
-      random: random.summary
-    });
   }
+  for (const fold of folds) {
+    if (!trainedByFold.has(fold.validationStart)) {
+      foldReports.push({ ...fold, status: '訓練樣本不足' });
+    }
+  }
+  foldReports.sort((left, right) => left.validationStart.localeCompare(right.validationStart));
 
   const metrics = aggregateRuns(validationRuns);
   const randomMetrics = aggregateRuns(randomRuns);

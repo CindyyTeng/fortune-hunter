@@ -43,7 +43,7 @@ function configurations() {
   const rows = [];
   for (const setup of ['bullish_no_new_low', 'volume_contract_no_new_low']) {
     for (const holdingDays of [5, 10]) {
-      for (const topN of [3, 5]) {
+      for (const topN of [5, 10, 20]) {
         for (const stopDistancePct of [10, 12]) {
           for (const maximumEntryGapPct of [2, 4]) {
             rows.push({ setup, holdingDays, topN, stopDistancePct, maximumEntryGapPct });
@@ -61,12 +61,10 @@ function signalMap(events, config, random = false) {
     const matchesSetup = row => config.setup === 'bullish_no_new_low'
       ? row.bullish && row.noNewLow
       : row.volumeContract && row.noNewLow;
-    const candidates = rows.filter(row => row.entryGapPct <= config.maximumEntryGapPct
-      && row.entryGapPct >= -5
-      && row.entryVsPriorClosePct > -9.3
-      && (random || matchesSetup(row)))
+    const candidates = rows.filter(row => random || matchesSetup(row))
       .map(row => ({
         ...row,
+        entryGapRange: { minimumPct: -5, maximumPct: config.maximumEntryGapPct },
         score: random
           ? deterministicScore(`${date}|${row.symbol}|急跌止穩公平隨機`)
           : -row.shockPct * 2 + row.lowerShadowRatio * 5 + (row.volumeContract ? 3 : 0),
@@ -128,10 +126,11 @@ function run(context, events, config, startDate, endDate, random = false) {
 function summarizeRuns(runs) {
   const monthly = runs.flatMap(item => item.summary.monthly);
   const trades = runs.flatMap(item => item.trades);
+  const equityCurve = runs.flatMap(item => item.equityCurve);
   let equity = INITIAL_CAPITAL;
   let peak = equity;
   let maximumDrawdownPct = 0;
-  for (const day of runs.flatMap(item => item.equityCurve)) {
+  for (const day of equityCurve) {
     equity *= 1 + day.dailyReturnPct / 100;
     peak = Math.max(peak, equity);
     maximumDrawdownPct = Math.min(maximumDrawdownPct, (equity / peak - 1) * 100);
@@ -149,7 +148,11 @@ function summarizeRuns(runs) {
     winRatePct: round(trades.filter(row => row.realizedPnl > 0).length / Math.max(1, trades.length) * 100),
     profitFactor: losses ? round(gains / losses) : null,
     concentrationPct: round(Math.max(0, ...symbols.values()) / Math.max(1, trades.length) * 100),
-    negativeMonths: monthly.filter(row => row.equityReturnPct < 0).length
+    negativeMonths: monthly.filter(row => row.equityReturnPct < 0).length,
+    averageExposurePct: round(mean(equityCurve.map(row => row.exposurePct || 0))),
+    investedTradingDaysPct: round(equityCurve.filter(row => row.openPositions > 0).length
+      / Math.max(1, equityCurve.length) * 100),
+    averageOpenPositions: round(mean(equityCurve.map(row => row.openPositions || 0)))
   };
 }
 
@@ -176,7 +179,7 @@ async function main() {
     exitRules: ['最多持有 5 或 10 個交易日'],
     riskRules: { accountRiskPct: 0.5, maxPositionPct: 10, tPlusTwo: true },
     blockedWhen: ['開盤鎖跌停', '低流動性', '帳戶熔斷'],
-    parameters: { testedConfigurations: 32 },
+    parameters: { testedConfigurations: 48, entryGapTiming: 'after_signal_rank_at_execution' },
     trainPeriod: 'rolling 54 months',
     validationPeriod: 'rolling 18 months',
     costModel: '真實手續費、交易稅與滑價',
@@ -224,7 +227,6 @@ async function main() {
       const tradeValue = mean(history.slice(index - 19, index + 1).map(row => row.close * row.volume));
       if (tradeValue < 30_000_000) continue;
       const gapPct = (entry.open / stabilize.close - 1) * 100;
-      if (gapPct < -5 || gapPct > 4) continue;
       const range = Math.max(0.01, stabilize.high - stabilize.low);
       const row = {
         bullish: stabilize.close > stabilize.open,
@@ -240,8 +242,8 @@ async function main() {
         name: stock.name,
         market: stock.market,
         shockPct,
+        close: stabilize.close,
         entryGapPct: gapPct,
-        entryVsPriorClosePct: (entry.open / stabilize.close - 1) * 100,
         ...row,
         futureBars: history.slice(index + 2, index + 14).map(bar => ({
           date: bar.date,

@@ -721,6 +721,14 @@ export function simulateSignalMap(context, signalMap, options = {}) {
       const nextDay = candidate.futureBars[0];
       const fill = simulateEntry({ mode: 'next_open_market', nextDay });
       if (!fill) continue;
+      const entryGapPct = candidate.close
+        ? (fill.price / candidate.close - 1) * 100
+        : 0;
+      if (candidate.entryGapRange
+        && (entryGapPct < candidate.entryGapRange.minimumPct
+          || entryGapPct > candidate.entryGapRange.maximumPct)) {
+        continue;
+      }
       const stopDistancePct = candidate.stopDistancePct
         ?? Math.min(8, Math.max(3, candidate.atrPct * 2));
       const rewardRisk = candidate.rewardRisk ?? 2;

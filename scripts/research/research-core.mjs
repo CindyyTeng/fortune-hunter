@@ -650,6 +650,15 @@ export function simulateSignalMap(context, signalMap, options = {}) {
       const bar = position.bars.find(row => row.date === date);
       if (!bar) continue;
       markPosition(portfolio, position.tradeId, bar.price);
+      if (position.closeStopTriggered) {
+        closePosition(portfolio, position, {
+          date,
+          price: bar.open ?? bar.price,
+          reason: '前一交易日收盤跌破停損，次日開盤出場',
+          type: 'close_stop_next_open'
+        }, dayIndex);
+        continue;
+      }
       const heldDays = dayIndex - position.entryDayIndex + 1;
       const trailingStop = trailingStopPrice(
         position.entryPrice,
@@ -676,13 +685,15 @@ export function simulateSignalMap(context, signalMap, options = {}) {
       }
       const exit = simulateExit({
         day: bar,
-        stopLoss: position.stopLoss,
+        stopLoss: position.stopLossMode === 'close' ? null : position.stopLoss,
         takeProfit: position.takeProfit,
         trailingStop,
         peakPrice: position.peakPrice
       });
       if (exit?.price) {
         closePosition(portfolio, position, { ...exit, date }, dayIndex);
+      } else if (position.stopLossMode === 'close' && bar.close <= position.stopLoss) {
+        position.closeStopTriggered = true;
       } else if (bar === position.bars.at(-1)) {
         closePosition(portfolio, position, {
           date,
@@ -728,6 +739,7 @@ export function simulateSignalMap(context, signalMap, options = {}) {
         bars: candidate.futureBars,
         maxHoldingDays: candidate.maxHoldingDays,
         trailingStopRule: candidate.trailingStopRule,
+        stopLossMode: candidate.stopLossMode,
         setup: candidate.setup,
         trigger: candidate.trigger,
         invalidation: candidate.invalidation,

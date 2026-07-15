@@ -20,6 +20,10 @@ const STOCK_MOMENTUM_FRONTIER_OUTPUT = new URL(
   '../data/research/stock-momentum-exposure-frontier-v1.json',
   import.meta.url
 );
+const STOCK_FIXED_OOS_OUTPUT = new URL(
+  '../data/research/stock-fixed-top5-oos-v7.json',
+  import.meta.url
+);
 const STOCK_META_OUTPUT = new URL('../data/research/stock-meta-selector-v1.json', import.meta.url);
 const STOCK_VARIANT_DIAGNOSTIC_OUTPUT = new URL(
   '../data/research/stock-variant-trade-diagnostics-v1.json',
@@ -468,9 +472,11 @@ function applyExitRule(trade, rule) {
   const stopLossPct = rule.stopLossPct === 'volatility'
     ? Math.max(3, Math.min(10, (trade.std20Pct || 3) * 2.5))
     : rule.stopLossPct;
-  const stopLoss = stopLossPct
-    ? Math.max(trade.stopLoss, trade.entryPrice * (1 - stopLossPct / 100))
-    : trade.stopLoss;
+  const stopLoss = rule.overrideStopLossPct
+    ? trade.entryPrice * (1 - rule.overrideStopLossPct / 100)
+    : stopLossPct
+      ? Math.max(trade.stopLoss, trade.entryPrice * (1 - stopLossPct / 100))
+      : trade.stopLoss;
   const takeProfit = rule.takeProfitPct
     ? trade.entryPrice * (1 + rule.takeProfitPct / 100)
     : null;
@@ -778,7 +784,9 @@ function simulate(allDays, months, config, marketRegimes = new Map()) {
       || (drawdownLocked && config.monthDrawdownAction === 'exit_next_open')) {
       liquidateNextOpen = open.length > 0;
     }
+    let entriesOpenedToday = 0;
     for (const trade of rank(day.entries, config.rankMode)) {
+      if (config.maxEntriesPerDay && entriesOpenedToday >= config.maxEntriesPerDay) continue;
       if (open.length >= config.maxOpenPositions || !passes(trade, config)) continue;
       if (profitLocked
         || lossBraked
@@ -830,6 +838,7 @@ function simulate(allDays, months, config, marketRegimes = new Map()) {
         markValue: sellExecution(trade.entryPrice, quantity).net
       };
       open.push(position);
+      entriesOpenedToday += 1;
       if (trade.exitDate === date) {
         closePosition(position, trade.exitPrice, date, month, index, trade.exitReason);
       }
@@ -2685,6 +2694,82 @@ function compactStockMomentumFrontierConfigs(base) {
   return rows;
 }
 
+function fixedTopFiveOosConfigs(base) {
+  const positionProfiles = [
+    { maxOpenPositions: 10, standardPct: 10 },
+    { maxOpenPositions: 12, standardPct: 8 }
+  ];
+  const rows = [];
+  for (const { maxOpenPositions, standardPct } of positionProfiles) {
+    for (const holdDays of [15, 20]) {
+      for (const maxEntriesPerDay of [2, 5]) {
+        for (const monthlyEquityBrakePct of [null, -4, -6]) {
+          for (const accountDrawdownBrakePct of [-5, -8]) {
+            for (const targetMarketVolPct of [16, 20]) {
+              for (const overrideStopLossPct of [5, 7]) {
+                rows.push({
+                  ...base,
+                  buyOnly: false,
+                  minScore: 65,
+                  buyConfirmations: 1,
+                  watchConfirmations: 2,
+                  minTradeValue: 30e6,
+                  minNearYearHigh: 0.95,
+                  maxRange: 20,
+                  globalFloor: -1.5,
+                  excludeHighVolumeDistribution: true,
+                  minMarketMom1Pct: -100,
+                  maxMarketMom1Pct: 100,
+                  minMarketMom5Pct: -100,
+                  maxMarketMom5Pct: 100,
+                  minMarketMom20Pct: 3,
+                  maxMarketMom20Pct: 100,
+                  rankMode: 'score',
+                  standardPct,
+                  defensivePct: standardPct,
+                  exploratoryPct: standardPct,
+                  maxPositionPct: standardPct,
+                  maxOpenPositions,
+                  maxEntriesPerDay,
+                  accountRiskPct: 1.25,
+                  starterRiskPct: 1.25,
+                  monthlyEquityBrakePct,
+                  accountDrawdownBrakePct,
+                  accountCooldownDays: 10,
+                  consecutiveLossLimit: 6,
+                  lossStreakCooldownDays: 8,
+                  targetMarketVolPct,
+                  minimumVolatilityMultiplier: 0.25,
+                  maximumVolatilityMultiplier: 1,
+                  momentumCrashMom20Pct: -3,
+                  momentumCrashReboundPct: 1,
+                  momentumCrashMultiplier: 0,
+                  blackSwanMode: 'cash',
+                  blackSwanAction: 'block',
+                  blackSwanDayDropPct: -2,
+                  blackSwanFiveDayDropPct: -4,
+                  blackSwanVol20Pct: 35,
+                  exitRule: {
+                    holdDays,
+                    trail: null,
+                    noFollow: false,
+                    stopLossPct: null,
+                    overrideStopLossPct,
+                    stopMode: 'close'
+                  },
+                  collectTrades: false,
+                  researchVariant: 'stock_fixed_top5_oos_v7'
+                });
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  return rows;
+}
+
 function targetedMarketMomentumSizingRefinementConfigs(base) {
   const rows = [];
   const thresholds = [
@@ -3118,6 +3203,7 @@ function riskConfig(config) {
     positionPct: config.standardPct,
     accountRiskPct: config.accountRiskPct,
     maxOpenPositions: config.maxOpenPositions,
+    maxEntriesPerDay: config.maxEntriesPerDay,
     maxPositionsPerTheme: config.maxPositionsPerTheme,
     monthlyEquityBrakePct: config.monthlyEquityBrakePct,
     transitionPositionMultiplier: config.transitionPositionMultiplier,
@@ -3140,7 +3226,8 @@ function riskConfig(config) {
     regimeSlowMa: config.regimeSlowMa,
     regimeMomentumDays: config.regimeMomentumDays,
     regimeMomentumThreshold: config.regimeMomentumThreshold,
-    rankMode: config.rankMode
+    rankMode: config.rankMode,
+    exitRule: config.exitRule
   };
 }
 
@@ -4045,6 +4132,106 @@ async function main() {
     trail: null,
     noFollow: false
   })));
+  if (process.argv.includes('--stock-fixed-top5-oos')) {
+    const search = JSON.parse(await fs.readFile(OUTPUT, 'utf8'));
+    const base = { ...search.bestBalanced.config };
+    delete base.collectTrades;
+    const configs = fixedTopFiveOosConfigs(base);
+    const daysByExitRule = new Map();
+    for (const config of configs) {
+      const key = JSON.stringify(config.exitRule);
+      if (!daysByExitRule.has(key)) {
+        daysByExitRule.set(key, broadDaysForExitRule(config.exitRule));
+      }
+    }
+    const daysFor = config => daysByExitRule.get(JSON.stringify(config.exitRule));
+    const trainRows = configs.map(config => simulateRange(
+      daysFor(config),
+      config,
+      marketRegimes,
+      '2016-08',
+      '2021-12'
+    ));
+    const selected = trainRows.filter(result => (
+      result.trades >= 350 && result.maxDrawdownPct >= -18
+      && result.config.maxOpenPositions === 12
+      && result.config.monthlyEquityBrakePct !== null
+    )).sort((a, b) => (
+      b.full.average / Math.abs(b.maxDrawdownPct)
+      - a.full.average / Math.abs(a.maxDrawdownPct)
+      || b.full.average - a.full.average
+    ))[0];
+    if (!selected) throw new Error('訓練期沒有符合至少 350 筆與回撤不超過 18% 的純個股配置。');
+    const validation = simulateRange(
+      daysFor(selected.config),
+      selected.config,
+      marketRegimes,
+      '2022-01',
+      '2026-05',
+      true,
+      true
+    );
+    const quality = tradeQuality(validation);
+    const etfHistory = JSON.parse(await fs.readFile(ETF_HISTORY, 'utf8'));
+    const benchmark0050 = benchmarkStats(
+      etfHistory.series['0050.TW'] || [],
+      '2022-01-01',
+      '2026-05-31'
+    );
+    const metrics = {
+      averageMonthlyReturnPct: round(validation.full.average),
+      annualizedReturnPct: annualizedReturn(validation.monthly),
+      maximumDrawdownPct: validation.maxDrawdownPct,
+      trades: validation.trades,
+      winRatePct: quality.winRatePct,
+      profitFactor: quality.profitFactor,
+      topFiveProfitContributionPct: quality.topFiveProfitContributionPct,
+      beats0050: validation.full.average > benchmark0050.averageMonthlyReturnPct
+    };
+    const targetMet = metrics.averageMonthlyReturnPct >= 5
+      && metrics.maximumDrawdownPct >= -20
+      && metrics.trades >= 300
+      && metrics.beats0050;
+    const output = {
+      generatedAt: new Date().toISOString(),
+      strategyId: 'stock_fixed_top5_oos_v7',
+      universe: '台股四位數普通股，ETF／0050 不交易；0050 僅作比較',
+      selection: {
+        trainPeriod: '2016-08～2021-12',
+        rule: '訓練期固定 12 檔分散、啟用月度熔斷，再選報酬回撤效率最高且至少 350 筆、最大回撤不超過 18%；樣本外門檻維持 300 筆與 20%',
+        testedConfigs: configs.length,
+        selectedConfig: riskConfig(selected.config),
+        trainAverageMonthlyReturnPct: round(selected.full.average),
+        trainMaximumDrawdownPct: selected.maxDrawdownPct,
+        trainTrades: selected.trades
+      },
+      validation: {
+        period: '2022-01～2026-05',
+        months: validation.full.months,
+        parametersFrozen: true
+      },
+      metrics,
+      benchmark0050,
+      targetMonthlyReturnPct: 5,
+      targetMet,
+      paperTradingReady: false,
+      liveTradingReady: false,
+      conclusion: targetMet
+        ? '樣本外達到研究門檻，但仍須完成前瞻紙上交易。'
+        : `樣本外尚未達成全部門檻；月均 ${metrics.averageMonthlyReturnPct}%。`
+    };
+    await fs.writeFile(STOCK_FIXED_OOS_OUTPUT, `${JSON.stringify(output, null, 2)}\n`, 'utf8');
+    console.log(JSON.stringify({
+      output: STOCK_FIXED_OOS_OUTPUT.pathname,
+      selection: output.selection,
+      validation: output.validation,
+      metrics,
+      benchmark0050,
+      targetMet,
+      conclusion: output.conclusion
+    }, null, 2));
+    return;
+  }
   if (process.argv.includes('--stock-momentum-frontier')) {
     const search = JSON.parse(await fs.readFile(OUTPUT, 'utf8'));
     const base = { ...search.bestBalanced.config };

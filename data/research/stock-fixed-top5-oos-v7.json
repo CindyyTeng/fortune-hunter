@@ -1,0 +1,71 @@
+{
+  "generatedAt": "2026-07-15T13:08:50.902Z",
+  "strategyId": "stock_fixed_top5_oos_v7",
+  "universe": "台股四位數普通股，ETF／0050 不交易；0050 僅作比較",
+  "selection": {
+    "trainPeriod": "2016-08～2021-12",
+    "rule": "訓練期固定 12 檔分散、啟用月度熔斷，再選報酬回撤效率最高且至少 350 筆、最大回撤不超過 18%；樣本外門檻維持 300 筆與 20%",
+    "testedConfigs": 192,
+    "selectedConfig": {
+      "positionPct": 8,
+      "accountRiskPct": 1.25,
+      "maxOpenPositions": 12,
+      "maxEntriesPerDay": 5,
+      "monthlyEquityBrakePct": -6,
+      "accountDrawdownBrakePct": -5,
+      "accountCooldownDays": 10,
+      "consecutiveLossLimit": 6,
+      "lossStreakCooldownDays": 8,
+      "targetMarketVolPct": 20,
+      "minimumVolatilityMultiplier": 0.25,
+      "maximumVolatilityMultiplier": 1,
+      "momentumCrashMom20Pct": -3,
+      "momentumCrashReboundPct": 1,
+      "momentumCrashMultiplier": 0,
+      "regimeMode": "none",
+      "regimeSlowMa": 40,
+      "regimeMomentumDays": 10,
+      "regimeMomentumThreshold": -1,
+      "rankMode": "score",
+      "exitRule": {
+        "holdDays": 15,
+        "trail": null,
+        "noFollow": false,
+        "stopLossPct": null,
+        "overrideStopLossPct": 7,
+        "stopMode": "close"
+      }
+    },
+    "trainAverageMonthlyReturnPct": 1.33,
+    "trainMaximumDrawdownPct": -15.37,
+    "trainTrades": 454
+  },
+  "validation": {
+    "period": "2022-01～2026-05",
+    "months": 53,
+    "parametersFrozen": true
+  },
+  "metrics": {
+    "averageMonthlyReturnPct": 1.75,
+    "annualizedReturnPct": 20.46,
+    "maximumDrawdownPct": -23.19,
+    "trades": 349,
+    "winRatePct": 49.57,
+    "profitFactor": 2.03,
+    "topFiveProfitContributionPct": 21.44,
+    "beats0050": false
+  },
+  "benchmark0050": {
+    "startDate": "2022-01-03",
+    "endDate": "2026-05-29",
+    "months": 52,
+    "averageMonthlyReturnPct": 2.38,
+    "annualizedReturnPct": 27.18,
+    "maxDrawdownPct": -36.38
+  },
+  "targetMonthlyReturnPct": 5,
+  "targetMet": false,
+  "paperTradingReady": false,
+  "liveTradingReady": false,
+  "conclusion": "樣本外尚未達成全部門檻；月均 1.75%。"
+}

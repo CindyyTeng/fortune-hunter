@@ -1,0 +1,382 @@
+{
+  "generatedAt": "2026-07-15T12:09:39.064Z",
+  "strategyId": "stock_momentum_exposure_frontier_v1",
+  "universe": "台股普通股，ETF 僅作比較基準且交易配置為 0%",
+  "testedConfigs": 144,
+  "validation": {
+    "trainingMonthsPerFold": 54,
+    "validationMonthsPerFold": 18,
+    "period": "2018-11～2026-04",
+    "months": 90,
+    "selectionMode": "drawdown_stability",
+    "minimumSegmentTrades": 10
+  },
+  "metrics": {
+    "averageMonthlyReturnPct": 1.41,
+    "annualizedReturnPct": 16.63,
+    "maximumDrawdownPct": -20.65,
+    "trades": 321,
+    "winRatePct": 46.42,
+    "profitFactor": 1.91,
+    "topFiveProfitContributionPct": 16.27,
+    "beats0050": false
+  },
+  "benchmark0050": {
+    "startDate": "2018-11-01",
+    "endDate": "2026-04-30",
+    "months": 89,
+    "averageMonthlyReturnPct": 1.96,
+    "annualizedReturnPct": 22.65,
+    "maxDrawdownPct": -36.38
+  },
+  "folds": [
+    {
+      "trainPeriod": "2014-05～2018-10",
+      "validationPeriod": "2018-11～2020-04",
+      "status": "cash_insufficient_training_evidence",
+      "selectedRisk": null,
+      "train": null,
+      "trainMaxDrawdownPct": 0,
+      "validation": {
+        "months": 18,
+        "hit": 0,
+        "negative": 0,
+        "zero": 18,
+        "worst": 0,
+        "average": 0
+      },
+      "validationMaxDrawdownPct": 0,
+      "validationTrades": 0,
+      "validationQuality": {
+        "winRatePct": 0,
+        "profitFactor": null,
+        "topFiveProfitContributionPct": 0
+      },
+      "selectedTacticalRule": "cash",
+      "selectedTacticalRuleName": "現金",
+      "selectedTacticalSleeveWeightPct": 100,
+      "trainTacticalMetrics": null
+    },
+    {
+      "trainPeriod": "2015-11～2020-04",
+      "validationPeriod": "2020-05～2021-10",
+      "selectedRisk": {
+        "positionPct": 8,
+        "accountRiskPct": 1,
+        "maxOpenPositions": 8,
+        "monthlyEquityBrakePct": -3,
+        "accountDrawdownBrakePct": -8,
+        "accountCooldownDays": 20,
+        "consecutiveLossLimit": 6,
+        "lossStreakCooldownDays": 8,
+        "targetMarketVolPct": 15,
+        "minimumVolatilityMultiplier": 0.25,
+        "maximumVolatilityMultiplier": 1,
+        "marketMomentumPositioning": true,
+        "strongMarketMom5Pct": 0,
+        "strongMarketMom20Pct": 1,
+        "strongMarketPositionMultiplier": 1.25,
+        "weakMarketPositionMultiplier": 0,
+        "regimeMode": "none",
+        "regimeSlowMa": 40,
+        "regimeMomentumDays": 10,
+        "regimeMomentumThreshold": -1,
+        "rankMode": "volumeRsiQuality"
+      },
+      "train": {
+        "months": 54,
+        "hit": 1,
+        "negative": 21,
+        "zero": 21,
+        "worst": -4.22,
+        "average": 0.9361111111111108
+      },
+      "trainMaxDrawdownPct": -14.68,
+      "trainStableSegments": [
+        {
+          "averageMonthlyReturnPct": 1.09,
+          "maximumDrawdownPct": -8.43,
+          "trades": 52
+        },
+        {
+          "averageMonthlyReturnPct": 0.91,
+          "maximumDrawdownPct": -10.98,
+          "trades": 88
+        },
+        {
+          "averageMonthlyReturnPct": 0.82,
+          "maximumDrawdownPct": -14.68,
+          "trades": 67
+        }
+      ],
+      "trainStabilityScore": -0.65,
+      "validation": {
+        "months": 18,
+        "hit": 1,
+        "negative": 5,
+        "zero": 4,
+        "worst": -7.91,
+        "average": 2.3566666666666665
+      },
+      "validationMaxDrawdownPct": -12.63,
+      "validationTrades": 120,
+      "validationQuality": {
+        "winRatePct": 47.5,
+        "profitFactor": 2.04,
+        "topFiveProfitContributionPct": 33.17
+      },
+      "selectedTacticalRule": "leveraged_strict",
+      "selectedTacticalRuleName": "正向槓桿強趨勢／現金",
+      "selectedTacticalSleeveWeightPct": 10,
+      "trainTacticalMetrics": {
+        "months": 54,
+        "averageMonthlyReturnPct": 0.88,
+        "annualizedReturnPct": 10.38,
+        "maximumDrawdownPct": -13.57,
+        "negativeMonths": 21
+      }
+    },
+    {
+      "trainPeriod": "2017-05～2021-10",
+      "validationPeriod": "2021-11～2023-04",
+      "selectedRisk": {
+        "positionPct": 10,
+        "accountRiskPct": 1,
+        "maxOpenPositions": 8,
+        "monthlyEquityBrakePct": -3,
+        "accountDrawdownBrakePct": -8,
+        "accountCooldownDays": 20,
+        "consecutiveLossLimit": 6,
+        "lossStreakCooldownDays": 8,
+        "targetMarketVolPct": 20,
+        "minimumVolatilityMultiplier": 0.25,
+        "maximumVolatilityMultiplier": 1,
+        "marketMomentumPositioning": true,
+        "strongMarketMom5Pct": 0,
+        "strongMarketMom20Pct": 3,
+        "strongMarketPositionMultiplier": 1.25,
+        "weakMarketPositionMultiplier": 0,
+        "regimeMode": "none",
+        "regimeSlowMa": 40,
+        "regimeMomentumDays": 10,
+        "regimeMomentumThreshold": -1,
+        "rankMode": "riskAdjustedMomentum"
+      },
+      "train": {
+        "months": 54,
+        "hit": 1,
+        "negative": 19,
+        "zero": 19,
+        "worst": -4.79,
+        "average": 1.4875925925925928
+      },
+      "trainMaxDrawdownPct": -11.97,
+      "trainStableSegments": [
+        {
+          "averageMonthlyReturnPct": 1.51,
+          "maximumDrawdownPct": -6.28,
+          "trades": 69
+        },
+        {
+          "averageMonthlyReturnPct": -0.2,
+          "maximumDrawdownPct": -11.97,
+          "trades": 56
+        },
+        {
+          "averageMonthlyReturnPct": 3.68,
+          "maximumDrawdownPct": -8.15,
+          "trades": 102
+        }
+      ],
+      "trainStabilityScore": -0.51,
+      "validation": {
+        "months": 18,
+        "hit": 0,
+        "negative": 4,
+        "zero": 10,
+        "worst": -5,
+        "average": 0.2411111111111111
+      },
+      "validationMaxDrawdownPct": -10.2,
+      "validationTrades": 63,
+      "validationQuality": {
+        "winRatePct": 41.27,
+        "profitFactor": 1.16,
+        "topFiveProfitContributionPct": 50.31
+      },
+      "selectedTacticalRule": "leveraged_trend",
+      "selectedTacticalRuleName": "正向槓桿趨勢／現金",
+      "selectedTacticalSleeveWeightPct": 10,
+      "trainTacticalMetrics": {
+        "months": 54,
+        "averageMonthlyReturnPct": 1.46,
+        "annualizedReturnPct": 17.71,
+        "maximumDrawdownPct": -11.02,
+        "negativeMonths": 25
+      }
+    },
+    {
+      "trainPeriod": "2018-11～2023-04",
+      "validationPeriod": "2023-05～2024-10",
+      "selectedRisk": {
+        "positionPct": 12,
+        "accountRiskPct": 1.5,
+        "maxOpenPositions": 8,
+        "monthlyEquityBrakePct": -3,
+        "accountDrawdownBrakePct": -8,
+        "accountCooldownDays": 20,
+        "consecutiveLossLimit": 6,
+        "lossStreakCooldownDays": 8,
+        "targetMarketVolPct": 20,
+        "minimumVolatilityMultiplier": 0.25,
+        "maximumVolatilityMultiplier": 1,
+        "marketMomentumPositioning": true,
+        "strongMarketMom5Pct": 0,
+        "strongMarketMom20Pct": 3,
+        "strongMarketPositionMultiplier": 2,
+        "weakMarketPositionMultiplier": 0,
+        "regimeMode": "none",
+        "regimeSlowMa": 40,
+        "regimeMomentumDays": 10,
+        "regimeMomentumThreshold": -1,
+        "rankMode": "volumeRsiQuality"
+      },
+      "train": {
+        "months": 54,
+        "hit": 5,
+        "negative": 16,
+        "zero": 27,
+        "worst": -6.38,
+        "average": 1.620740740740741
+      },
+      "trainMaxDrawdownPct": -15.77,
+      "trainStableSegments": [
+        {
+          "averageMonthlyReturnPct": 0.08,
+          "maximumDrawdownPct": -13.91,
+          "trades": 45
+        },
+        {
+          "averageMonthlyReturnPct": 2.87,
+          "maximumDrawdownPct": -12.13,
+          "trades": 73
+        },
+        {
+          "averageMonthlyReturnPct": 1.42,
+          "maximumDrawdownPct": -7.36,
+          "trades": 51
+        }
+      ],
+      "trainStabilityScore": -0.89,
+      "validation": {
+        "months": 18,
+        "hit": 2,
+        "negative": 5,
+        "zero": 7,
+        "worst": -3.43,
+        "average": 2.322222222222222
+      },
+      "validationMaxDrawdownPct": -13.19,
+      "validationTrades": 74,
+      "validationQuality": {
+        "winRatePct": 50,
+        "profitFactor": 2.05,
+        "topFiveProfitContributionPct": 40.97
+      },
+      "selectedTacticalRule": "leveraged_trend",
+      "selectedTacticalRuleName": "正向槓桿趨勢／現金",
+      "selectedTacticalSleeveWeightPct": 10,
+      "trainTacticalMetrics": {
+        "months": 54,
+        "averageMonthlyReturnPct": 1.58,
+        "annualizedReturnPct": 19.3,
+        "maximumDrawdownPct": -13.76,
+        "negativeMonths": 22
+      }
+    },
+    {
+      "trainPeriod": "2020-05～2024-10",
+      "validationPeriod": "2024-11～2026-04",
+      "selectedRisk": {
+        "positionPct": 10,
+        "accountRiskPct": 1.5,
+        "maxOpenPositions": 8,
+        "monthlyEquityBrakePct": -3,
+        "accountDrawdownBrakePct": -8,
+        "accountCooldownDays": 20,
+        "consecutiveLossLimit": 6,
+        "lossStreakCooldownDays": 8,
+        "targetMarketVolPct": 20,
+        "minimumVolatilityMultiplier": 0.25,
+        "maximumVolatilityMultiplier": 1,
+        "marketMomentumPositioning": true,
+        "strongMarketMom5Pct": 0,
+        "strongMarketMom20Pct": 3,
+        "strongMarketPositionMultiplier": 2,
+        "weakMarketPositionMultiplier": 0,
+        "regimeMode": "none",
+        "regimeSlowMa": 40,
+        "regimeMomentumDays": 10,
+        "regimeMomentumThreshold": -1,
+        "rankMode": "volumeRsiQuality"
+      },
+      "train": {
+        "months": 54,
+        "hit": 6,
+        "negative": 13,
+        "zero": 22,
+        "worst": -6.39,
+        "average": 2.237222222222222
+      },
+      "trainMaxDrawdownPct": -12.13,
+      "trainStableSegments": [
+        {
+          "averageMonthlyReturnPct": 2.93,
+          "maximumDrawdownPct": -12.13,
+          "trades": 74
+        },
+        {
+          "averageMonthlyReturnPct": 1.13,
+          "maximumDrawdownPct": -7.36,
+          "trades": 52
+        },
+        {
+          "averageMonthlyReturnPct": 2.89,
+          "maximumDrawdownPct": -7.16,
+          "trades": 71
+        }
+      ],
+      "trainStabilityScore": 1.88,
+      "validation": {
+        "months": 18,
+        "hit": 2,
+        "negative": 8,
+        "zero": 7,
+        "worst": -6.33,
+        "average": 2.132222222222222
+      },
+      "validationMaxDrawdownPct": -12.59,
+      "validationTrades": 64,
+      "validationQuality": {
+        "winRatePct": 45.31,
+        "profitFactor": 2.08,
+        "topFiveProfitContributionPct": 51.3
+      },
+      "selectedTacticalRule": "leveraged_strict",
+      "selectedTacticalRuleName": "正向槓桿強趨勢／現金",
+      "selectedTacticalSleeveWeightPct": 10,
+      "trainTacticalMetrics": {
+        "months": 54,
+        "averageMonthlyReturnPct": 2.15,
+        "annualizedReturnPct": 27.45,
+        "maximumDrawdownPct": -11.04,
+        "negativeMonths": 15
+      }
+    }
+  ],
+  "targetMonthlyReturnPct": 5,
+  "targetMet": false,
+  "paperTradingReady": false,
+  "liveTradingReady": false,
+  "conclusion": "尚未達月均 5%；目前純個股長期滾動驗證為 1.41%。"
+}

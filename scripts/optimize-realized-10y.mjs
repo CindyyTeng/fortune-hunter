@@ -16,6 +16,10 @@ const DIAGNOSTIC_OUTPUT = new URL('../data/realized-strategy-diagnostics-10y.jso
 const MARKET_HISTORY = new URL('../data/market-regime-history-10y.json', import.meta.url);
 const SEARCH_LEDGER = new URL('../data/strategy-search-ledger-10y.json', import.meta.url);
 const EXPOSURE_FRONTIER_OUTPUT = new URL('../data/realized-exposure-frontier-10y.json', import.meta.url);
+const STOCK_MOMENTUM_FRONTIER_OUTPUT = new URL(
+  '../data/research/stock-momentum-exposure-frontier-v1.json',
+  import.meta.url
+);
 const STOCK_META_OUTPUT = new URL('../data/research/stock-meta-selector-v1.json', import.meta.url);
 const STOCK_VARIANT_DIAGNOSTIC_OUTPUT = new URL(
   '../data/research/stock-variant-trade-diagnostics-v1.json',
@@ -2614,6 +2618,73 @@ function targetedMarketMomentumSizingConfigs(base) {
   return rows;
 }
 
+function compactStockMomentumFrontierConfigs(base) {
+  const rows = [];
+  for (const strongMarketMom20Pct of [1, 3]) {
+    for (const strongMarketPositionMultiplier of [1.25, 1.5, 2]) {
+      for (const weakMarketPositionMultiplier of [0]) {
+        for (const standardPct of [8, 10, 12]) {
+          for (const accountRiskPct of [1, 1.5]) {
+            for (const targetMarketVolPct of [15, 20]) {
+              for (const rankMode of ['volumeRsiQuality', 'riskAdjustedMomentum']) {
+              rows.push({
+                ...base,
+                marketMomentumPositioning: true,
+                strongMarketMom5Pct: 0,
+                strongMarketMom20Pct,
+                strongMarketPositionMultiplier,
+                weakMarketPositionMultiplier,
+                minMarketMom1Pct: -100,
+                maxMarketMom1Pct: 100,
+                minMarketMom5Pct: -100,
+                maxMarketMom5Pct: 100,
+                minMarketMom20Pct: -100,
+                maxMarketMom20Pct: 100,
+                minScore: 65,
+                minTradeValue: 30e6,
+                minNearYearHigh: 0.9,
+                excludeHighVolumeDistribution: true,
+                rankMode,
+                standardPct,
+                defensivePct: standardPct,
+                exploratoryPct: standardPct,
+                maxPositionPct: 45,
+                maxOpenPositions: 8,
+                accountRiskPct,
+                starterRiskPct: accountRiskPct,
+                monthlyEquityBrakePct: -3,
+                accountDrawdownBrakePct: -8,
+                accountCooldownDays: 20,
+                consecutiveLossLimit: 6,
+                lossStreakCooldownDays: 8,
+                targetMarketVolPct,
+                minimumVolatilityMultiplier: 0.25,
+                maximumVolatilityMultiplier: 1,
+                blackSwanMode: 'cash',
+                blackSwanAction: 'exit_next_open',
+                blackSwanDayDropPct: -2,
+                blackSwanFiveDayDropPct: -4,
+                blackSwanVol20Pct: 35,
+                exitRule: {
+                  holdDays: 20,
+                  trail: null,
+                  noFollow: false,
+                  stopLossPct: 10,
+                  stopMode: 'close'
+                },
+                collectTrades: false,
+                researchVariant: 'stock_momentum_exposure_frontier_v1'
+              });
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  return rows;
+}
+
 function targetedMarketMomentumSizingRefinementConfigs(base) {
   const rows = [];
   const thresholds = [
@@ -3060,6 +3131,11 @@ function riskConfig(config) {
     momentumCrashMom20Pct: config.momentumCrashMom20Pct,
     momentumCrashReboundPct: config.momentumCrashReboundPct,
     momentumCrashMultiplier: config.momentumCrashMultiplier,
+    marketMomentumPositioning: config.marketMomentumPositioning,
+    strongMarketMom5Pct: config.strongMarketMom5Pct,
+    strongMarketMom20Pct: config.strongMarketMom20Pct,
+    strongMarketPositionMultiplier: config.strongMarketPositionMultiplier,
+    weakMarketPositionMultiplier: config.weakMarketPositionMultiplier,
     regimeMode: config.regimeMode,
     regimeSlowMa: config.regimeSlowMa,
     regimeMomentumDays: config.regimeMomentumDays,
@@ -3650,6 +3726,7 @@ function rollingValidation(days, configs, marketRegimes, barsBySymbol) {
   const minimumSegmentTrades = Number(process.env.ROLLING_MIN_SEGMENT_TRADES || 15);
   const usesSegmentEvidence = [
     'subperiod_stability',
+    'drawdown_stability',
     'evidence_gated_return',
     'evidence_gated_loss_defense'
   ]
@@ -3712,6 +3789,15 @@ function rollingValidation(days, configs, marketRegimes, barsBySymbol) {
         shiftMonth(trainStart, offset + 17)
       ));
       const averages = segments.map(segment => segment.full.average).sort((a, b) => a - b);
+      const stabilityScore = ROLLING_SELECTION_MODE === 'drawdown_stability'
+        ? result.full.average * 0.35
+          + averages[1] * 0.7
+          + averages[0] * 0.9
+          + result.maxDrawdownPct * 0.16
+        : result.full.average * 0.5
+          + averages[1]
+          + averages[0] * 0.5
+          + result.maxDrawdownPct * 0.05;
       return {
         ...result,
         stableSegments: segments.map(segment => ({
@@ -3719,10 +3805,7 @@ function rollingValidation(days, configs, marketRegimes, barsBySymbol) {
           maximumDrawdownPct: segment.maxDrawdownPct,
           trades: segment.trades
         })),
-        stabilityScore: result.full.average * 0.5
-          + averages[1]
-          + averages[0] * 0.5
-          + result.maxDrawdownPct * 0.05
+        stabilityScore
       };
     });
     const trained = trainedRows.filter(result => (
@@ -3731,7 +3814,7 @@ function rollingValidation(days, configs, marketRegimes, barsBySymbol) {
       && (!usesSegmentEvidence
         || result.stableSegments.every(segment => segment.trades >= minimumSegmentTrades))
     )).sort((a, b) => (
-      ROLLING_SELECTION_MODE === 'subperiod_stability'
+      ['subperiod_stability', 'drawdown_stability'].includes(ROLLING_SELECTION_MODE)
         ? b.stabilityScore - a.stabilityScore
         : b.full.average - a.full.average
     ) || b.maxDrawdownPct - a.maxDrawdownPct)[0];
@@ -3864,7 +3947,7 @@ function rollingValidation(days, configs, marketRegimes, barsBySymbol) {
     minimumTrainTrades,
     minimumSegmentTrades,
     trainingSelectionMode: ROLLING_SELECTION_MODE,
-    trainingSelectionObjective: ROLLING_SELECTION_MODE === 'subperiod_stability'
+    trainingSelectionObjective: ['subperiod_stability', 'drawdown_stability'].includes(ROLLING_SELECTION_MODE)
       ? '三個 18 個月子區間穩定度與整體回撤綜合分數'
       : ROLLING_SELECTION_MODE === 'evidence_gated_return'
         ? '三個子區間皆有足夠樣本後，選訓練期月均報酬最高策略；不足則持有現金'
@@ -3962,6 +4045,73 @@ async function main() {
     trail: null,
     noFollow: false
   })));
+  if (process.argv.includes('--stock-momentum-frontier')) {
+    const search = JSON.parse(await fs.readFile(OUTPUT, 'utf8'));
+    const base = { ...search.bestBalanced.config };
+    delete base.collectTrades;
+    const configs = compactStockMomentumFrontierConfigs(base);
+    const sourceDays = broadDaysForExitRule(configs[0].exitRule);
+    const [etfHistory, leveragedEtfHistory] = await Promise.all([
+      fs.readFile(ETF_HISTORY, 'utf8').then(JSON.parse),
+      fs.readFile(LEVERAGED_ETF_HISTORY, 'utf8').then(JSON.parse)
+    ]);
+    const tacticalBars = new Map(
+      ['0050.TW', '00631L.TW', '00632R.TW'].map(symbol => [
+        symbol,
+        new Map((leveragedEtfHistory.series[symbol] || []).map(row => [row.date, row]))
+      ])
+    );
+    const rolling = rollingValidation(sourceDays, configs, marketRegimes, tacticalBars);
+    const stockOnly = rolling.allocationFrontier.find(row => row.stockWeightPct === 100);
+    const benchmark0050 = benchmarkStats(
+      etfHistory.series['0050.TW'] || [],
+      '2018-11-01',
+      '2026-04-30'
+    );
+    const output = {
+      generatedAt: new Date().toISOString(),
+      strategyId: 'stock_momentum_exposure_frontier_v1',
+      universe: '台股普通股，ETF 僅作比較基準且交易配置為 0%',
+      testedConfigs: configs.length,
+      validation: {
+        trainingMonthsPerFold: rolling.trainingMonthsPerFold,
+        validationMonthsPerFold: rolling.plannedValidationMonthsPerFold,
+        period: rolling.validationPeriod,
+        months: rolling.validationMonths,
+        selectionMode: rolling.trainingSelectionMode,
+        minimumSegmentTrades: rolling.minimumSegmentTrades
+      },
+      metrics: {
+        averageMonthlyReturnPct: stockOnly.averageMonthlyReturnPct,
+        annualizedReturnPct: stockOnly.annualizedReturnPct,
+        maximumDrawdownPct: stockOnly.maximumDrawdownPct,
+        trades: rolling.validationTrades,
+        winRatePct: rolling.validationQuality.winRatePct,
+        profitFactor: rolling.validationQuality.profitFactor,
+        topFiveProfitContributionPct: rolling.validationQuality.topFiveProfitContributionPct,
+        beats0050: stockOnly.averageMonthlyReturnPct > benchmark0050.averageMonthlyReturnPct
+      },
+      benchmark0050,
+      folds: rolling.folds,
+      targetMonthlyReturnPct: 5,
+      targetMet: stockOnly.averageMonthlyReturnPct >= 5,
+      paperTradingReady: false,
+      liveTradingReady: false,
+      conclusion: stockOnly.averageMonthlyReturnPct >= 5
+        ? '達到月均研究目標，但仍須完成紙上交易驗證。'
+        : `尚未達月均 5%；目前純個股長期滾動驗證為 ${stockOnly.averageMonthlyReturnPct}%。`
+    };
+    await fs.writeFile(STOCK_MOMENTUM_FRONTIER_OUTPUT, `${JSON.stringify(output, null, 2)}\n`, 'utf8');
+    console.log(JSON.stringify({
+      output: STOCK_MOMENTUM_FRONTIER_OUTPUT.pathname,
+      testedConfigs: configs.length,
+      validation: output.validation,
+      metrics: output.metrics,
+      targetMet: output.targetMet,
+      conclusion: output.conclusion
+    }, null, 2));
+    return;
+  }
   if (process.argv.includes('--stock-meta-selector')) {
     const search = JSON.parse(await fs.readFile(OUTPUT, 'utf8'));
     const result = stockMetaSelector(broadCandidates, search, marketRegimes);

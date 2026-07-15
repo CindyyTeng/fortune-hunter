@@ -176,10 +176,14 @@ async function main() {
     setupRules: ['普通股單日急跌 8.5% 至 12%', '急跌日不是大幅跳空', '隔日收紅或量縮且不破低'],
     triggerRules: ['止穩日收盤確認後，下一交易日開盤進場'],
     invalidationRules: ['進場價下方 10% 或 12% 停損，部位依 0.5% 帳戶風險縮小'],
-    exitRules: ['最多持有 5 或 10 個交易日'],
+    exitRules: ['最多持有 5 或 10 個交易日，由訓練期選擇'],
     riskRules: { accountRiskPct: 0.5, maxPositionPct: 10, tPlusTwo: true },
     blockedWhen: ['開盤鎖跌停', '低流動性', '帳戶熔斷'],
-    parameters: { testedConfigurations: 48, entryGapTiming: 'after_signal_rank_at_execution' },
+    parameters: {
+      testedConfigurations: 48,
+      forwardHorizons: [3, 5, 10, 20],
+      entryGapTiming: 'after_signal_rank_at_execution'
+    },
     trainPeriod: 'rolling 54 months',
     validationPeriod: 'rolling 18 months',
     costModel: '真實手續費、交易稅與滑價',
@@ -207,7 +211,7 @@ async function main() {
     volume_contract_no_new_low: row => row.volumeContract && row.noNewLow
   };
   for (const setup of Object.keys(setups)) {
-    for (const holdingDays of [3, 5, 10]) {
+    for (const holdingDays of [3, 5, 10, 20]) {
       for (const marketFilter of ['all', 'above_ma60']) {
         tests.set(`${setup}_h${holdingDays}_${marketFilter}`, []);
       }
@@ -215,7 +219,7 @@ async function main() {
   }
   for (const { stock, history } of context.ohlcv.stocks) {
     if (!/^\d{4}$/.test(stock.symbol) || Number(stock.symbol) < 1000) continue;
-    for (let index = 20; index + 11 < history.length; index += 1) {
+    for (let index = 20; index + 2 < history.length; index += 1) {
       const shock = history[index];
       const previous = history[index - 1];
       const stabilize = history[index + 1];
@@ -245,7 +249,7 @@ async function main() {
         close: stabilize.close,
         entryGapPct: gapPct,
         ...row,
-        futureBars: history.slice(index + 2, index + 14).map(bar => ({
+        futureBars: history.slice(index + 2, index + 24).map(bar => ({
           date: bar.date,
           open: bar.open,
           high: bar.high,
@@ -257,8 +261,9 @@ async function main() {
       events.set(stabilize.date, eventRows);
       for (const [setup, predicate] of Object.entries(setups)) {
         if (!predicate(row)) continue;
-        for (const holdingDays of [3, 5, 10]) {
+        for (const holdingDays of [3, 5, 10, 20]) {
           const exit = history[index + 1 + holdingDays];
+          if (!exit) continue;
           const netReturn = (exit.close / entry.open - 1) * 100 - COST_PCT;
           tests.get(`${setup}_h${holdingDays}_all`).push(netReturn);
           if (market.get(stabilize.date)?.aboveMa60) {

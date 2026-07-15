@@ -63,5 +63,6 @@
 - [Why is there no momentum in the Taiwan stock market?](https://doi.org/10.1016/j.jeconbus.2008.06.001)
 - [Market dynamics and momentum in the Taiwan stock market](https://doi.org/10.1016/j.pacfin.2016.03.009)
 - [Continuing overreaction and momentum in a market with price limits](https://doi.org/10.1016/j.pacfin.2018.01.005)
+- [Revisiting the momentum effect in Taiwan: The role of persistency](https://doi.org/10.1016/j.pacfin.2023.101943)
 
 目前歷史股票池仍可能有倖存者偏差，也沒有分鐘級委託簿、處置股完整歷史與實際券商拒單資料。即使日線回測達標，仍必須先通過前瞻紙上交易，才可評估是否接真實下單。

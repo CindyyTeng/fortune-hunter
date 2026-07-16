@@ -60,6 +60,7 @@ export function createPortfolio(options = {}) {
     monthStartEquity: initialCapital,
     monthlyEntryBlocked: false,
     drawdownBlockUntil: -1,
+    drawdownThresholdBreached: false,
     dailyBlockUntil: -1,
     lossStreakBlockUntil: -1,
     losingStreak: 0,
@@ -317,8 +318,8 @@ export function recordEquity(portfolio, date, context = {}) {
         blockedUntilMonthEnd: true
       });
     }
-    if (drawdownPct <= -portfolio.riskRules.drawdownBlockPct
-      && dayIndex > portfolio.drawdownBlockUntil) {
+    const drawdownThresholdBreached = drawdownPct <= -portfolio.riskRules.drawdownBlockPct;
+    if (drawdownThresholdBreached && !portfolio.drawdownThresholdBreached) {
       portfolio.drawdownBlockUntil = Math.max(
         portfolio.drawdownBlockUntil,
         dayIndex + portfolio.riskRules.drawdownBlockDays
@@ -330,6 +331,7 @@ export function recordEquity(portfolio, date, context = {}) {
         blockedUntilDayIndex: portfolio.drawdownBlockUntil
       });
     }
+    portfolio.drawdownThresholdBreached = drawdownThresholdBreached;
   }
 
   const blockReasons = activeBlockReasons(portfolio, dayIndex, regime);

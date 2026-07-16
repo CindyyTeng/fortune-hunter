@@ -1,4 +1,5 @@
 import fs from 'node:fs/promises';
+import { gzipSync } from 'node:zlib';
 import {
   deterministicScore,
   foldWindows,
@@ -14,10 +15,12 @@ import {
 
 const EPS = new URL('../../data/quality/eps-history-2015.json', import.meta.url);
 const OUTPUT = new URL('../../data/research/stock-unexpected-earnings-v1.json', import.meta.url);
+const SIGNAL_OUTPUT = new URL('../../data/research/stock-unexpected-earnings-signals-v1.json.gz', import.meta.url);
 const ETF_HISTORY = new URL('../../data/research/deployable-etf-rotation-history.json', import.meta.url);
 const STRATEGY_ID = 'stock_unexpected_earnings_v1';
 const INITIAL_CAPITAL = 1_000_000;
 const mean = values => values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : 0;
+const compactCandidates = candidates => candidates.map(({ futureBars, ...candidate }) => candidate);
 
 function standardDeviation(values) {
   const average = mean(values);
@@ -392,6 +395,8 @@ async function main() {
   const configs = configurations();
   const validations = [];
   const randoms = [];
+  const validationSignals = [];
+  const randomValidationSignals = [];
   const folds = [];
   for (const fold of foldWindows(context.startDate, context.endDate, 54, 18)) {
     const trained = configs.map(config => ({ config, result: run(context, signalMap(events, config), config, fold.trainStart, fold.trainEnd) }))
@@ -401,8 +406,14 @@ async function main() {
       folds.push({ ...fold, status: '訓練樣本不足' });
       continue;
     }
-    const validation = run(context, signalMap(events, trained.config), trained.config, fold.validationStart, fold.validationEnd);
-    const random = run(context, randomSignalMap(events, randomPool, trained.config), trained.config, fold.validationStart, fold.validationEnd, '_random');
+    const validationMap = signalMap(events, trained.config);
+    const randomMap = randomSignalMap(events, randomPool, trained.config);
+    const validation = run(context, validationMap, trained.config, fold.validationStart, fold.validationEnd);
+    const random = run(context, randomMap, trained.config, fold.validationStart, fold.validationEnd, '_random');
+    validationSignals.push(...[...validationMap].filter(([date]) => date >= fold.validationStart && date <= fold.validationEnd)
+      .map(([date, candidates]) => ({ date, candidates: compactCandidates(candidates) })));
+    randomValidationSignals.push(...[...randomMap].filter(([date]) => date >= fold.validationStart && date <= fold.validationEnd)
+      .map(([date, candidates]) => ({ date, candidates: compactCandidates(candidates) })));
     validations.push(validation);
     randoms.push(random);
     folds.push({ ...fold, status: '已驗證', selectedConfig: trained.config, train: trained.result.summary, validation: validation.summary, random: random.summary });
@@ -453,7 +464,10 @@ async function main() {
       ? '達到月均 5% 的純個股候選門檻，仍只能先紙上交易。'
       : `找不到月均 5% 的可實盤純個股策略；目前月均 ${metrics.averageMonthlyReturnPct}%。`
   };
-  await fs.writeFile(OUTPUT, `${JSON.stringify(output, null, 2)}\n`, 'utf8');
+  await Promise.all([
+    fs.writeFile(OUTPUT, `${JSON.stringify(output, null, 2)}\n`, 'utf8'),
+    fs.writeFile(SIGNAL_OUTPUT, gzipSync(JSON.stringify({ validationSignals, randomValidationSignals })))
+  ]);
   console.log(JSON.stringify({
     dataCoverage: output.dataCoverage,
     observations: output.observations,

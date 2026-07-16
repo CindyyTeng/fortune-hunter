@@ -2,14 +2,13 @@ import fs from 'node:fs/promises';
 
 const MARKET = new URL('../../data/market-regime-history-10y.json', import.meta.url);
 const BACKTEST = new URL('../../data/tw-backtest-10y.json', import.meta.url);
-const REVENUE = new URL('../../data/revenue/monthly-revenue.json', import.meta.url);
 const RAW = new URL('../../data/quality/raw/', import.meta.url);
 const MANUAL = new URL('../../data/quality/manual/', import.meta.url);
 const OUTPUT = new URL('../../data/quality/financial-quality.json', import.meta.url);
 const REPORT = new URL('../../data/research/quality-build-report.json', import.meta.url);
 const environment = globalThis.process?.env || {};
-const START_DATE = environment.QUALITY_START_DATE || '2020-01-01';
-const SYMBOL_LIMIT = Number(environment.QUALITY_SYMBOL_LIMIT || 470);
+const START_DATE = environment.QUALITY_START_DATE || '2015-01-01';
+const SYMBOL_LIMIT = Number(environment.QUALITY_SYMBOL_LIMIT || 1600);
 const FETCH_SKIP = environment.QUALITY_FETCH_SKIP === '1';
 
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
@@ -69,19 +68,15 @@ function nextTradingDay(dates, date) {
 }
 
 async function universe() {
-  const revenue = await readJson(REVENUE, { records: [] });
-  const fromRevenue = new Map((revenue.records || []).map(row => [row.symbol, {
-    symbol: row.symbol,
-    stockName: row.stockName,
-    market: row.market
-  }]));
-  if (fromRevenue.size) return [...fromRevenue.values()].sort((a, b) => a.symbol.localeCompare(b.symbol)).slice(0, SYMBOL_LIMIT);
   const backtest = await readJson(BACKTEST, { candidateTrades: [] });
   return [...new Map((backtest.candidateTrades || []).map(row => [row.symbol, {
     symbol: row.symbol,
     stockName: row.name,
     market: String(row.market).includes('上櫃') ? 'TPEX' : 'TWSE'
-  }])).values()].sort((a, b) => a.symbol.localeCompare(b.symbol)).slice(0, SYMBOL_LIMIT);
+  }])).values()]
+    .filter(row => /^\d{4}$/.test(row.symbol || ''))
+    .sort((a, b) => a.symbol.localeCompare(b.symbol))
+    .slice(0, SYMBOL_LIMIT);
 }
 
 async function fetchFinancial(stock) {

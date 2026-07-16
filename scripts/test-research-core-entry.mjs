@@ -9,7 +9,7 @@ const context = {
   marketByDate: new Map(dates.map(date => [date, { regime: 'BULL_TREND' }]))
 };
 
-function run(high) {
+function run(high, stopLossPrice) {
   return simulateSignalMap(context, new Map([[dates[0], [{
     signalDate: dates[0],
     entryDate: dates[1],
@@ -23,6 +23,7 @@ function run(high) {
       { date: dates[2], open: 109, high: 110, low: 108, close: 109, price: 109 }
     ],
     stopDistancePct: 5,
+    stopLossPrice,
     rewardRisk: 0,
     maxHoldingDays: 2,
     positionPct: 10,
@@ -38,6 +39,7 @@ function run(high) {
 const gapFill = run(110);
 assert.equal(gapFill.trades.length, 1, '隔日高點突破時應建立交易');
 assert.ok(gapFill.trades[0].entryPrice >= 108, '跳空突破不可用低於開盤價的觸發價成交');
+assert.equal(run(110, 106).trades[0].stopLoss, 106, '型態策略應可使用訊號日已知的絕對支撐停損價');
 assert.equal(run(104).trades.length, 0, '隔日高點未達觸發價時不得成交');
 
 console.log('研究核心突破成交整合測試通過');

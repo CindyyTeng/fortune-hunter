@@ -759,10 +759,13 @@ export function simulateSignalMap(context, signalMap, options = {}) {
         signalDate: candidate.signalDate,
         entryDate: candidate.entryDate,
         entryPrice: fill.price,
-        stopLoss: fill.price * (1 - stopDistancePct / 100),
+        stopLoss: Number.isFinite(candidate.stopLossPrice)
+          ? Math.min(candidate.stopLossPrice, fill.price * 0.999)
+          : fill.price * (1 - stopDistancePct / 100),
         takeProfit: rewardRisk ? fill.price * (1 + stopDistancePct * rewardRisk / 100) : null,
         positionPct: candidate.positionPct ?? 9,
         strategy: options.strategyId || '研究策略',
+        alphaSource: candidate.alphaSource,
         regime,
         bars: candidate.futureBars,
         maxHoldingDays: candidate.maxHoldingDays,

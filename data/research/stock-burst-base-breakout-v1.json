@@ -1,0 +1,375 @@
+{
+  "generatedAt": "2026-07-16T09:52:00.859Z",
+  "branch": "institutional-data-fetcher-v1",
+  "experimentHash": "61dc2c6bf9ec6c9de9a6e618",
+  "strategyFamilyId": "stock_burst_base_breakout_v1:56f6f709fcb4b77b9077fd3f",
+  "universe": "純台股普通股；ETF／0050 交易占比 0%，0050 僅作比較",
+  "sourceEvents": 49977,
+  "configurationsTested": 96,
+  "validationPeriod": "無–無",
+  "folds": [
+    {
+      "trainStart": "2016-03-01",
+      "trainEnd": "2020-08-31",
+      "validationStart": "2020-09-01",
+      "validationEnd": "2022-02-28",
+      "status": "訓練證據不足，持有現金",
+      "initialPass": 0,
+      "stablePass": 0,
+      "bestTrainingDiagnostics": [
+        {
+          "config": {
+            "burstReturnPct": 7,
+            "burstVolumeRatio": 3,
+            "maxBaseDays": 5,
+            "supportMode": "burst_midpoint",
+            "topN": 5,
+            "holdingDays": 10
+          },
+          "summary": {
+            "startDate": "2016-03-01",
+            "endDate": "2020-08-31",
+            "endingEquity": 965901,
+            "annualizedReturnPct": -0.7678,
+            "averageMonthlyEquityReturnPct": -0.0573,
+            "maximumDrawdownPct": -7.8483,
+            "negativeMonths": 24,
+            "winRatePct": 36.8421,
+            "profitFactor": 0.8988,
+            "sharpeLike": -0.2201,
+            "trades": 152,
+            "concentrationPct": 2.6316
+          }
+        },
+        {
+          "config": {
+            "burstReturnPct": 7,
+            "burstVolumeRatio": 2,
+            "maxBaseDays": 10,
+            "supportMode": "base_low",
+            "topN": 3,
+            "holdingDays": 10
+          },
+          "summary": {
+            "startDate": "2016-03-01",
+            "endDate": "2020-08-31",
+            "endingEquity": 937954,
+            "annualizedReturnPct": -1.413,
+            "averageMonthlyEquityReturnPct": -0.1168,
+            "maximumDrawdownPct": -9.2902,
+            "negativeMonths": 26,
+            "winRatePct": 33.0986,
+            "profitFactor": 0.7796,
+            "sharpeLike": -0.5079,
+            "trades": 142,
+            "concentrationPct": 2.1127
+          }
+        },
+        {
+          "config": {
+            "burstReturnPct": 7,
+            "burstVolumeRatio": 3,
+            "maxBaseDays": 10,
+            "supportMode": "base_low",
+            "topN": 3,
+            "holdingDays": 10
+          },
+          "summary": {
+            "startDate": "2016-03-01",
+            "endDate": "2020-08-31",
+            "endingEquity": 917007,
+            "annualizedReturnPct": -1.9065,
+            "averageMonthlyEquityReturnPct": -0.1592,
+            "maximumDrawdownPct": -8.8217,
+            "negativeMonths": 27,
+            "winRatePct": 30.9524,
+            "profitFactor": 0.6521,
+            "sharpeLike": -0.8125,
+            "trades": 126,
+            "concentrationPct": 2.381
+          }
+        }
+      ]
+    },
+    {
+      "trainStart": "2017-09-01",
+      "trainEnd": "2022-02-28",
+      "validationStart": "2022-03-01",
+      "validationEnd": "2023-08-31",
+      "status": "訓練證據不足，持有現金",
+      "initialPass": 0,
+      "stablePass": 0,
+      "bestTrainingDiagnostics": [
+        {
+          "config": {
+            "burstReturnPct": 7,
+            "burstVolumeRatio": 3,
+            "maxBaseDays": 5,
+            "supportMode": "burst_midpoint",
+            "topN": 3,
+            "holdingDays": 10
+          },
+          "summary": {
+            "startDate": "2017-09-01",
+            "endDate": "2022-02-28",
+            "endingEquity": 973790,
+            "annualizedReturnPct": -0.5894,
+            "averageMonthlyEquityReturnPct": -0.043,
+            "maximumDrawdownPct": -8.262,
+            "negativeMonths": 22,
+            "winRatePct": 42.7419,
+            "profitFactor": 0.9059,
+            "sharpeLike": -0.1607,
+            "trades": 124,
+            "concentrationPct": 2.4194
+          }
+        },
+        {
+          "config": {
+            "burstReturnPct": 7,
+            "burstVolumeRatio": 3,
+            "maxBaseDays": 5,
+            "supportMode": "burst_midpoint",
+            "topN": 5,
+            "holdingDays": 10
+          },
+          "summary": {
+            "startDate": "2017-09-01",
+            "endDate": "2022-02-28",
+            "endingEquity": 967354,
+            "annualizedReturnPct": -0.736,
+            "averageMonthlyEquityReturnPct": -0.05,
+            "maximumDrawdownPct": -8.5833,
+            "negativeMonths": 21,
+            "winRatePct": 37.4269,
+            "profitFactor": 0.9226,
+            "sharpeLike": -0.1506,
+            "trades": 171,
+            "concentrationPct": 1.1696
+          }
+        },
+        {
+          "config": {
+            "burstReturnPct": 7,
+            "burstVolumeRatio": 3,
+            "maxBaseDays": 10,
+            "supportMode": "burst_midpoint",
+            "topN": 3,
+            "holdingDays": 10
+          },
+          "summary": {
+            "startDate": "2017-09-01",
+            "endDate": "2022-02-28",
+            "endingEquity": 971712,
+            "annualizedReturnPct": -0.6367,
+            "averageMonthlyEquityReturnPct": -0.0504,
+            "maximumDrawdownPct": -8.7245,
+            "negativeMonths": 23,
+            "winRatePct": 40.1639,
+            "profitFactor": 0.8888,
+            "sharpeLike": -0.1856,
+            "trades": 122,
+            "concentrationPct": 2.459
+          }
+        }
+      ]
+    },
+    {
+      "trainStart": "2019-03-01",
+      "trainEnd": "2023-08-31",
+      "validationStart": "2023-09-01",
+      "validationEnd": "2025-02-28",
+      "status": "訓練證據不足，持有現金",
+      "initialPass": 0,
+      "stablePass": 0,
+      "bestTrainingDiagnostics": [
+        {
+          "config": {
+            "burstReturnPct": 5,
+            "burstVolumeRatio": 2,
+            "maxBaseDays": 10,
+            "supportMode": "base_low",
+            "topN": 3,
+            "holdingDays": 10
+          },
+          "summary": {
+            "startDate": "2019-03-01",
+            "endDate": "2023-08-31",
+            "endingEquity": 950401,
+            "annualizedReturnPct": -1.1239,
+            "averageMonthlyEquityReturnPct": -0.0905,
+            "maximumDrawdownPct": -7.4016,
+            "negativeMonths": 19,
+            "winRatePct": 40.1198,
+            "profitFactor": 0.8315,
+            "sharpeLike": -0.3682,
+            "trades": 167,
+            "concentrationPct": 1.1976
+          }
+        },
+        {
+          "config": {
+            "burstReturnPct": 7,
+            "burstVolumeRatio": 3,
+            "maxBaseDays": 5,
+            "supportMode": "burst_midpoint",
+            "topN": 3,
+            "holdingDays": 10
+          },
+          "summary": {
+            "startDate": "2019-03-01",
+            "endDate": "2023-08-31",
+            "endingEquity": 933346,
+            "annualizedReturnPct": -1.5208,
+            "averageMonthlyEquityReturnPct": -0.1223,
+            "maximumDrawdownPct": -8.3354,
+            "negativeMonths": 23,
+            "winRatePct": 39.0977,
+            "profitFactor": 0.7883,
+            "sharpeLike": -0.4271,
+            "trades": 133,
+            "concentrationPct": 2.2556
+          }
+        },
+        {
+          "config": {
+            "burstReturnPct": 5,
+            "burstVolumeRatio": 2,
+            "maxBaseDays": 10,
+            "supportMode": "burst_midpoint",
+            "topN": 5,
+            "holdingDays": 10
+          },
+          "summary": {
+            "startDate": "2019-03-01",
+            "endDate": "2023-08-31",
+            "endingEquity": 966708,
+            "annualizedReturnPct": -0.7494,
+            "averageMonthlyEquityReturnPct": -0.0513,
+            "maximumDrawdownPct": -11.2282,
+            "negativeMonths": 22,
+            "winRatePct": 37.799,
+            "profitFactor": 0.9209,
+            "sharpeLike": -0.151,
+            "trades": 209,
+            "concentrationPct": 1.4354
+          }
+        }
+      ]
+    },
+    {
+      "trainStart": "2020-09-01",
+      "trainEnd": "2025-02-28",
+      "validationStart": "2025-03-01",
+      "validationEnd": "2026-06-09",
+      "status": "訓練證據不足，持有現金",
+      "initialPass": 0,
+      "stablePass": 0,
+      "bestTrainingDiagnostics": [
+        {
+          "config": {
+            "burstReturnPct": 7,
+            "burstVolumeRatio": 3,
+            "maxBaseDays": 10,
+            "supportMode": "burst_midpoint",
+            "topN": 5,
+            "holdingDays": 10
+          },
+          "summary": {
+            "startDate": "2020-09-01",
+            "endDate": "2025-02-28",
+            "endingEquity": 962787,
+            "annualizedReturnPct": -0.8405,
+            "averageMonthlyEquityReturnPct": -0.0629,
+            "maximumDrawdownPct": -8.9026,
+            "negativeMonths": 20,
+            "winRatePct": 42.7778,
+            "profitFactor": 0.91,
+            "sharpeLike": -0.1702,
+            "trades": 180,
+            "concentrationPct": 1.6667
+          }
+        },
+        {
+          "config": {
+            "burstReturnPct": 5,
+            "burstVolumeRatio": 2,
+            "maxBaseDays": 5,
+            "supportMode": "base_low",
+            "topN": 5,
+            "holdingDays": 10
+          },
+          "summary": {
+            "startDate": "2020-09-01",
+            "endDate": "2025-02-28",
+            "endingEquity": 961964,
+            "annualizedReturnPct": -0.8594,
+            "averageMonthlyEquityReturnPct": -0.0622,
+            "maximumDrawdownPct": -9.5606,
+            "negativeMonths": 21,
+            "winRatePct": 38.2353,
+            "profitFactor": 0.9129,
+            "sharpeLike": -0.1971,
+            "trades": 204,
+            "concentrationPct": 0.9804
+          }
+        },
+        {
+          "config": {
+            "burstReturnPct": 5,
+            "burstVolumeRatio": 2,
+            "maxBaseDays": 10,
+            "supportMode": "burst_midpoint",
+            "topN": 3,
+            "holdingDays": 10
+          },
+          "summary": {
+            "startDate": "2020-09-01",
+            "endDate": "2025-02-28",
+            "endingEquity": 949530,
+            "annualizedReturnPct": -1.1461,
+            "averageMonthlyEquityReturnPct": -0.0904,
+            "maximumDrawdownPct": -8.6313,
+            "negativeMonths": 21,
+            "winRatePct": 36.8098,
+            "profitFactor": 0.8722,
+            "sharpeLike": -0.279,
+            "trades": 163,
+            "concentrationPct": 1.227
+          }
+        }
+      ]
+    }
+  ],
+  "metrics": {
+    "months": 0,
+    "averageMonthlyReturnPct": 0,
+    "annualizedReturnPct": 0,
+    "maximumDrawdownPct": 0,
+    "trades": 0,
+    "winRatePct": 0,
+    "profitFactor": null,
+    "concentrationPct": 0,
+    "averageExposurePct": 0
+  },
+  "fairRandom": {
+    "months": 0,
+    "averageMonthlyReturnPct": 0,
+    "annualizedReturnPct": 0,
+    "maximumDrawdownPct": 0,
+    "trades": 0,
+    "winRatePct": 0,
+    "profitFactor": null,
+    "concentrationPct": 0,
+    "averageExposurePct": 0
+  },
+  "benchmark0050": {
+    "averageMonthlyReturnPct": 0
+  },
+  "targetMonthlyReturnPct": 5,
+  "gapToTargetPct": 5,
+  "targetMet": false,
+  "paperTradingReady": false,
+  "liveTradingReady": false,
+  "conclusion": "所有訓練設定皆未達 PF 1，策略為負期望，因此不進入 validation。"
+}

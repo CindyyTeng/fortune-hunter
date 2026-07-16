@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { simulateEntry, simulateExit } from './lib/execution-simulator.mjs';
 import { buildMarketRegimes } from './lib/market-regime.mjs';
 import { STRATEGIES } from './lib/strategy-engine.mjs';
+import { hasHistoricalPriceAnomaly } from './research/research-core.mjs';
 
 const gapBreakout = simulateEntry({
   mode: 'resistance_breakout',
@@ -35,6 +36,19 @@ const history = Array.from({ length: 240 }, (_, index) => ({
 }));
 const full = buildMarketRegimes(history);
 const prefix = buildMarketRegimes(history.slice(0, 220));
+const anomalyReturns = Array(150).fill(0);
+anomalyReturns[121] = 0.2;
+assert.equal(
+  hasHistoricalPriceAnomaly(anomalyReturns, 120),
+  false,
+  '訊號日後的異常價格不可影響今天的候選資格'
+);
+anomalyReturns[100] = -0.2;
+assert.equal(
+  hasHistoricalPriceAnomaly(anomalyReturns, 120),
+  true,
+  '訊號日前的異常價格應被排除'
+);
 assert.deepEqual(full[219], prefix[219], '市場狀態不可因未來資料改變');
 for (const strategy of Object.values(STRATEGIES)) {
   for (const method of [

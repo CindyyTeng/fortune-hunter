@@ -80,6 +80,14 @@ function correlation(left, right) {
   return leftSquare && rightSquare ? numerator / Math.sqrt(leftSquare * rightSquare) : 0;
 }
 
+export function hasHistoricalPriceAnomaly(returns, index, lookback = 120, threshold = 0.15) {
+  const start = Math.max(0, index - lookback);
+  for (let cursor = start; cursor <= index; cursor += 1) {
+    if (Math.abs(returns[cursor] || 0) > threshold) return true;
+  }
+  return false;
+}
+
 function median(values) {
   if (!values.length) return null;
   const sorted = [...values].sort((a, b) => a - b);
@@ -160,9 +168,9 @@ function buildObservation(context, stockRow, rolling, index) {
   const day = history[index];
   const prior = history[index - 1];
   const market = context.marketByDate.get(day.date);
-  if (!market || index < 120 || index + 20 >= history.length) return null;
-  const surroundingReturns = rolling.returns.slice(index - 120, index + 21);
-  if (surroundingReturns.some(value => Math.abs(value) > 0.15)) return null;
+  if (!market || index < 120 || index + 40 >= history.length) return null;
+  // 異常價格排除只能使用訊號日以前資料，否則會因未來公司行動而偷看後續走勢。
+  if (hasHistoricalPriceAnomaly(rolling.returns, index)) return null;
   const ma20 = windowMean(rolling.closePrefix, index, 20);
   const ma60 = windowMean(rolling.closePrefix, index, 60);
   const priorMa20 = windowMean(rolling.closePrefix, index - 5, 20);
@@ -209,7 +217,7 @@ function buildObservation(context, stockRow, rolling, index) {
     forwardReturns[horizon] = pct(futureClose, day.close);
     forwardNetReturns[horizon] = transactionCostAdjustedReturn(day.close, futureClose);
   }
-  const futureBars = history.slice(index + 1, index + 21).map(row => ({
+  const futureBars = history.slice(index + 1, index + 41).map(row => ({
     date: row.date,
     open: row.open,
     high: row.high,

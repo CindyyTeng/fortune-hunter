@@ -69,6 +69,7 @@ const exits = [
   { id: 'target15r', name: '1.5R 停利', rewardRisk: 1.5, maxHoldingDays: 10, forced: () => false },
   { id: 'target2r', name: '2R 停利', rewardRisk: 2, maxHoldingDays: 15, forced: () => false },
   { id: 'trailing', name: '移動停利', rewardRisk: null, maxHoldingDays: 20, trailing: { triggerPct: 5, lockPct: 1.5, givebackPct: 3 }, forced: () => false },
+  { id: 'announcement_drift40', name: '公告漂移持有 40 日', rewardRisk: null, maxHoldingDays: 40, forced: () => false },
   { id: 'market_weak', name: '大盤轉弱出場', rewardRisk: 2, maxHoldingDays: 15, forced: row => ['BEAR_DEFENSE', 'HIGH_VOLATILITY'].includes(row.observation.factors.regime) }
 ];
 
@@ -348,8 +349,8 @@ function registryInput(family, range, metrics = null) {
     riskRules: ['單筆風險 0.5%', '單檔最多 10%', 'T+2', '集中持股 Top 3／5／10'],
     blockedWhen: ['跳空過大', 'ATR 過高', '離 MA20 過遠', '大盤跌破 MA60', '融資過熱'],
     parameters: { configurations: configurations(family).map(row => row.id), range },
-    trainPeriod: { months: 36 },
-    validationPeriod: { months: 12, stepMonths: 12 },
+    trainPeriod: { months: 54 },
+    validationPeriod: { months: 18, stepMonths: 18 },
     costModel: { buyFeePct: 0.1425, sellFeePct: 0.1425, sellTaxPct: 0.3, slippagePct: 0.15 },
     executionModel: { entry: 'next_open_market', settlement: 'T+2', simulator: 'shared' },
     metrics,
@@ -450,7 +451,7 @@ if (validation.status !== 'VALID') {
   const context = await loadResearchContext();
   const effectiveDates = [...new Set(revenue.records.map(row => row.effectiveDate))].sort();
   const range = { start: effectiveDates[0], end: [effectiveDates.at(-1), context.endDate].sort()[0] };
-  const folds = foldWindows(range.start, range.end, 36, 12);
+  const folds = foldWindows(range.start, range.end, 54, 18);
   const data = buildResearchRows(context, revenue.records, institutional.records, margin.records, range.start, range.end);
   const familyResults = [];
   for (const family of families) familyResults.push(await runFamily(family, data, context, range, folds));
@@ -469,7 +470,7 @@ if (validation.status !== 'VALID') {
     status: completed.length ? 'COMPLETED' : 'NO_VALID_BACKTEST',
     data: { records: revenue.records.length, symbols: validation.symbols, months: validation.months, pointInTimeSafe: validation.pointInTimeSafeRecords, fullyVerifiedPointInTime: false, researchRows: data.rows.length },
     search: { families: families.length, variants: families.reduce((sum, family) => sum + family.variants.length, 0), configurations: families.reduce((sum, family) => sum + configurations(family).length, 0), topCounts, entries: entries.map(row => row.name), exits: exits.map(row => row.name) },
-    walkForward: { trainMonths: 36, validationMonths: 12, stepMonths: 12, folds: folds.length },
+    walkForward: { trainMonths: 54, validationMonths: 18, stepMonths: 18, folds: folds.length },
     familyResults,
     bestStrategy: best ? { family: best.name, selectedStrategies: best.selectedStrategies, metrics: best.metrics } : null,
     readiness: { paperTradingAllowed: passed.length > 0, liveTradingAllowed: false, realBrokerAllowed: false, highProfitCandidates: highProfit.map(row => row.name) },

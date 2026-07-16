@@ -727,8 +727,20 @@ export function simulateSignalMap(context, signalMap, options = {}) {
     for (const candidate of dayEntries) {
       if (portfolio.positions.some(position => position.symbol === candidate.symbol)) continue;
       const nextDay = candidate.futureBars[0];
-      const fill = simulateEntry({ mode: 'next_open_market', nextDay });
+      const fill = simulateEntry({
+        mode: candidate.entryMode || 'next_open_market',
+        signalDay: candidate.signalDay,
+        nextDay,
+        triggerPrice: candidate.triggerPrice,
+        limitPrice: candidate.limitPrice,
+        pullbackPrice: candidate.pullbackPrice,
+        pullbackFloor: candidate.pullbackFloor
+      });
       if (!fill) continue;
+      if (candidate.maxEntryOverTriggerPct && candidate.triggerPrice
+        && (fill.price / candidate.triggerPrice - 1) * 100 > candidate.maxEntryOverTriggerPct) {
+        continue;
+      }
       const entryGapPct = candidate.close
         ? (fill.price / candidate.close - 1) * 100
         : 0;

@@ -1,0 +1,196 @@
+{
+  "generatedAt": "2026-07-16T09:29:42.600Z",
+  "strategyId": "stock_cross_sectional_momentum_v1",
+  "universe": "純台股普通股；ETF／0050 交易占比 0%，0050 僅作比較",
+  "methodology": "全個股 OHLCV 截面排名；54 個月訓練、18 個月固定驗證；真實費稅、滑價與 T+2。",
+  "observations": 258610,
+  "configurationsTested": 360,
+  "validationPeriod": "2022-03-01–2026-06-09",
+  "folds": [
+    {
+      "trainStart": "2016-03-01",
+      "trainEnd": "2020-08-31",
+      "validationStart": "2020-09-01",
+      "validationEnd": "2022-02-28",
+      "status": "訓練證據不足，持有現金",
+      "diagnostic": {
+        "bestConfig": {
+          "scoreMode": "trend_quality",
+          "regimeMode": "trend_only",
+          "rebalanceDays": 10,
+          "holdingDays": 20,
+          "topN": 5,
+          "exitMode": "wide_fixed"
+        },
+        "bestAverageMonthlyReturnPct": -0.0076,
+        "bestMaximumDrawdownPct": -7.2953,
+        "bestTrades": 76,
+        "bestProfitFactor": 0.9641
+      }
+    },
+    {
+      "trainStart": "2017-09-01",
+      "trainEnd": "2022-02-28",
+      "validationStart": "2022-03-01",
+      "validationEnd": "2023-08-31",
+      "status": "已驗證",
+      "selectedConfig": {
+        "scoreMode": "bull_reversal",
+        "regimeMode": "trend_pullback",
+        "rebalanceDays": 10,
+        "holdingDays": 20,
+        "topN": 5,
+        "exitMode": "wide_fixed"
+      },
+      "train": {
+        "startDate": "2017-09-01",
+        "endDate": "2022-02-28",
+        "endingEquity": 1005543,
+        "annualizedReturnPct": 0.1231,
+        "averageMonthlyEquityReturnPct": 0.0166,
+        "maximumDrawdownPct": -7.1426,
+        "negativeMonths": 20,
+        "winRatePct": 36.7647,
+        "profitFactor": 1.0231,
+        "sharpeLike": 0.061,
+        "trades": 136,
+        "concentrationPct": 2.2059
+      },
+      "validation": {
+        "startDate": "2022-03-01",
+        "endDate": "2023-08-31",
+        "endingEquity": 996662,
+        "annualizedReturnPct": -0.2226,
+        "averageMonthlyEquityReturnPct": -0.018,
+        "maximumDrawdownPct": -1.4434,
+        "negativeMonths": 5,
+        "winRatePct": 34.4828,
+        "profitFactor": 0.9094,
+        "sharpeLike": -0.1163,
+        "trades": 29,
+        "concentrationPct": 6.8966
+      },
+      "validationProfitFactor": 0.9094
+    },
+    {
+      "trainStart": "2019-03-01",
+      "trainEnd": "2023-08-31",
+      "validationStart": "2023-09-01",
+      "validationEnd": "2025-02-28",
+      "status": "已驗證",
+      "selectedConfig": {
+        "scoreMode": "bull_reversal",
+        "regimeMode": "trend_pullback",
+        "rebalanceDays": 10,
+        "holdingDays": 10,
+        "topN": 5,
+        "exitMode": "wide_fixed"
+      },
+      "train": {
+        "startDate": "2019-03-01",
+        "endDate": "2023-08-31",
+        "endingEquity": 1051315,
+        "annualizedReturnPct": 1.118,
+        "averageMonthlyEquityReturnPct": 0.0974,
+        "maximumDrawdownPct": -5.4989,
+        "negativeMonths": 17,
+        "winRatePct": 42.0732,
+        "profitFactor": 1.2634,
+        "sharpeLike": 0.4565,
+        "trades": 164,
+        "concentrationPct": 1.8293
+      },
+      "validation": {
+        "startDate": "2023-09-01",
+        "endDate": "2025-02-28",
+        "endingEquity": 1047424,
+        "annualizedReturnPct": 3.1481,
+        "averageMonthlyEquityReturnPct": 0.2625,
+        "maximumDrawdownPct": -2.4128,
+        "negativeMonths": 6,
+        "winRatePct": 47.3684,
+        "profitFactor": 1.5322,
+        "sharpeLike": 0.984,
+        "trades": 76,
+        "concentrationPct": 3.9474
+      },
+      "validationProfitFactor": 1.5322
+    },
+    {
+      "trainStart": "2020-09-01",
+      "trainEnd": "2025-02-28",
+      "validationStart": "2025-03-01",
+      "validationEnd": "2026-06-09",
+      "status": "已驗證",
+      "selectedConfig": {
+        "scoreMode": "trend_pullback",
+        "regimeMode": "trend_pullback",
+        "rebalanceDays": 5,
+        "holdingDays": 20,
+        "topN": 5,
+        "exitMode": "wide_fixed"
+      },
+      "train": {
+        "startDate": "2020-09-01",
+        "endDate": "2025-02-28",
+        "endingEquity": 1088074,
+        "annualizedReturnPct": 1.8965,
+        "averageMonthlyEquityReturnPct": 0.1606,
+        "maximumDrawdownPct": -5.8207,
+        "negativeMonths": 17,
+        "winRatePct": 45.122,
+        "profitFactor": 1.3179,
+        "sharpeLike": 0.5373,
+        "trades": 164,
+        "concentrationPct": 1.8293
+      },
+      "validation": {
+        "startDate": "2025-03-01",
+        "endDate": "2026-06-09",
+        "endingEquity": 969399,
+        "annualizedReturnPct": -2.4116,
+        "averageMonthlyEquityReturnPct": -0.1851,
+        "maximumDrawdownPct": -4.628,
+        "negativeMonths": 4,
+        "winRatePct": 34.1463,
+        "profitFactor": 0.6245,
+        "sharpeLike": -0.5822,
+        "trades": 41,
+        "concentrationPct": 7.3171
+      },
+      "validationProfitFactor": 0.6245
+    }
+  ],
+  "metrics": {
+    "months": 52,
+    "averageMonthlyReturnPct": 0.0277,
+    "annualizedReturnPct": 0.2846,
+    "maximumDrawdownPct": -5.3625,
+    "trades": 146,
+    "winRatePct": 41.0959,
+    "profitFactor": 1.065,
+    "concentrationPct": 2.0548,
+    "averageExposurePct": 4.006
+  },
+  "benchmark0050": {
+    "averageMonthlyReturnPct": 2.3887
+  },
+  "fairRandom": {
+    "months": 52,
+    "averageMonthlyReturnPct": 0.1035,
+    "annualizedReturnPct": 1.2596,
+    "maximumDrawdownPct": -3.0073,
+    "trades": 141,
+    "winRatePct": 45.3901,
+    "profitFactor": 1.4909,
+    "concentrationPct": 1.4184,
+    "averageExposurePct": 3.7718
+  },
+  "targetMonthlyReturnPct": 5,
+  "gapToTargetPct": 4.9723,
+  "targetMet": false,
+  "paperTradingReady": false,
+  "liveTradingReady": false,
+  "survivorshipBiasWarning": true,
+  "conclusion": "找不到月均 5% 的可實盤純個股截面動能策略；目前 0.0277%。"
+}

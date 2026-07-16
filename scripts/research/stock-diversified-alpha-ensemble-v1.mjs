@@ -259,7 +259,7 @@ async function main() {
     '# 純個股多事件 Alpha 組合', '',
     `- 驗證：${output.validationPeriod}`,
     `- 月均：${metrics.averageMonthlyReturnPct}%；年化：${metrics.annualizedReturnPct}%；最大回撤：${metrics.maximumDrawdownPct}%`,
-    `- 交易：${metrics.trades}；勝率：${metrics.winRatePct}%；PF：${metrics.profitFactor}`, 
+    `- 交易：${metrics.trades}；勝率：${metrics.winRatePct}%；PF：${metrics.profitFactor}`,
     `- 來源交易：${JSON.stringify(metrics.sourceTrades)}`,
     `- 公平隨機：${fairRandom.averageMonthlyReturnPct}%；0050：${benchmark0050.averageMonthlyReturnPct}%`,
     `- 結論：${output.conclusion}`

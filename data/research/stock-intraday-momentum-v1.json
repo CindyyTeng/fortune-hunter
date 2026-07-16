@@ -1,12 +1,12 @@
 {
-  "generatedAt": "2026-07-16T09:47:46.311Z",
+  "generatedAt": "2026-07-16T09:59:18.900Z",
   "branch": "institutional-data-fetcher-v1",
-  "experimentHash": "8ff9e26fd25fe6312828e8e0",
-  "strategyFamilyId": "stock_intraday_momentum_v1:bf84e7edde643d9e8690b4fc",
+  "experimentHash": "1932e0067c26e6edd0d05534",
+  "strategyFamilyId": "stock_intraday_momentum_v1:8b4a02a3f3fbc6c8c981e98d",
   "universe": "純台股普通股；ETF／0050 交易占比 0%，0050 僅作比較",
-  "methodology": "台股盤中動能與隔夜反轉分離；54 個月訓練、18 個月固定驗證。",
+  "methodology": "台股盤中動能與純隔夜反轉分離；54 個月訓練、18 個月固定驗證。",
   "observations": 275762,
-  "configurationsTested": 144,
+  "configurationsTested": 240,
   "validationPeriod": "2020-09-01–2026-06-09",
   "folds": [
     {
@@ -146,71 +146,71 @@
       "status": "已驗證",
       "selectedConfig": {
         "formationDays": 20,
-        "scoreMode": "intraday",
+        "scoreMode": "overnight_reversal_quality",
         "marketMode": "non_crash",
-        "rebalanceDays": 20,
+        "rebalanceDays": 5,
         "topN": 5,
-        "holdingDays": 20
+        "holdingDays": 60
       },
       "train": {
         "startDate": "2020-09-01",
         "endDate": "2025-02-28",
-        "endingEquity": 1158238,
-        "annualizedReturnPct": 3.3237,
-        "averageMonthlyEquityReturnPct": 0.3015,
-        "maximumDrawdownPct": -9.397,
-        "negativeMonths": 18,
-        "winRatePct": 40.4908,
-        "profitFactor": 1.1945,
-        "sharpeLike": 0.4418,
-        "trades": 163,
-        "concentrationPct": 1.8405
+        "endingEquity": 1106620,
+        "annualizedReturnPct": 2.2806,
+        "averageMonthlyEquityReturnPct": 0.1937,
+        "maximumDrawdownPct": -4.0573,
+        "negativeMonths": 19,
+        "winRatePct": 54.2254,
+        "profitFactor": 1.4385,
+        "sharpeLike": 0.624,
+        "trades": 142,
+        "concentrationPct": 3.5211
       },
       "validation": {
         "startDate": "2025-03-01",
         "endDate": "2026-06-09",
-        "endingEquity": 1008983,
-        "annualizedReturnPct": 0.7049,
-        "averageMonthlyEquityReturnPct": 0.0996,
-        "maximumDrawdownPct": -9.8858,
-        "negativeMonths": 4,
-        "winRatePct": 46.6667,
-        "profitFactor": 1.0639,
-        "sharpeLike": 0.1278,
-        "trades": 30,
-        "concentrationPct": 6.6667
+        "endingEquity": 952828,
+        "annualizedReturnPct": -3.7244,
+        "averageMonthlyEquityReturnPct": -0.2968,
+        "maximumDrawdownPct": -5.0625,
+        "negativeMonths": 7,
+        "winRatePct": 29.6296,
+        "profitFactor": 0.4963,
+        "sharpeLike": -0.9898,
+        "trades": 27,
+        "concentrationPct": 7.4074
       }
     }
   ],
   "metrics": {
     "months": 70,
-    "averageMonthlyReturnPct": -0.1463,
-    "annualizedReturnPct": -2.0456,
-    "maximumDrawdownPct": -15.4922,
-    "trades": 189,
-    "winRatePct": 38.6243,
-    "profitFactor": 0.8371,
-    "concentrationPct": 3.7037,
-    "averageExposurePct": 13.184
+    "averageMonthlyReturnPct": -0.2369,
+    "annualizedReturnPct": -3.0073,
+    "maximumDrawdownPct": -17.9955,
+    "trades": 186,
+    "winRatePct": 36.0215,
+    "profitFactor": 0.7347,
+    "concentrationPct": 4.3011,
+    "averageExposurePct": 15.2939
   },
   "fairRandom": {
     "months": 70,
-    "averageMonthlyReturnPct": 0.1714,
-    "annualizedReturnPct": 1.8447,
+    "averageMonthlyReturnPct": -0.0038,
+    "annualizedReturnPct": -0.1963,
     "maximumDrawdownPct": -16.8151,
-    "trades": 214,
-    "winRatePct": 43.9252,
-    "profitFactor": 1.1786,
-    "concentrationPct": 1.8692,
-    "averageExposurePct": 15.5349
+    "trades": 209,
+    "winRatePct": 42.5837,
+    "profitFactor": 0.982,
+    "concentrationPct": 1.9139,
+    "averageExposurePct": 16.4708
   },
   "benchmark0050": {
     "averageMonthlyReturnPct": 2.2346
   },
   "targetMonthlyReturnPct": 5,
-  "gapToTargetPct": 5.1463,
+  "gapToTargetPct": 5.2369,
   "targetMet": false,
   "paperTradingReady": false,
   "liveTradingReady": false,
-  "conclusion": "找不到月均 5% 的可實盤純個股盤中動能策略；目前 -0.1463%。"
+  "conclusion": "找不到月均 5% 的可實盤純個股盤中動能策略；目前 -0.2369%。"
 }

@@ -1,10 +1,1984 @@
 {
-  "generatedAt": "2026-07-20T12:47:55.903Z",
-  "status": "data_missing",
-  "validationStatus": "VALID",
-  "records": 7679,
-  "symbols": 1970,
-  "quarters": 4,
-  "requiredQuarters": 24,
-  "conclusion": "現金流歷史資料不足，尚無法執行可信的 54／18 個月 walk-forward；未產生績效。"
+  "generatedAt": "2026-07-20T12:54:00.554Z",
+  "strategyFamilyId": "stock_cashflow_quality_hunter_v1:25c2d2ae80675784a01e4024",
+  "experimentHash": "116f68825ce2a22d60cd25be",
+  "strategyFamilies": [
+    {
+      "id": "cash_conversion",
+      "name": "高現金轉換品質"
+    },
+    {
+      "id": "cashflow_acceleration",
+      "name": "營業現金流加速"
+    },
+    {
+      "id": "low_accrual",
+      "name": "低應計穩健成長"
+    },
+    {
+      "id": "cashflow_turnaround",
+      "name": "現金流由負轉正"
+    },
+    {
+      "id": "cashflow_revenue_confirm",
+      "name": "現金流與營收同步"
+    },
+    {
+      "id": "quality_momentum",
+      "name": "現金品質與相對強勢"
+    }
+  ],
+  "testedConfigurations": 384,
+  "trainingMonthsPerFold": 54,
+  "validationMonthsPerFold": 18,
+  "validationPeriod": {
+    "start": "2020-09-01",
+    "end": "2026-06-09"
+  },
+  "folds": [
+    {
+      "trainStart": "2016-03-01",
+      "trainEnd": "2020-08-31",
+      "validationStart": "2020-09-01",
+      "validationEnd": "2022-02-28",
+      "status": "完成",
+      "selected": {
+        "setup": "quality_momentum",
+        "trigger": "ma20_restrengthen",
+        "holdingDays": 20,
+        "topN": 5,
+        "stopDistancePct": 12,
+        "marketMode": "risk_on"
+      },
+      "train": {
+        "startDate": "2016-03-01",
+        "endDate": "2020-08-31",
+        "endingEquity": 1052978,
+        "annualizedReturnPct": 1.1535,
+        "averageMonthlyEquityReturnPct": 0.0972,
+        "maximumDrawdownPct": -3.6119,
+        "negativeMonths": 9,
+        "winRatePct": 47.561,
+        "profitFactor": 1.4944,
+        "sharpeLike": 0.5834,
+        "trades": 82,
+        "concentrationPct": 2.439,
+        "monthly": [
+          {
+            "month": "2016-03",
+            "equityReturnPct": 0,
+            "endingEquity": 1000000,
+            "trades": 0
+          },
+          {
+            "month": "2016-04",
+            "equityReturnPct": -0.5918,
+            "endingEquity": 994082,
+            "trades": 2
+          },
+          {
+            "month": "2016-05",
+            "equityReturnPct": 0.1426,
+            "endingEquity": 995500,
+            "trades": 4
+          },
+          {
+            "month": "2016-06",
+            "equityReturnPct": -0.9428,
+            "endingEquity": 986114,
+            "trades": 2
+          },
+          {
+            "month": "2016-07",
+            "equityReturnPct": -0.0115,
+            "endingEquity": 986001,
+            "trades": 3
+          },
+          {
+            "month": "2016-08",
+            "equityReturnPct": 0,
+            "endingEquity": 986001,
+            "trades": 0
+          },
+          {
+            "month": "2016-09",
+            "equityReturnPct": -0.319,
+            "endingEquity": 982856,
+            "trades": 1
+          },
+          {
+            "month": "2016-10",
+            "equityReturnPct": 0.1232,
+            "endingEquity": 984067,
+            "trades": 5
+          },
+          {
+            "month": "2016-11",
+            "equityReturnPct": 0,
+            "endingEquity": 984067,
+            "trades": 0
+          },
+          {
+            "month": "2016-12",
+            "equityReturnPct": -0.7354,
+            "endingEquity": 976830,
+            "trades": 5
+          },
+          {
+            "month": "2017-01",
+            "equityReturnPct": 0,
+            "endingEquity": 976830,
+            "trades": 0
+          },
+          {
+            "month": "2017-02",
+            "equityReturnPct": 0,
+            "endingEquity": 976830,
+            "trades": 0
+          },
+          {
+            "month": "2017-03",
+            "equityReturnPct": 0,
+            "endingEquity": 976830,
+            "trades": 0
+          },
+          {
+            "month": "2017-04",
+            "equityReturnPct": 0.0723,
+            "endingEquity": 977536,
+            "trades": 0
+          },
+          {
+            "month": "2017-05",
+            "equityReturnPct": 0.3078,
+            "endingEquity": 980545,
+            "trades": 5
+          },
+          {
+            "month": "2017-06",
+            "equityReturnPct": 0.8746,
+            "endingEquity": 989121,
+            "trades": 5
+          },
+          {
+            "month": "2017-07",
+            "equityReturnPct": 0,
+            "endingEquity": 989121,
+            "trades": 0
+          },
+          {
+            "month": "2017-08",
+            "equityReturnPct": 0,
+            "endingEquity": 989121,
+            "trades": 0
+          },
+          {
+            "month": "2017-09",
+            "equityReturnPct": -1.5149,
+            "endingEquity": 974137,
+            "trades": 2
+          },
+          {
+            "month": "2017-10",
+            "equityReturnPct": 0.9471,
+            "endingEquity": 983363,
+            "trades": 3
+          },
+          {
+            "month": "2017-11",
+            "equityReturnPct": 0,
+            "endingEquity": 983363,
+            "trades": 0
+          },
+          {
+            "month": "2017-12",
+            "equityReturnPct": 1.9068,
+            "endingEquity": 1002114,
+            "trades": 5
+          },
+          {
+            "month": "2018-01",
+            "equityReturnPct": 0,
+            "endingEquity": 1002114,
+            "trades": 0
+          },
+          {
+            "month": "2018-02",
+            "equityReturnPct": 0,
+            "endingEquity": 1002114,
+            "trades": 0
+          },
+          {
+            "month": "2018-03",
+            "equityReturnPct": 0,
+            "endingEquity": 1002114,
+            "trades": 0
+          },
+          {
+            "month": "2018-04",
+            "equityReturnPct": 0.3494,
+            "endingEquity": 1005615,
+            "trades": 4
+          },
+          {
+            "month": "2018-05",
+            "equityReturnPct": 0.0306,
+            "endingEquity": 1005923,
+            "trades": 1
+          },
+          {
+            "month": "2018-06",
+            "equityReturnPct": -0.6213,
+            "endingEquity": 999673,
+            "trades": 3
+          },
+          {
+            "month": "2018-07",
+            "equityReturnPct": -0.1085,
+            "endingEquity": 998588,
+            "trades": 2
+          },
+          {
+            "month": "2018-08",
+            "equityReturnPct": 0,
+            "endingEquity": 998588,
+            "trades": 0
+          },
+          {
+            "month": "2018-09",
+            "equityReturnPct": 0.2669,
+            "endingEquity": 1001253,
+            "trades": 0
+          },
+          {
+            "month": "2018-10",
+            "equityReturnPct": 0.0093,
+            "endingEquity": 1001346,
+            "trades": 5
+          },
+          {
+            "month": "2018-11",
+            "equityReturnPct": 0,
+            "endingEquity": 1001346,
+            "trades": 0
+          },
+          {
+            "month": "2018-12",
+            "equityReturnPct": 0,
+            "endingEquity": 1001346,
+            "trades": 0
+          },
+          {
+            "month": "2019-01",
+            "equityReturnPct": 0,
+            "endingEquity": 1001346,
+            "trades": 0
+          },
+          {
+            "month": "2019-02",
+            "equityReturnPct": 0,
+            "endingEquity": 1001346,
+            "trades": 0
+          },
+          {
+            "month": "2019-03",
+            "equityReturnPct": 0,
+            "endingEquity": 1001346,
+            "trades": 0
+          },
+          {
+            "month": "2019-04",
+            "equityReturnPct": 0.7304,
+            "endingEquity": 1008660,
+            "trades": 1
+          },
+          {
+            "month": "2019-05",
+            "equityReturnPct": 0.1477,
+            "endingEquity": 1010150,
+            "trades": 4
+          },
+          {
+            "month": "2019-06",
+            "equityReturnPct": 0.8552,
+            "endingEquity": 1018789,
+            "trades": 0
+          },
+          {
+            "month": "2019-07",
+            "equityReturnPct": 0.0563,
+            "endingEquity": 1019363,
+            "trades": 5
+          },
+          {
+            "month": "2019-08",
+            "equityReturnPct": 0,
+            "endingEquity": 1019363,
+            "trades": 0
+          },
+          {
+            "month": "2019-09",
+            "equityReturnPct": -0.6387,
+            "endingEquity": 1012852,
+            "trades": 0
+          },
+          {
+            "month": "2019-10",
+            "equityReturnPct": 0.3503,
+            "endingEquity": 1016400,
+            "trades": 5
+          },
+          {
+            "month": "2019-11",
+            "equityReturnPct": 0,
+            "endingEquity": 1016400,
+            "trades": 0
+          },
+          {
+            "month": "2019-12",
+            "equityReturnPct": 0.4828,
+            "endingEquity": 1021307,
+            "trades": 5
+          },
+          {
+            "month": "2020-01",
+            "equityReturnPct": 0,
+            "endingEquity": 1021307,
+            "trades": 0
+          },
+          {
+            "month": "2020-02",
+            "equityReturnPct": 0,
+            "endingEquity": 1021307,
+            "trades": 0
+          },
+          {
+            "month": "2020-03",
+            "equityReturnPct": 0,
+            "endingEquity": 1021307,
+            "trades": 0
+          },
+          {
+            "month": "2020-04",
+            "equityReturnPct": 0,
+            "endingEquity": 1021307,
+            "trades": 0
+          },
+          {
+            "month": "2020-05",
+            "equityReturnPct": 0,
+            "endingEquity": 1021307,
+            "trades": 0
+          },
+          {
+            "month": "2020-06",
+            "equityReturnPct": 2.2025,
+            "endingEquity": 1043801,
+            "trades": 0
+          },
+          {
+            "month": "2020-07",
+            "equityReturnPct": 0.8792,
+            "endingEquity": 1052978,
+            "trades": 5
+          },
+          {
+            "month": "2020-08",
+            "equityReturnPct": 0,
+            "endingEquity": 1052978,
+            "trades": 0
+          }
+        ]
+      },
+      "validation": {
+        "startDate": "2020-09-01",
+        "endDate": "2022-02-28",
+        "endingEquity": 954116,
+        "annualizedReturnPct": -3.0988,
+        "averageMonthlyEquityReturnPct": -0.2585,
+        "maximumDrawdownPct": -5.4628,
+        "negativeMonths": 6,
+        "winRatePct": 30,
+        "profitFactor": 0.3966,
+        "sharpeLike": -1.3034,
+        "trades": 30,
+        "concentrationPct": 6.6667,
+        "monthly": [
+          {
+            "month": "2020-09",
+            "equityReturnPct": -1.9331,
+            "endingEquity": 980669,
+            "trades": 5
+          },
+          {
+            "month": "2020-10",
+            "equityReturnPct": 0,
+            "endingEquity": 980669,
+            "trades": 0
+          },
+          {
+            "month": "2020-11",
+            "equityReturnPct": 0,
+            "endingEquity": 980669,
+            "trades": 0
+          },
+          {
+            "month": "2020-12",
+            "equityReturnPct": 0.9657,
+            "endingEquity": 990139,
+            "trades": 5
+          },
+          {
+            "month": "2021-01",
+            "equityReturnPct": 0,
+            "endingEquity": 990139,
+            "trades": 0
+          },
+          {
+            "month": "2021-02",
+            "equityReturnPct": 0,
+            "endingEquity": 990139,
+            "trades": 0
+          },
+          {
+            "month": "2021-03",
+            "equityReturnPct": 0,
+            "endingEquity": 990139,
+            "trades": 0
+          },
+          {
+            "month": "2021-04",
+            "equityReturnPct": -0.6079,
+            "endingEquity": 984120,
+            "trades": 0
+          },
+          {
+            "month": "2021-05",
+            "equityReturnPct": -0.9888,
+            "endingEquity": 974389,
+            "trades": 5
+          },
+          {
+            "month": "2021-06",
+            "equityReturnPct": -0.2435,
+            "endingEquity": 972016,
+            "trades": 1
+          },
+          {
+            "month": "2021-07",
+            "equityReturnPct": 0.3438,
+            "endingEquity": 975358,
+            "trades": 4
+          },
+          {
+            "month": "2021-08",
+            "equityReturnPct": 0,
+            "endingEquity": 975358,
+            "trades": 0
+          },
+          {
+            "month": "2021-09",
+            "equityReturnPct": -1.2448,
+            "endingEquity": 963217,
+            "trades": 1
+          },
+          {
+            "month": "2021-10",
+            "equityReturnPct": -0.991,
+            "endingEquity": 953672,
+            "trades": 4
+          },
+          {
+            "month": "2021-11",
+            "equityReturnPct": 0,
+            "endingEquity": 953672,
+            "trades": 0
+          },
+          {
+            "month": "2021-12",
+            "equityReturnPct": 0.0466,
+            "endingEquity": 954116,
+            "trades": 5
+          },
+          {
+            "month": "2022-01",
+            "equityReturnPct": 0,
+            "endingEquity": 954116,
+            "trades": 0
+          },
+          {
+            "month": "2022-02",
+            "equityReturnPct": 0,
+            "endingEquity": 954116,
+            "trades": 0
+          }
+        ]
+      }
+    },
+    {
+      "trainStart": "2017-09-01",
+      "trainEnd": "2022-02-28",
+      "validationStart": "2022-03-01",
+      "validationEnd": "2023-08-31",
+      "status": "完成",
+      "selected": {
+        "setup": "quality_momentum",
+        "trigger": "event_open",
+        "holdingDays": 20,
+        "topN": 5,
+        "stopDistancePct": 8,
+        "marketMode": "all"
+      },
+      "train": {
+        "startDate": "2017-09-01",
+        "endDate": "2022-02-28",
+        "endingEquity": 1303589,
+        "annualizedReturnPct": 6.0786,
+        "averageMonthlyEquityReturnPct": 0.5252,
+        "maximumDrawdownPct": -8.5586,
+        "negativeMonths": 12,
+        "winRatePct": 47.2973,
+        "profitFactor": 2.8458,
+        "sharpeLike": 1.2286,
+        "trades": 74,
+        "concentrationPct": 2.7027,
+        "monthly": [
+          {
+            "month": "2017-09",
+            "equityReturnPct": -1.0665,
+            "endingEquity": 989335,
+            "trades": 5
+          },
+          {
+            "month": "2017-10",
+            "equityReturnPct": 0,
+            "endingEquity": 989335,
+            "trades": 0
+          },
+          {
+            "month": "2017-11",
+            "equityReturnPct": 0,
+            "endingEquity": 989335,
+            "trades": 0
+          },
+          {
+            "month": "2017-12",
+            "equityReturnPct": -2.3468,
+            "endingEquity": 966117,
+            "trades": 5
+          },
+          {
+            "month": "2018-01",
+            "equityReturnPct": 0,
+            "endingEquity": 966117,
+            "trades": 0
+          },
+          {
+            "month": "2018-02",
+            "equityReturnPct": 0,
+            "endingEquity": 966117,
+            "trades": 0
+          },
+          {
+            "month": "2018-03",
+            "equityReturnPct": 0,
+            "endingEquity": 966117,
+            "trades": 0
+          },
+          {
+            "month": "2018-04",
+            "equityReturnPct": 0.8709,
+            "endingEquity": 974531,
+            "trades": 4
+          },
+          {
+            "month": "2018-05",
+            "equityReturnPct": 0,
+            "endingEquity": 974531,
+            "trades": 0
+          },
+          {
+            "month": "2018-06",
+            "equityReturnPct": -0.1727,
+            "endingEquity": 972848,
+            "trades": 2
+          },
+          {
+            "month": "2018-07",
+            "equityReturnPct": 0,
+            "endingEquity": 972848,
+            "trades": 0
+          },
+          {
+            "month": "2018-08",
+            "equityReturnPct": 0,
+            "endingEquity": 972848,
+            "trades": 0
+          },
+          {
+            "month": "2018-09",
+            "equityReturnPct": -0.8085,
+            "endingEquity": 964983,
+            "trades": 2
+          },
+          {
+            "month": "2018-10",
+            "equityReturnPct": -0.1316,
+            "endingEquity": 963713,
+            "trades": 3
+          },
+          {
+            "month": "2018-11",
+            "equityReturnPct": 0,
+            "endingEquity": 963713,
+            "trades": 0
+          },
+          {
+            "month": "2018-12",
+            "equityReturnPct": -0.0038,
+            "endingEquity": 963676,
+            "trades": 2
+          },
+          {
+            "month": "2019-01",
+            "equityReturnPct": 0,
+            "endingEquity": 963676,
+            "trades": 0
+          },
+          {
+            "month": "2019-02",
+            "equityReturnPct": 0,
+            "endingEquity": 963676,
+            "trades": 0
+          },
+          {
+            "month": "2019-03",
+            "equityReturnPct": 0,
+            "endingEquity": 963676,
+            "trades": 0
+          },
+          {
+            "month": "2019-04",
+            "equityReturnPct": -1.6567,
+            "endingEquity": 947711,
+            "trades": 3
+          },
+          {
+            "month": "2019-05",
+            "equityReturnPct": -0.0973,
+            "endingEquity": 946789,
+            "trades": 2
+          },
+          {
+            "month": "2019-06",
+            "equityReturnPct": -0.8083,
+            "endingEquity": 939136,
+            "trades": 1
+          },
+          {
+            "month": "2019-07",
+            "equityReturnPct": 0.0357,
+            "endingEquity": 939471,
+            "trades": 4
+          },
+          {
+            "month": "2019-08",
+            "equityReturnPct": 0,
+            "endingEquity": 939471,
+            "trades": 0
+          },
+          {
+            "month": "2019-09",
+            "equityReturnPct": 1.167,
+            "endingEquity": 950435,
+            "trades": 0
+          },
+          {
+            "month": "2019-10",
+            "equityReturnPct": 0.1304,
+            "endingEquity": 951674,
+            "trades": 5
+          },
+          {
+            "month": "2019-11",
+            "equityReturnPct": 0,
+            "endingEquity": 951674,
+            "trades": 0
+          },
+          {
+            "month": "2019-12",
+            "equityReturnPct": 0.348,
+            "endingEquity": 954986,
+            "trades": 5
+          },
+          {
+            "month": "2020-01",
+            "equityReturnPct": 0,
+            "endingEquity": 954986,
+            "trades": 0
+          },
+          {
+            "month": "2020-02",
+            "equityReturnPct": 0,
+            "endingEquity": 954986,
+            "trades": 0
+          },
+          {
+            "month": "2020-03",
+            "equityReturnPct": 0,
+            "endingEquity": 954986,
+            "trades": 0
+          },
+          {
+            "month": "2020-04",
+            "equityReturnPct": 0.37,
+            "endingEquity": 958519,
+            "trades": 2
+          },
+          {
+            "month": "2020-05",
+            "equityReturnPct": -0.0109,
+            "endingEquity": 958415,
+            "trades": 2
+          },
+          {
+            "month": "2020-06",
+            "equityReturnPct": 2.8539,
+            "endingEquity": 985767,
+            "trades": 0
+          },
+          {
+            "month": "2020-07",
+            "equityReturnPct": 0.1556,
+            "endingEquity": 987301,
+            "trades": 2
+          },
+          {
+            "month": "2020-08",
+            "equityReturnPct": 0,
+            "endingEquity": 987301,
+            "trades": 0
+          },
+          {
+            "month": "2020-09",
+            "equityReturnPct": 4.372,
+            "endingEquity": 1030466,
+            "trades": 5
+          },
+          {
+            "month": "2020-10",
+            "equityReturnPct": 0,
+            "endingEquity": 1030466,
+            "trades": 0
+          },
+          {
+            "month": "2020-11",
+            "equityReturnPct": 0,
+            "endingEquity": 1030466,
+            "trades": 0
+          },
+          {
+            "month": "2020-12",
+            "equityReturnPct": 2.1669,
+            "endingEquity": 1052795,
+            "trades": 5
+          },
+          {
+            "month": "2021-01",
+            "equityReturnPct": 0,
+            "endingEquity": 1052795,
+            "trades": 0
+          },
+          {
+            "month": "2021-02",
+            "equityReturnPct": 0,
+            "endingEquity": 1052795,
+            "trades": 0
+          },
+          {
+            "month": "2021-03",
+            "equityReturnPct": 0,
+            "endingEquity": 1052795,
+            "trades": 0
+          },
+          {
+            "month": "2021-04",
+            "equityReturnPct": 0.4591,
+            "endingEquity": 1057628,
+            "trades": 0
+          },
+          {
+            "month": "2021-05",
+            "equityReturnPct": -0.9603,
+            "endingEquity": 1047472,
+            "trades": 2
+          },
+          {
+            "month": "2021-06",
+            "equityReturnPct": 18.6936,
+            "endingEquity": 1243282,
+            "trades": 3
+          },
+          {
+            "month": "2021-07",
+            "equityReturnPct": 0,
+            "endingEquity": 1243282,
+            "trades": 0
+          },
+          {
+            "month": "2021-08",
+            "equityReturnPct": 0,
+            "endingEquity": 1243282,
+            "trades": 0
+          },
+          {
+            "month": "2021-09",
+            "equityReturnPct": 1.4881,
+            "endingEquity": 1261783,
+            "trades": 3
+          },
+          {
+            "month": "2021-10",
+            "equityReturnPct": -0.0367,
+            "endingEquity": 1261320,
+            "trades": 2
+          },
+          {
+            "month": "2021-11",
+            "equityReturnPct": 0,
+            "endingEquity": 1261320,
+            "trades": 0
+          },
+          {
+            "month": "2021-12",
+            "equityReturnPct": 3.3512,
+            "endingEquity": 1303589,
+            "trades": 5
+          },
+          {
+            "month": "2022-01",
+            "equityReturnPct": 0,
+            "endingEquity": 1303589,
+            "trades": 0
+          },
+          {
+            "month": "2022-02",
+            "equityReturnPct": 0,
+            "endingEquity": 1303589,
+            "trades": 0
+          }
+        ]
+      },
+      "validation": {
+        "startDate": "2022-03-01",
+        "endDate": "2023-08-31",
+        "endingEquity": 972327,
+        "annualizedReturnPct": -1.8531,
+        "averageMonthlyEquityReturnPct": -0.1539,
+        "maximumDrawdownPct": -5.0572,
+        "negativeMonths": 5,
+        "winRatePct": 38.0952,
+        "profitFactor": 0.4781,
+        "sharpeLike": -0.5142,
+        "trades": 21,
+        "concentrationPct": 4.7619,
+        "monthly": [
+          {
+            "month": "2022-03",
+            "equityReturnPct": 0,
+            "endingEquity": 1000000,
+            "trades": 0
+          },
+          {
+            "month": "2022-04",
+            "equityReturnPct": -0.8075,
+            "endingEquity": 991925,
+            "trades": 1
+          },
+          {
+            "month": "2022-05",
+            "equityReturnPct": 0.0328,
+            "endingEquity": 992250,
+            "trades": 1
+          },
+          {
+            "month": "2022-06",
+            "equityReturnPct": -0.6717,
+            "endingEquity": 985585,
+            "trades": 2
+          },
+          {
+            "month": "2022-07",
+            "equityReturnPct": 0,
+            "endingEquity": 985585,
+            "trades": 0
+          },
+          {
+            "month": "2022-08",
+            "equityReturnPct": 0,
+            "endingEquity": 985585,
+            "trades": 0
+          },
+          {
+            "month": "2022-09",
+            "equityReturnPct": -0.9453,
+            "endingEquity": 976268,
+            "trades": 2
+          },
+          {
+            "month": "2022-10",
+            "equityReturnPct": 0,
+            "endingEquity": 976268,
+            "trades": 0
+          },
+          {
+            "month": "2022-11",
+            "equityReturnPct": 0,
+            "endingEquity": 976268,
+            "trades": 0
+          },
+          {
+            "month": "2022-12",
+            "equityReturnPct": -1.5963,
+            "endingEquity": 960684,
+            "trades": 5
+          },
+          {
+            "month": "2023-01",
+            "equityReturnPct": 0,
+            "endingEquity": 960684,
+            "trades": 0
+          },
+          {
+            "month": "2023-02",
+            "equityReturnPct": 0,
+            "endingEquity": 960684,
+            "trades": 0
+          },
+          {
+            "month": "2023-03",
+            "equityReturnPct": 0,
+            "endingEquity": 960684,
+            "trades": 0
+          },
+          {
+            "month": "2023-04",
+            "equityReturnPct": -0.6716,
+            "endingEquity": 954232,
+            "trades": 2
+          },
+          {
+            "month": "2023-05",
+            "equityReturnPct": 0.566,
+            "endingEquity": 959633,
+            "trades": 3
+          },
+          {
+            "month": "2023-06",
+            "equityReturnPct": 1.3228,
+            "endingEquity": 972327,
+            "trades": 5
+          },
+          {
+            "month": "2023-07",
+            "equityReturnPct": 0,
+            "endingEquity": 972327,
+            "trades": 0
+          },
+          {
+            "month": "2023-08",
+            "equityReturnPct": 0,
+            "endingEquity": 972327,
+            "trades": 0
+          }
+        ]
+      }
+    },
+    {
+      "trainStart": "2019-03-01",
+      "trainEnd": "2023-08-31",
+      "validationStart": "2023-09-01",
+      "validationEnd": "2025-02-28",
+      "status": "完成",
+      "selected": {
+        "setup": "quality_momentum",
+        "trigger": "event_open",
+        "holdingDays": 20,
+        "topN": 5,
+        "stopDistancePct": 8,
+        "marketMode": "all"
+      },
+      "train": {
+        "startDate": "2019-03-01",
+        "endDate": "2023-08-31",
+        "endingEquity": 1315421,
+        "annualizedReturnPct": 6.2803,
+        "averageMonthlyEquityReturnPct": 0.5419,
+        "maximumDrawdownPct": -5.4495,
+        "negativeMonths": 11,
+        "winRatePct": 48.6111,
+        "profitFactor": 2.7533,
+        "sharpeLike": 1.2362,
+        "trades": 72,
+        "concentrationPct": 1.3889,
+        "monthly": [
+          {
+            "month": "2019-03",
+            "equityReturnPct": 0,
+            "endingEquity": 1000000,
+            "trades": 0
+          },
+          {
+            "month": "2019-04",
+            "equityReturnPct": -1.6621,
+            "endingEquity": 983379,
+            "trades": 3
+          },
+          {
+            "month": "2019-05",
+            "equityReturnPct": -0.0967,
+            "endingEquity": 982428,
+            "trades": 2
+          },
+          {
+            "month": "2019-06",
+            "equityReturnPct": -0.8071,
+            "endingEquity": 974499,
+            "trades": 1
+          },
+          {
+            "month": "2019-07",
+            "equityReturnPct": 0.0357,
+            "endingEquity": 974847,
+            "trades": 4
+          },
+          {
+            "month": "2019-08",
+            "equityReturnPct": 0,
+            "endingEquity": 974847,
+            "trades": 0
+          },
+          {
+            "month": "2019-09",
+            "equityReturnPct": 1.1677,
+            "endingEquity": 986230,
+            "trades": 0
+          },
+          {
+            "month": "2019-10",
+            "equityReturnPct": 0.1308,
+            "endingEquity": 987520,
+            "trades": 5
+          },
+          {
+            "month": "2019-11",
+            "equityReturnPct": 0,
+            "endingEquity": 987520,
+            "trades": 0
+          },
+          {
+            "month": "2019-12",
+            "equityReturnPct": 0.3491,
+            "endingEquity": 990967,
+            "trades": 5
+          },
+          {
+            "month": "2020-01",
+            "equityReturnPct": 0,
+            "endingEquity": 990967,
+            "trades": 0
+          },
+          {
+            "month": "2020-02",
+            "equityReturnPct": 0,
+            "endingEquity": 990967,
+            "trades": 0
+          },
+          {
+            "month": "2020-03",
+            "equityReturnPct": 0,
+            "endingEquity": 990967,
+            "trades": 0
+          },
+          {
+            "month": "2020-04",
+            "equityReturnPct": 0.3695,
+            "endingEquity": 994629,
+            "trades": 2
+          },
+          {
+            "month": "2020-05",
+            "equityReturnPct": -0.0109,
+            "endingEquity": 994521,
+            "trades": 2
+          },
+          {
+            "month": "2020-06",
+            "equityReturnPct": 2.8572,
+            "endingEquity": 1022936,
+            "trades": 0
+          },
+          {
+            "month": "2020-07",
+            "equityReturnPct": 0.1556,
+            "endingEquity": 1024528,
+            "trades": 2
+          },
+          {
+            "month": "2020-08",
+            "equityReturnPct": 0,
+            "endingEquity": 1024528,
+            "trades": 0
+          },
+          {
+            "month": "2020-09",
+            "equityReturnPct": 4.3818,
+            "endingEquity": 1069421,
+            "trades": 5
+          },
+          {
+            "month": "2020-10",
+            "equityReturnPct": 0,
+            "endingEquity": 1069421,
+            "trades": 0
+          },
+          {
+            "month": "2020-11",
+            "equityReturnPct": 0,
+            "endingEquity": 1069421,
+            "trades": 0
+          },
+          {
+            "month": "2020-12",
+            "equityReturnPct": 2.1674,
+            "endingEquity": 1092600,
+            "trades": 5
+          },
+          {
+            "month": "2021-01",
+            "equityReturnPct": 0,
+            "endingEquity": 1092600,
+            "trades": 0
+          },
+          {
+            "month": "2021-02",
+            "equityReturnPct": 0,
+            "endingEquity": 1092600,
+            "trades": 0
+          },
+          {
+            "month": "2021-03",
+            "equityReturnPct": 0,
+            "endingEquity": 1092600,
+            "trades": 0
+          },
+          {
+            "month": "2021-04",
+            "equityReturnPct": 0.4594,
+            "endingEquity": 1097619,
+            "trades": 0
+          },
+          {
+            "month": "2021-05",
+            "equityReturnPct": -0.9601,
+            "endingEquity": 1087081,
+            "trades": 2
+          },
+          {
+            "month": "2021-06",
+            "equityReturnPct": 18.6948,
+            "endingEquity": 1290309,
+            "trades": 3
+          },
+          {
+            "month": "2021-07",
+            "equityReturnPct": 0,
+            "endingEquity": 1290309,
+            "trades": 0
+          },
+          {
+            "month": "2021-08",
+            "equityReturnPct": 0,
+            "endingEquity": 1290309,
+            "trades": 0
+          },
+          {
+            "month": "2021-09",
+            "equityReturnPct": 1.4906,
+            "endingEquity": 1309542,
+            "trades": 3
+          },
+          {
+            "month": "2021-10",
+            "equityReturnPct": -0.0368,
+            "endingEquity": 1309060,
+            "trades": 2
+          },
+          {
+            "month": "2021-11",
+            "equityReturnPct": 0,
+            "endingEquity": 1309060,
+            "trades": 0
+          },
+          {
+            "month": "2021-12",
+            "equityReturnPct": 3.3433,
+            "endingEquity": 1352826,
+            "trades": 5
+          },
+          {
+            "month": "2022-01",
+            "equityReturnPct": 0,
+            "endingEquity": 1352826,
+            "trades": 0
+          },
+          {
+            "month": "2022-02",
+            "equityReturnPct": 0,
+            "endingEquity": 1352826,
+            "trades": 0
+          },
+          {
+            "month": "2022-03",
+            "equityReturnPct": 0,
+            "endingEquity": 1352826,
+            "trades": 0
+          },
+          {
+            "month": "2022-04",
+            "equityReturnPct": -0.8112,
+            "endingEquity": 1341852,
+            "trades": 1
+          },
+          {
+            "month": "2022-05",
+            "equityReturnPct": 0.0326,
+            "endingEquity": 1342289,
+            "trades": 1
+          },
+          {
+            "month": "2022-06",
+            "equityReturnPct": -0.672,
+            "endingEquity": 1333269,
+            "trades": 2
+          },
+          {
+            "month": "2022-07",
+            "equityReturnPct": 0,
+            "endingEquity": 1333269,
+            "trades": 0
+          },
+          {
+            "month": "2022-08",
+            "equityReturnPct": 0,
+            "endingEquity": 1333269,
+            "trades": 0
+          },
+          {
+            "month": "2022-09",
+            "equityReturnPct": -0.942,
+            "endingEquity": 1320709,
+            "trades": 2
+          },
+          {
+            "month": "2022-10",
+            "equityReturnPct": 0,
+            "endingEquity": 1320709,
+            "trades": 0
+          },
+          {
+            "month": "2022-11",
+            "equityReturnPct": 0,
+            "endingEquity": 1320709,
+            "trades": 0
+          },
+          {
+            "month": "2022-12",
+            "equityReturnPct": -1.5997,
+            "endingEquity": 1299581,
+            "trades": 5
+          },
+          {
+            "month": "2023-01",
+            "equityReturnPct": 0,
+            "endingEquity": 1299581,
+            "trades": 0
+          },
+          {
+            "month": "2023-02",
+            "equityReturnPct": 0,
+            "endingEquity": 1299581,
+            "trades": 0
+          },
+          {
+            "month": "2023-03",
+            "equityReturnPct": 0,
+            "endingEquity": 1299581,
+            "trades": 0
+          },
+          {
+            "month": "2023-04",
+            "equityReturnPct": -0.6645,
+            "endingEquity": 1290945,
+            "trades": 2
+          },
+          {
+            "month": "2023-05",
+            "equityReturnPct": 0.5707,
+            "endingEquity": 1298312,
+            "trades": 3
+          },
+          {
+            "month": "2023-06",
+            "equityReturnPct": 1.3178,
+            "endingEquity": 1315421,
+            "trades": 5
+          },
+          {
+            "month": "2023-07",
+            "equityReturnPct": 0,
+            "endingEquity": 1315421,
+            "trades": 0
+          },
+          {
+            "month": "2023-08",
+            "equityReturnPct": 0,
+            "endingEquity": 1315421,
+            "trades": 0
+          }
+        ]
+      },
+      "validation": {
+        "startDate": "2023-09-01",
+        "endDate": "2025-02-28",
+        "endingEquity": 959908,
+        "annualizedReturnPct": -2.7001,
+        "averageMonthlyEquityReturnPct": -0.2231,
+        "maximumDrawdownPct": -6.0585,
+        "negativeMonths": 6,
+        "winRatePct": 30.7692,
+        "profitFactor": 0.5442,
+        "sharpeLike": -0.7042,
+        "trades": 26,
+        "concentrationPct": 7.6923,
+        "monthly": [
+          {
+            "month": "2023-09",
+            "equityReturnPct": -2.8342,
+            "endingEquity": 971658,
+            "trades": 5
+          },
+          {
+            "month": "2023-10",
+            "equityReturnPct": 0,
+            "endingEquity": 971658,
+            "trades": 0
+          },
+          {
+            "month": "2023-11",
+            "equityReturnPct": 0,
+            "endingEquity": 971658,
+            "trades": 0
+          },
+          {
+            "month": "2023-12",
+            "equityReturnPct": 1.6299,
+            "endingEquity": 987495,
+            "trades": 5
+          },
+          {
+            "month": "2024-01",
+            "equityReturnPct": 0,
+            "endingEquity": 987495,
+            "trades": 0
+          },
+          {
+            "month": "2024-02",
+            "equityReturnPct": 0,
+            "endingEquity": 987495,
+            "trades": 0
+          },
+          {
+            "month": "2024-03",
+            "equityReturnPct": 0,
+            "endingEquity": 987495,
+            "trades": 0
+          },
+          {
+            "month": "2024-04",
+            "equityReturnPct": -0.6532,
+            "endingEquity": 981045,
+            "trades": 2
+          },
+          {
+            "month": "2024-05",
+            "equityReturnPct": -0.0711,
+            "endingEquity": 980347,
+            "trades": 2
+          },
+          {
+            "month": "2024-06",
+            "equityReturnPct": -1.5732,
+            "endingEquity": 964924,
+            "trades": 3
+          },
+          {
+            "month": "2024-07",
+            "equityReturnPct": 0,
+            "endingEquity": 964924,
+            "trades": 0
+          },
+          {
+            "month": "2024-08",
+            "equityReturnPct": 0,
+            "endingEquity": 964924,
+            "trades": 0
+          },
+          {
+            "month": "2024-09",
+            "equityReturnPct": 0.601,
+            "endingEquity": 970723,
+            "trades": 1
+          },
+          {
+            "month": "2024-10",
+            "equityReturnPct": -0.0249,
+            "endingEquity": 970481,
+            "trades": 3
+          },
+          {
+            "month": "2024-11",
+            "equityReturnPct": 0,
+            "endingEquity": 970481,
+            "trades": 0
+          },
+          {
+            "month": "2024-12",
+            "equityReturnPct": -1.0895,
+            "endingEquity": 959908,
+            "trades": 5
+          },
+          {
+            "month": "2025-01",
+            "equityReturnPct": 0,
+            "endingEquity": 959908,
+            "trades": 0
+          },
+          {
+            "month": "2025-02",
+            "equityReturnPct": 0,
+            "endingEquity": 959908,
+            "trades": 0
+          }
+        ]
+      }
+    },
+    {
+      "trainStart": "2020-09-01",
+      "trainEnd": "2025-02-28",
+      "validationStart": "2025-03-01",
+      "validationEnd": "2026-06-09",
+      "status": "完成",
+      "selected": {
+        "setup": "quality_momentum",
+        "trigger": "event_open",
+        "holdingDays": 20,
+        "topN": 5,
+        "stopDistancePct": 8,
+        "marketMode": "risk_on"
+      },
+      "train": {
+        "startDate": "2020-09-01",
+        "endDate": "2025-02-28",
+        "endingEquity": 1262042,
+        "annualizedReturnPct": 5.3166,
+        "averageMonthlyEquityReturnPct": 0.4651,
+        "maximumDrawdownPct": -6.414,
+        "negativeMonths": 10,
+        "winRatePct": 46.9697,
+        "profitFactor": 2.2067,
+        "sharpeLike": 1.035,
+        "trades": 66,
+        "concentrationPct": 3.0303,
+        "monthly": [
+          {
+            "month": "2020-09",
+            "equityReturnPct": 4.3762,
+            "endingEquity": 1043762,
+            "trades": 5
+          },
+          {
+            "month": "2020-10",
+            "equityReturnPct": 0,
+            "endingEquity": 1043762,
+            "trades": 0
+          },
+          {
+            "month": "2020-11",
+            "equityReturnPct": 0,
+            "endingEquity": 1043762,
+            "trades": 0
+          },
+          {
+            "month": "2020-12",
+            "equityReturnPct": 2.1662,
+            "endingEquity": 1066372,
+            "trades": 5
+          },
+          {
+            "month": "2021-01",
+            "equityReturnPct": 0,
+            "endingEquity": 1066372,
+            "trades": 0
+          },
+          {
+            "month": "2021-02",
+            "equityReturnPct": 0,
+            "endingEquity": 1066372,
+            "trades": 0
+          },
+          {
+            "month": "2021-03",
+            "equityReturnPct": 0,
+            "endingEquity": 1066372,
+            "trades": 0
+          },
+          {
+            "month": "2021-04",
+            "equityReturnPct": 0.4591,
+            "endingEquity": 1071268,
+            "trades": 0
+          },
+          {
+            "month": "2021-05",
+            "equityReturnPct": -0.9598,
+            "endingEquity": 1060986,
+            "trades": 2
+          },
+          {
+            "month": "2021-06",
+            "equityReturnPct": 18.6797,
+            "endingEquity": 1259175,
+            "trades": 3
+          },
+          {
+            "month": "2021-07",
+            "equityReturnPct": 0,
+            "endingEquity": 1259175,
+            "trades": 0
+          },
+          {
+            "month": "2021-08",
+            "equityReturnPct": 0,
+            "endingEquity": 1259175,
+            "trades": 0
+          },
+          {
+            "month": "2021-09",
+            "equityReturnPct": 1.4886,
+            "endingEquity": 1277919,
+            "trades": 3
+          },
+          {
+            "month": "2021-10",
+            "equityReturnPct": -0.0367,
+            "endingEquity": 1277450,
+            "trades": 2
+          },
+          {
+            "month": "2021-11",
+            "equityReturnPct": 0,
+            "endingEquity": 1277450,
+            "trades": 0
+          },
+          {
+            "month": "2021-12",
+            "equityReturnPct": 3.3418,
+            "endingEquity": 1320140,
+            "trades": 5
+          },
+          {
+            "month": "2022-01",
+            "equityReturnPct": 0,
+            "endingEquity": 1320140,
+            "trades": 0
+          },
+          {
+            "month": "2022-02",
+            "equityReturnPct": 0,
+            "endingEquity": 1320140,
+            "trades": 0
+          },
+          {
+            "month": "2022-03",
+            "equityReturnPct": 0,
+            "endingEquity": 1320140,
+            "trades": 0
+          },
+          {
+            "month": "2022-04",
+            "equityReturnPct": 0,
+            "endingEquity": 1320140,
+            "trades": 0
+          },
+          {
+            "month": "2022-05",
+            "equityReturnPct": 0,
+            "endingEquity": 1320140,
+            "trades": 0
+          },
+          {
+            "month": "2022-06",
+            "equityReturnPct": 0,
+            "endingEquity": 1320140,
+            "trades": 0
+          },
+          {
+            "month": "2022-07",
+            "equityReturnPct": 0,
+            "endingEquity": 1320140,
+            "trades": 0
+          },
+          {
+            "month": "2022-08",
+            "equityReturnPct": 0,
+            "endingEquity": 1320140,
+            "trades": 0
+          },
+          {
+            "month": "2022-09",
+            "equityReturnPct": 0,
+            "endingEquity": 1320140,
+            "trades": 0
+          },
+          {
+            "month": "2022-10",
+            "equityReturnPct": 0,
+            "endingEquity": 1320140,
+            "trades": 0
+          },
+          {
+            "month": "2022-11",
+            "equityReturnPct": 0,
+            "endingEquity": 1320140,
+            "trades": 0
+          },
+          {
+            "month": "2022-12",
+            "equityReturnPct": -1.6001,
+            "endingEquity": 1299016,
+            "trades": 5
+          },
+          {
+            "month": "2023-01",
+            "equityReturnPct": 0,
+            "endingEquity": 1299016,
+            "trades": 0
+          },
+          {
+            "month": "2023-02",
+            "equityReturnPct": 0,
+            "endingEquity": 1299016,
+            "trades": 0
+          },
+          {
+            "month": "2023-03",
+            "equityReturnPct": 0,
+            "endingEquity": 1299016,
+            "trades": 0
+          },
+          {
+            "month": "2023-04",
+            "equityReturnPct": -0.6649,
+            "endingEquity": 1290379,
+            "trades": 2
+          },
+          {
+            "month": "2023-05",
+            "equityReturnPct": 0.5705,
+            "endingEquity": 1297741,
+            "trades": 3
+          },
+          {
+            "month": "2023-06",
+            "equityReturnPct": 1.318,
+            "endingEquity": 1314845,
+            "trades": 5
+          },
+          {
+            "month": "2023-07",
+            "equityReturnPct": 0,
+            "endingEquity": 1314845,
+            "trades": 0
+          },
+          {
+            "month": "2023-08",
+            "equityReturnPct": 0,
+            "endingEquity": 1314845,
+            "trades": 0
+          },
+          {
+            "month": "2023-09",
+            "equityReturnPct": -2.8362,
+            "endingEquity": 1277554,
+            "trades": 5
+          },
+          {
+            "month": "2023-10",
+            "equityReturnPct": 0,
+            "endingEquity": 1277554,
+            "trades": 0
+          },
+          {
+            "month": "2023-11",
+            "equityReturnPct": 0,
+            "endingEquity": 1277554,
+            "trades": 0
+          },
+          {
+            "month": "2023-12",
+            "equityReturnPct": 1.6294,
+            "endingEquity": 1298370,
+            "trades": 5
+          },
+          {
+            "month": "2024-01",
+            "equityReturnPct": 0,
+            "endingEquity": 1298370,
+            "trades": 0
+          },
+          {
+            "month": "2024-02",
+            "equityReturnPct": 0,
+            "endingEquity": 1298370,
+            "trades": 0
+          },
+          {
+            "month": "2024-03",
+            "equityReturnPct": 0,
+            "endingEquity": 1298370,
+            "trades": 0
+          },
+          {
+            "month": "2024-04",
+            "equityReturnPct": -0.653,
+            "endingEquity": 1289892,
+            "trades": 2
+          },
+          {
+            "month": "2024-05",
+            "equityReturnPct": -0.0712,
+            "endingEquity": 1288974,
+            "trades": 2
+          },
+          {
+            "month": "2024-06",
+            "equityReturnPct": -1.5734,
+            "endingEquity": 1268693,
+            "trades": 3
+          },
+          {
+            "month": "2024-07",
+            "equityReturnPct": 0,
+            "endingEquity": 1268693,
+            "trades": 0
+          },
+          {
+            "month": "2024-08",
+            "equityReturnPct": 0,
+            "endingEquity": 1268693,
+            "trades": 0
+          },
+          {
+            "month": "2024-09",
+            "equityReturnPct": 0.5986,
+            "endingEquity": 1276288,
+            "trades": 1
+          },
+          {
+            "month": "2024-10",
+            "equityReturnPct": -0.0248,
+            "endingEquity": 1275971,
+            "trades": 3
+          },
+          {
+            "month": "2024-11",
+            "equityReturnPct": 0,
+            "endingEquity": 1275971,
+            "trades": 0
+          },
+          {
+            "month": "2024-12",
+            "equityReturnPct": -1.0916,
+            "endingEquity": 1262042,
+            "trades": 5
+          },
+          {
+            "month": "2025-01",
+            "equityReturnPct": 0,
+            "endingEquity": 1262042,
+            "trades": 0
+          },
+          {
+            "month": "2025-02",
+            "equityReturnPct": 0,
+            "endingEquity": 1262042,
+            "trades": 0
+          }
+        ]
+      },
+      "validation": {
+        "startDate": "2025-03-01",
+        "endDate": "2026-06-09",
+        "endingEquity": 1015988,
+        "annualizedReturnPct": 1.2537,
+        "averageMonthlyEquityReturnPct": 0.1053,
+        "maximumDrawdownPct": -2.9592,
+        "negativeMonths": 1,
+        "winRatePct": 40,
+        "profitFactor": 1.4441,
+        "sharpeLike": 0.5028,
+        "trades": 10,
+        "concentrationPct": 10,
+        "monthly": [
+          {
+            "month": "2025-03",
+            "equityReturnPct": 0,
+            "endingEquity": 1000000,
+            "trades": 0
+          },
+          {
+            "month": "2025-04",
+            "equityReturnPct": 0,
+            "endingEquity": 1000000,
+            "trades": 0
+          },
+          {
+            "month": "2025-05",
+            "equityReturnPct": 0,
+            "endingEquity": 1000000,
+            "trades": 0
+          },
+          {
+            "month": "2025-06",
+            "equityReturnPct": 0,
+            "endingEquity": 1000000,
+            "trades": 0
+          },
+          {
+            "month": "2025-07",
+            "equityReturnPct": 0,
+            "endingEquity": 1000000,
+            "trades": 0
+          },
+          {
+            "month": "2025-08",
+            "equityReturnPct": 0,
+            "endingEquity": 1000000,
+            "trades": 0
+          },
+          {
+            "month": "2025-09",
+            "equityReturnPct": 3.8952,
+            "endingEquity": 1038952,
+            "trades": 5
+          },
+          {
+            "month": "2025-10",
+            "equityReturnPct": 0,
+            "endingEquity": 1038952,
+            "trades": 0
+          },
+          {
+            "month": "2025-11",
+            "equityReturnPct": 0,
+            "endingEquity": 1038952,
+            "trades": 0
+          },
+          {
+            "month": "2025-12",
+            "equityReturnPct": -2.2103,
+            "endingEquity": 1015988,
+            "trades": 5
+          },
+          {
+            "month": "2026-01",
+            "equityReturnPct": 0,
+            "endingEquity": 1015988,
+            "trades": 0
+          },
+          {
+            "month": "2026-02",
+            "equityReturnPct": 0,
+            "endingEquity": 1015988,
+            "trades": 0
+          },
+          {
+            "month": "2026-03",
+            "equityReturnPct": 0,
+            "endingEquity": 1015988,
+            "trades": 0
+          },
+          {
+            "month": "2026-04",
+            "equityReturnPct": 0,
+            "endingEquity": 1015988,
+            "trades": 0
+          },
+          {
+            "month": "2026-05",
+            "equityReturnPct": 0,
+            "endingEquity": 1015988,
+            "trades": 0
+          },
+          {
+            "month": "2026-06",
+            "equityReturnPct": 0,
+            "endingEquity": 1015988,
+            "trades": 0
+          }
+        ]
+      }
+    }
+  ],
+  "metrics": {
+    "months": 70,
+    "averageMonthlyReturnPct": -0.1393,
+    "annualizedReturnPct": -1.6906,
+    "maximumDrawdownPct": -11.8605,
+    "trades": 87,
+    "winRatePct": 33.3333,
+    "profitFactor": 0.614,
+    "concentrationPct": 2.2989,
+    "negativeMonths": 18
+  },
+  "benchmark0050": {
+    "averageMonthlyReturnPct": 2.2346
+  },
+  "fairRandom": {
+    "months": 70,
+    "averageMonthlyReturnPct": -0.0996,
+    "annualizedReturnPct": -1.218,
+    "maximumDrawdownPct": -11.7951,
+    "trades": 94,
+    "winRatePct": 29.7872,
+    "profitFactor": 0.6707,
+    "concentrationPct": 2.1277,
+    "negativeMonths": 20
+  },
+  "checks": {
+    "target5Pct": false,
+    "trades": false,
+    "beats0050": false,
+    "beatsRandom": false,
+    "profitFactor": false,
+    "drawdown": true,
+    "diversified": true
+  },
+  "targetMonthlyReturnPct": 5,
+  "gapToTargetPct": 5.1393,
+  "passed": false,
+  "paperTradingReady": false,
+  "liveTradingReady": false,
+  "conclusion": "找不到達到可信月均 5% 且通過完整 validation 的純個股現金流品質策略。"
 }

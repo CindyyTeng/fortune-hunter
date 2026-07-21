@@ -66,6 +66,11 @@ function pass(row, filter) {
 
 function exposureFn(model) {
   return row => {
+    if (model === 'deployable_frontier_2_6') {
+      if ((row.marketVol20Pct ?? 0) <= 18) return 2.6;
+      if ((row.marketVol20Pct ?? 0) <= 22) return 0.2;
+      return 1;
+    }
     if (model === 'volatility_gate_3_2') {
       if ((row.marketVol20Pct ?? 0) <= 16.5) return 3.2;
       if ((row.marketVol20Pct ?? 0) <= 22) return 0.3;
@@ -176,6 +181,14 @@ async function main() {
   };
   const validationRows = validationTrades.filter(row => pass(row, selectedStrategy.filter));
   const validation = metric(validationRows, exposureFn(selectedStrategy.exposureModel));
+  const deployableFrontierStrategy = {
+    filter: selectedStrategy.filter,
+    exposureModel: 'deployable_frontier_2_6'
+  };
+  const deployableFrontier = {
+    train: metric(selectedRows, exposureFn(deployableFrontierStrategy.exposureModel)),
+    validation: metric(validationRows, exposureFn(deployableFrontierStrategy.exposureModel))
+  };
   const passed = validation.averageMonthlyReturnPct >= TARGET_MONTHLY
     && validation.trades >= 300
     && validation.maximumDrawdownPct >= -20
@@ -213,6 +226,13 @@ async function main() {
     gridBestByTrainScore: { filter: selected.filter, exposureModel: selected.exposureModel, train: selected.train },
     selected: { filter: selectedStrategy.filter, exposureModel: selectedStrategy.exposureModel, train: selectedStrategy.train },
     validation,
+    deployableFrontierBest: {
+      ...deployableFrontierStrategy,
+      ...deployableFrontier,
+      passedMonthly5: deployableFrontier.validation.averageMonthlyReturnPct >= TARGET_MONTHLY,
+      deployableRiskOk: deployableFrontier.train.maximumDrawdownPct >= -20
+        && deployableFrontier.validation.maximumDrawdownPct >= -20
+    },
     frontier,
     targetMonthlyReturnPct: TARGET_MONTHLY,
     targetGapPct: round(TARGET_MONTHLY - validation.averageMonthlyReturnPct),
@@ -222,11 +242,11 @@ async function main() {
     paperTradingReady: false,
     liveTradingReady: false,
     conclusion: passed
-      ? '達到月均 5% 研究門檻，但尚未通過實盤化審核；下一步必須做真實投組、下單單位與紙上交易驗證。'
+      ? '達到月均 5% 研究門檻，但尚未通過實盤化審核；目前可實盤風控邊界版本月均未達 5%。'
       : `未達月均 5%，目前最佳驗證月均 ${validation.averageMonthlyReturnPct}%，距離 5% 還差 ${round(TARGET_MONTHLY - validation.averageMonthlyReturnPct)} 個百分點。`
   };
   await fs.writeFile(OUTPUT, `${JSON.stringify(output, null, 2)}\n`, 'utf8');
-  await fs.writeFile(REPORT, `# Stock Profit 5% Hunter v2\n\n- 策略目標：純個股，尋找月均至少 5%、交易數至少 300、最大回撤不低於 -20% 的候選。\n- 搜尋組數：${candidates.length}\n- 最佳曝險模型：${selectedStrategy.exposureModel}\n- 驗證交易數：${validation.trades}\n- 驗證月均報酬：${validation.averageMonthlyReturnPct}%\n- 年化報酬：${validation.annualizedReturnPct}%\n- 最大回撤：${validation.maximumDrawdownPct}%\n- Profit Factor：${validation.profitFactor}\n- 勝率：${validation.winRatePct}%\n- 是否達月均 5%：${passed}\n- 是否可直接實盤：false\n\n## 結論\n\n${output.conclusion}\n\n## 實盤化審核\n\n- 純個股：${deployabilityAudit.pureStockOnly}\n- 驗證交易數達 300：${deployabilityAudit.validationTradeCountOk}\n- 驗證月均達 5%：${deployabilityAudit.validationMonthlyReturnOk}\n- 驗證回撤不低於 -20%：${deployabilityAudit.validationDrawdownOk}\n- 訓練期回撤不低於 -20%：${deployabilityAudit.trainDrawdownOk}\n- 最大曝險：${deployabilityAudit.maxExposure} 倍\n- 仍需紙上交易：${deployabilityAudit.requiresPaperTrading}\n\n## 風險警告\n\n${practicalRiskWarning || '無額外曝險警告。'}\n\n## 重要限制\n\n這版沒有使用 ETF/0050 作為主策略，也沒有使用出場後才知道的欄位。最佳版本是市場波動分層曝險：低波動期提高曝險，中波動期大幅降曝險，高波動期保留有限曝險。雖然驗證結果跨過月均 5%，但因訓練期回撤較深，而且曝險係數較高，仍不可直接接券商 API 實盤；下一步要放進真正的投組與下單單位模擬，檢查資金佔用、零股/整股限制、連續虧損熔斷與實際可成交性。\n`, 'utf8');
+  await fs.writeFile(REPORT, `# Stock Profit 5% Hunter v2\n\n- 策略目標：純個股，尋找月均至少 5%、交易數至少 300、最大回撤不低於 -20% 的候選。\n- 搜尋組數：${candidates.length}\n- 最佳研究曝險模型：${selectedStrategy.exposureModel}\n- 驗證交易數：${validation.trades}\n- 驗證月均報酬：${validation.averageMonthlyReturnPct}%\n- 年化報酬：${validation.annualizedReturnPct}%\n- 最大回撤：${validation.maximumDrawdownPct}%\n- Profit Factor：${validation.profitFactor}\n- 勝率：${validation.winRatePct}%\n- 是否達月均 5%：${passed}\n- 是否可直接實盤：false\n\n## 結論\n\n${output.conclusion}\n\n## 實盤化審核\n\n- 純個股：${deployabilityAudit.pureStockOnly}\n- 驗證交易數達 300：${deployabilityAudit.validationTradeCountOk}\n- 驗證月均達 5%：${deployabilityAudit.validationMonthlyReturnOk}\n- 驗證回撤不低於 -20%：${deployabilityAudit.validationDrawdownOk}\n- 訓練期回撤不低於 -20%：${deployabilityAudit.trainDrawdownOk}\n- 最大曝險：${deployabilityAudit.maxExposure} 倍\n- 仍需紙上交易：${deployabilityAudit.requiresPaperTrading}\n\n## 可實盤風控邊界\n\n- 曝險模型：${deployableFrontierStrategy.exposureModel}\n- 訓練月均：${deployableFrontier.train.averageMonthlyReturnPct}%\n- 訓練最大回撤：${deployableFrontier.train.maximumDrawdownPct}%\n- 驗證月均：${deployableFrontier.validation.averageMonthlyReturnPct}%\n- 驗證最大回撤：${deployableFrontier.validation.maximumDrawdownPct}%\n- 驗證交易數：${deployableFrontier.validation.trades}\n- 結論：風控較接近可實盤，但月均仍未達 5%。\n\n## 風險警告\n\n${practicalRiskWarning || '無額外曝險警告。'}\n\n## 重要限制\n\n這版沒有使用 ETF/0050 作為主策略，也沒有使用出場後才知道的欄位。最佳研究版已跨過月均 5%，但靠較高曝險達成，訓練期回撤較深；可實盤風控邊界版能把訓練與驗證回撤都壓在 -20% 內，但月均降到約 ${deployableFrontier.validation.averageMonthlyReturnPct}%。下一步若要同時「可實盤」與「月均 5%」，需要新增更強的進場 alpha 或更細的出場/熔斷規則，而不是單純加槓桿。\n`, 'utf8');
   console.log(JSON.stringify({
     output: OUTPUT.pathname,
     report: REPORT.pathname,
@@ -234,6 +254,7 @@ async function main() {
     selected: output.selected,
     validation,
     deployabilityAudit,
+    deployableFrontierBest: output.deployableFrontierBest,
     passed
   }, null, 2));
 }

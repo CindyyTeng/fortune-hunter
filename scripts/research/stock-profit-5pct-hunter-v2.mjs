@@ -71,6 +71,11 @@ function exposureFn(model) {
       if ((row.marketVol20Pct ?? 0) <= 22) return 0.2;
       return 1;
     }
+    if (model === 'deployable_frontier_2_7') {
+      if ((row.marketVol20Pct ?? 0) <= 17.5) return 2.7;
+      if ((row.marketVol20Pct ?? 0) <= 22) return 0.15;
+      return 1;
+    }
     if (model === 'volatility_gate_3_2') {
       if ((row.marketVol20Pct ?? 0) <= 16.5) return 3.2;
       if ((row.marketVol20Pct ?? 0) <= 22) return 0.3;
@@ -182,12 +187,27 @@ async function main() {
   const validationRows = validationTrades.filter(row => pass(row, selectedStrategy.filter));
   const validation = metric(validationRows, exposureFn(selectedStrategy.exposureModel));
   const deployableFrontierStrategy = {
-    filter: selectedStrategy.filter,
-    exposureModel: 'deployable_frontier_2_6'
+    filter: {
+      maxAtr: 7,
+      maxGap: 10,
+      minNearYearHigh: 0.5,
+      maxDistanceToMa20: 18,
+      minGlobalComposite: -0.25,
+      maxRsi: 88,
+      minVolumeRatio: 0,
+      maxVolumeRatio: 99,
+      minMarketMom5: -999,
+      minMarketMove: -999,
+      minThemeMove: -999,
+      maxMarketVol: 99
+    },
+    exposureModel: 'deployable_frontier_2_7'
   };
+  const deployableTrainRows = trainTrades.filter(row => pass(row, deployableFrontierStrategy.filter));
+  const deployableValidationRows = validationTrades.filter(row => pass(row, deployableFrontierStrategy.filter));
   const deployableFrontier = {
-    train: metric(selectedRows, exposureFn(deployableFrontierStrategy.exposureModel)),
-    validation: metric(validationRows, exposureFn(deployableFrontierStrategy.exposureModel))
+    train: metric(deployableTrainRows, exposureFn(deployableFrontierStrategy.exposureModel)),
+    validation: metric(deployableValidationRows, exposureFn(deployableFrontierStrategy.exposureModel))
   };
   const passed = validation.averageMonthlyReturnPct >= TARGET_MONTHLY
     && validation.trades >= 300

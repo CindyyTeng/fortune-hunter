@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-21T19:55:44.850Z",
+  "generatedAt": "2026-07-21T20:00:01.694Z",
   "strategyId": "stock_profit_5pct_hunter_v2",
   "source": "stock-fixed-top5-oos-v13 trade details",
   "guardrail": "只使用進場前可得欄位，不使用 exitReason、holdingDays 等未來資料欄位。",
@@ -676,10 +676,10 @@
   },
   "deployableFrontierBest": {
     "filter": {
-      "maxAtr": 8,
+      "maxAtr": 7,
       "maxGap": 10,
       "minNearYearHigh": 0.5,
-      "maxDistanceToMa20": 16,
+      "maxDistanceToMa20": 18,
       "minGlobalComposite": -0.25,
       "maxRsi": 88,
       "minVolumeRatio": 0,
@@ -689,200 +689,200 @@
       "minThemeMove": -999,
       "maxMarketVol": 99
     },
-    "exposureModel": "deployable_frontier_2_6",
+    "exposureModel": "deployable_frontier_2_7",
     "train": {
-      "trades": 453,
+      "trades": 461,
       "months": 55,
-      "averageMonthlyReturnPct": 3.624,
-      "annualizedReturnPct": 42.9766,
-      "maximumDrawdownPct": -19.9518,
-      "profitFactor": 1.8176,
-      "winRatePct": 43.7086,
-      "negativeMonths": 33,
+      "averageMonthlyReturnPct": 3.9125,
+      "annualizedReturnPct": 47.1753,
+      "maximumDrawdownPct": -19.4087,
+      "profitFactor": 1.835,
+      "winRatePct": 44.0347,
+      "negativeMonths": 31,
       "monthly": [
         {
           "month": "2016-08",
-          "returnPct": 9.126
+          "returnPct": 9.477
         },
         {
           "month": "2016-09",
-          "returnPct": -0.978
+          "returnPct": -0.9885
         },
         {
           "month": "2016-10",
-          "returnPct": -1.022
+          "returnPct": -0.7665
         },
         {
           "month": "2016-12",
-          "returnPct": -4.732
+          "returnPct": -4.914
         },
         {
           "month": "2017-03",
-          "returnPct": -0.286
+          "returnPct": -0.297
         },
         {
           "month": "2017-04",
-          "returnPct": -7.15
+          "returnPct": -7.425
         },
         {
           "month": "2017-05",
-          "returnPct": -5.252
+          "returnPct": -5.454
         },
         {
           "month": "2017-06",
-          "returnPct": 5.46
+          "returnPct": 5.67
         },
         {
           "month": "2017-07",
-          "returnPct": 1.248
+          "returnPct": 1.296
         },
         {
           "month": "2017-08",
-          "returnPct": 31.304
+          "returnPct": 32.508
         },
         {
           "month": "2017-09",
-          "returnPct": -7.098
+          "returnPct": -7.371
         },
         {
           "month": "2017-10",
-          "returnPct": -0.858
+          "returnPct": -2.16
         },
         {
           "month": "2017-11",
-          "returnPct": 5.252
+          "returnPct": 5.454
         },
         {
           "month": "2018-01",
-          "returnPct": -11.986
+          "returnPct": -12.447
         },
         {
           "month": "2018-02",
-          "returnPct": 10.218
+          "returnPct": 10.611
         },
         {
           "month": "2018-03",
-          "returnPct": -9.204
+          "returnPct": -9.558
         },
         {
           "month": "2018-04",
-          "returnPct": 6.162
+          "returnPct": 6.399
         },
         {
           "month": "2018-05",
-          "returnPct": -3.198
+          "returnPct": -3.321
         },
         {
           "month": "2018-06",
-          "returnPct": 4.602
+          "returnPct": 4.779
         },
         {
           "month": "2018-07",
-          "returnPct": -1.742
+          "returnPct": -1.809
         },
         {
           "month": "2018-08",
-          "returnPct": -2.366
+          "returnPct": -2.457
         },
         {
           "month": "2018-09",
-          "returnPct": -0.754
+          "returnPct": -0.783
         },
         {
           "month": "2018-10",
-          "returnPct": -1.404
+          "returnPct": -1.458
         },
         {
           "month": "2019-02",
-          "returnPct": -1.402
+          "returnPct": -1.4265
         },
         {
           "month": "2019-03",
-          "returnPct": 5.312
+          "returnPct": 4.026
         },
         {
           "month": "2019-04",
-          "returnPct": 27.274
+          "returnPct": 28.323
         },
         {
           "month": "2019-05",
-          "returnPct": 3.328
+          "returnPct": 5.103
         },
         {
           "month": "2019-06",
-          "returnPct": -1.56
+          "returnPct": -1.62
         },
         {
           "month": "2019-07",
-          "returnPct": -12.766
+          "returnPct": -13.257
         },
         {
           "month": "2019-09",
-          "returnPct": -5.356
+          "returnPct": -5.562
         },
         {
           "month": "2019-10",
-          "returnPct": -1.508
+          "returnPct": 1.188
         },
         {
           "month": "2019-11",
-          "returnPct": 13.442
+          "returnPct": 14.472
         },
         {
           "month": "2019-12",
-          "returnPct": 9.256
+          "returnPct": 9.612
         },
         {
           "month": "2020-01",
-          "returnPct": -0.312
+          "returnPct": -0.324
         },
         {
           "month": "2020-02",
-          "returnPct": -0.65
+          "returnPct": -0.675
         },
         {
           "month": "2020-04",
-          "returnPct": -0.554
+          "returnPct": -0.6145
         },
         {
           "month": "2020-05",
-          "returnPct": 4.65
+          "returnPct": 4.2815
         },
         {
           "month": "2020-06",
-          "returnPct": -1.928
+          "returnPct": -0.73
         },
         {
           "month": "2020-07",
-          "returnPct": 35.55
+          "returnPct": 37.0125
         },
         {
           "month": "2020-08",
-          "returnPct": 10.218
+          "returnPct": 10.2985
         },
         {
           "month": "2020-09",
-          "returnPct": -0.036
+          "returnPct": -0.242
         },
         {
           "month": "2020-10",
-          "returnPct": -7.098
+          "returnPct": -7.371
         },
         {
           "month": "2020-11",
-          "returnPct": 11.804
+          "returnPct": 12.258
         },
         {
           "month": "2020-12",
-          "returnPct": 20.254
+          "returnPct": 21.033
         },
         {
           "month": "2021-01",
-          "returnPct": 13.91
+          "returnPct": 14.445
         },
         {
           "month": "2021-02",
-          "returnPct": -2.026
+          "returnPct": -2.027
         },
         {
           "month": "2021-03",
@@ -890,63 +890,63 @@
         },
         {
           "month": "2021-04",
-          "returnPct": -1.352
+          "returnPct": -1.404
         },
         {
           "month": "2021-05",
-          "returnPct": 53.04
+          "returnPct": 55.08
         },
         {
           "month": "2021-06",
-          "returnPct": -0.188
+          "returnPct": -0.141
         },
         {
           "month": "2021-07",
-          "returnPct": 14.654
+          "returnPct": 14.6505
         },
         {
           "month": "2021-09",
-          "returnPct": -9.724
+          "returnPct": -10.098
         },
         {
           "month": "2021-10",
-          "returnPct": -0.156
+          "returnPct": -0.162
         },
         {
           "month": "2021-11",
-          "returnPct": -3.484
+          "returnPct": -3.618
         },
         {
           "month": "2021-12",
-          "returnPct": -1.014
+          "returnPct": 5.292
         }
       ]
     },
     "validation": {
-      "trades": 305,
+      "trades": 311,
       "months": 40,
-      "averageMonthlyReturnPct": 4.3651,
-      "annualizedReturnPct": 55.9949,
-      "maximumDrawdownPct": -19.346,
-      "profitFactor": 1.7137,
-      "winRatePct": 38.6885,
+      "averageMonthlyReturnPct": 4.5367,
+      "annualizedReturnPct": 58.6795,
+      "maximumDrawdownPct": -14.4867,
+      "profitFactor": 1.6485,
+      "winRatePct": 37.6206,
       "negativeMonths": 24,
       "monthly": [
         {
           "month": "2022-01",
-          "returnPct": -7.41
+          "returnPct": -7.695
         },
         {
           "month": "2022-06",
-          "returnPct": -0.58
+          "returnPct": -0.435
         },
         {
           "month": "2022-08",
-          "returnPct": -1.156
+          "returnPct": -2.742
         },
         {
           "month": "2022-09",
-          "returnPct": 8.71
+          "returnPct": 9.045
         },
         {
           "month": "2022-12",
@@ -954,71 +954,71 @@
         },
         {
           "month": "2023-01",
-          "returnPct": -0.03
+          "returnPct": -0.1215
         },
         {
           "month": "2023-02",
-          "returnPct": -0.274
+          "returnPct": -0.2055
         },
         {
           "month": "2023-03",
-          "returnPct": 0.18
+          "returnPct": 0.135
         },
         {
           "month": "2023-04",
-          "returnPct": -10.842
+          "returnPct": -11.259
         },
         {
           "month": "2023-05",
-          "returnPct": 0.286
+          "returnPct": 0.297
         },
         {
           "month": "2023-06",
-          "returnPct": 27.17
+          "returnPct": 28.215
         },
         {
           "month": "2023-07",
-          "returnPct": -1.846
+          "returnPct": -1.917
         },
         {
           "month": "2023-10",
-          "returnPct": -5.252
+          "returnPct": -5.454
         },
         {
           "month": "2023-11",
-          "returnPct": -3.198
+          "returnPct": -3.321
         },
         {
           "month": "2023-12",
-          "returnPct": 27.56
+          "returnPct": 28.62
         },
         {
           "month": "2024-01",
-          "returnPct": -6.578
+          "returnPct": -6.831
         },
         {
           "month": "2024-02",
-          "returnPct": -0.1
+          "returnPct": -0.075
         },
         {
           "month": "2024-03",
-          "returnPct": -0.662
+          "returnPct": -0.7765
         },
         {
           "month": "2024-04",
-          "returnPct": 9.432
+          "returnPct": 6.741
         },
         {
           "month": "2024-05",
-          "returnPct": -4.022
+          "returnPct": -4.074
         },
         {
           "month": "2024-06",
-          "returnPct": 2.866
+          "returnPct": 3.045
         },
         {
           "month": "2024-07",
-          "returnPct": -0.536
+          "returnPct": -0.827
         },
         {
           "month": "2024-09",
@@ -1026,63 +1026,63 @@
         },
         {
           "month": "2024-10",
-          "returnPct": 0.928
+          "returnPct": 0.9535
         },
         {
           "month": "2024-11",
-          "returnPct": -0.888
+          "returnPct": -0.666
         },
         {
           "month": "2024-12",
-          "returnPct": -3.068
+          "returnPct": -3.186
         },
         {
           "month": "2025-01",
-          "returnPct": -4.966
+          "returnPct": -0.2865
         },
         {
           "month": "2025-02",
-          "returnPct": -2.86
+          "returnPct": -0.165
         },
         {
           "month": "2025-06",
-          "returnPct": -6.18
+          "returnPct": -6.405
         },
         {
           "month": "2025-07",
-          "returnPct": 5.72
+          "returnPct": 4.8225
         },
         {
           "month": "2025-08",
-          "returnPct": 28.974
+          "returnPct": 30.0435
         },
         {
           "month": "2025-09",
-          "returnPct": -0.45
+          "returnPct": -0.5085
         },
         {
           "month": "2025-10",
-          "returnPct": 12.714
+          "returnPct": 14.904
         },
         {
           "month": "2025-11",
-          "returnPct": 24.486
+          "returnPct": 25.587
         },
         {
           "month": "2025-12",
-          "returnPct": -1.068
+          "returnPct": -1.1535
         },
         {
           "month": "2026-01",
-          "returnPct": 29.926
+          "returnPct": 31.077
         },
         {
           "month": "2026-02",
-          "returnPct": 31.148
+          "returnPct": 32.346
         },
         {
           "month": "2026-03",
-          "returnPct": 22.728
+          "returnPct": 21.201
         },
         {
           "month": "2026-04",
@@ -1090,7 +1090,7 @@
         },
         {
           "month": "2026-05",
-          "returnPct": 7.26
+          "returnPct": 6.06
         }
       ]
     },

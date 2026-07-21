@@ -32,6 +32,10 @@ const STOCK_FIXED_OOS_V9_OUTPUT = new URL(
   '../data/research/stock-fixed-top5-oos-v9.json',
   import.meta.url
 );
+const STOCK_FIXED_OOS_V10_OUTPUT = new URL(
+  '../data/research/stock-fixed-top5-oos-v10.json',
+  import.meta.url
+);
 const STOCK_META_OUTPUT = new URL('../data/research/stock-meta-selector-v1.json', import.meta.url);
 const STOCK_VARIANT_DIAGNOSTIC_OUTPUT = new URL(
   '../data/research/stock-variant-trade-diagnostics-v1.json',
@@ -2857,6 +2861,92 @@ function fixedTopFiveOosV8Configs(base) {
   return rows;
 }
 
+function fixedTopFiveOosV10Configs(base) {
+  const rows = [];
+  const trailOptions = [
+    null,
+    { triggerPct: 8, givebackPct: 5, lockPct: 2 },
+    { triggerPct: 10, givebackPct: 6, lockPct: 2 }
+  ];
+  for (const maxOpenPositions of [12]) {
+    const standardPct = 8;
+    for (const holdDays of [15, 20]) {
+      for (const maxEntriesPerDay of [3, 5]) {
+        for (const monthlyEquityBrakePct of [-4, -6]) {
+          for (const accountDrawdownBrakePct of [-5, -8]) {
+            for (const targetMarketVolPct of [16, 20]) {
+              for (const overrideStopLossPct of [5, 7]) {
+                for (const minNearYearHigh of [0.9, 0.95]) {
+                  for (const minMarketMom20Pct of [2, 3]) {
+                    for (const rankMode of ['score', 'riskAdjustedMomentum']) {
+                      for (const trail of trailOptions) {
+                        rows.push({
+                          ...base,
+                          buyOnly: false,
+                          minScore: 65,
+                          buyConfirmations: 1,
+                          watchConfirmations: 2,
+                          minTradeValue: 30e6,
+                          minNearYearHigh,
+                          maxRange: 20,
+                          globalFloor: -1.5,
+                          excludeHighVolumeDistribution: true,
+                          minMarketMom1Pct: -100,
+                          maxMarketMom1Pct: 100,
+                          minMarketMom5Pct: -100,
+                          maxMarketMom5Pct: 100,
+                          minMarketMom20Pct,
+                          maxMarketMom20Pct: 100,
+                          rankMode,
+                          standardPct,
+                          defensivePct: standardPct,
+                          exploratoryPct: standardPct,
+                          maxPositionPct: standardPct,
+                          maxOpenPositions,
+                          maxEntriesPerDay,
+                          accountRiskPct: 1.25,
+                          starterRiskPct: 1.25,
+                          monthlyEquityBrakePct,
+                          accountDrawdownBrakePct,
+                          accountCooldownDays: 10,
+                          consecutiveLossLimit: 6,
+                          lossStreakCooldownDays: 8,
+                          targetMarketVolPct,
+                          minimumVolatilityMultiplier: 0.25,
+                          maximumVolatilityMultiplier: 1,
+                          momentumCrashMom20Pct: -3,
+                          momentumCrashReboundPct: 1,
+                          momentumCrashMultiplier: 0,
+                          blackSwanMode: 'cash',
+                          blackSwanAction: 'block',
+                          blackSwanDayDropPct: -2,
+                          blackSwanFiveDayDropPct: -4,
+                          blackSwanVol20Pct: 35,
+                          exitRule: {
+                            holdDays,
+                            trail,
+                            noFollow: false,
+                            stopLossPct: null,
+                            overrideStopLossPct,
+                            stopMode: 'close'
+                          },
+                          collectTrades: false,
+                          researchVariant: 'stock_fixed_top5_oos_v10'
+                        });
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  return rows;
+}
+
 function targetedMarketMomentumSizingRefinementConfigs(base) {
   const rows = [];
   const thresholds = [
@@ -4414,6 +4504,74 @@ async function main() {
       targetMet,
       conclusion: output.conclusion
     }, null, 2));
+    return;
+  }
+  if (process.argv.includes('--stock-fixed-top5-oos-v10')) {
+    const search = JSON.parse(await fs.readFile(OUTPUT, 'utf8'));
+    const base = { ...search.bestBalanced.config };
+    delete base.collectTrades;
+    const configs = fixedTopFiveOosV10Configs(base);
+    const daysByExitRule = new Map();
+    for (const config of configs) {
+      const key = JSON.stringify(config.exitRule);
+      if (!daysByExitRule.has(key)) daysByExitRule.set(key, broadDaysForExitRule(config.exitRule));
+    }
+    const daysFor = config => daysByExitRule.get(JSON.stringify(config.exitRule));
+    const trainRows = configs.map(config => simulateRange(daysFor(config), config, marketRegimes, '2016-08', '2021-12'));
+    const selected = trainRows.filter(result => (
+      result.trades >= 300
+      && result.maxDrawdownPct >= -20
+      && result.config.monthlyEquityBrakePct !== null
+    )).sort((a, b) => (
+      b.full.average - a.full.average
+      || b.maxDrawdownPct - a.maxDrawdownPct
+      || b.trades - a.trades
+    ))[0];
+    if (!selected) throw new Error('fixed top5 v10 找不到符合訓練門檻的組合');
+    const validation = simulateRange(daysFor(selected.config), selected.config, marketRegimes, '2022-01', '2026-05', true, true);
+    const quality = tradeQuality(validation);
+    const etfHistory = JSON.parse(await fs.readFile(ETF_HISTORY, 'utf8'));
+    const benchmark0050 = benchmarkStats(etfHistory.series['0050.TW'] || [], '2022-01-01', '2026-05-31');
+    const metrics = {
+      averageMonthlyReturnPct: round(validation.full.average),
+      annualizedReturnPct: annualizedReturn(validation.monthly),
+      maximumDrawdownPct: validation.maxDrawdownPct,
+      trades: validation.trades,
+      winRatePct: quality.winRatePct,
+      profitFactor: quality.profitFactor,
+      topFiveProfitContributionPct: quality.topFiveProfitContributionPct,
+      beats0050: validation.full.average > benchmark0050.averageMonthlyReturnPct
+    };
+    const targetMet = metrics.averageMonthlyReturnPct >= 5
+      && metrics.maximumDrawdownPct >= -20
+      && metrics.trades >= 300
+      && metrics.beats0050;
+    const output = {
+      generatedAt: new Date().toISOString(),
+      strategyId: 'stock_fixed_top5_oos_v10',
+      universe: '純個股，不使用 ETF 或 0050 作為交易標的；0050 僅作為比較基準',
+      selection: {
+        trainPeriod: '2016-08～2021-12',
+        rule: '沿用完整 simulateRange；以 v7/v9 附近參數為核心，加入 trailing stop 變體；訓練期回撤需不低於 -20%',
+        testedConfigs: configs.length,
+        selectedConfig: riskConfig(selected.config),
+        trainAverageMonthlyReturnPct: round(selected.full.average),
+        trainMaximumDrawdownPct: selected.maxDrawdownPct,
+        trainTrades: selected.trades
+      },
+      validation: { period: '2022-01～2026-05', months: validation.full.months, parametersFrozen: true },
+      metrics,
+      benchmark0050,
+      targetMonthlyReturnPct: 5,
+      targetMet,
+      paperTradingReady: false,
+      liveTradingReady: false,
+      conclusion: targetMet
+        ? '通過可信月均 5% 門檻，但仍需人工驗收後才可進紙上交易。'
+        : `未達可信月均 5% 門檻，目前月均 ${metrics.averageMonthlyReturnPct}% ，不可紙上交易或實盤。`
+    };
+    await fs.writeFile(STOCK_FIXED_OOS_V10_OUTPUT, `${JSON.stringify(output, null, 2)}\n`, 'utf8');
+    console.log(JSON.stringify({ output: STOCK_FIXED_OOS_V10_OUTPUT.pathname, selection: output.selection, validation: output.validation, metrics, benchmark0050, targetMet, conclusion: output.conclusion }, null, 2));
     return;
   }
   if (process.argv.includes('--stock-fixed-top5-oos')) {

@@ -1,0 +1,71 @@
+{
+  "generatedAt": "2026-07-21T16:19:48.419Z",
+  "strategyId": "stock_fixed_top5_oos_v11",
+  "universe": "純個股，不使用 ETF 或 0050 作為交易標的；0050 僅作為比較基準",
+  "selection": {
+    "trainPeriod": "2016-08～2021-12",
+    "rule": "沿用 v10 參數集合與完整 simulateRange；訓練期放寬最大回撤到 -25%，再優先選訓練月均報酬最高組合",
+    "testedConfigs": 1536,
+    "selectedConfig": {
+      "positionPct": 8,
+      "accountRiskPct": 1.25,
+      "maxOpenPositions": 12,
+      "maxEntriesPerDay": 5,
+      "monthlyEquityBrakePct": -4,
+      "accountDrawdownBrakePct": -8,
+      "accountCooldownDays": 10,
+      "consecutiveLossLimit": 6,
+      "lossStreakCooldownDays": 8,
+      "targetMarketVolPct": 16,
+      "minimumVolatilityMultiplier": 0.25,
+      "maximumVolatilityMultiplier": 1,
+      "momentumCrashMom20Pct": -3,
+      "momentumCrashReboundPct": 1,
+      "momentumCrashMultiplier": 0,
+      "regimeMode": "none",
+      "regimeSlowMa": 40,
+      "regimeMomentumDays": 10,
+      "regimeMomentumThreshold": -1,
+      "rankMode": "score",
+      "exitRule": {
+        "holdDays": 20,
+        "trail": null,
+        "noFollow": false,
+        "stopLossPct": null,
+        "overrideStopLossPct": 7,
+        "stopMode": "close"
+      }
+    },
+    "trainAverageMonthlyReturnPct": 1.84,
+    "trainMaximumDrawdownPct": -13.09,
+    "trainTrades": 504
+  },
+  "validation": {
+    "period": "2022-01～2026-05",
+    "months": 53,
+    "parametersFrozen": true
+  },
+  "metrics": {
+    "averageMonthlyReturnPct": 1.39,
+    "annualizedReturnPct": 16.33,
+    "maximumDrawdownPct": -15.67,
+    "trades": 402,
+    "winRatePct": 43.03,
+    "profitFactor": 1.53,
+    "topFiveProfitContributionPct": 18.28,
+    "beats0050": false
+  },
+  "benchmark0050": {
+    "startDate": "2022-01-03",
+    "endDate": "2026-05-29",
+    "months": 52,
+    "averageMonthlyReturnPct": 2.38,
+    "annualizedReturnPct": 27.18,
+    "maxDrawdownPct": -36.38
+  },
+  "targetMonthlyReturnPct": 5,
+  "targetMet": false,
+  "paperTradingReady": false,
+  "liveTradingReady": false,
+  "conclusion": "未達可信月均 5% 門檻，目前月均 1.39% ，不可紙上交易或實盤。"
+}

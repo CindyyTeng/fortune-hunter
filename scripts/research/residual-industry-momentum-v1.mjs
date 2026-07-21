@@ -5,8 +5,9 @@ import { foldWindows, mean, round, simulateSignalMap } from './research-core.mjs
 const BACKTEST = new URL('../../data/tw-backtest-12y.json', import.meta.url);
 const MARKET = new URL('../../data/market-regime-history-10y.json', import.meta.url);
 const SECTORS = new URL('../../data/sector/sector-classification.json', import.meta.url);
-const OUTPUT = new URL('../../data/research/residual-industry-momentum-v1.json', import.meta.url);
-const REPORT = new URL('../../docs/RESIDUAL_INDUSTRY_MOMENTUM_V1.md', import.meta.url);
+const IS_V2 = process.argv.includes('--v2');
+const OUTPUT = new URL(`../../data/research/residual-industry-momentum-${IS_V2 ? 'v2' : 'v1'}.json`, import.meta.url);
+const REPORT = new URL(`../../docs/RESIDUAL_INDUSTRY_MOMENTUM_${IS_V2 ? 'V2' : 'V1'}.md`, import.meta.url);
 const BASELINE = Object.freeze({ monthly: 2.68, drawdown: -16.07, trades: 208 });
 const RANDOM_SEEDS = 20;
 
@@ -234,6 +235,35 @@ const configurations = definitions.flatMap(definition => (
     }))
   ))));
 
+const v2DefinitionIds = [
+  'market_residual',
+  'market_residual_pullback',
+  'liquid_low_vol_quality',
+  'intraday_strength_quality',
+  'breakout_quality',
+  'broad_low_chase',
+  'broad_support_reclaim'
+];
+
+const v2Configurations = v2DefinitionIds.flatMap(definitionId => (
+  [5, 8, 10].flatMap(top => (
+    [10, 15, 20].flatMap(holdingDays => (
+      [0.5, 0.75, 1].flatMap(accountRiskPct => (
+        [1.5, 2].map(rewardRisk => ({
+          id: `${definitionId}_v2_top${top}_hold${holdingDays}_risk${accountRiskPct}_target${rewardRisk}`,
+          definitionId,
+          name: `${definitionId} v2 Top ${top} 持有 ${holdingDays} 天 風險 ${accountRiskPct}% ${rewardRisk}R`,
+          top,
+          holdingDays,
+          accountRiskPct,
+          rewardRisk,
+          positionPct: top === 5 ? 14 : top === 8 ? 9 : 7
+        }))
+      ))
+    ))
+  ))
+));
+
 function addCandidate(map, date, candidate, limit = 8) {
   const rows = map.get(date) || [];
   rows.push(candidate);
@@ -428,6 +458,14 @@ function run(context, map, config, startDate, endDate) {
 }
 
 function trainingScore(summary) {
+  if (IS_V2) {
+    if (summary.trades < 80 || summary.profitFactor < 1.05 || summary.maximumDrawdownPct < -18) return -Infinity;
+    return summary.averageMonthlyEquityReturnPct * 8
+      + Math.min(3, summary.profitFactor) * 1.5
+      + summary.maximumDrawdownPct * 0.18
+      + Math.min(3, summary.trades / 140)
+      - Math.max(0, summary.negativeMonths - summary.months * 0.42) * 0.15;
+  }
   if (summary.trades < 40 || summary.profitFactor < 1 || summary.maximumDrawdownPct < -20) return -Infinity;
   return summary.averageMonthlyEquityReturnPct * 5
     + Math.min(3, summary.profitFactor)
@@ -510,11 +548,12 @@ async function main() {
   };
   const folds = foldWindows(context.startDate, context.endDate, 54, 12)
     .filter(fold => Date.parse(fold.validationEnd) - Date.parse(fold.validationStart) >= 330 * 86_400_000);
-  let activeConfigurations = process.env.POINT_IN_TIME_ONLY === '1'
-    ? configurations.filter(config => definitions.find(row => (
+  let activeConfigurations = IS_V2 ? v2Configurations : configurations;
+  activeConfigurations = process.env.POINT_IN_TIME_ONLY === '1'
+    ? activeConfigurations.filter(config => definitions.find(row => (
       row.id === config.definitionId
     )).pointInTimeSafe)
-    : configurations;
+    : activeConfigurations;
   if (process.env.STRATEGY_ONLY) {
     activeConfigurations = activeConfigurations.filter(config => (
       config.definitionId === process.env.STRATEGY_ONLY
@@ -580,6 +619,7 @@ async function main() {
     : null;
   const output = {
     generatedAt: new Date().toISOString(),
+    strategyId: IS_V2 ? 'residual_industry_momentum_v2' : 'residual_industry_momentum_v1',
     methodology: '54 個月訓練／12 個月驗證，每次前進 12 個月；驗證期固定規則。',
     configurationsTestedPerFold: activeConfigurations.length,
     pointInTimeOnly: process.env.POINT_IN_TIME_ONLY === '1',
@@ -604,6 +644,14 @@ async function main() {
     } : null,
     survivorshipBiasWarning: true,
     metrics,
+    targetMonthlyReturnPct: 5,
+    targetMet: metrics.averageMonthlyReturnPct >= 5
+      && metrics.maximumDrawdownPct >= -20
+      && metrics.trades >= 300
+      && metrics.averageMonthlyReturnPct > marketResult.averageMonthlyReturnPct
+      && metrics.averageMonthlyReturnPct > randomMetrics.medianMonthlyReturnPct,
+    paperTradingReady: false,
+    liveTradingReady: false,
     conclusion: metrics.improvesAllThree
       && !usesStaticSector
       && metrics.averageMonthlyReturnPct > randomMetrics.medianMonthlyReturnPct

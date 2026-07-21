@@ -122,6 +122,23 @@ function buildSetups(bySymbol) {
       }
     }
   }
+  return addCrossSectionRanks(setups);
+}
+
+function addCrossSectionRanks(setups) {
+  const byDate = new Map();
+  for (const setup of setups) {
+    if (!byDate.has(setup.signalDate)) byDate.set(setup.signalDate, []);
+    byDate.get(setup.signalDate).push(setup);
+  }
+  for (const rows of byDate.values()) {
+    const ranked = [...rows].sort((a, b) => (b.mom20 + b.mom60 * 0.5) - (a.mom20 + a.mom60 * 0.5));
+    const size = Math.max(1, ranked.length - 1);
+    ranked.forEach((setup, index) => {
+      setup.strengthRankPct = 1 - index / size;
+      setup.score += setup.strengthRankPct * 20;
+    });
+  }
   return setups;
 }
 
@@ -136,14 +153,16 @@ function configs() {
   ];
   const variants = [];
   for (const item of base) {
-    for (const top of [3, 5, 8]) {
+    for (const top of [3, 5, 8, 12]) {
       for (const holdDays of [3, 5, 10]) {
         for (const stopLossPct of [4, 6, 8]) {
           for (const takeProfitPct of [8, 12, 16]) {
-            for (const minMarketMom20 of [-999, 0]) {
-              for (const maxMarketVol20 of [99, 18]) {
-                for (const monthlyBrakePct of [-999, -5]) {
-                  variants.push({ ...item, top, holdDays, stopLossPct, takeProfitPct, minMarketMom20, maxMarketVol20, monthlyBrakePct, exposure: 1 });
+            for (const minStrengthRankPct of [0, 0.75]) {
+              for (const minMarketMom20 of [-999, 0]) {
+                for (const maxMarketVol20 of [99, 18]) {
+                  for (const monthlyBrakePct of [-5, -3]) {
+                    variants.push({ ...item, top, holdDays, stopLossPct, takeProfitPct, minStrengthRankPct, minMarketMom20, maxMarketVol20, monthlyBrakePct, exposure: 1 });
+                  }
                 }
               }
             }
@@ -162,6 +181,7 @@ function pass(setup, config) {
     && setup.mom60 >= config.minMom60
     && setup.atr20Pct <= config.maxAtr
     && setup.volumeRatio20 >= config.minVolumeRatio
+    && (setup.strengthRankPct ?? 0) >= config.minStrengthRankPct
     && setup.gapPct <= config.maxGap
     && Math.abs(setup.distanceToMa20Pct) <= config.maxDistance
     && (!['breakout', 'pullback'].includes(setup.setup) || setup.ma20AboveMa60);
@@ -303,22 +323,28 @@ const output = {
     : '尚未找到月均 5% 可實盤個股策略；此版已改用官方上市+上櫃 OHLCV 直接產生候選池，後續可在此基礎上擴大搜尋。'
 };
 
-await fs.writeFile(OUTPUT, `${JSON.stringify(output, null, 2)}\n`, 'utf8');
-await fs.writeFile(REPORT, `# 官方個股策略 Hunter v1
+output.conclusion = passed
+  ? '官方個股煙霧回測已達月均 5% 門檻，但仍需更長 walk-forward 與紙上交易驗證，不能直接實盤。'
+  : '目前仍未達月均 5% 且可實盤門檻；此版本只能視為官方個股 OHLCV 研究結果，不可 paper trading 或實盤。';
 
-- 宇宙：上市+上櫃個股官方 OHLCV。
-- 訓練期：${TRAIN.join(' ~ ')}
-- 驗證期：${VALIDATION.join(' ~ ')}
+await fs.writeFile(OUTPUT, `${JSON.stringify(output, null, 2)}\n`, 'utf8');
+await fs.writeFile(REPORT, `# 官方個股策略搜尋 Hunter v1
+
+- 資料：TWSE / TPEx 官方個股 OHLCV
+- 訓練區間：${TRAIN.join(' ~ ')}
+- 驗證區間：${VALIDATION.join(' ~ ')}
 - 股票數：${output.symbols}
-- 進場候選數：${output.setups}
-- 測試組合：${output.testedConfigurations}
-- 可行組合：${output.viableConfigurations}
-- 最佳策略：${best.config.setup} / ${best.config.top} 檔 / 持有 ${best.config.holdDays} 日
-- 驗證交易：${best.validation.trades}
-- 驗證月均：${best.validation.averageMonthlyReturnPct}%
+- 候選訊號數：${output.setups}
+- 測試組合數：${output.testedConfigurations}
+- 可行組合數：${output.viableConfigurations}
+- 最佳設定：${best.config.setup} / Top ${best.config.top} / 持有 ${best.config.holdDays} 天 / 停損 ${best.config.stopLossPct}% / 停利 ${best.config.takeProfitPct}%
+- 驗證交易數：${best.validation.trades}
+- 驗證月均報酬：${best.validation.averageMonthlyReturnPct}%
+- 驗證年化報酬：${best.validation.annualizedReturnPct}%
 - 驗證最大回撤：${best.validation.maximumDrawdownPct}%
 - 驗證 Profit Factor：${best.validation.profitFactor}
-- 是否達月均 5%：${passed}
+- 驗證勝率：${best.validation.winRatePct}%
+- 是否達月均 5% 且可實盤門檻：${passed ? '是' : '否'}
 
 ## 結論
 

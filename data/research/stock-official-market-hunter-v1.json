@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-21T21:04:54.456Z",
+  "generatedAt": "2026-07-21T21:19:07.026Z",
   "strategyId": "stock_official_market_hunter_v1",
   "universe": "TWSE_TPEX_OFFICIAL_MARKET_HISTORY_2018_2021",
   "periods": {
@@ -36,8 +36,8 @@
   ],
   "symbols": 1818,
   "setups": 218972,
-  "testedConfigurations": 3888,
-  "viableConfigurations": 10,
+  "testedConfigurations": 10368,
+  "viableConfigurations": 96,
   "best": {
     "config": {
       "setup": "breakout",
@@ -48,40 +48,41 @@
       "minVolumeRatio": 1.2,
       "maxGap": 6,
       "maxDistance": 18,
-      "top": 5,
+      "top": 3,
       "holdDays": 10,
       "stopLossPct": 4,
       "takeProfitPct": 16,
+      "minStrengthRankPct": 0,
       "minMarketMom20": 0,
       "maxMarketVol20": 99,
       "monthlyBrakePct": -5,
       "exposure": 1
     },
     "train": {
-      "trades": 239,
+      "trades": 153,
       "months": 19,
-      "averageMonthlyReturnPct": 0.6272,
-      "annualizedReturnPct": 5.1473,
-      "maximumDrawdownPct": -24.0444,
-      "profitFactor": 1.0811,
-      "winRatePct": 33.4728,
+      "averageMonthlyReturnPct": 0.0894,
+      "annualizedReturnPct": -1.2266,
+      "maximumDrawdownPct": -20.8084,
+      "profitFactor": 1.0103,
+      "winRatePct": 30.0654,
       "negativeMonths": 10
     },
     "validation": {
-      "trades": 380,
+      "trades": 205,
       "months": 23,
-      "averageMonthlyReturnPct": 1.6817,
-      "annualizedReturnPct": 18.7642,
-      "maximumDrawdownPct": -22.0345,
-      "profitFactor": 1.1445,
-      "winRatePct": 33.1579,
-      "negativeMonths": 10
+      "averageMonthlyReturnPct": 3.2227,
+      "annualizedReturnPct": 39.0573,
+      "maximumDrawdownPct": -20.5156,
+      "profitFactor": 1.324,
+      "winRatePct": 35.6098,
+      "negativeMonths": 12
     }
   },
   "targetMonthlyReturnPct": 5,
-  "targetGapPct": 3.3183,
+  "targetGapPct": 1.7773,
   "passed": false,
   "paperTradingReady": false,
   "liveTradingReady": false,
-  "conclusion": "尚未找到月均 5% 可實盤個股策略；此版已改用官方上市+上櫃 OHLCV 直接產生候選池，後續可在此基礎上擴大搜尋。"
+  "conclusion": "目前仍未達月均 5% 且可實盤門檻；此版本只能視為官方個股 OHLCV 研究結果，不可 paper trading 或實盤。"
 }

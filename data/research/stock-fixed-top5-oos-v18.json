@@ -1,0 +1,80 @@
+{
+  "generatedAt": "2026-07-21T17:50:40.179Z",
+  "strategyId": "stock_fixed_top5_oos_v18",
+  "universe": "純個股候選；ETF 與 0050 僅作比較基準。",
+  "selection": {
+    "trainPeriod": "2016-08~2021-12",
+    "validationPeriod": "2022-01~2026-05",
+    "rule": "保留 v15 子集合，測大盤動能、波動與強弱盤部位倍率。",
+    "testedConfigs": 432,
+    "selectedConfig": {
+      "positionPct": 8,
+      "accountRiskPct": 1.25,
+      "maxOpenPositions": 12,
+      "maxEntriesPerDay": 5,
+      "monthlyEquityBrakePct": -4,
+      "accountDrawdownBrakePct": -8,
+      "accountCooldownDays": 10,
+      "consecutiveLossLimit": 6,
+      "lossStreakCooldownDays": 8,
+      "targetMarketVolPct": 20,
+      "minimumVolatilityMultiplier": 0.25,
+      "maximumVolatilityMultiplier": 1,
+      "momentumCrashMom20Pct": -3,
+      "momentumCrashReboundPct": 1,
+      "momentumCrashMultiplier": 0,
+      "marketMomentumPositioning": true,
+      "strongMarketMom5Pct": 0,
+      "strongMarketMom20Pct": 0,
+      "strongMarketPositionMultiplier": 1.3,
+      "weakMarketPositionMultiplier": 0.7,
+      "regimeMode": "none",
+      "regimeSlowMa": 40,
+      "regimeMomentumDays": 10,
+      "regimeMomentumThreshold": -1,
+      "rankMode": "score",
+      "exitRule": {
+        "holdDays": 20,
+        "trail": null,
+        "noFollow": false,
+        "stopLossPct": null,
+        "overrideStopLossPct": 7,
+        "stopMode": "close"
+      }
+    },
+    "trainAverageMonthlyReturnPct": 1.9,
+    "trainMaximumDrawdownPct": -15.89,
+    "trainTrades": 736,
+    "trainProfitFactor": 1.62,
+    "worstSegmentAveragePct": 0.58,
+    "worstSegmentDrawdownPct": -13.67
+  },
+  "validation": {
+    "period": "2022-01~2026-05",
+    "months": 53,
+    "parametersFrozen": true
+  },
+  "metrics": {
+    "averageMonthlyReturnPct": 1.61,
+    "annualizedReturnPct": 18.66,
+    "maximumDrawdownPct": -19.27,
+    "trades": 529,
+    "winRatePct": 40.08,
+    "profitFactor": 1.48,
+    "topFiveProfitContributionPct": 13.75,
+    "beats0050": false
+  },
+  "benchmark0050": {
+    "startDate": "2022-01-03",
+    "endDate": "2026-05-29",
+    "months": 52,
+    "averageMonthlyReturnPct": 2.38,
+    "annualizedReturnPct": 27.18,
+    "maxDrawdownPct": -36.38
+  },
+  "targetMonthlyReturnPct": 5,
+  "targetMet": false,
+  "paperTradingReady": false,
+  "liveTradingReady": false,
+  "conclusion": "未達月均 5% 可信門檻；目前 validation 月均 1.61%，不可 paper trading、不可實盤。"
+}

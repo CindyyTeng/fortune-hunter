@@ -1879,6 +1879,20 @@
       "rule": "使用 optimize-realized-10y --exits-only 以 forwardPrices 重新計算持有天數、停損、移動停利與出場模式",
       "result": "最佳輸出測試期月均約 2.57%，最大回撤 -44.02%，未優於目前可實盤風控邊界",
       "reason": "正式出場組合沒有提升至可實盤月均 5%，且回撤惡化"
+    },
+    {
+      "testedAt": "2026-07-21T20:06:02.982Z",
+      "name": "alpha_ranking_candidate_pool",
+      "rule": "使用 optimize-realized-10y 對應 alpha 候選池旗標重新搜尋原始候選與排序",
+      "result": "最佳輸出測試期月均約 2.57%，最大回撤 -44.02%，交易 514，未優於目前可實盤風控邊界",
+      "reason": "候選池搜尋沒有產生更好的純個股可實盤月均 5% 組合"
+    },
+    {
+      "testedAt": "2026-07-21T20:06:02.983Z",
+      "name": "selected_alpha_candidate_pool",
+      "rule": "使用 optimize-realized-10y 對應 alpha 候選池旗標重新搜尋原始候選與排序",
+      "result": "最佳輸出測試期月均約 2.57%，最大回撤 -44.02%，交易 514，未優於目前可實盤風控邊界",
+      "reason": "候選池搜尋沒有產生更好的純個股可實盤月均 5% 組合"
     }
   ]
 }

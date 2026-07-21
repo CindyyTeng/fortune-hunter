@@ -1,0 +1,98 @@
+{
+  "generatedAt": "2026-07-21T18:53:26.174Z",
+  "strategyId": "stock_squeeze_breakout_v1",
+  "identity": {
+    "strategyFamilyId": "stock_squeeze_breakout_v1:a50390e1efd266605ebe62a2",
+    "experimentHash": "c0e8be096244c65d9702cbd5"
+  },
+  "universe": {
+    "commonStockTrades": 66442,
+    "etfExcluded": true,
+    "benchmarkOnly0050": true
+  },
+  "validation": {
+    "trainMonths": 60,
+    "validationMonths": 18,
+    "stepMonths": 18,
+    "folds": 3,
+    "startMonth": "2021-07",
+    "endMonth": "2025-12",
+    "configsTested": 54
+  },
+  "metrics": {
+    "months": 56,
+    "averageMonthlyReturnPct": -0.4701,
+    "annualizedReturnPct": -5.5472,
+    "maximumDrawdownPct": -10.7121,
+    "trades": 251,
+    "winRatePct": 33.0677,
+    "profitFactor": 0.3919,
+    "topFiveProfitContributionPct": 19.8375
+  },
+  "benchmark0050": {
+    "averageMonthlyReturnPct": 1.349,
+    "months": 54
+  },
+  "targetMonthlyReturnPct": 5,
+  "targetGapPct": 5.4701,
+  "checks": {
+    "target5Pct": false,
+    "drawdownUnder20Pct": true,
+    "tradesAbove300": false,
+    "profitFactor": false,
+    "beats0050": false,
+    "paperTradingReady": false,
+    "liveTradingReady": false
+  },
+  "folds": [
+    {
+      "validationPeriod": "2021-07~2022-12",
+      "selectedConfigId": "squeeze_bw8_pb0.65_vol1.2_h5",
+      "train": {
+        "averageMonthlyReturnPct": -0.1678,
+        "maximumDrawdownPct": -10.2164,
+        "trades": 91,
+        "profitFactor": 0.3096
+      },
+      "validation": {
+        "averageMonthlyReturnPct": -0.2972,
+        "maximumDrawdownPct": -5.586,
+        "trades": 74,
+        "profitFactor": 0.4802
+      }
+    },
+    {
+      "validationPeriod": "2023-01~2024-06",
+      "selectedConfigId": "squeeze_bw8_pb0.65_vol1.2_h5",
+      "train": {
+        "averageMonthlyReturnPct": -0.175,
+        "maximumDrawdownPct": -10.4743,
+        "trades": 137,
+        "profitFactor": 0.4025
+      },
+      "validation": {
+        "averageMonthlyReturnPct": -0.5248,
+        "maximumDrawdownPct": -10.7121,
+        "trades": 107,
+        "profitFactor": 0.4273
+      }
+    },
+    {
+      "validationPeriod": "2024-07~2025-12",
+      "selectedConfigId": "squeeze_bw8_pb0.65_vol1.2_h5",
+      "train": {
+        "averageMonthlyReturnPct": -0.1725,
+        "maximumDrawdownPct": -10.278,
+        "trades": 96,
+        "profitFactor": 0.3545
+      },
+      "validation": {
+        "averageMonthlyReturnPct": -0.595,
+        "maximumDrawdownPct": -10.2484,
+        "trades": 70,
+        "profitFactor": 0.268
+      }
+    }
+  ],
+  "conclusion": "未達月均 5% 可實盤門檻；validation 月均 -0.4701%，距離 5% 還差 5.4701 個百分點。"
+}

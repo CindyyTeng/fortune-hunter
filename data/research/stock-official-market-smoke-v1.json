@@ -1,0 +1,139 @@
+{
+  "generatedAt": "2026-07-21T20:41:34.820Z",
+  "strategyId": "stock_official_market_smoke_v1",
+  "universe": "TPEX_ONLY_PARTIAL_HISTORY",
+  "dataWarning": "目前官方個股 OHLCV 已補到可做 TPEX smoke test，但 TWSE 上市資料仍不完整；不可宣稱全台股 10 年驗證。",
+  "periods": {
+    "train": [
+      "2014-01-01",
+      "2017-12-31"
+    ],
+    "validation": [
+      "2018-01-01",
+      "2021-12-31"
+    ]
+  },
+  "coverage": [
+    {
+      "year": "2014",
+      "tpexDates": 247,
+      "twseDates": 0
+    },
+    {
+      "year": "2015",
+      "tpexDates": 244,
+      "twseDates": 0
+    },
+    {
+      "year": "2016",
+      "tpexDates": 103,
+      "twseDates": 0
+    },
+    {
+      "year": "2017",
+      "tpexDates": 243,
+      "twseDates": 61
+    },
+    {
+      "year": "2018",
+      "tpexDates": 245,
+      "twseDates": 2
+    },
+    {
+      "year": "2019",
+      "tpexDates": 242,
+      "twseDates": 4
+    },
+    {
+      "year": "2020",
+      "tpexDates": 245,
+      "twseDates": 0
+    },
+    {
+      "year": "2021",
+      "tpexDates": 238,
+      "twseDates": 0
+    }
+  ],
+  "symbols": 868,
+  "signals": 1237609,
+  "testedConfigurations": 15,
+  "bestByMonthly": {
+    "config": {
+      "id": "tpex_low_atr_strength_top5_hold10_x1.5",
+      "top": 5,
+      "hold": 10,
+      "minValue": 10000000,
+      "minMomentum20": 5,
+      "minMomentum60": 15,
+      "maxAtr20": 6,
+      "minVolumeRatio": 0.8,
+      "maxGap": 6,
+      "maxDistanceToMa20": 15,
+      "breakoutOnly": false,
+      "exposure": 1.95
+    },
+    "train": {
+      "trades": 381,
+      "months": 39,
+      "averageMonthlyReturnPct": -6.4685,
+      "annualizedReturnPct": -63.7584,
+      "maximumDrawdownPct": -97.0307,
+      "profitFactor": 0.6842,
+      "winRatePct": 37.2703,
+      "negativeMonths": 21
+    },
+    "validation": {
+      "trades": 475,
+      "months": 48,
+      "averageMonthlyReturnPct": 0.1298,
+      "annualizedReturnPct": -24.1759,
+      "maximumDrawdownPct": -85.1238,
+      "profitFactor": 1.0065,
+      "winRatePct": 42.9474,
+      "negativeMonths": 24
+    }
+  },
+  "best": {
+    "config": {
+      "id": "tpex_strength_top5_hold5_x1",
+      "top": 5,
+      "hold": 5,
+      "minValue": 10000000,
+      "minMomentum20": 5,
+      "minMomentum60": 10,
+      "maxAtr20": 8,
+      "minVolumeRatio": 1,
+      "maxGap": 8,
+      "maxDistanceToMa20": 20,
+      "breakoutOnly": false,
+      "exposure": 1.2
+    },
+    "train": {
+      "trades": 770,
+      "months": 39,
+      "averageMonthlyReturnPct": -4.3221,
+      "annualizedReturnPct": -49.7313,
+      "maximumDrawdownPct": -89.8567,
+      "profitFactor": 0.792,
+      "winRatePct": 40.1299,
+      "negativeMonths": 24
+    },
+    "validation": {
+      "trades": 955,
+      "months": 48,
+      "averageMonthlyReturnPct": -2.105,
+      "annualizedReturnPct": -33.0275,
+      "maximumDrawdownPct": -81.265,
+      "profitFactor": 0.8999,
+      "winRatePct": 42.9319,
+      "negativeMonths": 23
+    }
+  },
+  "targetMonthlyReturnPct": 5,
+  "targetGapPct": 7.105,
+  "passed": false,
+  "paperTradingReady": false,
+  "liveTradingReady": false,
+  "conclusion": "Smoke test 尚未找到月均 5% 可實盤策略；真正進展是已確認需要補齊官方 OHLCV 並建立高效搜尋器。"
+}

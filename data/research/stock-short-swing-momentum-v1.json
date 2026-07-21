@@ -1,0 +1,183 @@
+{
+  "generatedAt": "2026-07-21T18:19:21.075Z",
+  "strategyId": "stock_short_swing_momentum_v1",
+  "universe": "純個股，不以 ETF 或 0050 為主要交易標的。",
+  "validationPeriod": "2020-09-01~2026-06-09",
+  "testedProfiles": [
+    {
+      "profile": {
+        "id": "swing_top12",
+        "top": 12,
+        "hold": 10,
+        "risk": 0.5,
+        "pos": 7,
+        "exposure": 75,
+        "rr": 2
+      },
+      "metrics": {
+        "months": 70,
+        "averageMonthlyReturnPct": 0.0423,
+        "annualizedReturnPct": 0.1189,
+        "maximumDrawdownPct": -17.6524,
+        "trades": 1077,
+        "winRatePct": 45.4039,
+        "profitFactor": 1.003,
+        "concentrationPct": 0.8357,
+        "averageExposurePct": 24.6272
+      },
+      "fairRandom": {
+        "months": 70,
+        "averageMonthlyReturnPct": -0.1116,
+        "annualizedReturnPct": -1.7564,
+        "maximumDrawdownPct": -29.9922,
+        "trades": 1077,
+        "winRatePct": 41.7827,
+        "profitFactor": 0.9502,
+        "concentrationPct": 1.6713,
+        "averageExposurePct": 26.2269
+      },
+      "score": 1.3646599999999998
+    },
+    {
+      "profile": {
+        "id": "swing_top8",
+        "top": 8,
+        "hold": 10,
+        "risk": 0.75,
+        "pos": 10,
+        "exposure": 70,
+        "rr": 2
+      },
+      "metrics": {
+        "months": 70,
+        "averageMonthlyReturnPct": -0.2558,
+        "annualizedReturnPct": -3.6768,
+        "maximumDrawdownPct": -33.1219,
+        "trades": 854,
+        "winRatePct": 44.3794,
+        "profitFactor": 0.9198,
+        "concentrationPct": 0.8197,
+        "averageExposurePct": 27.2102
+      },
+      "fairRandom": {
+        "months": 70,
+        "averageMonthlyReturnPct": 0.1194,
+        "annualizedReturnPct": 0.9323,
+        "maximumDrawdownPct": -21.2252,
+        "trades": 773,
+        "winRatePct": 43.9845,
+        "profitFactor": 1.0266,
+        "concentrationPct": 2.7167,
+        "averageExposurePct": 26.3645
+      },
+      "score": -1.1597899999999997
+    },
+    {
+      "profile": {
+        "id": "quick_top12",
+        "top": 12,
+        "hold": 5,
+        "risk": 0.5,
+        "pos": 7,
+        "exposure": 70,
+        "rr": 1.5
+      },
+      "metrics": {
+        "months": 70,
+        "averageMonthlyReturnPct": -0.4501,
+        "annualizedReturnPct": -5.6033,
+        "maximumDrawdownPct": -31.9761,
+        "trades": 1281,
+        "winRatePct": 41.2959,
+        "profitFactor": 0.8438,
+        "concentrationPct": 0.7026,
+        "averageExposurePct": 16.8006
+      },
+      "fairRandom": {
+        "months": 70,
+        "averageMonthlyReturnPct": -0.7,
+        "annualizedReturnPct": -8.5176,
+        "maximumDrawdownPct": -43.3019,
+        "trades": 1336,
+        "winRatePct": 38.0988,
+        "profitFactor": 0.7439,
+        "concentrationPct": 1.9461,
+        "averageExposurePct": 18.5246
+      },
+      "score": -1.70411
+    },
+    {
+      "profile": {
+        "id": "quick_top8",
+        "top": 8,
+        "hold": 5,
+        "risk": 0.75,
+        "pos": 10,
+        "exposure": 65,
+        "rr": 1.5
+      },
+      "metrics": {
+        "months": 70,
+        "averageMonthlyReturnPct": -0.8041,
+        "annualizedReturnPct": -9.8182,
+        "maximumDrawdownPct": -45.3598,
+        "trades": 1119,
+        "winRatePct": 40.6613,
+        "profitFactor": 0.7821,
+        "concentrationPct": 0.8937,
+        "averageExposurePct": 21.2057
+      },
+      "fairRandom": {
+        "months": 70,
+        "averageMonthlyReturnPct": -0.7412,
+        "annualizedReturnPct": -9.0706,
+        "maximumDrawdownPct": -45.9592,
+        "trades": 1048,
+        "winRatePct": 39.7901,
+        "profitFactor": 0.7677,
+        "concentrationPct": 2.0992,
+        "averageExposurePct": 20.4513
+      },
+      "score": -4.166180000000001
+    }
+  ],
+  "selectedProfile": {
+    "id": "swing_top12",
+    "top": 12,
+    "hold": 10,
+    "risk": 0.5,
+    "pos": 7,
+    "exposure": 75,
+    "rr": 2
+  },
+  "metrics": {
+    "months": 70,
+    "averageMonthlyReturnPct": 0.0423,
+    "annualizedReturnPct": 0.1189,
+    "maximumDrawdownPct": -17.6524,
+    "trades": 1077,
+    "winRatePct": 45.4039,
+    "profitFactor": 1.003,
+    "concentrationPct": 0.8357,
+    "averageExposurePct": 24.6272
+  },
+  "fairRandom": {
+    "months": 70,
+    "averageMonthlyReturnPct": -0.1116,
+    "annualizedReturnPct": -1.7564,
+    "maximumDrawdownPct": -29.9922,
+    "trades": 1077,
+    "winRatePct": 41.7827,
+    "profitFactor": 0.9502,
+    "concentrationPct": 1.6713,
+    "averageExposurePct": 26.2269
+  },
+  "benchmark0050": {
+    "averageMonthlyReturnPct": 2.2346
+  },
+  "targetMonthlyReturnPct": 5,
+  "targetMet": false,
+  "paperTradingReady": false,
+  "liveTradingReady": false,
+  "conclusion": "未達月均 5% 可實盤門檻；validation 月均 0.0423%，不可 paper trading、不可實盤。"
+}

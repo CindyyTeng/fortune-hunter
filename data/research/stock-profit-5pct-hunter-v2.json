@@ -1857,5 +1857,14 @@
   "practicalRiskWarning": "此版本靠低波動期提高曝險達標，驗證回撤低於 -20%，但訓練期回撤低於 -20%，仍需更嚴格資金與下單單位審核。",
   "paperTradingReady": false,
   "liveTradingReady": false,
-  "conclusion": "達到月均 5% 研究門檻，但尚未通過實盤化審核；目前可實盤風控邊界版本月均未達 5%。"
+  "conclusion": "達到月均 5% 研究門檻，但尚未通過實盤化審核；目前可實盤風控邊界版本月均未達 5%。",
+  "failedPracticalExtensions": [
+    {
+      "testedAt": "2026-07-21T20:01:10.567Z",
+      "name": "monthly_loss_circuit_breaker",
+      "rule": "每月累計虧損達 -6%、-8%、-10%、-12% 後停止該月後續交易",
+      "result": "沒有找到訓練/驗證回撤皆不低於 -20%、驗證月均達 5%、驗證月份覆蓋足夠的組合",
+      "reason": "熔斷能降低部分虧損月份，但同時也削弱後續反彈交易，未能讓可實盤邊界跨過 5%"
+    }
+  ]
 }

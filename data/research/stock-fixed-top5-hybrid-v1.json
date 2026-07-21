@@ -1,0 +1,1383 @@
+{
+  "generatedAt": "2026-07-21T19:20:36.205Z",
+  "strategyId": "stock_fixed_top5_hybrid_v1",
+  "universe": {
+    "stocksOnly": true,
+    "etfExcluded": true,
+    "commonStockCandidates": 66184
+  },
+  "validation": {
+    "startMonth": "2021-07",
+    "endMonth": "2025-12",
+    "folds": 4,
+    "trainMonths": 60,
+    "validationMonths": 18,
+    "stepMonths": 12,
+    "testedConfigurations": 24
+  },
+  "metrics": {
+    "months": 72,
+    "averageMonthlyReturnPct": -0.7753,
+    "annualizedReturnPct": -9.1504,
+    "maximumDrawdownPct": -14.2391,
+    "trades": 158,
+    "profitFactor": 0.1344,
+    "winRatePct": 17.0886
+  },
+  "benchmark0050": {
+    "averageMonthlyReturnPct": 1.414,
+    "months": 53
+  },
+  "targetMonthlyReturnPct": 5,
+  "targetGapPct": 5.7753,
+  "passed": false,
+  "paperTradingReady": false,
+  "liveTradingReady": false,
+  "folds": [
+    {
+      "validationPeriod": "2021-07~2022-12",
+      "selectedConfigId": "hybrid_quality_h15_p6_s5",
+      "train": {
+        "trades": 42,
+        "averageMonthlyReturnPct": -0.2832,
+        "annualizedReturnPct": -3.458,
+        "maximumDrawdownPct": -16.249,
+        "profitFactor": 0.1894,
+        "winRatePct": 19.0476,
+        "monthly": [
+          {
+            "month": "2016-07",
+            "returnPct": -1.4168
+          },
+          {
+            "month": "2016-08",
+            "returnPct": -8.2901
+          },
+          {
+            "month": "2016-09",
+            "returnPct": -6.5733
+          },
+          {
+            "month": "2016-10",
+            "returnPct": -0.7132
+          },
+          {
+            "month": "2016-11",
+            "returnPct": 0
+          },
+          {
+            "month": "2016-12",
+            "returnPct": 0
+          },
+          {
+            "month": "2017-01",
+            "returnPct": 0
+          },
+          {
+            "month": "2017-02",
+            "returnPct": 0
+          },
+          {
+            "month": "2017-03",
+            "returnPct": 0
+          },
+          {
+            "month": "2017-04",
+            "returnPct": 0
+          },
+          {
+            "month": "2017-05",
+            "returnPct": 0
+          },
+          {
+            "month": "2017-06",
+            "returnPct": 0
+          },
+          {
+            "month": "2017-07",
+            "returnPct": 0
+          },
+          {
+            "month": "2017-08",
+            "returnPct": 0
+          },
+          {
+            "month": "2017-09",
+            "returnPct": 0
+          },
+          {
+            "month": "2017-10",
+            "returnPct": 0
+          },
+          {
+            "month": "2017-11",
+            "returnPct": 0
+          },
+          {
+            "month": "2017-12",
+            "returnPct": 0
+          },
+          {
+            "month": "2018-01",
+            "returnPct": 0
+          },
+          {
+            "month": "2018-02",
+            "returnPct": 0
+          },
+          {
+            "month": "2018-03",
+            "returnPct": 0
+          },
+          {
+            "month": "2018-04",
+            "returnPct": 0
+          },
+          {
+            "month": "2018-05",
+            "returnPct": 0
+          },
+          {
+            "month": "2018-06",
+            "returnPct": 0
+          },
+          {
+            "month": "2018-07",
+            "returnPct": 0
+          },
+          {
+            "month": "2018-08",
+            "returnPct": 0
+          },
+          {
+            "month": "2018-09",
+            "returnPct": 0
+          },
+          {
+            "month": "2018-10",
+            "returnPct": 0
+          },
+          {
+            "month": "2018-11",
+            "returnPct": 0
+          },
+          {
+            "month": "2018-12",
+            "returnPct": 0
+          },
+          {
+            "month": "2019-01",
+            "returnPct": 0
+          },
+          {
+            "month": "2019-02",
+            "returnPct": 0
+          },
+          {
+            "month": "2019-03",
+            "returnPct": 0
+          },
+          {
+            "month": "2019-04",
+            "returnPct": 0
+          },
+          {
+            "month": "2019-05",
+            "returnPct": 0
+          },
+          {
+            "month": "2019-06",
+            "returnPct": 0
+          },
+          {
+            "month": "2019-07",
+            "returnPct": 0
+          },
+          {
+            "month": "2019-08",
+            "returnPct": 0
+          },
+          {
+            "month": "2019-09",
+            "returnPct": 0
+          },
+          {
+            "month": "2019-10",
+            "returnPct": 0
+          },
+          {
+            "month": "2019-11",
+            "returnPct": 0
+          },
+          {
+            "month": "2019-12",
+            "returnPct": 0
+          },
+          {
+            "month": "2020-01",
+            "returnPct": 0
+          },
+          {
+            "month": "2020-02",
+            "returnPct": 0
+          },
+          {
+            "month": "2020-03",
+            "returnPct": 0
+          },
+          {
+            "month": "2020-04",
+            "returnPct": 0
+          },
+          {
+            "month": "2020-05",
+            "returnPct": 0
+          },
+          {
+            "month": "2020-06",
+            "returnPct": 0
+          },
+          {
+            "month": "2020-07",
+            "returnPct": 0
+          },
+          {
+            "month": "2020-08",
+            "returnPct": 0
+          },
+          {
+            "month": "2020-09",
+            "returnPct": 0
+          },
+          {
+            "month": "2020-10",
+            "returnPct": 0
+          },
+          {
+            "month": "2020-11",
+            "returnPct": 0
+          },
+          {
+            "month": "2020-12",
+            "returnPct": 0
+          },
+          {
+            "month": "2021-01",
+            "returnPct": 0
+          },
+          {
+            "month": "2021-02",
+            "returnPct": 0
+          },
+          {
+            "month": "2021-03",
+            "returnPct": 0
+          },
+          {
+            "month": "2021-04",
+            "returnPct": 0
+          },
+          {
+            "month": "2021-05",
+            "returnPct": 0
+          },
+          {
+            "month": "2021-06",
+            "returnPct": 0
+          }
+        ]
+      },
+      "validation": {
+        "trades": 47,
+        "averageMonthlyReturnPct": -0.7213,
+        "annualizedReturnPct": -8.4978,
+        "maximumDrawdownPct": -12.7542,
+        "profitFactor": 0.2044,
+        "winRatePct": 21.2766,
+        "monthly": [
+          {
+            "month": "2021-07",
+            "returnPct": -5.9598
+          },
+          {
+            "month": "2021-08",
+            "returnPct": -5.2868
+          },
+          {
+            "month": "2021-09",
+            "returnPct": -1.1155
+          },
+          {
+            "month": "2021-10",
+            "returnPct": -0.6209
+          },
+          {
+            "month": "2021-11",
+            "returnPct": 0
+          },
+          {
+            "month": "2021-12",
+            "returnPct": 0
+          },
+          {
+            "month": "2022-01",
+            "returnPct": 0
+          },
+          {
+            "month": "2022-02",
+            "returnPct": 0
+          },
+          {
+            "month": "2022-03",
+            "returnPct": 0
+          },
+          {
+            "month": "2022-04",
+            "returnPct": 0
+          },
+          {
+            "month": "2022-05",
+            "returnPct": 0
+          },
+          {
+            "month": "2022-06",
+            "returnPct": 0
+          },
+          {
+            "month": "2022-07",
+            "returnPct": 0
+          },
+          {
+            "month": "2022-08",
+            "returnPct": 0
+          },
+          {
+            "month": "2022-09",
+            "returnPct": 0
+          },
+          {
+            "month": "2022-10",
+            "returnPct": 0
+          },
+          {
+            "month": "2022-11",
+            "returnPct": 0
+          },
+          {
+            "month": "2022-12",
+            "returnPct": 0
+          }
+        ]
+      }
+    },
+    {
+      "validationPeriod": "2022-07~2023-12",
+      "selectedConfigId": "hybrid_quality_h15_p6_s5",
+      "train": {
+        "trades": 64,
+        "averageMonthlyReturnPct": -0.2508,
+        "annualizedReturnPct": -3.08,
+        "maximumDrawdownPct": -14.885,
+        "profitFactor": 0.4153,
+        "winRatePct": 29.6875,
+        "monthly": [
+          {
+            "month": "2017-07",
+            "returnPct": -1.0877
+          },
+          {
+            "month": "2017-08",
+            "returnPct": -5.3349
+          },
+          {
+            "month": "2017-09",
+            "returnPct": -9.0996
+          },
+          {
+            "month": "2017-10",
+            "returnPct": 0.4759
+          },
+          {
+            "month": "2017-11",
+            "returnPct": 0
+          },
+          {
+            "month": "2017-12",
+            "returnPct": 0
+          },
+          {
+            "month": "2018-01",
+            "returnPct": 0
+          },
+          {
+            "month": "2018-02",
+            "returnPct": 0
+          },
+          {
+            "month": "2018-03",
+            "returnPct": 0
+          },
+          {
+            "month": "2018-04",
+            "returnPct": 0
+          },
+          {
+            "month": "2018-05",
+            "returnPct": 0
+          },
+          {
+            "month": "2018-06",
+            "returnPct": 0
+          },
+          {
+            "month": "2018-07",
+            "returnPct": 0
+          },
+          {
+            "month": "2018-08",
+            "returnPct": 0
+          },
+          {
+            "month": "2018-09",
+            "returnPct": 0
+          },
+          {
+            "month": "2018-10",
+            "returnPct": 0
+          },
+          {
+            "month": "2018-11",
+            "returnPct": 0
+          },
+          {
+            "month": "2018-12",
+            "returnPct": 0
+          },
+          {
+            "month": "2019-01",
+            "returnPct": 0
+          },
+          {
+            "month": "2019-02",
+            "returnPct": 0
+          },
+          {
+            "month": "2019-03",
+            "returnPct": 0
+          },
+          {
+            "month": "2019-04",
+            "returnPct": 0
+          },
+          {
+            "month": "2019-05",
+            "returnPct": 0
+          },
+          {
+            "month": "2019-06",
+            "returnPct": 0
+          },
+          {
+            "month": "2019-07",
+            "returnPct": 0
+          },
+          {
+            "month": "2019-08",
+            "returnPct": 0
+          },
+          {
+            "month": "2019-09",
+            "returnPct": 0
+          },
+          {
+            "month": "2019-10",
+            "returnPct": 0
+          },
+          {
+            "month": "2019-11",
+            "returnPct": 0
+          },
+          {
+            "month": "2019-12",
+            "returnPct": 0
+          },
+          {
+            "month": "2020-01",
+            "returnPct": 0
+          },
+          {
+            "month": "2020-02",
+            "returnPct": 0
+          },
+          {
+            "month": "2020-03",
+            "returnPct": 0
+          },
+          {
+            "month": "2020-04",
+            "returnPct": 0
+          },
+          {
+            "month": "2020-05",
+            "returnPct": 0
+          },
+          {
+            "month": "2020-06",
+            "returnPct": 0
+          },
+          {
+            "month": "2020-07",
+            "returnPct": 0
+          },
+          {
+            "month": "2020-08",
+            "returnPct": 0
+          },
+          {
+            "month": "2020-09",
+            "returnPct": 0
+          },
+          {
+            "month": "2020-10",
+            "returnPct": 0
+          },
+          {
+            "month": "2020-11",
+            "returnPct": 0
+          },
+          {
+            "month": "2020-12",
+            "returnPct": 0
+          },
+          {
+            "month": "2021-01",
+            "returnPct": 0
+          },
+          {
+            "month": "2021-02",
+            "returnPct": 0
+          },
+          {
+            "month": "2021-03",
+            "returnPct": 0
+          },
+          {
+            "month": "2021-04",
+            "returnPct": 0
+          },
+          {
+            "month": "2021-05",
+            "returnPct": 0
+          },
+          {
+            "month": "2021-06",
+            "returnPct": 0
+          },
+          {
+            "month": "2021-07",
+            "returnPct": 0
+          },
+          {
+            "month": "2021-08",
+            "returnPct": 0
+          },
+          {
+            "month": "2021-09",
+            "returnPct": 0
+          },
+          {
+            "month": "2021-10",
+            "returnPct": 0
+          },
+          {
+            "month": "2021-11",
+            "returnPct": 0
+          },
+          {
+            "month": "2021-12",
+            "returnPct": 0
+          },
+          {
+            "month": "2022-01",
+            "returnPct": 0
+          },
+          {
+            "month": "2022-02",
+            "returnPct": 0
+          },
+          {
+            "month": "2022-03",
+            "returnPct": 0
+          },
+          {
+            "month": "2022-04",
+            "returnPct": 0
+          },
+          {
+            "month": "2022-05",
+            "returnPct": 0
+          },
+          {
+            "month": "2022-06",
+            "returnPct": 0
+          }
+        ]
+      },
+      "validation": {
+        "trades": 35,
+        "averageMonthlyReturnPct": -0.8298,
+        "annualizedReturnPct": -9.7336,
+        "maximumDrawdownPct": -14.2391,
+        "profitFactor": 0.1265,
+        "winRatePct": 11.4286,
+        "monthly": [
+          {
+            "month": "2022-07",
+            "returnPct": -5.9996
+          },
+          {
+            "month": "2022-08",
+            "returnPct": -6.1709
+          },
+          {
+            "month": "2022-09",
+            "returnPct": -2.7652
+          },
+          {
+            "month": "2022-10",
+            "returnPct": 0
+          },
+          {
+            "month": "2022-11",
+            "returnPct": 0
+          },
+          {
+            "month": "2022-12",
+            "returnPct": 0
+          },
+          {
+            "month": "2023-01",
+            "returnPct": 0
+          },
+          {
+            "month": "2023-02",
+            "returnPct": 0
+          },
+          {
+            "month": "2023-03",
+            "returnPct": 0
+          },
+          {
+            "month": "2023-04",
+            "returnPct": 0
+          },
+          {
+            "month": "2023-05",
+            "returnPct": 0
+          },
+          {
+            "month": "2023-06",
+            "returnPct": 0
+          },
+          {
+            "month": "2023-07",
+            "returnPct": 0
+          },
+          {
+            "month": "2023-08",
+            "returnPct": 0
+          },
+          {
+            "month": "2023-09",
+            "returnPct": 0
+          },
+          {
+            "month": "2023-10",
+            "returnPct": 0
+          },
+          {
+            "month": "2023-11",
+            "returnPct": 0
+          },
+          {
+            "month": "2023-12",
+            "returnPct": 0
+          }
+        ]
+      }
+    },
+    {
+      "validationPeriod": "2023-07~2024-12",
+      "selectedConfigId": "hybrid_quality_h15_p6_s5",
+      "train": {
+        "trades": 37,
+        "averageMonthlyReturnPct": -0.2669,
+        "annualizedReturnPct": -3.3143,
+        "maximumDrawdownPct": -15.878,
+        "profitFactor": 0.1387,
+        "winRatePct": 24.3243,
+        "monthly": [
+          {
+            "month": "2018-07",
+            "returnPct": -4.3346
+          },
+          {
+            "month": "2018-08",
+            "returnPct": -11.6806
+          },
+          {
+            "month": "2018-09",
+            "returnPct": 0
+          },
+          {
+            "month": "2018-10",
+            "returnPct": 0
+          },
+          {
+            "month": "2018-11",
+            "returnPct": 0
+          },
+          {
+            "month": "2018-12",
+            "returnPct": 0
+          },
+          {
+            "month": "2019-01",
+            "returnPct": 0
+          },
+          {
+            "month": "2019-02",
+            "returnPct": 0
+          },
+          {
+            "month": "2019-03",
+            "returnPct": 0
+          },
+          {
+            "month": "2019-04",
+            "returnPct": 0
+          },
+          {
+            "month": "2019-05",
+            "returnPct": 0
+          },
+          {
+            "month": "2019-06",
+            "returnPct": 0
+          },
+          {
+            "month": "2019-07",
+            "returnPct": 0
+          },
+          {
+            "month": "2019-08",
+            "returnPct": 0
+          },
+          {
+            "month": "2019-09",
+            "returnPct": 0
+          },
+          {
+            "month": "2019-10",
+            "returnPct": 0
+          },
+          {
+            "month": "2019-11",
+            "returnPct": 0
+          },
+          {
+            "month": "2019-12",
+            "returnPct": 0
+          },
+          {
+            "month": "2020-01",
+            "returnPct": 0
+          },
+          {
+            "month": "2020-02",
+            "returnPct": 0
+          },
+          {
+            "month": "2020-03",
+            "returnPct": 0
+          },
+          {
+            "month": "2020-04",
+            "returnPct": 0
+          },
+          {
+            "month": "2020-05",
+            "returnPct": 0
+          },
+          {
+            "month": "2020-06",
+            "returnPct": 0
+          },
+          {
+            "month": "2020-07",
+            "returnPct": 0
+          },
+          {
+            "month": "2020-08",
+            "returnPct": 0
+          },
+          {
+            "month": "2020-09",
+            "returnPct": 0
+          },
+          {
+            "month": "2020-10",
+            "returnPct": 0
+          },
+          {
+            "month": "2020-11",
+            "returnPct": 0
+          },
+          {
+            "month": "2020-12",
+            "returnPct": 0
+          },
+          {
+            "month": "2021-01",
+            "returnPct": 0
+          },
+          {
+            "month": "2021-02",
+            "returnPct": 0
+          },
+          {
+            "month": "2021-03",
+            "returnPct": 0
+          },
+          {
+            "month": "2021-04",
+            "returnPct": 0
+          },
+          {
+            "month": "2021-05",
+            "returnPct": 0
+          },
+          {
+            "month": "2021-06",
+            "returnPct": 0
+          },
+          {
+            "month": "2021-07",
+            "returnPct": 0
+          },
+          {
+            "month": "2021-08",
+            "returnPct": 0
+          },
+          {
+            "month": "2021-09",
+            "returnPct": 0
+          },
+          {
+            "month": "2021-10",
+            "returnPct": 0
+          },
+          {
+            "month": "2021-11",
+            "returnPct": 0
+          },
+          {
+            "month": "2021-12",
+            "returnPct": 0
+          },
+          {
+            "month": "2022-01",
+            "returnPct": 0
+          },
+          {
+            "month": "2022-02",
+            "returnPct": 0
+          },
+          {
+            "month": "2022-03",
+            "returnPct": 0
+          },
+          {
+            "month": "2022-04",
+            "returnPct": 0
+          },
+          {
+            "month": "2022-05",
+            "returnPct": 0
+          },
+          {
+            "month": "2022-06",
+            "returnPct": 0
+          },
+          {
+            "month": "2022-07",
+            "returnPct": 0
+          },
+          {
+            "month": "2022-08",
+            "returnPct": 0
+          },
+          {
+            "month": "2022-09",
+            "returnPct": 0
+          },
+          {
+            "month": "2022-10",
+            "returnPct": 0
+          },
+          {
+            "month": "2022-11",
+            "returnPct": 0
+          },
+          {
+            "month": "2022-12",
+            "returnPct": 0
+          },
+          {
+            "month": "2023-01",
+            "returnPct": 0
+          },
+          {
+            "month": "2023-02",
+            "returnPct": 0
+          },
+          {
+            "month": "2023-03",
+            "returnPct": 0
+          },
+          {
+            "month": "2023-04",
+            "returnPct": 0
+          },
+          {
+            "month": "2023-05",
+            "returnPct": 0
+          },
+          {
+            "month": "2023-06",
+            "returnPct": 0
+          }
+        ]
+      },
+      "validation": {
+        "trades": 35,
+        "averageMonthlyReturnPct": -0.8171,
+        "annualizedReturnPct": -9.6954,
+        "maximumDrawdownPct": -14.2059,
+        "profitFactor": 0.0864,
+        "winRatePct": 17.1429,
+        "monthly": [
+          {
+            "month": "2023-07",
+            "returnPct": -5.9965
+          },
+          {
+            "month": "2023-08",
+            "returnPct": -8.7105
+          },
+          {
+            "month": "2023-09",
+            "returnPct": 0
+          },
+          {
+            "month": "2023-10",
+            "returnPct": 0
+          },
+          {
+            "month": "2023-11",
+            "returnPct": 0
+          },
+          {
+            "month": "2023-12",
+            "returnPct": 0
+          },
+          {
+            "month": "2024-01",
+            "returnPct": 0
+          },
+          {
+            "month": "2024-02",
+            "returnPct": 0
+          },
+          {
+            "month": "2024-03",
+            "returnPct": 0
+          },
+          {
+            "month": "2024-04",
+            "returnPct": 0
+          },
+          {
+            "month": "2024-05",
+            "returnPct": 0
+          },
+          {
+            "month": "2024-06",
+            "returnPct": 0
+          },
+          {
+            "month": "2024-07",
+            "returnPct": 0
+          },
+          {
+            "month": "2024-08",
+            "returnPct": 0
+          },
+          {
+            "month": "2024-09",
+            "returnPct": 0
+          },
+          {
+            "month": "2024-10",
+            "returnPct": 0
+          },
+          {
+            "month": "2024-11",
+            "returnPct": 0
+          },
+          {
+            "month": "2024-12",
+            "returnPct": 0
+          }
+        ]
+      }
+    },
+    {
+      "validationPeriod": "2024-07~2025-12",
+      "selectedConfigId": "hybrid_quality_h15_p6_s5",
+      "train": {
+        "trades": 35,
+        "averageMonthlyReturnPct": -0.216,
+        "annualizedReturnPct": -2.6448,
+        "maximumDrawdownPct": -12.8665,
+        "profitFactor": 0.1465,
+        "winRatePct": 25.7143,
+        "monthly": [
+          {
+            "month": "2019-07",
+            "returnPct": -6.7986
+          },
+          {
+            "month": "2019-08",
+            "returnPct": -6.1633
+          },
+          {
+            "month": "2019-09",
+            "returnPct": 0
+          },
+          {
+            "month": "2019-10",
+            "returnPct": 0
+          },
+          {
+            "month": "2019-11",
+            "returnPct": 0
+          },
+          {
+            "month": "2019-12",
+            "returnPct": 0
+          },
+          {
+            "month": "2020-01",
+            "returnPct": 0
+          },
+          {
+            "month": "2020-02",
+            "returnPct": 0
+          },
+          {
+            "month": "2020-03",
+            "returnPct": 0
+          },
+          {
+            "month": "2020-04",
+            "returnPct": 0
+          },
+          {
+            "month": "2020-05",
+            "returnPct": 0
+          },
+          {
+            "month": "2020-06",
+            "returnPct": 0
+          },
+          {
+            "month": "2020-07",
+            "returnPct": 0
+          },
+          {
+            "month": "2020-08",
+            "returnPct": 0
+          },
+          {
+            "month": "2020-09",
+            "returnPct": 0
+          },
+          {
+            "month": "2020-10",
+            "returnPct": 0
+          },
+          {
+            "month": "2020-11",
+            "returnPct": 0
+          },
+          {
+            "month": "2020-12",
+            "returnPct": 0
+          },
+          {
+            "month": "2021-01",
+            "returnPct": 0
+          },
+          {
+            "month": "2021-02",
+            "returnPct": 0
+          },
+          {
+            "month": "2021-03",
+            "returnPct": 0
+          },
+          {
+            "month": "2021-04",
+            "returnPct": 0
+          },
+          {
+            "month": "2021-05",
+            "returnPct": 0
+          },
+          {
+            "month": "2021-06",
+            "returnPct": 0
+          },
+          {
+            "month": "2021-07",
+            "returnPct": 0
+          },
+          {
+            "month": "2021-08",
+            "returnPct": 0
+          },
+          {
+            "month": "2021-09",
+            "returnPct": 0
+          },
+          {
+            "month": "2021-10",
+            "returnPct": 0
+          },
+          {
+            "month": "2021-11",
+            "returnPct": 0
+          },
+          {
+            "month": "2021-12",
+            "returnPct": 0
+          },
+          {
+            "month": "2022-01",
+            "returnPct": 0
+          },
+          {
+            "month": "2022-02",
+            "returnPct": 0
+          },
+          {
+            "month": "2022-03",
+            "returnPct": 0
+          },
+          {
+            "month": "2022-04",
+            "returnPct": 0
+          },
+          {
+            "month": "2022-05",
+            "returnPct": 0
+          },
+          {
+            "month": "2022-06",
+            "returnPct": 0
+          },
+          {
+            "month": "2022-07",
+            "returnPct": 0
+          },
+          {
+            "month": "2022-08",
+            "returnPct": 0
+          },
+          {
+            "month": "2022-09",
+            "returnPct": 0
+          },
+          {
+            "month": "2022-10",
+            "returnPct": 0
+          },
+          {
+            "month": "2022-11",
+            "returnPct": 0
+          },
+          {
+            "month": "2022-12",
+            "returnPct": 0
+          },
+          {
+            "month": "2023-01",
+            "returnPct": 0
+          },
+          {
+            "month": "2023-02",
+            "returnPct": 0
+          },
+          {
+            "month": "2023-03",
+            "returnPct": 0
+          },
+          {
+            "month": "2023-04",
+            "returnPct": 0
+          },
+          {
+            "month": "2023-05",
+            "returnPct": 0
+          },
+          {
+            "month": "2023-06",
+            "returnPct": 0
+          },
+          {
+            "month": "2023-07",
+            "returnPct": 0
+          },
+          {
+            "month": "2023-08",
+            "returnPct": 0
+          },
+          {
+            "month": "2023-09",
+            "returnPct": 0
+          },
+          {
+            "month": "2023-10",
+            "returnPct": 0
+          },
+          {
+            "month": "2023-11",
+            "returnPct": 0
+          },
+          {
+            "month": "2023-12",
+            "returnPct": 0
+          },
+          {
+            "month": "2024-01",
+            "returnPct": 0
+          },
+          {
+            "month": "2024-02",
+            "returnPct": 0
+          },
+          {
+            "month": "2024-03",
+            "returnPct": 0
+          },
+          {
+            "month": "2024-04",
+            "returnPct": 0
+          },
+          {
+            "month": "2024-05",
+            "returnPct": 0
+          },
+          {
+            "month": "2024-06",
+            "returnPct": 0
+          }
+        ]
+      },
+      "validation": {
+        "trades": 41,
+        "averageMonthlyReturnPct": -0.7333,
+        "annualizedReturnPct": -8.6677,
+        "maximumDrawdownPct": -12.7286,
+        "profitFactor": 0.102,
+        "winRatePct": 17.0732,
+        "monthly": [
+          {
+            "month": "2024-07",
+            "returnPct": -7.0696
+          },
+          {
+            "month": "2024-08",
+            "returnPct": -5.0596
+          },
+          {
+            "month": "2024-09",
+            "returnPct": -1.07
+          },
+          {
+            "month": "2024-10",
+            "returnPct": 0
+          },
+          {
+            "month": "2024-11",
+            "returnPct": 0
+          },
+          {
+            "month": "2024-12",
+            "returnPct": 0
+          },
+          {
+            "month": "2025-01",
+            "returnPct": 0
+          },
+          {
+            "month": "2025-02",
+            "returnPct": 0
+          },
+          {
+            "month": "2025-03",
+            "returnPct": 0
+          },
+          {
+            "month": "2025-04",
+            "returnPct": 0
+          },
+          {
+            "month": "2025-05",
+            "returnPct": 0
+          },
+          {
+            "month": "2025-06",
+            "returnPct": 0
+          },
+          {
+            "month": "2025-07",
+            "returnPct": 0
+          },
+          {
+            "month": "2025-08",
+            "returnPct": 0
+          },
+          {
+            "month": "2025-09",
+            "returnPct": 0
+          },
+          {
+            "month": "2025-10",
+            "returnPct": 0
+          },
+          {
+            "month": "2025-11",
+            "returnPct": 0
+          },
+          {
+            "month": "2025-12",
+            "returnPct": 0
+          }
+        ]
+      }
+    }
+  ],
+  "conclusion": "未達月均 5%，目前月均 -0.7753%，距離 5% 還差 5.7753 個百分點。"
+}

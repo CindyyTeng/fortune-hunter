@@ -1,0 +1,455 @@
+{
+  "generatedAt": "2026-07-21T19:22:48.944Z",
+  "strategyId": "stock_top5_subset_portfolio_v1",
+  "source": "stock-fixed-top5-oos-v13 trade details",
+  "selected": {
+    "filter": {
+      "maxAtr": 6,
+      "maxGap": 8,
+      "minNearYearHigh": 0.5,
+      "maxDistanceToMa20": 22,
+      "minMarketMom5": -5,
+      "minGlobalComposite": -1,
+      "maxStochastic": 100
+    },
+    "exposureScale": 1.15,
+    "train": {
+      "trades": 506,
+      "months": 56,
+      "averageMonthlyReturnPct": 2.3713,
+      "annualizedReturnPct": 29.683,
+      "maximumDrawdownPct": -11.6412,
+      "winRatePct": 44.2688,
+      "profitFactor": 1.8099,
+      "negativeMonths": 29,
+      "monthly": [
+        {
+          "month": "2016-08",
+          "returnPct": 3.5535
+        },
+        {
+          "month": "2016-09",
+          "returnPct": 4.255
+        },
+        {
+          "month": "2016-10",
+          "returnPct": -5.8765
+        },
+        {
+          "month": "2016-12",
+          "returnPct": -3.473
+        },
+        {
+          "month": "2017-03",
+          "returnPct": 2.8175
+        },
+        {
+          "month": "2017-04",
+          "returnPct": -3.1625
+        },
+        {
+          "month": "2017-05",
+          "returnPct": -2.323
+        },
+        {
+          "month": "2017-06",
+          "returnPct": 2.415
+        },
+        {
+          "month": "2017-07",
+          "returnPct": 4.0135
+        },
+        {
+          "month": "2017-08",
+          "returnPct": 14.8925
+        },
+        {
+          "month": "2017-09",
+          "returnPct": -3.1395
+        },
+        {
+          "month": "2017-10",
+          "returnPct": -0.92
+        },
+        {
+          "month": "2017-11",
+          "returnPct": 2.323
+        },
+        {
+          "month": "2018-01",
+          "returnPct": -6.1525
+        },
+        {
+          "month": "2018-02",
+          "returnPct": 4.5195
+        },
+        {
+          "month": "2018-03",
+          "returnPct": -3.5075
+        },
+        {
+          "month": "2018-04",
+          "returnPct": 2.7255
+        },
+        {
+          "month": "2018-05",
+          "returnPct": -1.4145
+        },
+        {
+          "month": "2018-06",
+          "returnPct": -0.7245
+        },
+        {
+          "month": "2018-07",
+          "returnPct": -0.7705
+        },
+        {
+          "month": "2018-08",
+          "returnPct": -1.38
+        },
+        {
+          "month": "2018-09",
+          "returnPct": -0.9085
+        },
+        {
+          "month": "2018-10",
+          "returnPct": -0.621
+        },
+        {
+          "month": "2019-02",
+          "returnPct": -1.1615
+        },
+        {
+          "month": "2019-03",
+          "returnPct": 4.8645
+        },
+        {
+          "month": "2019-04",
+          "returnPct": 12.0635
+        },
+        {
+          "month": "2019-05",
+          "returnPct": 2.1735
+        },
+        {
+          "month": "2019-06",
+          "returnPct": -0.69
+        },
+        {
+          "month": "2019-07",
+          "returnPct": -5.6465
+        },
+        {
+          "month": "2019-09",
+          "returnPct": -2.369
+        },
+        {
+          "month": "2019-10",
+          "returnPct": 0.506
+        },
+        {
+          "month": "2019-11",
+          "returnPct": 6.164
+        },
+        {
+          "month": "2019-12",
+          "returnPct": 4.1285
+        },
+        {
+          "month": "2020-01",
+          "returnPct": -0.138
+        },
+        {
+          "month": "2020-02",
+          "returnPct": -0.2875
+        },
+        {
+          "month": "2020-04",
+          "returnPct": -2.2885
+        },
+        {
+          "month": "2020-05",
+          "returnPct": 15.5595
+        },
+        {
+          "month": "2020-06",
+          "returnPct": -0.2645
+        },
+        {
+          "month": "2020-07",
+          "returnPct": 14.5475
+        },
+        {
+          "month": "2020-08",
+          "returnPct": 10.8675
+        },
+        {
+          "month": "2020-09",
+          "returnPct": -0.805
+        },
+        {
+          "month": "2020-10",
+          "returnPct": -3.1395
+        },
+        {
+          "month": "2020-11",
+          "returnPct": 4.6805
+        },
+        {
+          "month": "2020-12",
+          "returnPct": 10.0165
+        },
+        {
+          "month": "2021-01",
+          "returnPct": 4.4275
+        },
+        {
+          "month": "2021-02",
+          "returnPct": 0.529
+        },
+        {
+          "month": "2021-03",
+          "returnPct": 14.26
+        },
+        {
+          "month": "2021-04",
+          "returnPct": -0.598
+        },
+        {
+          "month": "2021-05",
+          "returnPct": 23.46
+        },
+        {
+          "month": "2021-06",
+          "returnPct": -1.081
+        },
+        {
+          "month": "2021-07",
+          "returnPct": 15.87
+        },
+        {
+          "month": "2021-08",
+          "returnPct": 4.577
+        },
+        {
+          "month": "2021-09",
+          "returnPct": -4.094
+        },
+        {
+          "month": "2021-10",
+          "returnPct": -0.069
+        },
+        {
+          "month": "2021-11",
+          "returnPct": -2.599
+        },
+        {
+          "month": "2021-12",
+          "returnPct": 2.185
+        }
+      ]
+    }
+  },
+  "validation": {
+    "trades": 362,
+    "months": 46,
+    "averageMonthlyReturnPct": 1.5563,
+    "annualizedReturnPct": 18.5638,
+    "maximumDrawdownPct": -16.4526,
+    "winRatePct": 36.7403,
+    "profitFactor": 1.5912,
+    "negativeMonths": 25,
+    "monthly": [
+      {
+        "month": "2022-01",
+        "returnPct": -5.842
+      },
+      {
+        "month": "2022-02",
+        "returnPct": 1.3915
+      },
+      {
+        "month": "2022-04",
+        "returnPct": -0.5865
+      },
+      {
+        "month": "2022-06",
+        "returnPct": -3.9675
+      },
+      {
+        "month": "2022-07",
+        "returnPct": 1.15
+      },
+      {
+        "month": "2022-08",
+        "returnPct": 0.529
+      },
+      {
+        "month": "2022-09",
+        "returnPct": 2.001
+      },
+      {
+        "month": "2022-11",
+        "returnPct": -0.5405
+      },
+      {
+        "month": "2022-12",
+        "returnPct": -1.5755
+      },
+      {
+        "month": "2023-01",
+        "returnPct": -0.1725
+      },
+      {
+        "month": "2023-02",
+        "returnPct": -1.5755
+      },
+      {
+        "month": "2023-03",
+        "returnPct": 2.714
+      },
+      {
+        "month": "2023-04",
+        "returnPct": -4.7955
+      },
+      {
+        "month": "2023-05",
+        "returnPct": 0.1265
+      },
+      {
+        "month": "2023-06",
+        "returnPct": 9.223
+      },
+      {
+        "month": "2023-07",
+        "returnPct": -1.587
+      },
+      {
+        "month": "2023-09",
+        "returnPct": -0.6095
+      },
+      {
+        "month": "2023-10",
+        "returnPct": -0.4485
+      },
+      {
+        "month": "2023-11",
+        "returnPct": -1.4145
+      },
+      {
+        "month": "2023-12",
+        "returnPct": 11.638
+      },
+      {
+        "month": "2024-01",
+        "returnPct": -2.599
+      },
+      {
+        "month": "2024-02",
+        "returnPct": -0.575
+      },
+      {
+        "month": "2024-03",
+        "returnPct": 1.3455
+      },
+      {
+        "month": "2024-04",
+        "returnPct": 9.6485
+      },
+      {
+        "month": "2024-05",
+        "returnPct": -4.209
+      },
+      {
+        "month": "2024-06",
+        "returnPct": -0.207
+      },
+      {
+        "month": "2024-07",
+        "returnPct": 4.14
+      },
+      {
+        "month": "2024-09",
+        "returnPct": -2.53
+      },
+      {
+        "month": "2024-10",
+        "returnPct": 3.197
+      },
+      {
+        "month": "2024-11",
+        "returnPct": -5.8075
+      },
+      {
+        "month": "2024-12",
+        "returnPct": -1.357
+      },
+      {
+        "month": "2025-01",
+        "returnPct": -4.669
+      },
+      {
+        "month": "2025-02",
+        "returnPct": -1.265
+      },
+      {
+        "month": "2025-05",
+        "returnPct": -1.173
+      },
+      {
+        "month": "2025-06",
+        "returnPct": -3.335
+      },
+      {
+        "month": "2025-07",
+        "returnPct": 2.6795
+      },
+      {
+        "month": "2025-08",
+        "returnPct": 10.3845
+      },
+      {
+        "month": "2025-09",
+        "returnPct": -1.104
+      },
+      {
+        "month": "2025-10",
+        "returnPct": 6.348
+      },
+      {
+        "month": "2025-11",
+        "returnPct": 7.9005
+      },
+      {
+        "month": "2025-12",
+        "returnPct": 2.783
+      },
+      {
+        "month": "2026-01",
+        "returnPct": 13.708
+      },
+      {
+        "month": "2026-02",
+        "returnPct": 10.189
+      },
+      {
+        "month": "2026-03",
+        "returnPct": 9.8325
+      },
+      {
+        "month": "2026-04",
+        "returnPct": -0.5175
+      },
+      {
+        "month": "2026-05",
+        "returnPct": 13.1215
+      }
+    ]
+  },
+  "targetMonthlyReturnPct": 5,
+  "targetGapPct": 3.4437,
+  "passed": false,
+  "paperTradingReady": false,
+  "liveTradingReady": false,
+  "conclusion": "未達月均 5%，目前月均 1.5563%，距離 5% 還差 3.4437 個百分點。"
+}

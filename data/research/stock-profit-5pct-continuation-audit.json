@@ -1,0 +1,57 @@
+{
+  "generatedAt": "2026-07-22T00:00:00.000+08:00",
+  "branch": "institutional-data-fetcher-v1",
+  "objective": "以個股為主，尋找可實盤、長期驗證、月均至少 5%、交易數增加且最大回撤降低的策略。",
+  "status": "NOT_COMPLETED",
+  "reason": "本輪延續搜尋沒有找到同時達成月均 >= 5%、驗證交易數 >= 300、訓練與驗證最大回撤皆不低於 -20% 的純個股可實盤策略。",
+  "bestKnownDeployableBoundary": {
+    "strategy": "stock_profit_5pct_hunter_v2.deployable_frontier_2_7",
+    "train": {
+      "trades": 461,
+      "averageMonthlyReturnPct": 3.9125,
+      "maximumDrawdownPct": -19.4087,
+      "profitFactor": 1.835
+    },
+    "validation": {
+      "trades": 311,
+      "averageMonthlyReturnPct": 4.5367,
+      "maximumDrawdownPct": -14.4867,
+      "profitFactor": 1.6485
+    },
+    "gapToMonthly5Pct": 0.4633,
+    "paperTradingReady": false,
+    "liveTradingReady": false
+  },
+  "continuationChecks": [
+    {
+      "name": "現有個股研究輸出掃描",
+      "result": "多數候選策略驗證月均低於 0050 或低於既有最佳邊界；不可宣稱成功。"
+    },
+    {
+      "name": "stock-variant-trade-diagnostics-v1 精查",
+      "result": "總報酬高但 test 月均約 1.03%，不是可用答案。"
+    },
+    {
+      "name": "stock-shock-stabilization-v1 精查",
+      "result": "最大回撤約 -8.07%，但月均約 0.40%，收益不足。"
+    },
+    {
+      "name": "v13 進場濾網與市場波動曝險搜尋",
+      "result": "嚴格條件下找不到優於既有 4.5367% 邊界的組合；放寬後有 4.51% 候選，但訓練回撤約 -22% 且驗證交易數 287，不符合可實盤門檻。"
+    },
+    {
+      "name": "Top5 子集合 v1-v8 對照",
+      "result": "最高驗證月均約 2.4169%，最大回撤約 -19.487%；最穩 v8 月均約 1.9781%，最大回撤約 -13.6442%。固定曝險版本離月均 5% 仍遠。"
+    },
+    {
+      "name": "新資料策略輸出複查",
+      "result": "月營收、品質、Profit Hunter、族群、法人-only 等既有輸出均未通過 validation，不可 paper trading 或實盤。"
+    }
+  ],
+  "doNotClaimAsComplete": true,
+  "nextMostUsefulDirection": [
+    "不要再單純調整 v13 濾網與曝險，因為已接近風險報酬邊界。",
+    "若要突破月均 5%，需要新的可驗證 alpha 來源，優先補更可靠的日內/分鐘資料、注意處置股與漲跌停資料、完整歷史股票池與公司行動資料。",
+    "若仍只用目前資料，應把目標改為找更穩的 3% 至 4.5% paper trading 候選，而不是宣稱已找到月均 5% 可實盤策略。"
+  ]
+}

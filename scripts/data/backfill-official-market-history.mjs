@@ -14,9 +14,11 @@ import {
 const arg = name => process.argv.find(value => value.startsWith(`--${name}=`))?.split('=')[1];
 const start = arg('start') || '2011-01-01';
 const end = arg('end') || new Date().toISOString().slice(0, 10);
+const marketArg = (arg('market') || 'ALL').toUpperCase();
 const smoke = process.argv.includes('--smoke');
 const delayMs = Number(process.env.MARKET_HISTORY_DELAY_MS || 250);
 const concurrency = Number(process.env.MARKET_HISTORY_CONCURRENCY || 4);
+const markets = marketArg === 'ALL' ? ['TWSE', 'TPEX'] : [marketArg].filter(market => ['TWSE', 'TPEX'].includes(market));
 const dates = smoke
   ? ['2011-01-03', '2016-06-13', '2020-03-19', end]
   : weekdays(start, end);
@@ -24,7 +26,7 @@ const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 const results = [];
 
 async function processDate(date) {
-  for (const market of ['TWSE', 'TPEX']) {
+  for (const market of markets) {
     const folder = new URL(`${market.toLowerCase()}/`, RAW_ROOT);
     const file = new URL(`${compactDate(date)}.json.gz`, folder);
     if (await exists(file)) {
@@ -75,6 +77,7 @@ await Promise.all(Array.from({ length: Math.min(concurrency, queue.length) }, as
 
 const summary = {
   requestedDates: dates.length,
+  markets,
   concurrency,
   downloadedDays: results.filter(row => row.status === 'downloaded').length,
   cachedDays: results.filter(row => row.status === 'cached').length,

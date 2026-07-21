@@ -23,7 +23,7 @@ export function rocDate(date) {
 
 export function marketUrl(market, date) {
   if (market === 'TWSE') {
-    return `https://www.twse.com.tw/rwd/zh/afterTrading/MI_INDEX?date=${compactDate(date)}&type=ALLBUT0999&response=json`;
+    return `https://www.twse.com.tw/exchangeReport/MI_INDEX?response=json&date=${compactDate(date)}&type=ALLBUT0999`;
   }
   return `https://www.tpex.org.tw/www/zh-tw/afterTrading/dailyQuotes?date=${rocDate(date)}&id=&response=json`;
 }

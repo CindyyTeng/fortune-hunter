@@ -1,0 +1,72 @@
+{
+  "generatedAt": "2026-07-21T19:34:55.436Z",
+  "strategyId": "stock_top5_alpha_boundary_v1",
+  "purpose": "檢查 Top5 子集合在不破 -20% 回撤、交易數 300+ 的前提下，是否還能靠濾網或曝險推高月均。",
+  "testedOptions": 648,
+  "bestOverall": {
+    "option": {
+      "maxAtr": 8,
+      "maxGap": 10,
+      "maxDistanceToMa20": 16,
+      "maxVolumeRatio": 99,
+      "maxIntradayMomentum": 99,
+      "maxRsi": 78,
+      "scale": 1.5
+    },
+    "train": {
+      "trades": 427,
+      "months": 55,
+      "averageMonthlyReturnPct": 2.7115,
+      "maximumDrawdownPct": -16.9719,
+      "profitFactor": 1.8105,
+      "winRatePct": 43.5597,
+      "negativeMonths": 32
+    },
+    "validation": {
+      "trades": 298,
+      "months": 40,
+      "averageMonthlyReturnPct": 2.4289,
+      "maximumDrawdownPct": -19.487,
+      "profitFactor": 1.7272,
+      "winRatePct": 38.5906,
+      "negativeMonths": 21
+    }
+  },
+  "bestRiskControlled": {
+    "option": {
+      "maxAtr": 8,
+      "maxGap": 10,
+      "maxDistanceToMa20": 16,
+      "maxVolumeRatio": 99,
+      "maxIntradayMomentum": 99,
+      "maxRsi": 88,
+      "scale": 1.5
+    },
+    "train": {
+      "trades": 453,
+      "months": 55,
+      "averageMonthlyReturnPct": 2.8985,
+      "maximumDrawdownPct": -17.6503,
+      "profitFactor": 1.8176,
+      "winRatePct": 43.7086,
+      "negativeMonths": 31
+    },
+    "validation": {
+      "trades": 305,
+      "months": 40,
+      "averageMonthlyReturnPct": 2.4169,
+      "maximumDrawdownPct": -19.487,
+      "profitFactor": 1.7137,
+      "winRatePct": 38.6885,
+      "negativeMonths": 21
+    }
+  },
+  "currentBestReference": {
+    "strategyId": "stock_top5_subset_portfolio_v6",
+    "averageMonthlyReturnPct": 2.3281,
+    "maximumDrawdownPct": -19.901,
+    "trades": 307,
+    "profitFactor": 1.6955
+  },
+  "conclusion": "找到比 v6 更高且仍符合回撤/交易數限制的候選。"
+}

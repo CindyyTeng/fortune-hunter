@@ -1893,6 +1893,13 @@
       "rule": "使用 optimize-realized-10y 對應 alpha 候選池旗標重新搜尋原始候選與排序",
       "result": "最佳輸出測試期月均約 2.57%，最大回撤 -44.02%，交易 514，未優於目前可實盤風控邊界",
       "reason": "候選池搜尋沒有產生更好的純個股可實盤月均 5% 組合"
+    },
+    {
+      "testedAt": "2026-07-21T20:07:14.385Z",
+      "name": "remaining_candidate_pool_modes",
+      "rule": "批次測試 alpha-risk-frontier、alpha-breadth、breadth-risk、market-band 四種候選池或市場分層模式",
+      "result": "四種模式最佳輸出皆約為測試期月均 2.57%、最大回撤 -44.02%、交易 514，未優於目前可實盤風控邊界",
+      "reason": "現有候選池/市場分層模式未能產生可實盤月均 5% 純個股策略"
     }
   ]
 }

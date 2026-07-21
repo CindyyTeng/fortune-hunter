@@ -59,3 +59,7 @@
 ## Alpha 候選池搜尋
 
 已執行 alpha-ranking-only 與 selected-alpha-only 候選池搜尋。兩者最佳輸出測試期月均約 2.57%，最大回撤 -44.02%，交易 514，未優於目前可實盤風控邊界，因此暫不採用。
+
+## 剩餘候選池與市場分層模式
+
+已批次測試 alpha-risk-frontier、alpha-breadth、breadth-risk、market-band 四種模式。四者最佳輸出皆約為測試期月均 2.57%、最大回撤 -44.02%、交易 514，未優於目前可實盤風控邊界，因此暫不採用。

@@ -1,0 +1,75 @@
+{
+  "generatedAt": "2026-07-21T17:31:18.617Z",
+  "strategyId": "stock_fixed_top5_oos_v15",
+  "universe": "純個股候選；ETF 與 0050 僅作比較基準。",
+  "selection": {
+    "trainPeriod": "2016-08~2021-12",
+    "validationPeriod": "2022-01~2026-05",
+    "rule": "沿用 v14 子集合條件，只搜尋較小範圍的出場、停損、月熔斷與風險配置。",
+    "testedConfigs": 432,
+    "selectedConfig": {
+      "positionPct": 8,
+      "accountRiskPct": 1,
+      "maxOpenPositions": 12,
+      "maxEntriesPerDay": 5,
+      "monthlyEquityBrakePct": -5,
+      "accountDrawdownBrakePct": -8,
+      "accountCooldownDays": 10,
+      "consecutiveLossLimit": 6,
+      "lossStreakCooldownDays": 8,
+      "targetMarketVolPct": 20,
+      "minimumVolatilityMultiplier": 0.25,
+      "maximumVolatilityMultiplier": 1,
+      "momentumCrashMom20Pct": -3,
+      "momentumCrashReboundPct": 1,
+      "momentumCrashMultiplier": 0,
+      "regimeMode": "none",
+      "regimeSlowMa": 40,
+      "regimeMomentumDays": 10,
+      "regimeMomentumThreshold": -1,
+      "rankMode": "score",
+      "exitRule": {
+        "holdDays": 20,
+        "trail": null,
+        "noFollow": false,
+        "stopLossPct": null,
+        "overrideStopLossPct": 7,
+        "stopMode": "close"
+      }
+    },
+    "trainAverageMonthlyReturnPct": 1.92,
+    "trainMaximumDrawdownPct": -14.77,
+    "trainTrades": 507,
+    "trainProfitFactor": 1.87,
+    "worstSegmentAveragePct": 0.65,
+    "worstSegmentDrawdownPct": -14.81
+  },
+  "validation": {
+    "period": "2022-01~2026-05",
+    "months": 53,
+    "parametersFrozen": true
+  },
+  "metrics": {
+    "averageMonthlyReturnPct": 1.96,
+    "annualizedReturnPct": 23.96,
+    "maximumDrawdownPct": -8.78,
+    "trades": 382,
+    "winRatePct": 45.03,
+    "profitFactor": 1.79,
+    "topFiveProfitContributionPct": 17.52,
+    "beats0050": false
+  },
+  "benchmark0050": {
+    "startDate": "2022-01-03",
+    "endDate": "2026-05-29",
+    "months": 52,
+    "averageMonthlyReturnPct": 2.38,
+    "annualizedReturnPct": 27.18,
+    "maxDrawdownPct": -36.38
+  },
+  "targetMonthlyReturnPct": 5,
+  "targetMet": false,
+  "paperTradingReady": false,
+  "liveTradingReady": false,
+  "conclusion": "未達月均 5% 可信門檻；目前 validation 月均 1.96%，不可 paper trading、不可實盤。"
+}

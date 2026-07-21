@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-21T20:55:50.818Z",
+  "generatedAt": "2026-07-21T21:04:54.456Z",
   "strategyId": "stock_official_market_hunter_v1",
   "universe": "TWSE_TPEX_OFFICIAL_MARKET_HISTORY_2018_2021",
   "periods": {
@@ -36,8 +36,8 @@
   ],
   "symbols": 1818,
   "setups": 218972,
-  "testedConfigurations": 486,
-  "viableConfigurations": 0,
+  "testedConfigurations": 3888,
+  "viableConfigurations": 10,
   "best": {
     "config": {
       "setup": "breakout",
@@ -48,35 +48,38 @@
       "minVolumeRatio": 1.2,
       "maxGap": 6,
       "maxDistance": 18,
-      "top": 3,
+      "top": 5,
       "holdDays": 10,
-      "stopLossPct": 6,
+      "stopLossPct": 4,
       "takeProfitPct": 16,
+      "minMarketMom20": 0,
+      "maxMarketVol20": 99,
+      "monthlyBrakePct": -5,
       "exposure": 1
     },
     "train": {
-      "trades": 215,
-      "months": 20,
-      "averageMonthlyReturnPct": -3.7694,
-      "annualizedReturnPct": -45.1612,
-      "maximumDrawdownPct": -74.5614,
-      "profitFactor": 0.737,
-      "winRatePct": 29.7674,
-      "negativeMonths": 12
+      "trades": 239,
+      "months": 19,
+      "averageMonthlyReturnPct": 0.6272,
+      "annualizedReturnPct": 5.1473,
+      "maximumDrawdownPct": -24.0444,
+      "profitFactor": 1.0811,
+      "winRatePct": 33.4728,
+      "negativeMonths": 10
     },
     "validation": {
-      "trades": 317,
-      "months": 24,
-      "averageMonthlyReturnPct": 2.9181,
-      "annualizedReturnPct": 26.2425,
-      "maximumDrawdownPct": -36.8938,
-      "profitFactor": 1.1596,
-      "winRatePct": 38.4858,
-      "negativeMonths": 8
+      "trades": 380,
+      "months": 23,
+      "averageMonthlyReturnPct": 1.6817,
+      "annualizedReturnPct": 18.7642,
+      "maximumDrawdownPct": -22.0345,
+      "profitFactor": 1.1445,
+      "winRatePct": 33.1579,
+      "negativeMonths": 10
     }
   },
   "targetMonthlyReturnPct": 5,
-  "targetGapPct": 2.0819,
+  "targetGapPct": 3.3183,
   "passed": false,
   "paperTradingReady": false,
   "liveTradingReady": false,

@@ -40,7 +40,33 @@ async function loadHistories() {
     coverage.push({ year, tpexDates: tpexDates.size, twseDates: twseDates.size });
   }
   for (const rows of bySymbol.values()) rows.sort((a, b) => a.date.localeCompare(b.date));
-  return { bySymbol, coverage };
+  return { bySymbol, coverage, marketRisk: buildMarketRisk(bySymbol) };
+}
+
+function buildMarketRisk(bySymbol) {
+  const dailyReturns = new Map();
+  for (const rows of bySymbol.values()) {
+    for (let i = 1; i < rows.length; i += 1) {
+      const previous = rows[i - 1];
+      const row = rows[i];
+      if (previous.close <= 0 || row.close <= 0) continue;
+      if (!dailyReturns.has(row.date)) dailyReturns.set(row.date, []);
+      dailyReturns.get(row.date).push((row.close / previous.close - 1) * 100);
+    }
+  }
+  let index = 100;
+  const series = [...dailyReturns].sort().map(([date, returns]) => {
+    index *= 1 + avg(returns) / 100;
+    return { date, index, dayReturnPct: avg(returns) };
+  });
+  const risk = new Map();
+  for (let i = 60; i < series.length; i += 1) {
+    const mom20Pct = (series[i].index / series[i - 20].index - 1) * 100;
+    const mom60Pct = (series[i].index / series[i - 60].index - 1) * 100;
+    const vol20Pct = Math.sqrt(avg(series.slice(i - 19, i + 1).map(row => row.dayReturnPct ** 2))) * Math.sqrt(20);
+    risk.set(series[i].date, { mom20Pct, mom60Pct, vol20Pct });
+  }
+  return risk;
 }
 
 function buildSetups(bySymbol) {
@@ -114,7 +140,13 @@ function configs() {
       for (const holdDays of [3, 5, 10]) {
         for (const stopLossPct of [4, 6, 8]) {
           for (const takeProfitPct of [8, 12, 16]) {
-            variants.push({ ...item, top, holdDays, stopLossPct, takeProfitPct, exposure: 1 });
+            for (const minMarketMom20 of [-999, 0]) {
+              for (const maxMarketVol20 of [99, 18]) {
+                for (const monthlyBrakePct of [-999, -5]) {
+                  variants.push({ ...item, top, holdDays, stopLossPct, takeProfitPct, minMarketMom20, maxMarketVol20, monthlyBrakePct, exposure: 1 });
+                }
+              }
+            }
           }
         }
       }
@@ -151,36 +183,41 @@ function simulateTrade(setup, config) {
   return { exitDate: last.date, returnPct: (last.open / entry - 1) * 100 - COST_PCT, reason: 'time' };
 }
 
-function evaluate(setups, config, [start, end]) {
+function evaluate(setups, config, [start, end], marketRisk) {
   const byDate = new Map();
   for (const setup of setups) {
     if (setup.entryDate < start || setup.entryDate > end || !pass(setup, config)) continue;
+    const risk = marketRisk.get(setup.signalDate);
+    if (risk && (risk.mom20Pct < config.minMarketMom20 || risk.vol20Pct > config.maxMarketVol20)) continue;
     if (!byDate.has(setup.entryDate)) byDate.set(setup.entryDate, []);
     byDate.get(setup.entryDate).push(setup);
   }
-  const dates = [...new Set([...setups.map(setup => setup.entryDate), ...byDate.keys()])]
-    .filter(date => date >= start && date <= end)
-    .sort();
+  const dates = [...byDate.keys()].sort();
   const open = [];
   const monthly = new Map();
   let trades = 0;
   let wins = 0;
   let grossProfit = 0;
   let grossLoss = 0;
+  const blockedMonths = new Set();
+  const closeTrade = trade => {
+    monthly.set(monthKey(trade.exitDate), (monthly.get(monthKey(trade.exitDate)) || 0) + trade.accountReturnPct);
+    if ((monthly.get(monthKey(trade.exitDate)) || 0) <= config.monthlyBrakePct) blockedMonths.add(monthKey(trade.exitDate));
+    trades += 1;
+    if (trade.accountReturnPct > 0) {
+      wins += 1;
+      grossProfit += trade.accountReturnPct;
+    } else {
+      grossLoss += Math.abs(trade.accountReturnPct);
+    }
+  };
   for (const date of dates) {
     for (let i = open.length - 1; i >= 0; i -= 1) {
       if (open[i].exitDate > date) continue;
-      const trade = open.splice(i, 1)[0];
-      monthly.set(monthKey(trade.exitDate), (monthly.get(monthKey(trade.exitDate)) || 0) + trade.accountReturnPct);
-      trades += 1;
-      if (trade.accountReturnPct > 0) {
-        wins += 1;
-        grossProfit += trade.accountReturnPct;
-      } else {
-        grossLoss += Math.abs(trade.accountReturnPct);
-      }
+      closeTrade(open.splice(i, 1)[0]);
     }
     if (open.length >= config.top) continue;
+    if (blockedMonths.has(monthKey(date))) continue;
     const picks = (byDate.get(date) || []).sort((a, b) => b.score - a.score).slice(0, config.top - open.length);
     for (const setup of picks) {
       const trade = simulateTrade(setup, config);
@@ -190,6 +227,7 @@ function evaluate(setups, config, [start, end]) {
       });
     }
   }
+  for (const trade of open.sort((a, b) => a.exitDate.localeCompare(b.exitDate))) closeTrade(trade);
   const months = [...monthly].sort().map(([month, returnPct]) => ({ month, returnPct: round(returnPct) }));
   let equity = 100;
   let peak = 100;
@@ -211,12 +249,12 @@ function evaluate(setups, config, [start, end]) {
   };
 }
 
-const { bySymbol, coverage } = await loadHistories();
+const { bySymbol, coverage, marketRisk } = await loadHistories();
 const setups = buildSetups(bySymbol);
 const results = configs().map(config => ({
   config,
-  train: evaluate(setups, config, TRAIN),
-  validation: evaluate(setups, config, VALIDATION)
+  train: evaluate(setups, config, TRAIN, marketRisk),
+  validation: evaluate(setups, config, VALIDATION, marketRisk)
 }));
 const viable = results.filter(result => (
   result.train.trades >= 150

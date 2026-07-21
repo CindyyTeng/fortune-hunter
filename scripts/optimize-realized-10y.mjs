@@ -5575,6 +5575,182 @@ async function main() {
     console.log(JSON.stringify({ output: outputFile.pathname, report: reportFile.pathname, selection: output.selection, validation: output.validation, metrics, benchmark0050, targetMet, conclusion: output.conclusion }, null, 2));
     return;
   }
+  if (process.argv.includes('--stock-fixed-top5-oos-v23')) {
+    const outputFile = new URL('../data/research/stock-fixed-top5-oos-v23.json', import.meta.url);
+    const reportFile = new URL('../docs/STOCK_FIXED_TOP5_OOS_V23.md', import.meta.url);
+    const v15 = JSON.parse(await fs.readFile(new URL('../data/research/stock-fixed-top5-oos-v15.json', import.meta.url), 'utf8'));
+    const v19 = JSON.parse(await fs.readFile(new URL('../data/research/stock-fixed-top5-oos-v19.json', import.meta.url), 'utf8'));
+    const v22 = JSON.parse(await fs.readFile(new URL('../data/research/stock-fixed-top5-oos-v22.json', import.meta.url), 'utf8'));
+    const search = JSON.parse(await fs.readFile(OUTPUT, 'utf8'));
+    const base = { ...search.bestBalanced.config };
+    delete base.collectTrades;
+    const withSubset = config => ({
+      ...config,
+      maxAtr14Pct: Math.min(config.maxAtr14Pct ?? 100, 6),
+      maxGap: Math.min(config.maxGap ?? 100, 8),
+      minNearYearHigh: Math.max(config.minNearYearHigh ?? 0, 0.5),
+      maxDistanceToMa20Pct: Math.min(config.maxDistanceToMa20Pct ?? 100, 22),
+      minMarketMom5Pct: Math.max(config.minMarketMom5Pct ?? -100, -5)
+    });
+    const seedConfigs = fixedTopFiveOosV10Configs(base).map(withSubset);
+    const daysByExitRule = new Map();
+    const daysFor = config => {
+      const key = JSON.stringify(config.exitRule);
+      if (!daysByExitRule.has(key)) daysByExitRule.set(key, broadDaysForExitRule(config.exitRule));
+      return daysByExitRule.get(key);
+    };
+    const trainSegments = [
+      { id: 'early', start: '2016-08', end: '2018-05' },
+      { id: 'middle', start: '2018-06', end: '2020-03' },
+      { id: 'late', start: '2020-04', end: '2021-12' }
+    ];
+    const seedRows = seedConfigs.map(config => {
+      const result = simulateRange(daysFor(config), config, marketRegimes, '2016-08', '2021-12', true, true);
+      const quality = tradeQuality(result);
+      return { ...result, config, profitFactor: quality.profitFactor };
+    }).sort((a, b) => b.full.average - a.full.average || b.profitFactor - a.profitFactor);
+    const seeds = seedRows.filter(row => row.trades >= 250 && row.maxDrawdownPct >= -22 && row.profitFactor >= 1.15).slice(0, 3).map(row => row.config);
+    const variants = [];
+    for (const seed of seeds) {
+      for (const accountRiskPct of [0.5, 0.75]) {
+        for (const maxEntriesPerDay of [2, 3]) {
+          for (const monthlyEquityBrakePct of [-3, -4, -5]) {
+            for (const targetMarketVolPct of [14, 16, 18]) {
+              for (const weakMarketPositionMultiplier of [0.5, 0.65, 0.75]) {
+                for (const overrideStopLossPct of [5]) {
+                  for (const holdDays of [20]) {
+                    variants.push({
+                      ...seed,
+                      accountRiskPct,
+                      starterRiskPct: accountRiskPct,
+                      maxEntriesPerDay,
+                      monthlyEquityBrakePct,
+                      targetMarketVolPct,
+                      accountDrawdownBrakePct: -7,
+                      accountCooldownDays: 15,
+                      consecutiveLossLimit: 4,
+                      lossStreakCooldownDays: 10,
+                      marketMomentumPositioning: true,
+                      strongMarketMom5Pct: 0,
+                      strongMarketMom20Pct: 0,
+                      strongMarketPositionMultiplier: 1,
+                      weakMarketPositionMultiplier,
+                      exitRule: {
+                        ...seed.exitRule,
+                        holdDays,
+                        overrideStopLossPct,
+                        stopMode: 'close'
+                      }
+                    });
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    const rows = variants.map(config => {
+      const fullTrain = simulateRange(daysFor(config), config, marketRegimes, '2016-08', '2021-12', true, true);
+      const quality = tradeQuality(fullTrain);
+      const segments = trainSegments.map(segment => {
+        const result = simulateRange(daysFor(config), config, marketRegimes, segment.start, segment.end, true, true);
+        return {
+          ...segment,
+          averageMonthlyReturnPct: result.full.average,
+          maximumDrawdownPct: result.maxDrawdownPct,
+          trades: result.trades
+        };
+      });
+      const worstSegmentAveragePct = Math.min(...segments.map(row => row.averageMonthlyReturnPct));
+      const worstSegmentDrawdownPct = Math.min(...segments.map(row => row.maximumDrawdownPct));
+      return {
+        ...fullTrain,
+        config,
+        profitFactor: quality.profitFactor,
+        segments,
+        worstSegmentAveragePct,
+        worstSegmentDrawdownPct,
+        score: fullTrain.full.average * 2.4
+          + Math.min(quality.profitFactor, 2.5) * 1.2
+          + Math.min(fullTrain.trades, 700) / 160
+          + worstSegmentAveragePct * 1.6
+          + fullTrain.maxDrawdownPct * 0.16
+          + worstSegmentDrawdownPct * 0.06
+      };
+    }).sort((a, b) => b.score - a.score);
+    const selected = rows.find(row => (
+      row.trades >= 300
+      && row.maxDrawdownPct >= -14
+      && row.profitFactor >= 1.3
+      && row.worstSegmentAveragePct >= 0
+      && row.worstSegmentDrawdownPct >= -13
+    )) || rows.find(row => (
+      row.trades >= 300
+      && row.maxDrawdownPct >= -16
+      && row.profitFactor >= 1.25
+      && row.worstSegmentAveragePct >= -0.15
+    )) || rows[0];
+    const validation = simulateRange(daysFor(selected.config), selected.config, marketRegimes, '2022-01', '2026-05', true, true);
+    const quality = tradeQuality(validation);
+    const etfHistory = JSON.parse(await fs.readFile(ETF_HISTORY, 'utf8'));
+    const benchmark0050 = benchmarkStats(etfHistory.series['0050.TW'] || [], '2022-01-01', '2026-05-31');
+    const metrics = {
+      averageMonthlyReturnPct: round(validation.full.average),
+      annualizedReturnPct: annualizedReturn(validation.monthly),
+      maximumDrawdownPct: validation.maxDrawdownPct,
+      trades: validation.trades,
+      winRatePct: quality.winRatePct,
+      profitFactor: quality.profitFactor,
+      topFiveProfitContributionPct: quality.topFiveProfitContributionPct,
+      beats0050: validation.full.average > benchmark0050.averageMonthlyReturnPct,
+      improvesMonthlyVsV15: validation.full.average > v15.metrics.averageMonthlyReturnPct,
+      improvesDrawdownVsV15: validation.maxDrawdownPct > v15.metrics.maximumDrawdownPct,
+      improvesTradesVsV15: validation.trades > v15.metrics.trades
+    };
+    const targetMet = metrics.averageMonthlyReturnPct >= 5
+      && metrics.maximumDrawdownPct >= -20
+      && metrics.trades >= 300
+      && metrics.beats0050;
+    const output = {
+      generatedAt: new Date().toISOString(),
+      strategyId: 'stock_fixed_top5_oos_v23',
+      universe: '純個股，不以 ETF 或 0050 作為主要交易標的',
+      selection: {
+        trainPeriod: '2016-08~2021-12',
+        validationPeriod: '2022-01~2026-05',
+        rule: '以 v15/v19/v22 已驗證參數為種子，只用訓練期挑選低回撤、高交易數、三段訓練期較穩定的固定參數；validation 參數凍結。',
+        testedConfigs: variants.length,
+        selectedConfig: riskConfig(selected.config),
+        trainAverageMonthlyReturnPct: round(selected.full.average),
+        trainMaximumDrawdownPct: selected.maxDrawdownPct,
+        trainTrades: selected.trades,
+        trainProfitFactor: selected.profitFactor,
+        trainSegments: selected.segments,
+        worstSegmentAveragePct: round(selected.worstSegmentAveragePct),
+        worstSegmentDrawdownPct: selected.worstSegmentDrawdownPct
+      },
+      validation: { period: '2022-01~2026-05', months: validation.full.months, parametersFrozen: true },
+      metrics,
+      benchmark0050,
+      baselines: {
+        v15: v15.metrics,
+        v19: v19.metrics,
+        v22: v22.metrics
+      },
+      targetMonthlyReturnPct: 5,
+      targetMet,
+      paperTradingReady: false,
+      liveTradingReady: false,
+      conclusion: targetMet
+        ? '達到月均 5% 初步門檻，但仍需更長紙上交易驗證後才可考慮實盤。'
+        : `未達月均 5% 可實盤門檻；validation 月均 ${metrics.averageMonthlyReturnPct}%，不可 paper trading、不可實盤。`
+    };
+    await fs.writeFile(outputFile, `${JSON.stringify(output, null, 2)}\n`, 'utf8');
+    await fs.writeFile(reportFile, `# 純個股 Top5 OOS v23\n\n- 驗證期：2022-01~2026-05\n- 月均報酬：${metrics.averageMonthlyReturnPct}%\n- 年化報酬：${metrics.annualizedReturnPct}%\n- 最大回撤：${metrics.maximumDrawdownPct}%\n- 交易筆數：${metrics.trades}\n- Profit Factor：${metrics.profitFactor}\n- 勝率：${metrics.winRatePct}%\n- 0050 月均：${benchmark0050.averageMonthlyReturnPct}%\n- 是否達月均 5%：${targetMet}\n- 結論：${output.conclusion}\n\nv23 使用純個股交易，不以 ETF/0050 為主。此版以 v15/v19/v22 為種子，試圖在不偷看 validation 的前提下降低 v19 的回撤，同時維持交易數與月均報酬。\n`, 'utf8');
+    console.log(JSON.stringify({ output: outputFile.pathname, report: reportFile.pathname, selection: output.selection, validation: output.validation, metrics, benchmark0050, targetMet, conclusion: output.conclusion }, null, 2));
+    return;
+  }
   if (process.argv.includes('--stock-fixed-top5-oos-v17')) {
     const outputFile = new URL('../data/research/stock-fixed-top5-oos-v17.json', import.meta.url);
     const reportFile = new URL('../docs/STOCK_FIXED_TOP5_OOS_V17.md', import.meta.url);

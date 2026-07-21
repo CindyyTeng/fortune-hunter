@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-21T19:50:47.244Z",
+  "generatedAt": "2026-07-21T19:53:32.683Z",
   "strategyId": "stock_profit_5pct_hunter_v2",
   "source": "stock-fixed-top5-oos-v13 trade details",
   "guardrail": "只使用進場前可得欄位，不使用 exitReason、holdingDays 等未來資料欄位。",
@@ -1419,8 +1419,20 @@
   "targetMonthlyReturnPct": 5,
   "targetGapPct": -0.0726,
   "passed": true,
+  "deployabilityAudit": {
+    "pureStockOnly": true,
+    "validationTradeCountOk": true,
+    "validationMonthlyReturnOk": true,
+    "validationDrawdownOk": true,
+    "validationProfitFactorOk": true,
+    "trainDrawdownOk": false,
+    "maxExposure": 3.2,
+    "requiresPositionSizingReview": true,
+    "requiresPaperTrading": true,
+    "deployableNow": false
+  },
   "practicalRiskWarning": "此版本靠低波動期提高曝險達標，驗證回撤低於 -20%，但訓練期回撤低於 -20%，仍需更嚴格資金與下單單位審核。",
   "paperTradingReady": false,
   "liveTradingReady": false,
-  "conclusion": "達到月均 5% 研究門檻，但仍需更完整成交層、資金限制與紙上交易驗證，不能直接實盤。"
+  "conclusion": "達到月均 5% 研究門檻，但尚未通過實盤化審核；下一步必須做真實投組、下單單位與紙上交易驗證。"
 }

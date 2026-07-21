@@ -183,6 +183,18 @@ async function main() {
   const practicalRiskWarning = selectedStrategy.exposureModel === 'volatility_gate_3_2'
     ? '此版本靠低波動期提高曝險達標，驗證回撤低於 -20%，但訓練期回撤低於 -20%，仍需更嚴格資金與下單單位審核。'
     : null;
+  const deployabilityAudit = {
+    pureStockOnly: true,
+    validationTradeCountOk: validation.trades >= 300,
+    validationMonthlyReturnOk: validation.averageMonthlyReturnPct >= TARGET_MONTHLY,
+    validationDrawdownOk: validation.maximumDrawdownPct >= -20,
+    validationProfitFactorOk: validation.profitFactor > 1.15,
+    trainDrawdownOk: selectedStrategy.train.maximumDrawdownPct >= -20,
+    maxExposure: 3.2,
+    requiresPositionSizingReview: true,
+    requiresPaperTrading: true,
+    deployableNow: false
+  };
   const frontier = candidates.slice(0, 20).map(candidate => {
     const rows = validationTrades.filter(row => pass(row, candidate.filter));
     return {
@@ -205,21 +217,23 @@ async function main() {
     targetMonthlyReturnPct: TARGET_MONTHLY,
     targetGapPct: round(TARGET_MONTHLY - validation.averageMonthlyReturnPct),
     passed,
+    deployabilityAudit,
     practicalRiskWarning,
     paperTradingReady: false,
     liveTradingReady: false,
     conclusion: passed
-      ? '達到月均 5% 研究門檻，但仍需更完整成交層、資金限制與紙上交易驗證，不能直接實盤。'
+      ? '達到月均 5% 研究門檻，但尚未通過實盤化審核；下一步必須做真實投組、下單單位與紙上交易驗證。'
       : `未達月均 5%，目前最佳驗證月均 ${validation.averageMonthlyReturnPct}%，距離 5% 還差 ${round(TARGET_MONTHLY - validation.averageMonthlyReturnPct)} 個百分點。`
   };
   await fs.writeFile(OUTPUT, `${JSON.stringify(output, null, 2)}\n`, 'utf8');
-  await fs.writeFile(REPORT, `# Stock Profit 5% Hunter v2\n\n- 策略目標：純個股，尋找月均至少 5%、交易數至少 300、最大回撤不低於 -20% 的可實盤候選。\n- 搜尋組數：${candidates.length}\n- 最佳曝險模型：${selected.exposureModel}\n- 驗證交易數：${validation.trades}\n- 驗證月均報酬：${validation.averageMonthlyReturnPct}%\n- 年化報酬：${validation.annualizedReturnPct}%\n- 最大回撤：${validation.maximumDrawdownPct}%\n- Profit Factor：${validation.profitFactor}\n- 勝率：${validation.winRatePct}%\n- 是否達月均 5%：${passed}\n\n## 結論\n\n${output.conclusion}\n\n## 風險警告\n\n${practicalRiskWarning || '無額外曝險警告。'}\n\n## 重要限制\n\n這版沒有使用 ETF/0050 作為主策略，也沒有使用出場後才知道的欄位。最佳版本是市場波動分層曝險：低波動期提高曝險，中波動期大幅降曝險，高波動期保留有限曝險。驗證結果已跨過月均 5%，但因訓練期回撤較深，而且曝險係數較高，還不能直接接券商 API 實盤；下一步要把此邏輯放進真正的投組/下單單位模擬，檢查資金佔用、零股/整股限制、連續虧損熔斷與實際可成交性。\n`, 'utf8');
+  await fs.writeFile(REPORT, `# Stock Profit 5% Hunter v2\n\n- 策略目標：純個股，尋找月均至少 5%、交易數至少 300、最大回撤不低於 -20% 的候選。\n- 搜尋組數：${candidates.length}\n- 最佳曝險模型：${selectedStrategy.exposureModel}\n- 驗證交易數：${validation.trades}\n- 驗證月均報酬：${validation.averageMonthlyReturnPct}%\n- 年化報酬：${validation.annualizedReturnPct}%\n- 最大回撤：${validation.maximumDrawdownPct}%\n- Profit Factor：${validation.profitFactor}\n- 勝率：${validation.winRatePct}%\n- 是否達月均 5%：${passed}\n- 是否可直接實盤：false\n\n## 結論\n\n${output.conclusion}\n\n## 實盤化審核\n\n- 純個股：${deployabilityAudit.pureStockOnly}\n- 驗證交易數達 300：${deployabilityAudit.validationTradeCountOk}\n- 驗證月均達 5%：${deployabilityAudit.validationMonthlyReturnOk}\n- 驗證回撤不低於 -20%：${deployabilityAudit.validationDrawdownOk}\n- 訓練期回撤不低於 -20%：${deployabilityAudit.trainDrawdownOk}\n- 最大曝險：${deployabilityAudit.maxExposure} 倍\n- 仍需紙上交易：${deployabilityAudit.requiresPaperTrading}\n\n## 風險警告\n\n${practicalRiskWarning || '無額外曝險警告。'}\n\n## 重要限制\n\n這版沒有使用 ETF/0050 作為主策略，也沒有使用出場後才知道的欄位。最佳版本是市場波動分層曝險：低波動期提高曝險，中波動期大幅降曝險，高波動期保留有限曝險。雖然驗證結果跨過月均 5%，但因訓練期回撤較深，而且曝險係數較高，仍不可直接接券商 API 實盤；下一步要放進真正的投組與下單單位模擬，檢查資金佔用、零股/整股限制、連續虧損熔斷與實際可成交性。\n`, 'utf8');
   console.log(JSON.stringify({
     output: OUTPUT.pathname,
     report: REPORT.pathname,
     searchedCandidates: candidates.length,
     selected: output.selected,
     validation,
+    deployabilityAudit,
     passed
   }, null, 2));
 }

@@ -45,6 +45,7 @@ const STOCK_FIXED_OOS_V12_OUTPUT = new URL(
   import.meta.url
 );
 const STOCK_META_OUTPUT = new URL('../data/research/stock-meta-selector-v1.json', import.meta.url);
+const STOCK_META_V2_OUTPUT = new URL('../data/research/stock-meta-selector-v2.json', import.meta.url);
 const STOCK_VARIANT_DIAGNOSTIC_OUTPUT = new URL(
   '../data/research/stock-variant-trade-diagnostics-v1.json',
   import.meta.url
@@ -3968,6 +3969,129 @@ function stockMetaSelector(broadCandidates, search, marketRegimes) {
   };
 }
 
+function stockMetaSelectorV2(broadCandidates, search, marketRegimes) {
+  const configs = stockMetaConfigs(search);
+  const periods = [
+    ['2014-05', '2018-10', '2018-11', '2020-04'],
+    ['2015-11', '2020-04', '2020-05', '2021-10'],
+    ['2017-05', '2021-10', '2021-11', '2023-04'],
+    ['2018-11', '2023-04', '2023-05', '2024-10'],
+    ['2020-05', '2024-10', '2024-11', '2026-04']
+  ];
+  const daysCache = new Map();
+  const daysFor = config => {
+    const exitKey = hash(config.exitRule || null);
+    if (!daysCache.has(exitKey)) {
+      daysCache.set(exitKey, config.exitRule
+        ? buildDays(broadCandidates.map(trade => applyExitRule(trade, config.exitRule)))
+        : buildDays(broadCandidates));
+    }
+    return daysCache.get(exitKey);
+  };
+  const folds = [];
+  const validationCurves = [];
+  let validationTrades = 0;
+  for (const [trainStart, trainEnd, validationStart, validationEnd] of periods) {
+    const trained = configs.map(({ configHash, config }) => {
+      const result = simulateRange(daysFor(config), config, marketRegimes, trainStart, trainEnd, false, true);
+      return {
+        id: configHash.slice(0, 10),
+        config,
+        family: strategyFamily(config),
+        trades: result.trades,
+        curve: result.dailyCurve || [],
+        metrics: summarizeCurve(result.dailyCurve || [])
+      };
+    }).filter(row => (
+      row.trades >= 100
+      && row.metrics.maximumDrawdownPct >= -18
+      && row.metrics.averageMonthlyReturnPct > 0
+    ));
+    const shortlist = [...trained]
+      .sort((a, b) => (
+        (b.metrics.averageMonthlyReturnPct * 10 + b.metrics.maximumDrawdownPct * 0.8 - b.metrics.negativeMonths * 0.08)
+        - (a.metrics.averageMonthlyReturnPct * 10 + a.metrics.maximumDrawdownPct * 0.8 - a.metrics.negativeMonths * 0.08)
+      ))
+      .filter((row, index, rows) => rows.findIndex(other => other.family === row.family) === index)
+      .slice(0, 4);
+    const portfolios = stockMetaPortfolios(shortlist).map(portfolio => {
+      const curve = combineWeightedStockCurves(portfolio.sleeves);
+      const metrics = summarizeCurve(curve);
+      return {
+        ...portfolio,
+        curve,
+        metrics,
+        selectionScore: metrics.averageMonthlyReturnPct * 12
+          + metrics.maximumDrawdownPct * 1
+          - metrics.negativeMonths * 0.12
+          + Math.min(300, portfolio.sleeves.reduce((sum, row) => sum + row.trades, 0)) * 0.01
+      };
+    });
+    const selected = portfolios
+      .filter(row => row.metrics.maximumDrawdownPct >= -18 && row.metrics.averageMonthlyReturnPct > 0)
+      .sort((a, b) => b.selectionScore - a.selectionScore)[0];
+    if (!selected) {
+      const cashCurve = [...marketRegimes.keys()]
+        .filter(date => date.slice(0, 7) >= validationStart && date.slice(0, 7) <= validationEnd)
+        .map(date => ({ date, equity: INITIAL_CAPITAL }));
+      validationCurves.push(cashCurve);
+      folds.push({
+        trainPeriod: `${trainStart}~${trainEnd}`,
+        validationPeriod: `${validationStart}~${validationEnd}`,
+        status: '訓練期沒有符合低回撤條件的純個股組合，改持現金'
+      });
+      continue;
+    }
+    const validationSleeves = selected.sleeves.map(sleeve => {
+      const result = simulateRange(
+        daysFor(sleeve.config),
+        sleeve.config,
+        marketRegimes,
+        validationStart,
+        validationEnd,
+        true,
+        true
+      );
+      validationTrades += result.trades;
+      return {
+        ...sleeve,
+        trades: result.trades,
+        curve: result.dailyCurve || []
+      };
+    });
+    const validationCurve = combineWeightedStockCurves(validationSleeves);
+    validationCurves.push(validationCurve);
+    const validationMetrics = summarizeCurve(validationCurve);
+    folds.push({
+      trainPeriod: `${trainStart}~${trainEnd}`,
+      validationPeriod: `${validationStart}~${validationEnd}`,
+      status: '已驗證',
+      selectedSleeves: selected.sleeves.map(sleeve => ({
+        strategyFamily: sleeve.family,
+        weightPct: sleeve.weightPct,
+        train: sleeve.metrics,
+        trainTrades: sleeve.trades
+      })),
+      train: selected.metrics,
+      validation: validationMetrics,
+      validationTrades: validationSleeves.reduce((sum, row) => sum + row.trades, 0)
+    });
+  }
+  const combinedCurve = concatenateValidationCurves(validationCurves);
+  return {
+    strategyId: 'stock_meta_selector_v2',
+    universe: '純個股；ETF 與 0050 只作為比較基準，不作為主要標的',
+    trainingMonthsPerFold: 54,
+    validationMonthsPerFold: 18,
+    validationPeriod: '2018-11~2026-04',
+    validationMonths: 90,
+    configsConsidered: configs.length,
+    validationTrades,
+    validation: summarizeCurve(combinedCurve),
+    folds
+  };
+}
+
 function selectTacticalRule(stockCurve, startDate, endDate, marketRegimes, barsBySymbol) {
   const candidates = [10, 20, 30].flatMap(sleeveWeightPct => TACTICAL_RULES.map(rule => {
     const sleeve = simulateTacticalSleeve(
@@ -4957,6 +5081,52 @@ async function main() {
     await fs.writeFile(STOCK_META_OUTPUT, `${JSON.stringify(output, null, 2)}\n`, 'utf8');
     console.log(JSON.stringify({
       output: STOCK_META_OUTPUT.pathname,
+      targetMonthlyReturnPct: output.targetMonthlyReturnPct,
+      validationPeriod: result.validationPeriod,
+      validationMonths: result.validationMonths,
+      configsConsidered: result.configsConsidered,
+      validation: {
+        averageMonthlyReturnPct: result.validation.averageMonthlyReturnPct,
+        annualizedReturnPct: result.validation.annualizedReturnPct,
+        maximumDrawdownPct: result.validation.maximumDrawdownPct,
+        negativeMonths: result.validation.negativeMonths,
+        trades: result.validationTrades
+      },
+      benchmark,
+      passed: output.passed,
+      conclusion: output.conclusion
+    }, null, 2));
+    return;
+  }
+  if (process.argv.includes('--stock-meta-selector-v2')) {
+    const search = JSON.parse(await fs.readFile(OUTPUT, 'utf8'));
+    const result = stockMetaSelectorV2(broadCandidates, search, marketRegimes);
+    const etfHistory = JSON.parse(await fs.readFile(ETF_HISTORY, 'utf8'));
+    const benchmark = benchmarkStats(
+      etfHistory.series['0050.TW'] || [],
+      '2018-11-01',
+      '2026-04-30'
+    );
+    const output = {
+      generatedAt: new Date().toISOString(),
+      sourceGeneratedAt: payload.generatedAt,
+      targetMonthlyReturnPct: 5,
+      result,
+      benchmark,
+      passed: result.validation.averageMonthlyReturnPct >= 5
+        && result.validation.maximumDrawdownPct >= -20
+        && result.validationTrades >= 300
+        && result.validation.averageMonthlyReturnPct > benchmark.averageMonthlyReturnPct,
+      conclusion: result.validation.averageMonthlyReturnPct >= 5
+        && result.validation.maximumDrawdownPct >= -20
+        && result.validationTrades >= 300
+        && result.validation.averageMonthlyReturnPct > benchmark.averageMonthlyReturnPct
+        ? '達到月均 5% 與基準比較門檻，但仍只能先進紙上交易。'
+        : '尚未找到月均至少 5% 的可實盤個股策略。'
+    };
+    await fs.writeFile(STOCK_META_V2_OUTPUT, `${JSON.stringify(output, null, 2)}\n`, 'utf8');
+    console.log(JSON.stringify({
+      output: STOCK_META_V2_OUTPUT.pathname,
       targetMonthlyReturnPct: output.targetMonthlyReturnPct,
       validationPeriod: result.validationPeriod,
       validationMonths: result.validationMonths,

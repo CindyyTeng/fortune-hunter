@@ -4885,6 +4885,8 @@ async function main() {
         worstSegmentProfitFactor: selected.worstSegmentProfitFactor,
         trainSegments: selected.trainSegments
       },
+      trainTradesDetail: selected.closedTrades || [],
+      validationTradesDetail: validation.closedTrades || [],
       validation: { period: '2022-01~2026-05', months: validation.full.months, parametersFrozen: true },
       metrics,
       benchmark0050,

@@ -1,0 +1,31 @@
+{
+  "generatedAt": "2026-07-21T17:22:20.737Z",
+  "status": "validated",
+  "selected": {
+    "filter": {
+      "maxAtr": 6,
+      "maxGap": 8,
+      "minNearYearHigh": 0.5,
+      "maxDistanceToMa20": 22,
+      "minMarketMom5": -5
+    },
+    "train": {
+      "trades": 512,
+      "averageTradeReturnPct": 2.8418,
+      "averageMonthlyAccountReturnPct": 2.0139,
+      "winRatePct": 43.75,
+      "profitFactor": 1.7773,
+      "negativeMonths": 29
+    },
+    "score": 8.239
+  },
+  "validation": {
+    "trades": 364,
+    "averageTradeReturnPct": 2.542,
+    "averageMonthlyAccountReturnPct": 1.3493,
+    "winRatePct": 36.8132,
+    "profitFactor": 1.5875,
+    "negativeMonths": 25
+  },
+  "conclusion": "找到交易明細子集合，validation 交易 364 筆、月均帳戶貢獻 1.3493%。仍需下一輪完整 portfolio 回測確認。"
+}

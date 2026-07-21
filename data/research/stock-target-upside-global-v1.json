@@ -1,0 +1,98 @@
+{
+  "generatedAt": "2026-07-21T19:09:54.800Z",
+  "strategyId": "stock_target_upside_global_v1",
+  "identity": {
+    "strategyFamilyId": "stock_target_upside_global_v1:b94a678a26f248bbafcf2bfa",
+    "experimentHash": "a9782abf14973c18856a1399"
+  },
+  "universe": {
+    "commonStockTrades": 66442,
+    "etfExcluded": true,
+    "benchmarkOnly0050": true
+  },
+  "validation": {
+    "trainMonths": 60,
+    "validationMonths": 18,
+    "stepMonths": 18,
+    "folds": 3,
+    "startMonth": "2021-07",
+    "endMonth": "2025-12",
+    "configsTested": 18
+  },
+  "metrics": {
+    "months": 56,
+    "averageMonthlyReturnPct": 0.1549,
+    "annualizedReturnPct": 1.4546,
+    "maximumDrawdownPct": -18.0489,
+    "trades": 415,
+    "winRatePct": 42.6506,
+    "profitFactor": 1.1392,
+    "topFiveProfitContributionPct": 13.0707
+  },
+  "benchmark0050": {
+    "averageMonthlyReturnPct": 1.349,
+    "months": 54
+  },
+  "targetMonthlyReturnPct": 5,
+  "targetGapPct": 4.8451,
+  "checks": {
+    "target5Pct": false,
+    "drawdownUnder20Pct": true,
+    "tradesAbove300": true,
+    "profitFactor": false,
+    "beats0050": false,
+    "paperTradingReady": false,
+    "liveTradingReady": false
+  },
+  "folds": [
+    {
+      "validationPeriod": "2021-07~2022-12",
+      "selectedConfigId": "target_upside_1.15_nyh0.75_h20",
+      "train": {
+        "averageMonthlyReturnPct": 0.3147,
+        "maximumDrawdownPct": -15.4806,
+        "trades": 367,
+        "profitFactor": 1.1698
+      },
+      "validation": {
+        "averageMonthlyReturnPct": -0.494,
+        "maximumDrawdownPct": -18.0489,
+        "trades": 63,
+        "profitFactor": 0.6788
+      }
+    },
+    {
+      "validationPeriod": "2023-01~2024-06",
+      "selectedConfigId": "target_upside_1.12_nyh0.75_h15",
+      "train": {
+        "averageMonthlyReturnPct": -0.2204,
+        "maximumDrawdownPct": -16.4653,
+        "trades": 157,
+        "profitFactor": 0.7087
+      },
+      "validation": {
+        "averageMonthlyReturnPct": 1.5727,
+        "maximumDrawdownPct": -7.0206,
+        "trades": 310,
+        "profitFactor": 1.4825
+      }
+    },
+    {
+      "validationPeriod": "2024-07~2025-12",
+      "selectedConfigId": "target_upside_1.18_nyh0.85_h15",
+      "train": {
+        "averageMonthlyReturnPct": 0.889,
+        "maximumDrawdownPct": -15.6436,
+        "trades": 438,
+        "profitFactor": 1.4323
+      },
+      "validation": {
+        "averageMonthlyReturnPct": -0.6482,
+        "maximumDrawdownPct": -15.6256,
+        "trades": 42,
+        "profitFactor": 0.3161
+      }
+    }
+  ],
+  "conclusion": "未達月均 5% 可實盤門檻；validation 月均 0.1549%，距離 5% 還差 4.8451 個百分點。"
+}

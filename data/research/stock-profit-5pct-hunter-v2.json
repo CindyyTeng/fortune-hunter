@@ -1,0 +1,1426 @@
+{
+  "generatedAt": "2026-07-21T19:50:47.244Z",
+  "strategyId": "stock_profit_5pct_hunter_v2",
+  "source": "stock-fixed-top5-oos-v13 trade details",
+  "guardrail": "只使用進場前可得欄位，不使用 exitReason、holdingDays 等未來資料欄位。",
+  "searchedCandidates": 107904,
+  "gridBestByTrainScore": {
+    "filter": {
+      "maxAtr": 6,
+      "maxGap": 10,
+      "minNearYearHigh": 0.3,
+      "maxDistanceToMa20": 25,
+      "minGlobalComposite": -0.5,
+      "maxRsi": 95,
+      "minVolumeRatio": 0.5,
+      "maxVolumeRatio": 99,
+      "minMarketMom5": -999,
+      "minMarketMove": -999,
+      "minThemeMove": -999,
+      "maxMarketVol": 99
+    },
+    "exposureModel": "volatility_gate_3_2",
+    "train": {
+      "trades": 476,
+      "months": 55,
+      "averageMonthlyReturnPct": 5.3091,
+      "annualizedReturnPct": 68.3612,
+      "maximumDrawdownPct": -23.6342,
+      "profitFactor": 1.8898,
+      "winRatePct": 44.3277,
+      "negativeMonths": 28,
+      "monthly": [
+        {
+          "month": "2016-08",
+          "returnPct": 13.152
+        },
+        {
+          "month": "2016-09",
+          "returnPct": 9.843
+        },
+        {
+          "month": "2016-10",
+          "returnPct": -1.533
+        },
+        {
+          "month": "2016-12",
+          "returnPct": -9.664
+        },
+        {
+          "month": "2017-03",
+          "returnPct": 8.032
+        },
+        {
+          "month": "2017-04",
+          "returnPct": -8.8
+        },
+        {
+          "month": "2017-05",
+          "returnPct": -6.464
+        },
+        {
+          "month": "2017-06",
+          "returnPct": 6.72
+        },
+        {
+          "month": "2017-07",
+          "returnPct": 1.536
+        },
+        {
+          "month": "2017-08",
+          "returnPct": 38.528
+        },
+        {
+          "month": "2017-09",
+          "returnPct": -8.736
+        },
+        {
+          "month": "2017-10",
+          "returnPct": -1.6
+        },
+        {
+          "month": "2017-11",
+          "returnPct": 6.464
+        },
+        {
+          "month": "2018-01",
+          "returnPct": -17.12
+        },
+        {
+          "month": "2018-02",
+          "returnPct": 12.576
+        },
+        {
+          "month": "2018-03",
+          "returnPct": -11.328
+        },
+        {
+          "month": "2018-04",
+          "returnPct": 7.584
+        },
+        {
+          "month": "2018-05",
+          "returnPct": -3.936
+        },
+        {
+          "month": "2018-06",
+          "returnPct": 13.12
+        },
+        {
+          "month": "2018-07",
+          "returnPct": -2.144
+        },
+        {
+          "month": "2018-08",
+          "returnPct": -3.84
+        },
+        {
+          "month": "2018-09",
+          "returnPct": -2.528
+        },
+        {
+          "month": "2018-10",
+          "returnPct": -1.728
+        },
+        {
+          "month": "2019-02",
+          "returnPct": -1.753
+        },
+        {
+          "month": "2019-03",
+          "returnPct": 5.126
+        },
+        {
+          "month": "2019-04",
+          "returnPct": 35.136
+        },
+        {
+          "month": "2019-05",
+          "returnPct": 6.048
+        },
+        {
+          "month": "2019-07",
+          "returnPct": -13.6
+        },
+        {
+          "month": "2019-09",
+          "returnPct": -6.592
+        },
+        {
+          "month": "2019-10",
+          "returnPct": -5.376
+        },
+        {
+          "month": "2019-11",
+          "returnPct": 18.016
+        },
+        {
+          "month": "2019-12",
+          "returnPct": 11.392
+        },
+        {
+          "month": "2020-01",
+          "returnPct": -1.472
+        },
+        {
+          "month": "2020-02",
+          "returnPct": -0.8
+        },
+        {
+          "month": "2020-04",
+          "returnPct": -0.459
+        },
+        {
+          "month": "2020-05",
+          "returnPct": 5.879
+        },
+        {
+          "month": "2020-06",
+          "returnPct": -0.58
+        },
+        {
+          "month": "2020-07",
+          "returnPct": 42.513
+        },
+        {
+          "month": "2020-08",
+          "returnPct": 13.47
+        },
+        {
+          "month": "2020-09",
+          "returnPct": -0.086
+        },
+        {
+          "month": "2020-10",
+          "returnPct": -6.72
+        },
+        {
+          "month": "2020-11",
+          "returnPct": 13.984
+        },
+        {
+          "month": "2020-12",
+          "returnPct": 24.032
+        },
+        {
+          "month": "2021-01",
+          "returnPct": 12.32
+        },
+        {
+          "month": "2021-02",
+          "returnPct": 5.872
+        },
+        {
+          "month": "2021-03",
+          "returnPct": 12.4
+        },
+        {
+          "month": "2021-04",
+          "returnPct": -1.664
+        },
+        {
+          "month": "2021-05",
+          "returnPct": 65.28
+        },
+        {
+          "month": "2021-06",
+          "returnPct": -0.282
+        },
+        {
+          "month": "2021-07",
+          "returnPct": 15.685
+        },
+        {
+          "month": "2021-08",
+          "returnPct": 11.424
+        },
+        {
+          "month": "2021-09",
+          "returnPct": -5.476
+        },
+        {
+          "month": "2021-10",
+          "returnPct": -0.105
+        },
+        {
+          "month": "2021-11",
+          "returnPct": -5.824
+        },
+        {
+          "month": "2021-12",
+          "returnPct": 6.08
+        }
+      ]
+    }
+  },
+  "selected": {
+    "filter": {
+      "maxAtr": 8,
+      "maxGap": 10,
+      "minNearYearHigh": 0.5,
+      "maxDistanceToMa20": 16,
+      "minGlobalComposite": -0.25,
+      "maxRsi": 88,
+      "minVolumeRatio": 0,
+      "maxVolumeRatio": 99,
+      "minMarketMom5": -999,
+      "minMarketMove": -999,
+      "minThemeMove": -999,
+      "maxMarketVol": 99
+    },
+    "exposureModel": "volatility_gate_3_2",
+    "train": {
+      "trades": 453,
+      "months": 55,
+      "averageMonthlyReturnPct": 4.5532,
+      "annualizedReturnPct": 54.4137,
+      "maximumDrawdownPct": -24.2131,
+      "profitFactor": 1.8176,
+      "winRatePct": 43.7086,
+      "negativeMonths": 32,
+      "monthly": [
+        {
+          "month": "2016-08",
+          "returnPct": 11.232
+        },
+        {
+          "month": "2016-09",
+          "returnPct": -1.229
+        },
+        {
+          "month": "2016-10",
+          "returnPct": -1.533
+        },
+        {
+          "month": "2016-12",
+          "returnPct": -5.824
+        },
+        {
+          "month": "2017-03",
+          "returnPct": -0.352
+        },
+        {
+          "month": "2017-04",
+          "returnPct": -8.8
+        },
+        {
+          "month": "2017-05",
+          "returnPct": -6.464
+        },
+        {
+          "month": "2017-06",
+          "returnPct": 6.72
+        },
+        {
+          "month": "2017-07",
+          "returnPct": 1.536
+        },
+        {
+          "month": "2017-08",
+          "returnPct": 38.528
+        },
+        {
+          "month": "2017-09",
+          "returnPct": -8.736
+        },
+        {
+          "month": "2017-10",
+          "returnPct": -1.056
+        },
+        {
+          "month": "2017-11",
+          "returnPct": 6.464
+        },
+        {
+          "month": "2018-01",
+          "returnPct": -14.752
+        },
+        {
+          "month": "2018-02",
+          "returnPct": 12.576
+        },
+        {
+          "month": "2018-03",
+          "returnPct": -11.328
+        },
+        {
+          "month": "2018-04",
+          "returnPct": 7.584
+        },
+        {
+          "month": "2018-05",
+          "returnPct": -3.936
+        },
+        {
+          "month": "2018-06",
+          "returnPct": 5.664
+        },
+        {
+          "month": "2018-07",
+          "returnPct": -2.144
+        },
+        {
+          "month": "2018-08",
+          "returnPct": -2.912
+        },
+        {
+          "month": "2018-09",
+          "returnPct": -0.928
+        },
+        {
+          "month": "2018-10",
+          "returnPct": -1.728
+        },
+        {
+          "month": "2019-02",
+          "returnPct": -1.753
+        },
+        {
+          "month": "2019-03",
+          "returnPct": 6.694
+        },
+        {
+          "month": "2019-04",
+          "returnPct": 33.568
+        },
+        {
+          "month": "2019-05",
+          "returnPct": 4.096
+        },
+        {
+          "month": "2019-06",
+          "returnPct": -1.92
+        },
+        {
+          "month": "2019-07",
+          "returnPct": -15.712
+        },
+        {
+          "month": "2019-09",
+          "returnPct": -6.592
+        },
+        {
+          "month": "2019-10",
+          "returnPct": -1.856
+        },
+        {
+          "month": "2019-11",
+          "returnPct": 16.544
+        },
+        {
+          "month": "2019-12",
+          "returnPct": 11.392
+        },
+        {
+          "month": "2020-01",
+          "returnPct": -0.384
+        },
+        {
+          "month": "2020-02",
+          "returnPct": -0.8
+        },
+        {
+          "month": "2020-04",
+          "returnPct": -0.601
+        },
+        {
+          "month": "2020-05",
+          "returnPct": 5.675
+        },
+        {
+          "month": "2020-06",
+          "returnPct": -0.58
+        },
+        {
+          "month": "2020-07",
+          "returnPct": 43.665
+        },
+        {
+          "month": "2020-08",
+          "returnPct": 13.065
+        },
+        {
+          "month": "2020-09",
+          "returnPct": 0.376
+        },
+        {
+          "month": "2020-10",
+          "returnPct": -8.736
+        },
+        {
+          "month": "2020-11",
+          "returnPct": 14.528
+        },
+        {
+          "month": "2020-12",
+          "returnPct": 24.928
+        },
+        {
+          "month": "2021-01",
+          "returnPct": 17.12
+        },
+        {
+          "month": "2021-02",
+          "returnPct": -2.032
+        },
+        {
+          "month": "2021-03",
+          "returnPct": 12.4
+        },
+        {
+          "month": "2021-04",
+          "returnPct": -1.664
+        },
+        {
+          "month": "2021-05",
+          "returnPct": 65.28
+        },
+        {
+          "month": "2021-06",
+          "returnPct": -0.282
+        },
+        {
+          "month": "2021-07",
+          "returnPct": 18.597
+        },
+        {
+          "month": "2021-09",
+          "returnPct": -7.531
+        },
+        {
+          "month": "2021-10",
+          "returnPct": -0.105
+        },
+        {
+          "month": "2021-11",
+          "returnPct": -4.288
+        },
+        {
+          "month": "2021-12",
+          "returnPct": -1.248
+        }
+      ]
+    }
+  },
+  "validation": {
+    "trades": 305,
+    "months": 40,
+    "averageMonthlyReturnPct": 5.0726,
+    "annualizedReturnPct": 64.6482,
+    "maximumDrawdownPct": -15.6859,
+    "profitFactor": 1.7137,
+    "winRatePct": 38.6885,
+    "negativeMonths": 24,
+    "monthly": [
+      {
+        "month": "2022-01",
+        "returnPct": -9.12
+      },
+      {
+        "month": "2022-06",
+        "returnPct": -0.87
+      },
+      {
+        "month": "2022-08",
+        "returnPct": -1.762
+      },
+      {
+        "month": "2022-09",
+        "returnPct": 10.72
+      },
+      {
+        "month": "2022-12",
+        "returnPct": -0.52
+      },
+      {
+        "month": "2023-01",
+        "returnPct": -0.045
+      },
+      {
+        "month": "2023-02",
+        "returnPct": -0.411
+      },
+      {
+        "month": "2023-03",
+        "returnPct": 0.27
+      },
+      {
+        "month": "2023-04",
+        "returnPct": -13.344
+      },
+      {
+        "month": "2023-05",
+        "returnPct": 0.352
+      },
+      {
+        "month": "2023-06",
+        "returnPct": 33.44
+      },
+      {
+        "month": "2023-07",
+        "returnPct": -2.272
+      },
+      {
+        "month": "2023-10",
+        "returnPct": -6.464
+      },
+      {
+        "month": "2023-11",
+        "returnPct": -3.936
+      },
+      {
+        "month": "2023-12",
+        "returnPct": 33.92
+      },
+      {
+        "month": "2024-01",
+        "returnPct": -8.096
+      },
+      {
+        "month": "2024-02",
+        "returnPct": -0.15
+      },
+      {
+        "month": "2024-03",
+        "returnPct": -1.489
+      },
+      {
+        "month": "2024-04",
+        "returnPct": 8.598
+      },
+      {
+        "month": "2024-05",
+        "returnPct": -2.826
+      },
+      {
+        "month": "2024-06",
+        "returnPct": -1.398
+      },
+      {
+        "month": "2024-07",
+        "returnPct": 0.046
+      },
+      {
+        "month": "2024-09",
+        "returnPct": -2.2
+      },
+      {
+        "month": "2024-10",
+        "returnPct": 0.727
+      },
+      {
+        "month": "2024-11",
+        "returnPct": -1.332
+      },
+      {
+        "month": "2024-12",
+        "returnPct": -0.354
+      },
+      {
+        "month": "2025-01",
+        "returnPct": -0.573
+      },
+      {
+        "month": "2025-02",
+        "returnPct": -0.33
+      },
+      {
+        "month": "2025-06",
+        "returnPct": -1.005
+      },
+      {
+        "month": "2025-07",
+        "returnPct": 0.196
+      },
+      {
+        "month": "2025-08",
+        "returnPct": 35.621
+      },
+      {
+        "month": "2025-09",
+        "returnPct": -0.542
+      },
+      {
+        "month": "2025-10",
+        "returnPct": 16.402
+      },
+      {
+        "month": "2025-11",
+        "returnPct": 29.988
+      },
+      {
+        "month": "2025-12",
+        "returnPct": -1.273
+      },
+      {
+        "month": "2026-01",
+        "returnPct": 42.168
+      },
+      {
+        "month": "2026-02",
+        "returnPct": 41.787
+      },
+      {
+        "month": "2026-03",
+        "returnPct": 2.52
+      },
+      {
+        "month": "2026-04",
+        "returnPct": -0.8
+      },
+      {
+        "month": "2026-05",
+        "returnPct": 7.26
+      }
+    ]
+  },
+  "frontier": [
+    {
+      "filter": {
+        "maxAtr": 6,
+        "maxGap": 10,
+        "minNearYearHigh": 0.3,
+        "maxDistanceToMa20": 25,
+        "minGlobalComposite": -0.5,
+        "maxRsi": 95,
+        "minVolumeRatio": 0.5,
+        "maxVolumeRatio": 99,
+        "minMarketMom5": -999,
+        "minMarketMove": -999,
+        "minThemeMove": -999,
+        "maxMarketVol": 99
+      },
+      "exposureModel": "volatility_gate_3_2",
+      "train": {
+        "trades": 476,
+        "months": 55,
+        "averageMonthlyReturnPct": 5.3091,
+        "annualizedReturnPct": 68.3612,
+        "maximumDrawdownPct": -23.6342,
+        "profitFactor": 1.8898,
+        "winRatePct": 44.3277,
+        "negativeMonths": 28
+      },
+      "validation": {
+        "trades": 327,
+        "months": 42,
+        "averageMonthlyReturnPct": 3.6918,
+        "annualizedReturnPct": 44.8153,
+        "maximumDrawdownPct": -18.7592,
+        "profitFactor": 1.5811,
+        "winRatePct": 37.0031,
+        "negativeMonths": 27
+      }
+    },
+    {
+      "filter": {
+        "maxAtr": 6,
+        "maxGap": 10,
+        "minNearYearHigh": 0.5,
+        "maxDistanceToMa20": 25,
+        "minGlobalComposite": -0.5,
+        "maxRsi": 95,
+        "minVolumeRatio": 0.5,
+        "maxVolumeRatio": 99,
+        "minMarketMom5": -999,
+        "minMarketMove": -999,
+        "minThemeMove": -999,
+        "maxMarketVol": 99
+      },
+      "exposureModel": "volatility_gate_3_2",
+      "train": {
+        "trades": 476,
+        "months": 55,
+        "averageMonthlyReturnPct": 5.3091,
+        "annualizedReturnPct": 68.3612,
+        "maximumDrawdownPct": -23.6342,
+        "profitFactor": 1.8898,
+        "winRatePct": 44.3277,
+        "negativeMonths": 28
+      },
+      "validation": {
+        "trades": 327,
+        "months": 42,
+        "averageMonthlyReturnPct": 3.6918,
+        "annualizedReturnPct": 44.8153,
+        "maximumDrawdownPct": -18.7592,
+        "profitFactor": 1.5811,
+        "winRatePct": 37.0031,
+        "negativeMonths": 27
+      }
+    },
+    {
+      "filter": {
+        "maxAtr": 6,
+        "maxGap": 10,
+        "minNearYearHigh": 0.7,
+        "maxDistanceToMa20": 25,
+        "minGlobalComposite": -0.5,
+        "maxRsi": 95,
+        "minVolumeRatio": 0.5,
+        "maxVolumeRatio": 99,
+        "minMarketMom5": -999,
+        "minMarketMove": -999,
+        "minThemeMove": -999,
+        "maxMarketVol": 99
+      },
+      "exposureModel": "volatility_gate_3_2",
+      "train": {
+        "trades": 476,
+        "months": 55,
+        "averageMonthlyReturnPct": 5.3091,
+        "annualizedReturnPct": 68.3612,
+        "maximumDrawdownPct": -23.6342,
+        "profitFactor": 1.8898,
+        "winRatePct": 44.3277,
+        "negativeMonths": 28
+      },
+      "validation": {
+        "trades": 327,
+        "months": 42,
+        "averageMonthlyReturnPct": 3.6918,
+        "annualizedReturnPct": 44.8153,
+        "maximumDrawdownPct": -18.7592,
+        "profitFactor": 1.5811,
+        "winRatePct": 37.0031,
+        "negativeMonths": 27
+      }
+    },
+    {
+      "filter": {
+        "maxAtr": 6,
+        "maxGap": 10,
+        "minNearYearHigh": 0.85,
+        "maxDistanceToMa20": 25,
+        "minGlobalComposite": -0.5,
+        "maxRsi": 95,
+        "minVolumeRatio": 0.5,
+        "maxVolumeRatio": 99,
+        "minMarketMom5": -999,
+        "minMarketMove": -999,
+        "minThemeMove": -999,
+        "maxMarketVol": 99
+      },
+      "exposureModel": "volatility_gate_3_2",
+      "train": {
+        "trades": 476,
+        "months": 55,
+        "averageMonthlyReturnPct": 5.3091,
+        "annualizedReturnPct": 68.3612,
+        "maximumDrawdownPct": -23.6342,
+        "profitFactor": 1.8898,
+        "winRatePct": 44.3277,
+        "negativeMonths": 28
+      },
+      "validation": {
+        "trades": 327,
+        "months": 42,
+        "averageMonthlyReturnPct": 3.6918,
+        "annualizedReturnPct": 44.8153,
+        "maximumDrawdownPct": -18.7592,
+        "profitFactor": 1.5811,
+        "winRatePct": 37.0031,
+        "negativeMonths": 27
+      }
+    },
+    {
+      "filter": {
+        "maxAtr": 6,
+        "maxGap": 15,
+        "minNearYearHigh": 0.3,
+        "maxDistanceToMa20": 25,
+        "minGlobalComposite": -0.5,
+        "maxRsi": 95,
+        "minVolumeRatio": 0.5,
+        "maxVolumeRatio": 99,
+        "minMarketMom5": -999,
+        "minMarketMove": -999,
+        "minThemeMove": -999,
+        "maxMarketVol": 99
+      },
+      "exposureModel": "volatility_gate_3_2",
+      "train": {
+        "trades": 476,
+        "months": 55,
+        "averageMonthlyReturnPct": 5.3091,
+        "annualizedReturnPct": 68.3612,
+        "maximumDrawdownPct": -23.6342,
+        "profitFactor": 1.8898,
+        "winRatePct": 44.3277,
+        "negativeMonths": 28
+      },
+      "validation": {
+        "trades": 329,
+        "months": 42,
+        "averageMonthlyReturnPct": 3.765,
+        "annualizedReturnPct": 45.8628,
+        "maximumDrawdownPct": -18.7592,
+        "profitFactor": 1.5865,
+        "winRatePct": 37.0821,
+        "negativeMonths": 27
+      }
+    },
+    {
+      "filter": {
+        "maxAtr": 6,
+        "maxGap": 15,
+        "minNearYearHigh": 0.5,
+        "maxDistanceToMa20": 25,
+        "minGlobalComposite": -0.5,
+        "maxRsi": 95,
+        "minVolumeRatio": 0.5,
+        "maxVolumeRatio": 99,
+        "minMarketMom5": -999,
+        "minMarketMove": -999,
+        "minThemeMove": -999,
+        "maxMarketVol": 99
+      },
+      "exposureModel": "volatility_gate_3_2",
+      "train": {
+        "trades": 476,
+        "months": 55,
+        "averageMonthlyReturnPct": 5.3091,
+        "annualizedReturnPct": 68.3612,
+        "maximumDrawdownPct": -23.6342,
+        "profitFactor": 1.8898,
+        "winRatePct": 44.3277,
+        "negativeMonths": 28
+      },
+      "validation": {
+        "trades": 329,
+        "months": 42,
+        "averageMonthlyReturnPct": 3.765,
+        "annualizedReturnPct": 45.8628,
+        "maximumDrawdownPct": -18.7592,
+        "profitFactor": 1.5865,
+        "winRatePct": 37.0821,
+        "negativeMonths": 27
+      }
+    },
+    {
+      "filter": {
+        "maxAtr": 6,
+        "maxGap": 15,
+        "minNearYearHigh": 0.7,
+        "maxDistanceToMa20": 25,
+        "minGlobalComposite": -0.5,
+        "maxRsi": 95,
+        "minVolumeRatio": 0.5,
+        "maxVolumeRatio": 99,
+        "minMarketMom5": -999,
+        "minMarketMove": -999,
+        "minThemeMove": -999,
+        "maxMarketVol": 99
+      },
+      "exposureModel": "volatility_gate_3_2",
+      "train": {
+        "trades": 476,
+        "months": 55,
+        "averageMonthlyReturnPct": 5.3091,
+        "annualizedReturnPct": 68.3612,
+        "maximumDrawdownPct": -23.6342,
+        "profitFactor": 1.8898,
+        "winRatePct": 44.3277,
+        "negativeMonths": 28
+      },
+      "validation": {
+        "trades": 329,
+        "months": 42,
+        "averageMonthlyReturnPct": 3.765,
+        "annualizedReturnPct": 45.8628,
+        "maximumDrawdownPct": -18.7592,
+        "profitFactor": 1.5865,
+        "winRatePct": 37.0821,
+        "negativeMonths": 27
+      }
+    },
+    {
+      "filter": {
+        "maxAtr": 6,
+        "maxGap": 15,
+        "minNearYearHigh": 0.85,
+        "maxDistanceToMa20": 25,
+        "minGlobalComposite": -0.5,
+        "maxRsi": 95,
+        "minVolumeRatio": 0.5,
+        "maxVolumeRatio": 99,
+        "minMarketMom5": -999,
+        "minMarketMove": -999,
+        "minThemeMove": -999,
+        "maxMarketVol": 99
+      },
+      "exposureModel": "volatility_gate_3_2",
+      "train": {
+        "trades": 476,
+        "months": 55,
+        "averageMonthlyReturnPct": 5.3091,
+        "annualizedReturnPct": 68.3612,
+        "maximumDrawdownPct": -23.6342,
+        "profitFactor": 1.8898,
+        "winRatePct": 44.3277,
+        "negativeMonths": 28
+      },
+      "validation": {
+        "trades": 329,
+        "months": 42,
+        "averageMonthlyReturnPct": 3.765,
+        "annualizedReturnPct": 45.8628,
+        "maximumDrawdownPct": -18.7592,
+        "profitFactor": 1.5865,
+        "winRatePct": 37.0821,
+        "negativeMonths": 27
+      }
+    },
+    {
+      "filter": {
+        "maxAtr": 7,
+        "maxGap": 10,
+        "minNearYearHigh": 0.3,
+        "maxDistanceToMa20": 25,
+        "minGlobalComposite": -0.5,
+        "maxRsi": 95,
+        "minVolumeRatio": 0.5,
+        "maxVolumeRatio": 99,
+        "minMarketMom5": -999,
+        "minMarketMove": -999,
+        "minThemeMove": -999,
+        "maxMarketVol": 99
+      },
+      "exposureModel": "volatility_gate_3_2",
+      "train": {
+        "trades": 482,
+        "months": 55,
+        "averageMonthlyReturnPct": 5.2533,
+        "annualizedReturnPct": 67.2353,
+        "maximumDrawdownPct": -23.6342,
+        "profitFactor": 1.8643,
+        "winRatePct": 44.1909,
+        "negativeMonths": 28
+      },
+      "validation": {
+        "trades": 340,
+        "months": 42,
+        "averageMonthlyReturnPct": 3.8265,
+        "annualizedReturnPct": 45.9742,
+        "maximumDrawdownPct": -21.3745,
+        "profitFactor": 1.5877,
+        "winRatePct": 37.0588,
+        "negativeMonths": 27
+      }
+    },
+    {
+      "filter": {
+        "maxAtr": 7,
+        "maxGap": 10,
+        "minNearYearHigh": 0.5,
+        "maxDistanceToMa20": 25,
+        "minGlobalComposite": -0.5,
+        "maxRsi": 95,
+        "minVolumeRatio": 0.5,
+        "maxVolumeRatio": 99,
+        "minMarketMom5": -999,
+        "minMarketMove": -999,
+        "minThemeMove": -999,
+        "maxMarketVol": 99
+      },
+      "exposureModel": "volatility_gate_3_2",
+      "train": {
+        "trades": 482,
+        "months": 55,
+        "averageMonthlyReturnPct": 5.2533,
+        "annualizedReturnPct": 67.2353,
+        "maximumDrawdownPct": -23.6342,
+        "profitFactor": 1.8643,
+        "winRatePct": 44.1909,
+        "negativeMonths": 28
+      },
+      "validation": {
+        "trades": 340,
+        "months": 42,
+        "averageMonthlyReturnPct": 3.8265,
+        "annualizedReturnPct": 45.9742,
+        "maximumDrawdownPct": -21.3745,
+        "profitFactor": 1.5877,
+        "winRatePct": 37.0588,
+        "negativeMonths": 27
+      }
+    },
+    {
+      "filter": {
+        "maxAtr": 7,
+        "maxGap": 10,
+        "minNearYearHigh": 0.7,
+        "maxDistanceToMa20": 25,
+        "minGlobalComposite": -0.5,
+        "maxRsi": 95,
+        "minVolumeRatio": 0.5,
+        "maxVolumeRatio": 99,
+        "minMarketMom5": -999,
+        "minMarketMove": -999,
+        "minThemeMove": -999,
+        "maxMarketVol": 99
+      },
+      "exposureModel": "volatility_gate_3_2",
+      "train": {
+        "trades": 482,
+        "months": 55,
+        "averageMonthlyReturnPct": 5.2533,
+        "annualizedReturnPct": 67.2353,
+        "maximumDrawdownPct": -23.6342,
+        "profitFactor": 1.8643,
+        "winRatePct": 44.1909,
+        "negativeMonths": 28
+      },
+      "validation": {
+        "trades": 340,
+        "months": 42,
+        "averageMonthlyReturnPct": 3.8265,
+        "annualizedReturnPct": 45.9742,
+        "maximumDrawdownPct": -21.3745,
+        "profitFactor": 1.5877,
+        "winRatePct": 37.0588,
+        "negativeMonths": 27
+      }
+    },
+    {
+      "filter": {
+        "maxAtr": 7,
+        "maxGap": 10,
+        "minNearYearHigh": 0.85,
+        "maxDistanceToMa20": 25,
+        "minGlobalComposite": -0.5,
+        "maxRsi": 95,
+        "minVolumeRatio": 0.5,
+        "maxVolumeRatio": 99,
+        "minMarketMom5": -999,
+        "minMarketMove": -999,
+        "minThemeMove": -999,
+        "maxMarketVol": 99
+      },
+      "exposureModel": "volatility_gate_3_2",
+      "train": {
+        "trades": 482,
+        "months": 55,
+        "averageMonthlyReturnPct": 5.2533,
+        "annualizedReturnPct": 67.2353,
+        "maximumDrawdownPct": -23.6342,
+        "profitFactor": 1.8643,
+        "winRatePct": 44.1909,
+        "negativeMonths": 28
+      },
+      "validation": {
+        "trades": 340,
+        "months": 42,
+        "averageMonthlyReturnPct": 3.8265,
+        "annualizedReturnPct": 45.9742,
+        "maximumDrawdownPct": -21.3745,
+        "profitFactor": 1.5877,
+        "winRatePct": 37.0588,
+        "negativeMonths": 27
+      }
+    },
+    {
+      "filter": {
+        "maxAtr": 7,
+        "maxGap": 15,
+        "minNearYearHigh": 0.3,
+        "maxDistanceToMa20": 25,
+        "minGlobalComposite": -0.5,
+        "maxRsi": 95,
+        "minVolumeRatio": 0.5,
+        "maxVolumeRatio": 99,
+        "minMarketMom5": -999,
+        "minMarketMove": -999,
+        "minThemeMove": -999,
+        "maxMarketVol": 99
+      },
+      "exposureModel": "volatility_gate_3_2",
+      "train": {
+        "trades": 482,
+        "months": 55,
+        "averageMonthlyReturnPct": 5.2533,
+        "annualizedReturnPct": 67.2353,
+        "maximumDrawdownPct": -23.6342,
+        "profitFactor": 1.8643,
+        "winRatePct": 44.1909,
+        "negativeMonths": 28
+      },
+      "validation": {
+        "trades": 342,
+        "months": 42,
+        "averageMonthlyReturnPct": 3.8996,
+        "annualizedReturnPct": 47.0301,
+        "maximumDrawdownPct": -21.3745,
+        "profitFactor": 1.5928,
+        "winRatePct": 37.1345,
+        "negativeMonths": 27
+      }
+    },
+    {
+      "filter": {
+        "maxAtr": 7,
+        "maxGap": 15,
+        "minNearYearHigh": 0.5,
+        "maxDistanceToMa20": 25,
+        "minGlobalComposite": -0.5,
+        "maxRsi": 95,
+        "minVolumeRatio": 0.5,
+        "maxVolumeRatio": 99,
+        "minMarketMom5": -999,
+        "minMarketMove": -999,
+        "minThemeMove": -999,
+        "maxMarketVol": 99
+      },
+      "exposureModel": "volatility_gate_3_2",
+      "train": {
+        "trades": 482,
+        "months": 55,
+        "averageMonthlyReturnPct": 5.2533,
+        "annualizedReturnPct": 67.2353,
+        "maximumDrawdownPct": -23.6342,
+        "profitFactor": 1.8643,
+        "winRatePct": 44.1909,
+        "negativeMonths": 28
+      },
+      "validation": {
+        "trades": 342,
+        "months": 42,
+        "averageMonthlyReturnPct": 3.8996,
+        "annualizedReturnPct": 47.0301,
+        "maximumDrawdownPct": -21.3745,
+        "profitFactor": 1.5928,
+        "winRatePct": 37.1345,
+        "negativeMonths": 27
+      }
+    },
+    {
+      "filter": {
+        "maxAtr": 7,
+        "maxGap": 15,
+        "minNearYearHigh": 0.7,
+        "maxDistanceToMa20": 25,
+        "minGlobalComposite": -0.5,
+        "maxRsi": 95,
+        "minVolumeRatio": 0.5,
+        "maxVolumeRatio": 99,
+        "minMarketMom5": -999,
+        "minMarketMove": -999,
+        "minThemeMove": -999,
+        "maxMarketVol": 99
+      },
+      "exposureModel": "volatility_gate_3_2",
+      "train": {
+        "trades": 482,
+        "months": 55,
+        "averageMonthlyReturnPct": 5.2533,
+        "annualizedReturnPct": 67.2353,
+        "maximumDrawdownPct": -23.6342,
+        "profitFactor": 1.8643,
+        "winRatePct": 44.1909,
+        "negativeMonths": 28
+      },
+      "validation": {
+        "trades": 342,
+        "months": 42,
+        "averageMonthlyReturnPct": 3.8996,
+        "annualizedReturnPct": 47.0301,
+        "maximumDrawdownPct": -21.3745,
+        "profitFactor": 1.5928,
+        "winRatePct": 37.1345,
+        "negativeMonths": 27
+      }
+    },
+    {
+      "filter": {
+        "maxAtr": 7,
+        "maxGap": 15,
+        "minNearYearHigh": 0.85,
+        "maxDistanceToMa20": 25,
+        "minGlobalComposite": -0.5,
+        "maxRsi": 95,
+        "minVolumeRatio": 0.5,
+        "maxVolumeRatio": 99,
+        "minMarketMom5": -999,
+        "minMarketMove": -999,
+        "minThemeMove": -999,
+        "maxMarketVol": 99
+      },
+      "exposureModel": "volatility_gate_3_2",
+      "train": {
+        "trades": 482,
+        "months": 55,
+        "averageMonthlyReturnPct": 5.2533,
+        "annualizedReturnPct": 67.2353,
+        "maximumDrawdownPct": -23.6342,
+        "profitFactor": 1.8643,
+        "winRatePct": 44.1909,
+        "negativeMonths": 28
+      },
+      "validation": {
+        "trades": 342,
+        "months": 42,
+        "averageMonthlyReturnPct": 3.8996,
+        "annualizedReturnPct": 47.0301,
+        "maximumDrawdownPct": -21.3745,
+        "profitFactor": 1.5928,
+        "winRatePct": 37.1345,
+        "negativeMonths": 27
+      }
+    },
+    {
+      "filter": {
+        "maxAtr": 6,
+        "maxGap": 10,
+        "minNearYearHigh": 0.3,
+        "maxDistanceToMa20": 25,
+        "minGlobalComposite": -0.5,
+        "maxRsi": 88,
+        "minVolumeRatio": 0.5,
+        "maxVolumeRatio": 99,
+        "minMarketMom5": -999,
+        "minMarketMove": -999,
+        "minThemeMove": -999,
+        "maxMarketVol": 99
+      },
+      "exposureModel": "volatility_gate_3_2",
+      "train": {
+        "trades": 475,
+        "months": 55,
+        "averageMonthlyReturnPct": 5.2393,
+        "annualizedReturnPct": 67.0974,
+        "maximumDrawdownPct": -23.6342,
+        "profitFactor": 1.8811,
+        "winRatePct": 44.2105,
+        "negativeMonths": 28
+      },
+      "validation": {
+        "trades": 324,
+        "months": 42,
+        "averageMonthlyReturnPct": 3.6093,
+        "annualizedReturnPct": 43.4034,
+        "maximumDrawdownPct": -17.2739,
+        "profitFactor": 1.5822,
+        "winRatePct": 37.037,
+        "negativeMonths": 27
+      }
+    },
+    {
+      "filter": {
+        "maxAtr": 6,
+        "maxGap": 10,
+        "minNearYearHigh": 0.5,
+        "maxDistanceToMa20": 25,
+        "minGlobalComposite": -0.5,
+        "maxRsi": 88,
+        "minVolumeRatio": 0.5,
+        "maxVolumeRatio": 99,
+        "minMarketMom5": -999,
+        "minMarketMove": -999,
+        "minThemeMove": -999,
+        "maxMarketVol": 99
+      },
+      "exposureModel": "volatility_gate_3_2",
+      "train": {
+        "trades": 475,
+        "months": 55,
+        "averageMonthlyReturnPct": 5.2393,
+        "annualizedReturnPct": 67.0974,
+        "maximumDrawdownPct": -23.6342,
+        "profitFactor": 1.8811,
+        "winRatePct": 44.2105,
+        "negativeMonths": 28
+      },
+      "validation": {
+        "trades": 324,
+        "months": 42,
+        "averageMonthlyReturnPct": 3.6093,
+        "annualizedReturnPct": 43.4034,
+        "maximumDrawdownPct": -17.2739,
+        "profitFactor": 1.5822,
+        "winRatePct": 37.037,
+        "negativeMonths": 27
+      }
+    },
+    {
+      "filter": {
+        "maxAtr": 6,
+        "maxGap": 10,
+        "minNearYearHigh": 0.7,
+        "maxDistanceToMa20": 25,
+        "minGlobalComposite": -0.5,
+        "maxRsi": 88,
+        "minVolumeRatio": 0.5,
+        "maxVolumeRatio": 99,
+        "minMarketMom5": -999,
+        "minMarketMove": -999,
+        "minThemeMove": -999,
+        "maxMarketVol": 99
+      },
+      "exposureModel": "volatility_gate_3_2",
+      "train": {
+        "trades": 475,
+        "months": 55,
+        "averageMonthlyReturnPct": 5.2393,
+        "annualizedReturnPct": 67.0974,
+        "maximumDrawdownPct": -23.6342,
+        "profitFactor": 1.8811,
+        "winRatePct": 44.2105,
+        "negativeMonths": 28
+      },
+      "validation": {
+        "trades": 324,
+        "months": 42,
+        "averageMonthlyReturnPct": 3.6093,
+        "annualizedReturnPct": 43.4034,
+        "maximumDrawdownPct": -17.2739,
+        "profitFactor": 1.5822,
+        "winRatePct": 37.037,
+        "negativeMonths": 27
+      }
+    },
+    {
+      "filter": {
+        "maxAtr": 6,
+        "maxGap": 10,
+        "minNearYearHigh": 0.85,
+        "maxDistanceToMa20": 25,
+        "minGlobalComposite": -0.5,
+        "maxRsi": 88,
+        "minVolumeRatio": 0.5,
+        "maxVolumeRatio": 99,
+        "minMarketMom5": -999,
+        "minMarketMove": -999,
+        "minThemeMove": -999,
+        "maxMarketVol": 99
+      },
+      "exposureModel": "volatility_gate_3_2",
+      "train": {
+        "trades": 475,
+        "months": 55,
+        "averageMonthlyReturnPct": 5.2393,
+        "annualizedReturnPct": 67.0974,
+        "maximumDrawdownPct": -23.6342,
+        "profitFactor": 1.8811,
+        "winRatePct": 44.2105,
+        "negativeMonths": 28
+      },
+      "validation": {
+        "trades": 324,
+        "months": 42,
+        "averageMonthlyReturnPct": 3.6093,
+        "annualizedReturnPct": 43.4034,
+        "maximumDrawdownPct": -17.2739,
+        "profitFactor": 1.5822,
+        "winRatePct": 37.037,
+        "negativeMonths": 27
+      }
+    }
+  ],
+  "targetMonthlyReturnPct": 5,
+  "targetGapPct": -0.0726,
+  "passed": true,
+  "practicalRiskWarning": "此版本靠低波動期提高曝險達標，驗證回撤低於 -20%，但訓練期回撤低於 -20%，仍需更嚴格資金與下單單位審核。",
+  "paperTradingReady": false,
+  "liveTradingReady": false,
+  "conclusion": "達到月均 5% 研究門檻，但仍需更完整成交層、資金限制與紙上交易驗證，不能直接實盤。"
+}

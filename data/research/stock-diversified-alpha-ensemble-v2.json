@@ -1,0 +1,176 @@
+{
+  "generatedAt": "2026-07-21T18:13:29.800Z",
+  "strategyFamilyId": "stock_diversified_alpha_ensemble_v2:1f87c1c846991345a78c0b83",
+  "experimentHash": "5a118ef231e3da782c7f9299",
+  "universe": "純台股普通股；ETF／0050 交易占比 0%，0050 僅作比較",
+  "validationPeriod": "2020-09-01–2026-06-09",
+  "testedProfiles": [
+    {
+      "profile": {
+        "id": "base",
+        "positionMultiplier": 1,
+        "accountRiskPct": 0.5,
+        "maxPositionPct": 10,
+        "maxOpenPositions": 15,
+        "exposure": 80
+      },
+      "metrics": {
+        "months": 70,
+        "averageMonthlyReturnPct": 0.2925,
+        "annualizedReturnPct": 3.3142,
+        "maximumDrawdownPct": -10.6334,
+        "trades": 585,
+        "winRatePct": 45.4701,
+        "profitFactor": 1.1852,
+        "concentrationPct": 1.0256,
+        "averageExposurePct": 21.1653,
+        "sourceTrades": {
+          "急跌止穩": 247,
+          "意外營收": 338
+        }
+      },
+      "fairRandom": {
+        "months": 70,
+        "averageMonthlyReturnPct": 0.0939,
+        "annualizedReturnPct": 0.7887,
+        "maximumDrawdownPct": -17.5453,
+        "trades": 913,
+        "winRatePct": 43.1544,
+        "profitFactor": 1.0291,
+        "concentrationPct": 0.5476,
+        "averageExposurePct": 23.9584,
+        "sourceTrades": {
+          "急跌止穩": 753,
+          "意外營收": 160
+        }
+      }
+    },
+    {
+      "profile": {
+        "id": "profit_push",
+        "positionMultiplier": 2,
+        "accountRiskPct": 1,
+        "maxPositionPct": 18,
+        "maxOpenPositions": 10,
+        "exposure": 70
+      },
+      "metrics": {
+        "months": 70,
+        "averageMonthlyReturnPct": 0.3627,
+        "annualizedReturnPct": 4.0662,
+        "maximumDrawdownPct": -14.9334,
+        "trades": 391,
+        "winRatePct": 52.1739,
+        "profitFactor": 1.1931,
+        "concentrationPct": 0.7673,
+        "averageExposurePct": 21.7727,
+        "sourceTrades": {
+          "意外營收": 184,
+          "急跌止穩": 207
+        }
+      },
+      "fairRandom": {
+        "months": 70,
+        "averageMonthlyReturnPct": 0.4285,
+        "annualizedReturnPct": 4.6091,
+        "maximumDrawdownPct": -16.6851,
+        "trades": 619,
+        "winRatePct": 46.3651,
+        "profitFactor": 1.1463,
+        "concentrationPct": 0.6462,
+        "averageExposurePct": 26.3432,
+        "sourceTrades": {
+          "急跌止穩": 546,
+          "意外營收": 73
+        }
+      }
+    },
+    {
+      "profile": {
+        "id": "balanced_boost",
+        "positionMultiplier": 1.5,
+        "accountRiskPct": 0.75,
+        "maxPositionPct": 14,
+        "maxOpenPositions": 12,
+        "exposure": 75
+      },
+      "metrics": {
+        "months": 70,
+        "averageMonthlyReturnPct": 0.1163,
+        "annualizedReturnPct": 1.0049,
+        "maximumDrawdownPct": -10.909,
+        "trades": 486,
+        "winRatePct": 46.0905,
+        "profitFactor": 1.0438,
+        "concentrationPct": 1.2346,
+        "averageExposurePct": 22.9374,
+        "sourceTrades": {
+          "意外營收": 255,
+          "急跌止穩": 231
+        }
+      },
+      "fairRandom": {
+        "months": 70,
+        "averageMonthlyReturnPct": 0.057,
+        "annualizedReturnPct": 0.2925,
+        "maximumDrawdownPct": -15.5675,
+        "trades": 718,
+        "winRatePct": 43.7326,
+        "profitFactor": 1.0097,
+        "concentrationPct": 0.5571,
+        "averageExposurePct": 25.3335,
+        "sourceTrades": {
+          "急跌止穩": 622,
+          "意外營收": 96
+        }
+      }
+    }
+  ],
+  "selectedProfile": {
+    "id": "base",
+    "positionMultiplier": 1,
+    "accountRiskPct": 0.5,
+    "maxPositionPct": 10,
+    "maxOpenPositions": 15,
+    "exposure": 80
+  },
+  "metrics": {
+    "months": 70,
+    "averageMonthlyReturnPct": 0.2925,
+    "annualizedReturnPct": 3.3142,
+    "maximumDrawdownPct": -10.6334,
+    "trades": 585,
+    "winRatePct": 45.4701,
+    "profitFactor": 1.1852,
+    "concentrationPct": 1.0256,
+    "averageExposurePct": 21.1653,
+    "sourceTrades": {
+      "急跌止穩": 247,
+      "意外營收": 338
+    }
+  },
+  "fairRandom": {
+    "months": 70,
+    "averageMonthlyReturnPct": 0.0939,
+    "annualizedReturnPct": 0.7887,
+    "maximumDrawdownPct": -17.5453,
+    "trades": 913,
+    "winRatePct": 43.1544,
+    "profitFactor": 1.0291,
+    "concentrationPct": 0.5476,
+    "averageExposurePct": 23.9584,
+    "sourceTrades": {
+      "急跌止穩": 753,
+      "意外營收": 160
+    }
+  },
+  "benchmark0050": {
+    "averageMonthlyReturnPct": 2.2346
+  },
+  "targetMonthlyReturnPct": 5,
+  "gapToTargetPct": 4.7075,
+  "targetMet": false,
+  "paperTradingReady": false,
+  "liveTradingReady": false,
+  "conclusion": "多事件純個股投組仍未達月均 5%；目前 0.2925%。"
+}

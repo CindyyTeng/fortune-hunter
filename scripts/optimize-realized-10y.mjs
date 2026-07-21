@@ -28,6 +28,10 @@ const STOCK_FIXED_OOS_V8_OUTPUT = new URL(
   '../data/research/stock-fixed-top5-oos-v8.json',
   import.meta.url
 );
+const STOCK_FIXED_OOS_V9_OUTPUT = new URL(
+  '../data/research/stock-fixed-top5-oos-v9.json',
+  import.meta.url
+);
 const STOCK_META_OUTPUT = new URL('../data/research/stock-meta-selector-v1.json', import.meta.url);
 const STOCK_VARIANT_DIAGNOSTIC_OUTPUT = new URL(
   '../data/research/stock-variant-trade-diagnostics-v1.json',
@@ -4305,6 +4309,104 @@ async function main() {
     await fs.writeFile(STOCK_FIXED_OOS_V8_OUTPUT, `${JSON.stringify(output, null, 2)}\n`, 'utf8');
     console.log(JSON.stringify({
       output: STOCK_FIXED_OOS_V8_OUTPUT.pathname,
+      selection: output.selection,
+      validation: output.validation,
+      metrics,
+      benchmark0050,
+      targetMet,
+      conclusion: output.conclusion
+    }, null, 2));
+    return;
+  }
+  if (process.argv.includes('--stock-fixed-top5-oos-v9')) {
+    const search = JSON.parse(await fs.readFile(OUTPUT, 'utf8'));
+    const base = { ...search.bestBalanced.config };
+    delete base.collectTrades;
+    const configs = fixedTopFiveOosV8Configs(base);
+    const daysByExitRule = new Map();
+    for (const config of configs) {
+      const key = JSON.stringify(config.exitRule);
+      if (!daysByExitRule.has(key)) daysByExitRule.set(key, broadDaysForExitRule(config.exitRule));
+    }
+    const daysFor = config => daysByExitRule.get(JSON.stringify(config.exitRule));
+    const trainRows = configs.map(config => simulateRange(
+      daysFor(config),
+      config,
+      marketRegimes,
+      '2016-08',
+      '2021-12'
+    ));
+    const selected = trainRows.filter(result => (
+      result.trades >= 300
+      && result.maxDrawdownPct >= -20
+      && result.config.monthlyEquityBrakePct !== null
+    )).sort((a, b) => (
+      b.full.average - a.full.average
+      || b.trades - a.trades
+      || b.maxDrawdownPct - a.maxDrawdownPct
+    ))[0];
+    if (!selected) throw new Error('fixed top5 v9 找不到符合訓練門檻的組合');
+    const validation = simulateRange(
+      daysFor(selected.config),
+      selected.config,
+      marketRegimes,
+      '2022-01',
+      '2026-05',
+      true,
+      true
+    );
+    const quality = tradeQuality(validation);
+    const etfHistory = JSON.parse(await fs.readFile(ETF_HISTORY, 'utf8'));
+    const benchmark0050 = benchmarkStats(
+      etfHistory.series['0050.TW'] || [],
+      '2022-01-01',
+      '2026-05-31'
+    );
+    const metrics = {
+      averageMonthlyReturnPct: round(validation.full.average),
+      annualizedReturnPct: annualizedReturn(validation.monthly),
+      maximumDrawdownPct: validation.maxDrawdownPct,
+      trades: validation.trades,
+      winRatePct: quality.winRatePct,
+      profitFactor: quality.profitFactor,
+      topFiveProfitContributionPct: quality.topFiveProfitContributionPct,
+      beats0050: validation.full.average > benchmark0050.averageMonthlyReturnPct
+    };
+    const targetMet = metrics.averageMonthlyReturnPct >= 5
+      && metrics.maximumDrawdownPct >= -20
+      && metrics.trades >= 300
+      && metrics.beats0050;
+    const output = {
+      generatedAt: new Date().toISOString(),
+      strategyId: 'stock_fixed_top5_oos_v9',
+      universe: '純個股，不使用 ETF 或 0050 作為交易標的；0050 僅作為比較基準',
+      selection: {
+        trainPeriod: '2016-08～2021-12',
+        rule: '沿用 v8 參數集合與完整 simulateRange；訓練期先要求至少 300 筆且最大回撤不低於 -20%，再優先選訓練月均報酬最高組合',
+        testedConfigs: configs.length,
+        selectedConfig: riskConfig(selected.config),
+        trainAverageMonthlyReturnPct: round(selected.full.average),
+        trainMaximumDrawdownPct: selected.maxDrawdownPct,
+        trainTrades: selected.trades
+      },
+      validation: {
+        period: '2022-01～2026-05',
+        months: validation.full.months,
+        parametersFrozen: true
+      },
+      metrics,
+      benchmark0050,
+      targetMonthlyReturnPct: 5,
+      targetMet,
+      paperTradingReady: false,
+      liveTradingReady: false,
+      conclusion: targetMet
+        ? '通過可信月均 5% 門檻，但仍需人工驗收後才可進紙上交易。'
+        : `未達可信月均 5% 門檻，目前月均 ${metrics.averageMonthlyReturnPct}% ，不可紙上交易或實盤。`
+    };
+    await fs.writeFile(STOCK_FIXED_OOS_V9_OUTPUT, `${JSON.stringify(output, null, 2)}\n`, 'utf8');
+    console.log(JSON.stringify({
+      output: STOCK_FIXED_OOS_V9_OUTPUT.pathname,
       selection: output.selection,
       validation: output.validation,
       metrics,

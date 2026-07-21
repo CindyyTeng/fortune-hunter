@@ -4774,6 +4774,133 @@ async function main() {
     console.log(JSON.stringify({ output: STOCK_FIXED_OOS_V11_OUTPUT.pathname, selection: output.selection, validation: output.validation, metrics, benchmark0050, targetMet, conclusion: output.conclusion }, null, 2));
     return;
   }
+  if (process.argv.includes('--stock-fixed-top5-oos-v13')) {
+    const outputFile = new URL('../data/research/stock-fixed-top5-oos-v13.json', import.meta.url);
+    const reportFile = new URL('../docs/STOCK_FIXED_TOP5_OOS_V13.md', import.meta.url);
+    const search = JSON.parse(await fs.readFile(OUTPUT, 'utf8'));
+    const base = { ...search.bestBalanced.config };
+    delete base.collectTrades;
+    const configs = fixedTopFiveOosV10Configs(base);
+    const trainSegments = [
+      { id: 'early', start: '2016-08', end: '2018-05' },
+      { id: 'middle', start: '2018-06', end: '2020-03' },
+      { id: 'late', start: '2020-04', end: '2021-12' }
+    ];
+    const daysByExitRule = new Map();
+    for (const config of configs) {
+      const key = JSON.stringify(config.exitRule);
+      if (!daysByExitRule.has(key)) daysByExitRule.set(key, broadDaysForExitRule(config.exitRule));
+    }
+    const daysFor = config => daysByExitRule.get(JSON.stringify(config.exitRule));
+    const trainRows = configs.map(config => {
+      const fullTrain = simulateRange(daysFor(config), config, marketRegimes, '2016-08', '2021-12', true, true);
+      const fullQuality = tradeQuality(fullTrain);
+      const segmentResults = trainSegments.map(segment => {
+        const result = simulateRange(daysFor(config), config, marketRegimes, segment.start, segment.end, true, true);
+        const quality = tradeQuality(result);
+        return {
+          id: segment.id,
+          period: `${segment.start}~${segment.end}`,
+          averageMonthlyReturnPct: round(result.full.average),
+          maximumDrawdownPct: result.maxDrawdownPct,
+          trades: result.trades,
+          profitFactor: quality.profitFactor
+        };
+      });
+      const averages = segmentResults.map(row => row.averageMonthlyReturnPct);
+      const positiveSegments = averages.filter(value => value > 0).length;
+      const worstSegmentAveragePct = Math.min(...averages);
+      const worstSegmentDrawdownPct = Math.min(...segmentResults.map(row => row.maximumDrawdownPct));
+      const worstSegmentProfitFactor = Math.min(...segmentResults.map(row => row.profitFactor));
+      const stabilityScore = fullTrain.full.average * 0.8
+        + worstSegmentAveragePct * 1.2
+        + Math.min(fullQuality.profitFactor, 2.5) * 0.55
+        + Math.min(worstSegmentProfitFactor, 2) * 0.45
+        + positiveSegments * 0.35
+        + fullTrain.maxDrawdownPct * 0.035
+        + Math.min(fullTrain.trades, 700) / 700 * 0.25;
+      return {
+        ...fullTrain,
+        fullProfitFactor: fullQuality.profitFactor,
+        trainSegments: segmentResults,
+        positiveSegments,
+        worstSegmentAveragePct,
+        worstSegmentDrawdownPct,
+        worstSegmentProfitFactor,
+        stabilityScore
+      };
+    });
+    const selected = trainRows.filter(result => (
+      result.trades >= 300
+      && result.maxDrawdownPct >= -22
+      && result.fullProfitFactor >= 1.2
+      && result.positiveSegments >= 3
+      && result.worstSegmentAveragePct >= 0
+      && result.worstSegmentDrawdownPct >= -18
+      && result.worstSegmentProfitFactor >= 1
+      && result.config.monthlyEquityBrakePct !== null
+    )).sort((a, b) => (
+      b.stabilityScore - a.stabilityScore
+      || b.full.average - a.full.average
+      || b.maxDrawdownPct - a.maxDrawdownPct
+      || b.trades - a.trades
+    ))[0];
+    if (!selected) throw new Error('fixed top5 v13 no qualified train candidate');
+    const validation = simulateRange(daysFor(selected.config), selected.config, marketRegimes, '2022-01', '2026-05', true, true);
+    const quality = tradeQuality(validation);
+    const etfHistory = JSON.parse(await fs.readFile(ETF_HISTORY, 'utf8'));
+    const benchmark0050 = benchmarkStats(etfHistory.series['0050.TW'] || [], '2022-01-01', '2026-05-31');
+    const metrics = {
+      averageMonthlyReturnPct: round(validation.full.average),
+      annualizedReturnPct: annualizedReturn(validation.monthly),
+      maximumDrawdownPct: validation.maxDrawdownPct,
+      trades: validation.trades,
+      winRatePct: quality.winRatePct,
+      profitFactor: quality.profitFactor,
+      topFiveProfitContributionPct: quality.topFiveProfitContributionPct,
+      beats0050: validation.full.average > benchmark0050.averageMonthlyReturnPct
+    };
+    const targetMet = metrics.averageMonthlyReturnPct >= 5
+      && metrics.maximumDrawdownPct >= -20
+      && metrics.trades >= 300
+      && metrics.beats0050;
+    const output = {
+      generatedAt: new Date().toISOString(),
+      strategyId: 'stock_fixed_top5_oos_v13',
+      universe: '純個股候選；ETF 與 0050 僅作比較基準。',
+      selection: {
+        trainPeriod: '2016-08~2021-12',
+        validationPeriod: '2022-01~2026-05',
+        rule: '沿用 fixed-top5 v12 完整成交與風控模型，改用更嚴格分段穩定、PF 與回撤排序。',
+        testedConfigs: configs.length,
+        selectedConfig: riskConfig(selected.config),
+        trainAverageMonthlyReturnPct: round(selected.full.average),
+        trainMaximumDrawdownPct: selected.maxDrawdownPct,
+        trainTrades: selected.trades,
+        trainProfitFactor: selected.fullProfitFactor,
+        stabilityScore: round(selected.stabilityScore),
+        positiveSegments: selected.positiveSegments,
+        worstSegmentAveragePct: selected.worstSegmentAveragePct,
+        worstSegmentDrawdownPct: selected.worstSegmentDrawdownPct,
+        worstSegmentProfitFactor: selected.worstSegmentProfitFactor,
+        trainSegments: selected.trainSegments
+      },
+      validation: { period: '2022-01~2026-05', months: validation.full.months, parametersFrozen: true },
+      metrics,
+      benchmark0050,
+      targetMonthlyReturnPct: 5,
+      targetMet,
+      paperTradingReady: false,
+      liveTradingReady: false,
+      conclusion: targetMet
+        ? '達到月均 5% 觀察門檻，但仍需紙上交易驗證。'
+        : `未達月均 5% 可信門檻；目前 validation 月均 ${metrics.averageMonthlyReturnPct}%，不可 paper trading、不可實盤。`
+    };
+    await fs.writeFile(outputFile, `${JSON.stringify(output, null, 2)}\n`, 'utf8');
+    await fs.writeFile(reportFile, `# 固定 Top5 純個股 OOS v13\n\n- 驗證期間：2022-01~2026-05\n- 訓練選擇：分段穩定、PF、回撤優先\n- 月均報酬：${metrics.averageMonthlyReturnPct}%\n- 年化報酬：${metrics.annualizedReturnPct}%\n- 最大回撤：${metrics.maximumDrawdownPct}%\n- 交易筆數：${metrics.trades}\n- Profit Factor：${metrics.profitFactor}\n- 勝率：${metrics.winRatePct}%\n- 0050 同期月均：${benchmark0050.averageMonthlyReturnPct}%\n- 結論：${output.conclusion}\n\n本策略仍以個股為主，排除 ETF/0050 作為交易標的。若未達標，不可接券商 API 實盤。\n`, 'utf8');
+    console.log(JSON.stringify({ output: outputFile.pathname, report: reportFile.pathname, selection: output.selection, validation: output.validation, metrics, benchmark0050, targetMet, conclusion: output.conclusion }, null, 2));
+    return;
+  }
   if (process.argv.includes('--stock-fixed-top5-oos-v12')) {
     const search = JSON.parse(await fs.readFile(OUTPUT, 'utf8'));
     const base = { ...search.bestBalanced.config };

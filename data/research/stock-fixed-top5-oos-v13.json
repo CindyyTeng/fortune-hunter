@@ -1,0 +1,104 @@
+{
+  "generatedAt": "2026-07-21T17:13:24.171Z",
+  "strategyId": "stock_fixed_top5_oos_v13",
+  "universe": "純個股候選；ETF 與 0050 僅作比較基準。",
+  "selection": {
+    "trainPeriod": "2016-08~2021-12",
+    "validationPeriod": "2022-01~2026-05",
+    "rule": "沿用 fixed-top5 v12 完整成交與風控模型，改用更嚴格分段穩定、PF 與回撤排序。",
+    "testedConfigs": 1536,
+    "selectedConfig": {
+      "positionPct": 8,
+      "accountRiskPct": 1.25,
+      "maxOpenPositions": 12,
+      "maxEntriesPerDay": 5,
+      "monthlyEquityBrakePct": -6,
+      "accountDrawdownBrakePct": -8,
+      "accountCooldownDays": 10,
+      "consecutiveLossLimit": 6,
+      "lossStreakCooldownDays": 8,
+      "targetMarketVolPct": 20,
+      "minimumVolatilityMultiplier": 0.25,
+      "maximumVolatilityMultiplier": 1,
+      "momentumCrashMom20Pct": -3,
+      "momentumCrashReboundPct": 1,
+      "momentumCrashMultiplier": 0,
+      "regimeMode": "none",
+      "regimeSlowMa": 40,
+      "regimeMomentumDays": 10,
+      "regimeMomentumThreshold": -1,
+      "rankMode": "score",
+      "exitRule": {
+        "holdDays": 20,
+        "trail": null,
+        "noFollow": false,
+        "stopLossPct": null,
+        "overrideStopLossPct": 5,
+        "stopMode": "close"
+      }
+    },
+    "trainAverageMonthlyReturnPct": 1.81,
+    "trainMaximumDrawdownPct": -11.6,
+    "trainTrades": 525,
+    "trainProfitFactor": 1.84,
+    "stabilityScore": 4.24,
+    "positiveSegments": 3,
+    "worstSegmentAveragePct": 0.36,
+    "worstSegmentDrawdownPct": -11.6,
+    "worstSegmentProfitFactor": 1.16,
+    "trainSegments": [
+      {
+        "id": "early",
+        "period": "2016-08~2018-05",
+        "averageMonthlyReturnPct": 0.57,
+        "maximumDrawdownPct": -11.6,
+        "trades": 162,
+        "profitFactor": 1.16
+      },
+      {
+        "id": "middle",
+        "period": "2018-06~2020-03",
+        "averageMonthlyReturnPct": 0.36,
+        "maximumDrawdownPct": -11.03,
+        "trades": 147,
+        "profitFactor": 1.16
+      },
+      {
+        "id": "late",
+        "period": "2020-04~2021-12",
+        "averageMonthlyReturnPct": 3.1,
+        "maximumDrawdownPct": -9.3,
+        "trades": 217,
+        "profitFactor": 1.9
+      }
+    ]
+  },
+  "validation": {
+    "period": "2022-01~2026-05",
+    "months": 53,
+    "parametersFrozen": true
+  },
+  "metrics": {
+    "averageMonthlyReturnPct": 1.52,
+    "annualizedReturnPct": 17.69,
+    "maximumDrawdownPct": -18.15,
+    "trades": 388,
+    "winRatePct": 36.86,
+    "profitFactor": 1.6,
+    "topFiveProfitContributionPct": 17.05,
+    "beats0050": false
+  },
+  "benchmark0050": {
+    "startDate": "2022-01-03",
+    "endDate": "2026-05-29",
+    "months": 52,
+    "averageMonthlyReturnPct": 2.38,
+    "annualizedReturnPct": 27.18,
+    "maxDrawdownPct": -36.38
+  },
+  "targetMonthlyReturnPct": 5,
+  "targetMet": false,
+  "paperTradingReady": false,
+  "liveTradingReady": false,
+  "conclusion": "未達月均 5% 可信門檻；目前 validation 月均 1.52%，不可 paper trading、不可實盤。"
+}

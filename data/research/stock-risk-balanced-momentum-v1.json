@@ -1,0 +1,103 @@
+{
+  "generatedAt": "2026-07-21T15:19:22.135Z",
+  "strategyId": "stock_risk_balanced_momentum_v1",
+  "identity": {
+    "strategyFamilyId": "stock_risk_balanced_momentum_v1:3395dfaccd77932ad24a66b7",
+    "experimentHash": "9068045080497d8811e90337"
+  },
+  "universe": {
+    "candidateTrades": 66741,
+    "commonStockTrades": 66700,
+    "etfExcluded": true,
+    "benchmarkOnly0050": true
+  },
+  "validation": {
+    "trainMonths": 60,
+    "validationMonths": 18,
+    "stepMonths": 18,
+    "folds": 3,
+    "startMonth": "2021-07",
+    "endMonth": "2025-12",
+    "configsTested": 1440
+  },
+  "metrics": {
+    "months": 57,
+    "averageMonthlyReturnPct": -0.5105,
+    "annualizedReturnPct": -6.0706,
+    "maximumDrawdownPct": -10.5424,
+    "trades": 52,
+    "winRatePct": 25,
+    "profitFactor": 0.1949,
+    "topFiveProfitContributionPct": 80.668,
+    "negativeMonths": 8
+  },
+  "benchmark0050": {
+    "averageMonthlyReturnPct": 1.349,
+    "months": 54
+  },
+  "targetMonthlyReturnPct": 5,
+  "targetGapPct": 5.5105,
+  "checks": {
+    "target5Pct": false,
+    "drawdownUnder20Pct": true,
+    "tradesAbove300": false,
+    "profitFactor": false,
+    "beats0050": false,
+    "paperTradingReady": false,
+    "liveTradingReady": false
+  },
+  "folds": [
+    {
+      "trainPeriod": "2016-07～2021-06",
+      "validationPeriod": "2021-07～2022-12",
+      "selectedConfigId": "broad_quality_momentum_h5_s5_score_open6_p8_r1.5",
+      "train": {
+        "averageMonthlyReturnPct": -0.152,
+        "maximumDrawdownPct": -9.0562,
+        "trades": 26,
+        "profitFactor": 0.2267
+      },
+      "validation": {
+        "averageMonthlyReturnPct": -0.507,
+        "maximumDrawdownPct": -9.4019,
+        "trades": 9,
+        "profitFactor": 0.017
+      }
+    },
+    {
+      "trainPeriod": "2018-01～2022-12",
+      "validationPeriod": "2023-01～2024-06",
+      "selectedConfigId": "broad_quality_momentum_h5_s5_score_open6_p8_r1.5",
+      "train": {
+        "averageMonthlyReturnPct": -0.1561,
+        "maximumDrawdownPct": -9.2966,
+        "trades": 17,
+        "profitFactor": 0.1221
+      },
+      "validation": {
+        "averageMonthlyReturnPct": -0.5749,
+        "maximumDrawdownPct": -10.5424,
+        "trades": 23,
+        "profitFactor": 0.213
+      }
+    },
+    {
+      "trainPeriod": "2019-07～2024-06",
+      "validationPeriod": "2024-07～2025-12",
+      "selectedConfigId": "broad_quality_momentum_h5_s5_score_open6_p8_r1.5",
+      "train": {
+        "averageMonthlyReturnPct": -0.1499,
+        "maximumDrawdownPct": -8.9374,
+        "trades": 12,
+        "profitFactor": 0
+      },
+      "validation": {
+        "averageMonthlyReturnPct": -0.4496,
+        "maximumDrawdownPct": -8.3629,
+        "trades": 20,
+        "profitFactor": 0.2825
+      }
+    }
+  ],
+  "conclusion": "尚未找到月均 5% 的可實盤純個股策略；目前月均 -0.5105%，距離目標 5.5105 個百分點。"
+}

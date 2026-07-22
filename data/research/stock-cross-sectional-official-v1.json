@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-22T14:27:04.651Z",
+  "generatedAt": "2026-07-22T14:41:02.846Z",
   "strategyFamilyId": "stock_cross_sectional_official_v1:c58843d7108da344e67c19fc",
   "experimentHash": "ea355cab3c0bc05153d4a874",
   "registryChecked": true,
@@ -2152,6 +2152,21 @@
       "maximumDrawdownPct": -14.26,
       "trades": 295,
       "reason": "增加交易數但犧牲報酬與回撤"
+    },
+    {
+      "id": "momentum_pullback_entry",
+      "selectedFolds": 0,
+      "reason": "訓練期未勝過既有動能家族，未進入樣本外交易"
+    },
+    {
+      "id": "momentum_volatility_contraction",
+      "selectedFolds": 0,
+      "reason": "波動收斂未提供額外訓練優勢"
+    },
+    {
+      "id": "momentum_acceleration",
+      "selectedFolds": 0,
+      "reason": "近期加速訊號未提供額外訓練優勢"
     }
   ],
   "targetMonthlyReturnPct": 5,

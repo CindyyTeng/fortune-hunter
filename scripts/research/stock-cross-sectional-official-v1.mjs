@@ -36,6 +36,7 @@ function buildSetups(histories) {
       const returns60 = rows.slice(index - 59, index + 1).map((item, offset, source) => (
         offset ? (item.close / source[offset - 1].close - 1) * 100 : 0
       )).slice(1);
+      const volatility60 = deviation(returns60) * Math.sqrt(252);
       const mom12Skip1 = (rows[index - 20].close / rows[index - 252].close - 1) * 100;
       const mom6Skip1 = (rows[index - 20].close / rows[index - 126].close - 1) * 100;
       const nearHigh252 = row.close / Math.max(...rows.slice(index - 251, index + 1).map(item => item.high));
@@ -54,7 +55,7 @@ function buildSetups(histories) {
         mom60: (row.close / rows[index - 60].close - 1) * 100,
         mom12Skip1,
         mom6Skip1,
-        volatility60: deviation(returns60) * Math.sqrt(252),
+        volatility60,
         nearHigh252,
         ma20,
         distanceToMa20Pct: (row.close / ma20 - 1) * 100,
@@ -211,7 +212,10 @@ const output = {
   rejectedExperiments: [
     { id: 'beta_residual_momentum', monthlyReturnPct: 0.3753, maximumDrawdownPct: -18.23, trades: 236, reason: '樣本外報酬下降且回撤明顯擴大' },
     { id: 'tight_stop_risk_sizing', monthlyReturnPct: 0.6261, maximumDrawdownPct: -12.31, trades: 204, reason: '月均、回撤與交易數皆劣於保留版本' },
-    { id: 'entry_gap_control', monthlyReturnPct: 0.3849, maximumDrawdownPct: -14.26, trades: 295, reason: '增加交易數但犧牲報酬與回撤' }
+    { id: 'entry_gap_control', monthlyReturnPct: 0.3849, maximumDrawdownPct: -14.26, trades: 295, reason: '增加交易數但犧牲報酬與回撤' },
+    { id: 'momentum_pullback_entry', selectedFolds: 0, reason: '訓練期未勝過既有動能家族，未進入樣本外交易' },
+    { id: 'momentum_volatility_contraction', selectedFolds: 0, reason: '波動收斂未提供額外訓練優勢' },
+    { id: 'momentum_acceleration', selectedFolds: 0, reason: '近期加速訊號未提供額外訓練優勢' }
   ],
   targetMonthlyReturnPct: 5,
   targetGapPct: round(5 - metrics.averageMonthlyReturnPct),

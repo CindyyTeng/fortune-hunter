@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-22T14:10:51.946Z",
+  "generatedAt": "2026-07-22T14:27:04.651Z",
   "strategyFamilyId": "stock_cross_sectional_official_v1:c58843d7108da344e67c19fc",
   "experimentHash": "ea355cab3c0bc05153d4a874",
   "registryChecked": true,
@@ -2131,6 +2131,29 @@
     "maximumDrawdown": true,
     "tradeCount": true
   },
+  "rejectedExperiments": [
+    {
+      "id": "beta_residual_momentum",
+      "monthlyReturnPct": 0.3753,
+      "maximumDrawdownPct": -18.23,
+      "trades": 236,
+      "reason": "樣本外報酬下降且回撤明顯擴大"
+    },
+    {
+      "id": "tight_stop_risk_sizing",
+      "monthlyReturnPct": 0.6261,
+      "maximumDrawdownPct": -12.31,
+      "trades": 204,
+      "reason": "月均、回撤與交易數皆劣於保留版本"
+    },
+    {
+      "id": "entry_gap_control",
+      "monthlyReturnPct": 0.3849,
+      "maximumDrawdownPct": -14.26,
+      "trades": 295,
+      "reason": "增加交易數但犧牲報酬與回撤"
+    }
+  ],
   "targetMonthlyReturnPct": 5,
   "targetGapPct": 4.3513,
   "passed": false,

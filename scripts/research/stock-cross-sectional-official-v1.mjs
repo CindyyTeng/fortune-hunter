@@ -156,9 +156,9 @@ const [{ histories, dailyBars, coverage }, etfPayload, fundamentalPayload] = awa
   fs.readFile(ETF_HISTORY, 'utf8').then(JSON.parse),
   fs.readFile(FUNDAMENTAL_BASELINE, 'utf8').then(JSON.parse)
 ]);
-const setups = buildSetups(histories);
 const dates = [...dailyBars.keys()].sort();
 const benchmarkSeries = etfPayload.series?.['0050.TW'] || [];
+const setups = buildSetups(histories);
 const marketRisk = buildMarketRisk(benchmarkSeries, buildBreadth(histories));
 const allConfigs = configs();
 const folds = [];
@@ -208,6 +208,11 @@ const output = {
   candidateRandom,
   fundamentalBaseline,
   improvements,
+  rejectedExperiments: [
+    { id: 'beta_residual_momentum', monthlyReturnPct: 0.3753, maximumDrawdownPct: -18.23, trades: 236, reason: '樣本外報酬下降且回撤明顯擴大' },
+    { id: 'tight_stop_risk_sizing', monthlyReturnPct: 0.6261, maximumDrawdownPct: -12.31, trades: 204, reason: '月均、回撤與交易數皆劣於保留版本' },
+    { id: 'entry_gap_control', monthlyReturnPct: 0.3849, maximumDrawdownPct: -14.26, trades: 295, reason: '增加交易數但犧牲報酬與回撤' }
+  ],
   targetMonthlyReturnPct: 5,
   targetGapPct: round(5 - metrics.averageMonthlyReturnPct),
   passed,
@@ -216,5 +221,5 @@ const output = {
   conclusion: passed ? '通過研究門檻，仍須先紙上交易。' : `未達可信月均 5%；目前 ${metrics.averageMonthlyReturnPct}%，不可宣稱完成或可實盤。`
 };
 await fs.writeFile(OUTPUT, `${JSON.stringify(output, null, 2)}\n`, 'utf8');
-await fs.writeFile(REPORT, `# 官方全市場個股橫斷面動能 v1\n\n- 驗證：2020-01-01 至 2025-12-31，共 ${metrics.validationMonths} 個月\n- 個股交易：${metrics.trades} 筆；ETF 交易占比 0%\n- 月均總資產報酬：${metrics.averageMonthlyReturnPct}%\n- 年化報酬：${metrics.annualizedReturnPct}%\n- 最大回撤：${metrics.maximumDrawdownPct}%\n- Profit Factor：${metrics.profitFactor}\n- 勝率：${metrics.winRatePct}%\n- 0050 月均：${benchmark.averageMonthlyReturnPct}%\n- 候選池隨機排序月均：${candidateRandom.averageMonthlyReturnPct}%\n- 修正後基本面基準：月均 ${fundamentalBaseline.averageMonthlyReturnPct}%、最大回撤 ${fundamentalBaseline.maximumDrawdownPct}%、${fundamentalBaseline.trades} 筆\n- 三項比較：月均較高 ${improvements.monthlyReturn ? '是' : '否'}、回撤較小 ${improvements.maximumDrawdown ? '是' : '否'}、交易較多 ${improvements.tradeCount ? '是' : '否'}\n- 分段月均：${folds.map(row => `${row.validationPeriod.join('～')} 為 ${row.validation.averageMonthlyReturnPct}%`).join('；')}\n- 結論：${output.conclusion}\n\n每月底只使用當時以前 6 至 12 個月資料，跳過最近 20 日，隔月開盤成交；包含真實費稅、滑價、T+2、跳空停損及每日總資產計價。\n`, 'utf8');
+await fs.writeFile(REPORT, `# 官方全市場個股橫斷面動能 v1\n\n- 驗證：2020-01-01 至 2025-12-31，共 ${metrics.validationMonths} 個月\n- 個股交易：${metrics.trades} 筆；ETF 交易占比 0%\n- 月均總資產報酬：${metrics.averageMonthlyReturnPct}%\n- 年化報酬：${metrics.annualizedReturnPct}%\n- 最大回撤：${metrics.maximumDrawdownPct}%\n- Profit Factor：${metrics.profitFactor}\n- 勝率：${metrics.winRatePct}%\n- 0050 月均：${benchmark.averageMonthlyReturnPct}%\n- 候選池隨機排序月均：${candidateRandom.averageMonthlyReturnPct}%\n- 修正後基本面基準：月均 ${fundamentalBaseline.averageMonthlyReturnPct}%、最大回撤 ${fundamentalBaseline.maximumDrawdownPct}%、${fundamentalBaseline.trades} 筆\n- 三項比較：月均較高 ${improvements.monthlyReturn ? '是' : '否'}、回撤較小 ${improvements.maximumDrawdown ? '是' : '否'}、交易較多 ${improvements.tradeCount ? '是' : '否'}\n- 分段月均：${folds.map(row => `${row.validationPeriod.join('～')} 為 ${row.validation.averageMonthlyReturnPct}%`).join('；')}\n- 本輪淘汰：Beta 殘差動能、緊停損風險配置、開盤跳空控制，皆未同時改善報酬、回撤與交易數\n- 結論：${output.conclusion}\n\n每月底只使用當時以前 6 至 12 個月資料，跳過最近 20 日，隔月開盤成交；包含真實費稅、滑價、T+2、跳空停損及每日總資產計價。\n`, 'utf8');
 console.log(JSON.stringify({ metrics, benchmark, candidateRandom, selected: folds.map(row => row.selectedConfig.id), passed, conclusion: output.conclusion }, null, 2));

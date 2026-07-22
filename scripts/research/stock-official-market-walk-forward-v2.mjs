@@ -1,5 +1,6 @@
 import fs from 'node:fs/promises';
 import zlib from 'node:zlib';
+import { pathToFileURL } from 'node:url';
 import { buyExecution } from '../lib/execution-simulator.mjs';
 import {
   beginPortfolioDay,
@@ -12,7 +13,7 @@ import {
 } from '../lib/portfolio-simulator.mjs';
 
 const YEARS = ['2014', '2015', '2016', '2017', '2018', '2019', '2020', '2021', '2022', '2023', '2024', '2025'];
-const FOLDS = [
+export const FOLDS = [
   { train: ['2014-01-01', '2019-12-31'], validation: ['2020-01-01', '2021-12-31'] },
   { train: ['2016-01-01', '2021-12-31'], validation: ['2022-01-01', '2023-12-31'] },
   { train: ['2018-01-01', '2023-12-31'], validation: ['2024-01-01', '2025-12-31'] }
@@ -21,7 +22,7 @@ const PROCESSED = new URL('../../data/market-history/processed/', import.meta.ur
 const ETF_HISTORY = new URL('../../data/research/deployable-etf-rotation-history.json', import.meta.url);
 const OUTPUT = new URL('../../data/research/stock-official-market-walk-forward-v2.json', import.meta.url);
 const REPORT = new URL('../../docs/STOCK_OFFICIAL_MARKET_WALK_FORWARD_V2.md', import.meta.url);
-const COSTS = Object.freeze({
+export const COSTS = Object.freeze({
   buyFeePct: 0.1425,
   sellFeePct: 0.1425,
   sellTaxPct: 0.3,
@@ -31,11 +32,11 @@ const COSTS = Object.freeze({
   boardLotShares: 1
 });
 
-const round = (value, digits = 4) => Number.isFinite(value) ? Number(value.toFixed(digits)) : null;
-const avg = values => values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : 0;
+export const round = (value, digits = 4) => Number.isFinite(value) ? Number(value.toFixed(digits)) : null;
+export const avg = values => values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : 0;
 const monthKey = date => date.slice(0, 7);
 
-async function loadData() {
+export async function loadData() {
   const histories = new Map();
   const dailyBars = new Map();
   const coverage = [];
@@ -58,7 +59,7 @@ async function loadData() {
   return { histories, dailyBars, coverage };
 }
 
-function buildBreadth(histories) {
+export function buildBreadth(histories) {
   const byDate = new Map();
   for (const rows of histories.values()) {
     for (let index = 20; index < rows.length; index += 1) {
@@ -77,7 +78,7 @@ function buildBreadth(histories) {
   }]));
 }
 
-function buildMarketRisk(series, breadth) {
+export function buildMarketRisk(series, breadth) {
   const risk = new Map();
   for (let index = 60; index < series.length; index += 1) {
     const daily = series.slice(index - 19, index + 1).map((row, offset) => (
@@ -314,7 +315,7 @@ function summarize(portfolio, start, end) {
   };
 }
 
-function simulate(setups, dailyBars, dates, marketRisk, config, period, randomOrder = false) {
+export function simulate(setups, dailyBars, dates, marketRisk, config, period, randomOrder = false) {
   const candidates = new Map();
   for (const setup of setups) {
     if (setup.entryDate < period[0] || setup.entryDate > period[1] || !passes(setup, config)) continue;
@@ -382,7 +383,7 @@ function simulate(setups, dailyBars, dates, marketRisk, config, period, randomOr
   return summarize(portfolio, period[0], period[1]);
 }
 
-function cashMetrics(period, dates) {
+export function cashMetrics(period, dates) {
   const months = [...new Set(dates.filter(date => date >= period[0] && date <= period[1]).map(monthKey))]
     .map(month => ({ month, returnPct: 0, equity: 1_000_000 }));
   return { trades: 0, months: months.length, averageMonthlyReturnPct: 0, annualizedReturnPct: 0, maximumDrawdownPct: 0, profitFactor: 0, winRatePct: 0, negativeMonths: 0, endingEquity: 1_000_000, monthly: months };
@@ -401,7 +402,7 @@ function score(metrics) {
     + Math.min(metrics.trades, 500) / 500;
 }
 
-function aggregate(rows) {
+export function aggregate(rows) {
   const monthly = rows.flatMap(row => row.monthly);
   const trades = rows.reduce((sum, row) => sum + row.trades, 0);
   const weighted = key => trades ? rows.reduce((sum, row) => sum + row[key] * row.trades, 0) / trades : 0;
@@ -420,7 +421,7 @@ function aggregate(rows) {
   };
 }
 
-async function benchmark0050(rows) {
+export async function benchmark0050(rows) {
   const monthEnds = new Map();
   for (const row of rows) {
     if (FOLDS.some(fold => row.date >= fold.validation[0] && row.date <= fold.validation[1])) monthEnds.set(monthKey(row.date), row.close);
@@ -434,6 +435,7 @@ async function benchmark0050(rows) {
   return { months: returns.length, averageMonthlyReturnPct: round(avg(returns)) };
 }
 
+export async function runOfficialBaseline() {
 const [{ histories, dailyBars, coverage }, etfPayload] = await Promise.all([
   loadData(),
   fs.readFile(ETF_HISTORY, 'utf8').then(JSON.parse)
@@ -504,3 +506,8 @@ const output = {
 await fs.writeFile(OUTPUT, `${JSON.stringify(output, null, 2)}\n`, 'utf8');
 await fs.writeFile(REPORT, `# 官方個股長期 Walk-forward v2\n\n- 個股範圍：上市／上櫃四位數普通股，ETF 與 0050 交易比重為 0%。\n- 訓練／驗證：每折 72 個月訓練、24 個月驗證，共三折；合併驗證為 2020-01-01 至 2025-12-31。\n- 成交與風控：逐日總資產估值、T+2、真實費稅、雙邊滑價、跳空較差價停損、單檔最高 10%、單筆風險最高 0.5%。\n- 進場時點：前一日收盤產生訊號，隔日開盤市價加滑價成交；不使用隔日開盤價反向篩選候選。\n- 每折測試組數：${allConfigs.length}\n- 驗證交易：${metrics.trades} 筆\n- 驗證月均總資產報酬：${metrics.averageMonthlyReturnPct}%\n- 年化報酬：${metrics.annualizedReturnPct}%\n- 最大回撤：${metrics.maximumDrawdownPct}%\n- Profit Factor：${metrics.profitFactor}\n- 勝率：${metrics.winRatePct}%\n- 0050 同期月均：${benchmark.averageMonthlyReturnPct}%\n- 同候選池隨機排序月均：${randomMetrics.averageMonthlyReturnPct}%\n- 是否達月均 5% 且通過完整門檻：${passed ? '是' : '否'}\n\n## 結論\n\n${output.conclusion}\n`, 'utf8');
 console.log(JSON.stringify({ output: OUTPUT.pathname, report: REPORT.pathname, metrics, benchmark, randomMetrics, selected: folds.map(row => row.selectedConfig.id), passed }, null, 2));
+}
+
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  await runOfficialBaseline();
+}

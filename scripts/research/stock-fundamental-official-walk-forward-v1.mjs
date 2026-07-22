@@ -157,16 +157,25 @@ function buildSetups(histories, revenueRows, qualityRows) {
       while (qualityCursor + 1 < stockQuality.length && stockQuality[qualityCursor + 1].effectiveDate <= date) qualityCursor += 1;
       const revenue = stockRevenue[revenueCursor];
       const quality = stockQuality[qualityCursor];
-      if (!revenue || !quality) continue;
-      const revenueAge = (Date.parse(date) - Date.parse(revenue.effectiveDate)) / 86_400_000;
+      if (!quality) continue;
       const qualityAge = (Date.parse(date) - Date.parse(quality.effectiveDate)) / 86_400_000;
-      if (revenueAge > 60 || qualityAge > 180 || quality.EPS <= 0) continue;
+      if (qualityAge > 180 || quality.EPS <= 0) continue;
       const common = marketFeatures(rows, index);
-      const yoy = revenue.YoY ?? revenue.reportedYoY ?? -100;
       const epsGrowth = quality.epsYoY ?? -100;
       const grossChange = quality.grossMarginYoYChange ?? quality.grossMarginQoQChange ?? -99;
       const operatingChange = quality.operatingMarginYoYChange ?? quality.operatingMarginQoQChange ?? -99;
       const qualityConfirmed = epsGrowth >= 0 || grossChange + operatingChange > 0;
+      const qualityTrend = common && qualityConfirmed && common.ma20AboveMa60 && common.mom20 >= 3
+        && common.mom60 >= 8 && common.distanceToMa20Pct >= -1 && common.distanceToMa20Pct <= 12;
+      if (qualityTrend && [2, 5].includes(new Date(`${date}T00:00:00Z`).getUTCDay())) {
+        const score = Math.max(-20, epsGrowth) * 0.2 + (grossChange + operatingChange) * 1.5
+          + common.mom20 * 0.6 + common.mom60 * 0.4 - common.atr20Pct * 2 - common.distanceToMa20Pct * 0.5;
+        addSetup(setups, common, 'quality_momentum_persistence', score, quality);
+      }
+      if (!revenue) continue;
+      const revenueAge = (Date.parse(date) - Date.parse(revenue.effectiveDate)) / 86_400_000;
+      if (revenueAge > 60) continue;
+      const yoy = revenue.YoY ?? revenue.reportedYoY ?? -100;
       const trendConfirmed = common && yoy >= 10 && qualityConfirmed && common.ma20AboveMa60 && common.mom20 >= 3
         && common.mom60 >= 8 && common.distanceToMa20Pct >= -1 && common.distanceToMa20Pct <= 12;
       if (trendConfirmed && [2, 5].includes(new Date(`${date}T00:00:00Z`).getUTCDay())) {
@@ -183,9 +192,10 @@ function buildSetups(histories, revenueRows, qualityRows) {
   }
   const byDate = new Map();
   for (const setup of setups) {
-    const list = byDate.get(setup.signalDate) || [];
+    const key = `${setup.signalDate}|${setup.setup}`;
+    const list = byDate.get(key) || [];
     list.push(setup);
-    byDate.set(setup.signalDate, list);
+    byDate.set(key, list);
   }
   for (const rows of byDate.values()) {
     rows.sort((a, b) => b.score - a.score).forEach((row, index) => {
@@ -202,7 +212,8 @@ function configs() {
     { setup: 'fundamental_pullback', minValue: 30e6, minMom20: -10, minMom60: 3, maxAtr: 9, minVolumeRatio: 0.4, maxDistance: 6, minRank: 0.2 },
     { setup: 'quality_repricing', minValue: 30e6, minMom20: -5, minMom60: 0, maxAtr: 9, minVolumeRatio: 0.5, maxDistance: 12, minRank: 0.2 },
     { setup: 'fundamental_persistence', minValue: 50e6, minMom20: 3, minMom60: 8, maxAtr: 8, minVolumeRatio: 0.5, maxDistance: 12, minRank: 0.5 },
-    { setup: 'fundamental_reacceleration', minValue: 50e6, minMom20: 3, minMom60: 8, maxAtr: 8, minVolumeRatio: 0.8, maxDistance: 12, minRank: 0.5 }
+    { setup: 'fundamental_reacceleration', minValue: 50e6, minMom20: 3, minMom60: 8, maxAtr: 8, minVolumeRatio: 0.8, maxDistance: 12, minRank: 0.5 },
+    { setup: 'quality_momentum_persistence', minValue: 50e6, minMom20: 3, minMom60: 8, maxAtr: 8, minVolumeRatio: 0.5, maxDistance: 12, minRank: 0.5 }
   ];
   const output = [];
   for (const family of families) {
@@ -232,7 +243,7 @@ const experiment = {
   exitRules: ['固定目標、移動停利、最長持有日'],
   riskRules: { accountRiskPct: 0.5, maximumPositionPct: 10, tPlusTwo: true },
   blockedWhen: ['大盤弱勢、波動過高、流動性不足'],
-  parameters: { families: 5, configurationsPerFold: 360 },
+  parameters: { families: 6, configurationsPerFold: 432 },
   trainPeriod: '每段 72 個月',
   validationPeriod: '每段 24 個月，合併 2020-2025',
   costModel: '手續費、交易稅、雙邊滑價、最低手續費',

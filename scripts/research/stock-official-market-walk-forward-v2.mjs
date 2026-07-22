@@ -332,7 +332,7 @@ export function simulate(setups, dailyBars, dates, marketRisk, config, period, r
       maxAccountRiskPct: 0.5,
       maxSinglePositionPct: 10,
       exposureLimits: { BULL_TREND: 80, THEME_MOMENTUM: 80, BULL_PULLBACK: 60, RANGE_BOUND: 40, HIGH_VOLATILITY: 20, BEAR_DEFENSE: 0 },
-      drawdownBlockPct: 8,
+      drawdownBlockPct: config.drawdownBlockPct ?? 8,
       drawdownBlockDays: 20,
       monthlyLossBlockPct: 5,
       dailyLossBlockPct: 2,

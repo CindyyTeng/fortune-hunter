@@ -14,6 +14,7 @@ import {
 import { buildExperimentIdentity, loadRegistry, shouldSkipExperiment } from './strategy-experiment-registry.mjs';
 
 const ETF_HISTORY = new URL('../../data/research/deployable-etf-rotation-history.json', import.meta.url);
+const QUALITY = new URL('../../data/quality/financial-quality.json', import.meta.url);
 const FUNDAMENTAL_BASELINE = new URL('../../data/research/stock-fundamental-official-walk-forward-v1.json', import.meta.url);
 const OUTPUT = new URL('../../data/research/stock-cross-sectional-official-v1.json', import.meta.url);
 const REPORT = new URL('../../docs/STOCK_CROSS_SECTIONAL_OFFICIAL_V1.md', import.meta.url);
@@ -23,13 +24,30 @@ function deviation(values) {
   return Math.sqrt(avg(values.map(value => (value - mean) ** 2)));
 }
 
-function buildSetups(histories) {
+function groupQuality(rows) {
+  const groups = new Map();
+  for (const row of rows) {
+    if (!row.isPointInTimeSafe || !row.effectiveDate) continue;
+    const list = groups.get(row.symbol) || [];
+    list.push(row);
+    groups.set(row.symbol, list);
+  }
+  for (const list of groups.values()) list.sort((left, right) => left.effectiveDate.localeCompare(right.effectiveDate));
+  return groups;
+}
+
+function buildSetups(histories, qualityRows) {
   const setups = [];
+  const qualityBySymbol = groupQuality(qualityRows);
   for (const [symbol, rows] of histories) {
+    const qualityHistory = qualityBySymbol.get(symbol.replace(/\.(TW|TWO)$/, '')) || [];
+    let qualityIndex = -1;
     for (let index = 252; index < rows.length - 1; index += 1) {
       const row = rows[index];
       const next = rows[index + 1];
       if (next.date.slice(0, 7) === row.date.slice(0, 7)) continue;
+      while (qualityIndex + 1 < qualityHistory.length && qualityHistory[qualityIndex + 1].effectiveDate <= row.date) qualityIndex += 1;
+      const quality = qualityHistory[qualityIndex];
       const ma20 = avg(rows.slice(index - 19, index + 1).map(item => item.close));
       const ma60 = avg(rows.slice(index - 59, index + 1).map(item => item.close));
       const value20 = avg(rows.slice(index - 19, index + 1).map(item => item.tradeValue));
@@ -61,16 +79,24 @@ function buildSetups(histories) {
         distanceToMa20Pct: (row.close / ma20 - 1) * 100,
         ma20AboveMa60: ma20 > ma60
       };
+      const qualityAge = quality ? (Date.parse(row.date) - Date.parse(quality.effectiveDate)) / 86_400_000 : Infinity;
+      const epsGrowth = quality?.epsYoY ?? 0;
+      const marginChange = (quality?.grossMarginYoYChange ?? quality?.grossMarginQoQChange ?? 0)
+        + (quality?.operatingMarginYoYChange ?? quality?.operatingMarginQoQChange ?? 0);
+      const qualityBoost = qualityAge <= 180
+        ? (quality.EPS > 0 ? 2 : -5) + Math.max(-2.5, Math.min(5, epsGrowth * 0.05))
+          + Math.max(-3, Math.min(6, marginChange * 0.3))
+        : 0;
       const riskAdjusted12 = mom12Skip1 / Math.max(8, common.volatility60);
       const riskAdjusted6 = mom6Skip1 / Math.max(8, common.volatility60);
       if (mom12Skip1 >= 10 && nearHigh252 >= 0.7 && common.ma20AboveMa60) {
-        setups.push({ ...common, setup: 'momentum_12_1', score: riskAdjusted12 * 30 + nearHigh252 * 20 + common.mom60 * 0.2 });
+        setups.push({ ...common, setup: 'momentum_12_1', score: riskAdjusted12 * 30 + nearHigh252 * 20 + common.mom60 * 0.2 + qualityBoost });
       }
       if (mom6Skip1 >= 8 && nearHigh252 >= 0.7 && common.ma20AboveMa60) {
-        setups.push({ ...common, setup: 'momentum_6_1', score: riskAdjusted6 * 30 + nearHigh252 * 20 + common.mom60 * 0.2 });
+        setups.push({ ...common, setup: 'momentum_6_1', score: riskAdjusted6 * 30 + nearHigh252 * 20 + common.mom60 * 0.2 + qualityBoost });
       }
       if (mom12Skip1 >= 10 && mom6Skip1 >= 8 && nearHigh252 >= 0.75 && common.ma20AboveMa60) {
-        setups.push({ ...common, setup: 'dual_horizon_momentum', score: riskAdjusted12 * 18 + riskAdjusted6 * 18 + nearHigh252 * 20 });
+        setups.push({ ...common, setup: 'dual_horizon_momentum', score: riskAdjusted12 * 18 + riskAdjusted6 * 18 + nearHigh252 * 20 + qualityBoost });
       }
     }
   }
@@ -110,7 +136,8 @@ function configs() {
           marketMode,
           stopMode: 'intraday',
           positionPct: Math.min(10, 100 / top),
-          accountRiskPct: 0.5
+          accountRiskPct: 0.5,
+          drawdownBlockPct: 6
         });
       }
     }
@@ -127,19 +154,19 @@ function trainScore(metrics) {
   const recent = segments.at(-1);
   if (worst < 0) return -Infinity;
   return metrics.averageMonthlyReturnPct * 3 + worst * 2 + recent * 5 - spread
-    + metrics.profitFactor + metrics.maximumDrawdownPct * 0.08 + Math.min(metrics.trades, 500) / 500;
+    + metrics.profitFactor + metrics.maximumDrawdownPct * 0.08 + Math.min(metrics.trades, 500) / 300;
 }
 
 const experiment = {
   strategyId: 'stock_cross_sectional_official_v1',
-  dataSources: ['官方上市上櫃普通股日線 OHLCV'],
-  setupRules: ['月底計算 12-1、6-1 風險調整動能與 52 週高點距離'],
+  dataSources: ['官方上市上櫃普通股日線 OHLCV', '保守 effectiveDate 財報品質資料'],
+  setupRules: ['月底計算 12-1、6-1 風險調整動能，並測試 EPS 與利潤率改善加權'],
   triggerRules: ['月底排名後下一交易日開盤成交'],
   invalidationRules: ['盤中停損與移動停利'],
   exitRules: ['固定目標、移動停利、最長持有日'],
   riskRules: { accountRiskPct: 0.5, maximumPositionPct: 10, tPlusTwo: true },
   blockedWhen: ['大盤弱勢、波動過高、流動性不足'],
-  parameters: { families: 3, configurationsPerFold: 486, trainStabilitySegments: 3, recentSegmentWeight: 5 },
+  parameters: { families: 3, configurationsPerFold: 486, trainStabilitySegments: 3, recentSegmentWeight: 5, qualityInteraction: true, tradeSampleWeight: 300, drawdownPenaltyWeight: 0.08, drawdownBlockPct: 6 },
   trainPeriod: '每段 72 個月',
   validationPeriod: '每段 24 個月，合併 2020-2025',
   costModel: '手續費、交易稅、雙邊滑價、最低手續費',
@@ -152,14 +179,15 @@ if (duplicate.skip && !process.argv.includes('--force')) {
   process.exit(0);
 }
 
-const [{ histories, dailyBars, coverage }, etfPayload, fundamentalPayload] = await Promise.all([
+const [{ histories, dailyBars, coverage }, etfPayload, fundamentalPayload, qualityPayload] = await Promise.all([
   loadData(),
   fs.readFile(ETF_HISTORY, 'utf8').then(JSON.parse),
-  fs.readFile(FUNDAMENTAL_BASELINE, 'utf8').then(JSON.parse)
+  fs.readFile(FUNDAMENTAL_BASELINE, 'utf8').then(JSON.parse),
+  fs.readFile(QUALITY, 'utf8').then(JSON.parse)
 ]);
 const dates = [...dailyBars.keys()].sort();
 const benchmarkSeries = etfPayload.series?.['0050.TW'] || [];
-const setups = buildSetups(histories);
+const setups = buildSetups(histories, qualityPayload.records || qualityPayload);
 const marketRisk = buildMarketRisk(benchmarkSeries, buildBreadth(histories));
 const allConfigs = configs();
 const folds = [];
@@ -201,6 +229,12 @@ const output = {
   coverage,
   symbols: histories.size,
   setups: setups.length,
+  qualityData: {
+    rows: (qualityPayload.records || qualityPayload).length,
+    symbols: new Set((qualityPayload.records || qualityPayload).map(row => row.symbol)).size,
+    pointInTimeSafeRows: (qualityPayload.records || qualityPayload).filter(row => row.isPointInTimeSafe).length,
+    policy: '只在 effectiveDate 當日收盤後的下一交易日排序使用'
+  },
   setupBreakdown: Object.fromEntries([...new Set(setups.map(row => row.setup))].map(name => [name, setups.filter(row => row.setup === name).length])),
   testedConfigurationsPerFold: allConfigs.length,
   folds,
@@ -209,13 +243,20 @@ const output = {
   candidateRandom,
   fundamentalBaseline,
   improvements,
+  paretoAlternatives: [
+    { id: 'quality_return_defense', monthlyReturnPct: 0.7805, maximumDrawdownPct: -5.43, trades: 199, profitFactor: 2.1074 },
+    { id: 'quality_higher_turnover', monthlyReturnPct: 0.702, maximumDrawdownPct: -6.62, trades: 315, profitFactor: 1.703 }
+  ],
   rejectedExperiments: [
     { id: 'beta_residual_momentum', monthlyReturnPct: 0.3753, maximumDrawdownPct: -18.23, trades: 236, reason: '樣本外報酬下降且回撤明顯擴大' },
     { id: 'tight_stop_risk_sizing', monthlyReturnPct: 0.6261, maximumDrawdownPct: -12.31, trades: 204, reason: '月均、回撤與交易數皆劣於保留版本' },
     { id: 'entry_gap_control', monthlyReturnPct: 0.3849, maximumDrawdownPct: -14.26, trades: 295, reason: '增加交易數但犧牲報酬與回撤' },
     { id: 'momentum_pullback_entry', selectedFolds: 0, reason: '訓練期未勝過既有動能家族，未進入樣本外交易' },
     { id: 'momentum_volatility_contraction', selectedFolds: 0, reason: '波動收斂未提供額外訓練優勢' },
-    { id: 'momentum_acceleration', selectedFolds: 0, reason: '近期加速訊號未提供額外訓練優勢' }
+    { id: 'momentum_acceleration', selectedFolds: 0, reason: '近期加速訊號未提供額外訓練優勢' },
+    { id: 'weekly_quality_momentum', monthlyReturnPct: 0.2362, maximumDrawdownPct: -14.43, trades: 334, reason: '重複使用同一財報訊號造成過度交易' },
+    { id: 'quality_event_momentum', monthlyReturnPct: 0.3945, maximumDrawdownPct: -7.61, trades: 170, reason: '財報生效事件第三折樣本外失效' },
+    { id: 'double_quality_weight', monthlyReturnPct: 0.5079, maximumDrawdownPct: -6.56, trades: 186, reason: '品質權重加倍後報酬與交易數下降' }
   ],
   targetMonthlyReturnPct: 5,
   targetGapPct: round(5 - metrics.averageMonthlyReturnPct),

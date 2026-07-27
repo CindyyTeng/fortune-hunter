@@ -254,6 +254,30 @@ function passes(setup, config) {
     && (setup.setup === 'shock_stabilization' || setup.ma20AboveMa60);
 }
 
+const candidateCache = new WeakMap();
+
+function candidatesFor(setups, config) {
+  let cache = candidateCache.get(setups);
+  if (!cache) {
+    cache = new Map();
+    candidateCache.set(setups, cache);
+  }
+  const key = [
+    config.setup, config.minValue, config.minMom20, config.minMom60,
+    config.maxAtr, config.minVolumeRatio, config.maxDistance, config.minRank
+  ].join('|');
+  if (cache.has(key)) return cache.get(key);
+  const candidates = new Map();
+  for (const setup of setups) {
+    if (!passes(setup, config)) continue;
+    const rows = candidates.get(setup.entryDate) || [];
+    rows.push(setup);
+    candidates.set(setup.entryDate, rows);
+  }
+  cache.set(key, candidates);
+  return candidates;
+}
+
 function regimeFor(risk, config) {
   if (!risk) return 'RANGE_BOUND';
   if (risk.vol20Pct > 38) return 'HIGH_VOLATILITY';
@@ -316,13 +340,7 @@ function summarize(portfolio, start, end) {
 }
 
 export function simulate(setups, dailyBars, dates, marketRisk, config, period, randomOrder = false) {
-  const candidates = new Map();
-  for (const setup of setups) {
-    if (setup.entryDate < period[0] || setup.entryDate > period[1] || !passes(setup, config)) continue;
-    const rows = candidates.get(setup.entryDate) || [];
-    rows.push(setup);
-    candidates.set(setup.entryDate, rows);
-  }
+  const candidates = candidatesFor(setups, config);
   const portfolio = createPortfolio({
     initialCapital: 1_000_000,
     settlementDays: 2,

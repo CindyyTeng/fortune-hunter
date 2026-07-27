@@ -211,6 +211,8 @@ for (const fold of FOLDS) {
 }
 const metrics = aggregate(folds.map(row => row.validation));
 const candidateRandom = aggregate(folds.map(row => row.candidateRandom));
+const longHoldout = simulate(setups, dailyBars, dates, marketRisk, folds[0].selectedConfig, ['2020-01-01', '2025-12-31']);
+const longHoldoutRandom = simulate(setups, dailyBars, dates, marketRisk, folds[0].selectedConfig, ['2020-01-01', '2025-12-31'], true);
 const benchmark = await benchmark0050(benchmarkSeries);
 const fundamentalBaseline = fundamentalPayload.metrics;
 const improvements = {
@@ -241,13 +243,31 @@ const output = {
   metrics,
   benchmark0050: benchmark,
   candidateRandom,
+  longHoldout: {
+    trainPeriod: folds[0].trainPeriod,
+    validationPeriod: ['2020-01-01', '2025-12-31'],
+    parametersFrozen: true,
+    selectedConfig: folds[0].selectedConfig,
+    metrics: longHoldout,
+    candidateRandom: longHoldoutRandom
+  },
   fundamentalBaseline,
   improvements,
   paretoAlternatives: [
     { id: 'quality_return_defense', monthlyReturnPct: 0.7805, maximumDrawdownPct: -5.43, trades: 199, profitFactor: 2.1074 },
-    { id: 'quality_higher_turnover', monthlyReturnPct: 0.702, maximumDrawdownPct: -6.62, trades: 315, profitFactor: 1.703 }
+    { id: 'quality_higher_turnover', monthlyReturnPct: 0.702, maximumDrawdownPct: -6.62, trades: 315, profitFactor: 1.703 },
+    { id: 'smooth_momentum_defense', monthlyReturnPct: 0.7792, maximumDrawdownPct: -5.42, trades: 228, profitFactor: 1.9549 }
   ],
   rejectedExperiments: [
+    { id: 'monthly_plus_midmonth_fill', selectedFolds: 0, reason: '月中最多補兩檔的版本在三個訓練折疊皆未被選中。' },
+    { id: 'wide_or_disabled_trailing_stop', monthlyReturnPct: 0.4029, maximumDrawdownPct: -21.95, trades: 154, reason: '放寬或停用移動停利造成樣本外報酬下降、回撤失控且輸給公平隨機。' },
+    { id: 'regime_specific_smooth_ranking', monthlyReturnPct: 0.5068, maximumDrawdownPct: -12.3, trades: 317, reason: '訓練期在第三折改選較弱組合，交易雖增加但報酬與回撤顯著惡化。' },
+    { id: 'smooth_momentum_all_regimes', monthlyReturnPct: 0.7792, maximumDrawdownPct: -5.42, trades: 228, reason: '改善交易數與回撤，但強多頭懲罰爆發型領先股，使月均略低於基準。' },
+    { id: 'adaptive_bull_position_sizing', monthlyReturnPct: 0.4633, maximumDrawdownPct: -9.63, trades: 179, reason: '動態提高強多頭部位後，月均、回撤與交易數皆退步，且輸給公平隨機。' },
+    { id: 'shock_stabilization_sleeve', selectedFolds: 0, reason: '急跌止穩策略在三個訓練折疊皆未勝過品質動能核心。' },
+    { id: 'near_high_reacceleration', monthlyReturnPct: 0.3129, maximumDrawdownPct: -12.56, trades: 288, reason: '第一折樣本外轉負，整體報酬與回撤都明顯退步。' },
+    { id: 'ultra_market_filter', selectedFolds: 0, reason: '極強市場濾網在三個訓練折疊皆未被選中，沒有新增價值。' },
+    { id: 'semimonthly_quality_momentum', monthlyReturnPct: 0.4974, maximumDrawdownPct: -4.85, trades: 188, reason: '半月重新排名雖降低回撤，但月均報酬與交易數都退步。' },
     { id: 'beta_residual_momentum', monthlyReturnPct: 0.3753, maximumDrawdownPct: -18.23, trades: 236, reason: '樣本外報酬下降且回撤明顯擴大' },
     { id: 'tight_stop_risk_sizing', monthlyReturnPct: 0.6261, maximumDrawdownPct: -12.31, trades: 204, reason: '月均、回撤與交易數皆劣於保留版本' },
     { id: 'entry_gap_control', monthlyReturnPct: 0.3849, maximumDrawdownPct: -14.26, trades: 295, reason: '增加交易數但犧牲報酬與回撤' },
@@ -266,5 +286,5 @@ const output = {
   conclusion: passed ? '通過研究門檻，仍須先紙上交易。' : `未達可信月均 5%；目前 ${metrics.averageMonthlyReturnPct}%，不可宣稱完成或可實盤。`
 };
 await fs.writeFile(OUTPUT, `${JSON.stringify(output, null, 2)}\n`, 'utf8');
-await fs.writeFile(REPORT, `# 官方全市場個股橫斷面動能 v1\n\n- 驗證：2020-01-01 至 2025-12-31，共 ${metrics.validationMonths} 個月\n- 個股交易：${metrics.trades} 筆；ETF 交易占比 0%\n- 月均總資產報酬：${metrics.averageMonthlyReturnPct}%\n- 年化報酬：${metrics.annualizedReturnPct}%\n- 最大回撤：${metrics.maximumDrawdownPct}%\n- Profit Factor：${metrics.profitFactor}\n- 勝率：${metrics.winRatePct}%\n- 0050 月均：${benchmark.averageMonthlyReturnPct}%\n- 候選池隨機排序月均：${candidateRandom.averageMonthlyReturnPct}%\n- 修正後基本面基準：月均 ${fundamentalBaseline.averageMonthlyReturnPct}%、最大回撤 ${fundamentalBaseline.maximumDrawdownPct}%、${fundamentalBaseline.trades} 筆\n- 三項比較：月均較高 ${improvements.monthlyReturn ? '是' : '否'}、回撤較小 ${improvements.maximumDrawdown ? '是' : '否'}、交易較多 ${improvements.tradeCount ? '是' : '否'}\n- 分段月均：${folds.map(row => `${row.validationPeriod.join('～')} 為 ${row.validation.averageMonthlyReturnPct}%`).join('；')}\n- 本輪淘汰：Beta 殘差動能、緊停損風險配置、開盤跳空控制，皆未同時改善報酬、回撤與交易數\n- 結論：${output.conclusion}\n\n每月底只使用當時以前 6 至 12 個月資料，跳過最近 20 日，隔月開盤成交；包含真實費稅、滑價、T+2、跳空停損及每日總資產計價。\n`, 'utf8');
+await fs.writeFile(REPORT, `# 官方全市場個股橫斷面動能 v1\n\n## Rolling 樣本外結果\n\n- 驗證：2020-01-01 至 2025-12-31，共 ${metrics.validationMonths} 個月\n- 個股交易：${metrics.trades} 筆；ETF 交易占比 0%\n- 月均總資產報酬：${metrics.averageMonthlyReturnPct}%\n- 年化報酬：${metrics.annualizedReturnPct}%\n- 最大回撤：${metrics.maximumDrawdownPct}%\n- Profit Factor：${metrics.profitFactor}\n- 勝率：${metrics.winRatePct}%\n- 0050 月均：${benchmark.averageMonthlyReturnPct}%\n- 候選池隨機排序月均：${candidateRandom.averageMonthlyReturnPct}%\n- 分段月均：${folds.map(row => `${row.validationPeriod.join('～')} 為 ${row.validation.averageMonthlyReturnPct}%`).join('；')}\n\n## 六年完全凍結檢查\n\n只用 2014～2019 選一次規則，2020～2025 不再重新選參數：月均 ${longHoldout.averageMonthlyReturnPct}%、年化 ${longHoldout.annualizedReturnPct}%、最大回撤 ${longHoldout.maximumDrawdownPct}%、${longHoldout.trades} 筆、PF ${longHoldout.profitFactor}；相同候選池隨機排序月均 ${longHoldoutRandom.averageMonthlyReturnPct}%。這項結果顯示核心為正，但排名優勢仍偏薄。\n\n## 資料與限制\n\n- 品質資料 ${(qualityPayload.records || qualityPayload).length.toLocaleString('en-US')} 筆、${new Set((qualityPayload.records || qualityPayload).map(row => row.symbol)).size} 檔，只在保守 effectiveDate 後使用。\n- 每月底只使用當時以前 6 至 12 個月資料，跳過最近 20 日，隔月開盤成交。\n- 已納入手續費、交易稅、雙邊滑價、最低手續費、T+2、跳空停損與每日總資產計價。\n- 本輪新增九項失敗實驗紀錄；完整數字保存在 JSON，避免重複測試。\n- 平滑動能前緣：月均 0.7792%、最大回撤 -5.42%、228 筆；交易與回撤較佳，但月均未超越保留版。\n- 高周轉前緣：月均 0.702%、最大回撤 -6.62%、315 筆。\n\n## 結論\n\n${output.conclusion} Rolling 月均仍輸給 0050，且六年完全凍結優勢只略高於隨機排序，不可進紙上交易或實盤。\n`, 'utf8');
 console.log(JSON.stringify({ metrics, benchmark, candidateRandom, selected: folds.map(row => row.selectedConfig.id), passed, conclusion: output.conclusion }, null, 2));

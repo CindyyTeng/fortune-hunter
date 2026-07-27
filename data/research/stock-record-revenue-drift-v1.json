@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-27T13:38:58.239Z",
+  "generatedAt": "2026-07-27T13:45:28.137Z",
   "strategyFamilyId": "stock_revenue_momentum_ensemble_v1:9b9fa09fcb486e062b4951cc",
   "experimentHash": "be2f3251eba2f0ab771120f5",
   "universe": "台股個股；ETF 與 0050 實際交易比重 0%",
@@ -2606,6 +2606,13 @@
       "maximumDrawdownPct": -14.2722,
       "trades": 481,
       "reason": "SUE 疊加增加交易數，但資金競爭稀釋較強的月營收事件，報酬與回撤同時惡化。"
+    },
+    {
+      "id": "train_selected_source_risk_budget",
+      "monthlyReturnPct": 1.5134,
+      "maximumDrawdownPct": -13.8924,
+      "trades": 434,
+      "reason": "來源別風險預算略增交易與 PF，但月均下降且最大回撤沒有改善。"
     }
   ],
   "targetMonthlyReturnPct": 5,

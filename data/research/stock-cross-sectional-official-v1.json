@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-27T12:38:02.372Z",
+  "generatedAt": "2026-07-27T12:51:40.771Z",
   "strategyFamilyId": "stock_cross_sectional_official_v1:f24d537e46d004ecd6dd4c93",
   "experimentHash": "60599dd2270d28ac368d301b",
   "registryChecked": true,
@@ -2941,6 +2941,13 @@
     }
   ],
   "rejectedExperiments": [
+    {
+      "id": "learned_factor_ranking",
+      "monthlyReturnPct": 0.1574,
+      "maximumDrawdownPct": -10.41,
+      "trades": 267,
+      "reason": "修正同分百分位假訊號後，學習排名輸給公平隨機，沒有可用 alpha。"
+    },
     {
       "id": "monthly_plus_midmonth_fill",
       "selectedFolds": 0,

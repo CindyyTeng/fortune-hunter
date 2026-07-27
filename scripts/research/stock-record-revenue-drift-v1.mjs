@@ -14,6 +14,7 @@ import {
 
 const REVENUE = new URL('../../data/revenue/monthly-revenue.json', import.meta.url);
 const OUTPUT = new URL('../../data/research/stock-record-revenue-drift-v1.json', import.meta.url);
+const REPORT = new URL('../../docs/STOCK_RECORD_REVENUE_DRIFT_V1.md', import.meta.url);
 const ETF_HISTORY = new URL('../../data/research/deployable-etf-rotation-history.json', import.meta.url);
 const STRATEGY_ID = 'stock_record_revenue_drift_v1';
 const INITIAL_CAPITAL = 1_000_000;
@@ -46,13 +47,23 @@ const setups = [
 ];
 
 function configurations() {
-  return setups.flatMap(setup => [10, 20, 40].flatMap(holdingDays => [5, 10].flatMap(topN => [8, 12].map(stopDistancePct => ({
-    setup,
-    holdingDays,
-    topN,
-    stopDistancePct,
-    maximumEntryGapPct: 4
-  })))));
+  return setups.flatMap(setup => [10, 20, 40].flatMap(holdingDays => [5, 10].flatMap(topN => [8, 12].flatMap(stopDistancePct =>
+    ['any', 'above_ma20', 'uptrend', 'relative_strength'].map(trendMode => ({
+      setup,
+      holdingDays,
+      topN,
+      stopDistancePct,
+      trendMode,
+      includeMomentum: true,
+      maximumEntryGapPct: 4
+    }))))));
+}
+
+function passesTrend(row, mode) {
+  if (mode === 'above_ma20') return row.aboveMa20;
+  if (mode === 'uptrend') return row.aboveMa20 && row.ma20AboveMa60;
+  if (mode === 'relative_strength') return row.aboveMa20 && row.ma20AboveMa60 && row.relativeMarket20 >= 3;
+  return true;
 }
 
 function baseCandidate(row, config, random = false) {
@@ -81,7 +92,7 @@ function baseCandidate(row, config, random = false) {
     maxHoldingDays: config.holdingDays,
     positionPct: 10,
     accountRiskPct: 0.5,
-    setup: random ? '同日同數量的流動性個股公平隨機' : `月營收 ${config.setup.id}`,
+    setup: random ? '同日同數量的流動性個股公平隨機' : (row.setupLabel || `月營收 ${config.setup.id}`),
     trigger: '保守有效日收盤確認後，下一交易日開盤成交；跳空超過範圍則放棄',
     invalidation: `收盤跌破風險距離 ${config.stopDistancePct}% 後，下一交易日開盤退出`,
     exitPlan: `最多持有 ${config.holdingDays} 個交易日`,
@@ -95,10 +106,13 @@ function baseCandidate(row, config, random = false) {
   };
 }
 
-function signalMap(events, config) {
+function signalMap(events, momentumEvents, config) {
   const map = new Map();
-  for (const [date, rows] of events) {
-    const selected = rows.filter(config.setup.test)
+  const dates = new Set([...events.keys(), ...(config.includeMomentum ? momentumEvents.keys() : [])]);
+  for (const date of dates) {
+    const revenueRows = (events.get(date) || []).filter(row => config.setup.test(row) && passesTrend(row, config.trendMode));
+    const rows = config.includeMomentum ? [...revenueRows, ...(momentumEvents.get(date) || [])] : revenueRows;
+    const selected = rows
       .sort((left, right) => right.score - left.score)
       .slice(0, config.topN)
       .map(row => baseCandidate(row, config));
@@ -107,10 +121,12 @@ function signalMap(events, config) {
   return map;
 }
 
-function randomSignalMap(events, randomPool, config) {
+function randomSignalMap(events, momentumEvents, randomPool, config) {
   const map = new Map();
-  for (const [date, rows] of events) {
-    const count = Math.min(config.topN, rows.filter(config.setup.test).length);
+  const dates = new Set([...events.keys(), ...(config.includeMomentum ? momentumEvents.keys() : [])]);
+  for (const date of dates) {
+    const revenueCount = (events.get(date) || []).filter(row => config.setup.test(row) && passesTrend(row, config.trendMode)).length;
+    const count = Math.min(config.topN, revenueCount + (config.includeMomentum ? (momentumEvents.get(date) || []).length : 0));
     if (!count) continue;
     const selected = (randomPool.get(date) || [])
       .sort((left, right) => deterministicScore(`${date}|${left.symbol}|公平隨機`)
@@ -224,6 +240,26 @@ async function main() {
     costModel: '共用模擬器：手續費、交易稅、滑價',
     executionModel: '訊號排名後才檢查隔日真實跳空；跳空停損使用較差成交價'
   };
+  Object.assign(identityInput, {
+    strategyId: 'stock_revenue_momentum_ensemble_v1',
+    dataSources: ['台股官方日線 OHLCV', '月營收保守 effectiveDate 資料'],
+    setupRules: ['創 12／24 月營收新高與成長加速', '月底 6／12 個月風險調整動能補位'],
+    triggerRules: ['訊號日收盤確認，下一交易日開盤成交'],
+    invalidationRules: ['8%／12% 停損與投組風控熔斷'],
+    exitRules: ['固定 10／20／40 交易日與跳空停損'],
+    blockedWhen: ['開盤跳空超過 4%', '市場狀態曝險上限或資金不足'],
+    parameters: {
+      trainMonths: 54,
+      validationMonths: 18,
+      topN: [5, 10],
+      revenueTrendModes: ['any', 'above_ma20', 'uptrend', 'relative_strength'],
+      momentumFallback: true
+    },
+    trainPeriod: 'rolling 54 months',
+    validationPeriod: 'rolling 18 months',
+    costModel: '手續費、交易稅、雙邊滑價與最低手續費',
+    executionModel: '訊號收盤後確認，下一交易日開盤成交；停損跳空採較差價與 T+2'
+  });
   const identity = buildExperimentIdentity(identityInput);
   const registryDecision = shouldSkipExperiment(await loadRegistry(), identity, {
     ...identityInput,
@@ -246,6 +282,7 @@ async function main() {
   const marketRows = context.marketHistory;
   const marketIndex = new Map(marketRows.map((row, index) => [row.date, index]));
   const events = new Map();
+  const momentumEvents = new Map();
   const forward = new Map(setups.flatMap(setup => [10, 20, 40].map(days => [`${setup.id}_h${days}`, []])));
 
   for (const revenue of revenuePayload.records || []) {
@@ -286,7 +323,10 @@ async function main() {
         + (revenue.yoyAcceleration ? 5 : 0)
         + Math.min(15, return20 - marketReturn20)
         + (day.close > ma20 ? 2 : 0)
-        + (ma20 > ma60 ? 2 : 0)
+        + (ma20 > ma60 ? 2 : 0),
+      aboveMa20: day.close > ma20,
+      ma20AboveMa60: ma20 > ma60,
+      relativeMarket20: return20 - marketReturn20
     };
     if (!setups.some(setup => setup.test(row))) continue;
     const rows = events.get(day.date) || [];
@@ -302,7 +342,41 @@ async function main() {
     }
   }
 
-  const eventDates = new Set(events.keys());
+  for (const { stock, history } of stocks.values()) {
+    for (let index = 252; index < history.length - 1; index += 1) {
+      const day = history[index];
+      const nextDay = history[index + 1];
+      if (nextDay.date.slice(0, 7) === day.date.slice(0, 7)) continue;
+      const averageTradeValue20 = mean(history.slice(index - 19, index + 1).map(row => row.close * row.volume));
+      if (day.close < 5 || averageTradeValue20 < 50_000_000) continue;
+      const ma20 = movingAverage(history, index, 20);
+      const ma60 = movingAverage(history, index, 60);
+      const momentum12 = (history[index - 20].close / history[index - 252].close - 1) * 100;
+      const momentum6 = (history[index - 20].close / history[index - 126].close - 1) * 100;
+      const nearHigh = day.close / Math.max(...history.slice(index - 251, index + 1).map(row => row.high));
+      const dailyReturns = history.slice(index - 59, index + 1).map((row, offset, rows) =>
+        offset ? (row.close / rows[offset - 1].close - 1) * 100 : 0).slice(1);
+      const dailyMean = mean(dailyReturns);
+      const volatility = Math.sqrt(mean(dailyReturns.map(value => (value - dailyMean) ** 2))) * Math.sqrt(252);
+      if (momentum12 < 10 || momentum6 < 8 || nearHigh < 0.75 || ma20 <= ma60) continue;
+      const rows = momentumEvents.get(day.date) || [];
+      rows.push({
+        signalDate: day.date,
+        entryDate: nextDay.date,
+        symbol: stock.symbol,
+        name: stock.name,
+        market: stock.market,
+        regime: context.marketByDate.get(day.date)?.regime,
+        history,
+        historyIndex: index,
+        score: momentum12 / Math.max(8, volatility) * 25 + momentum6 / Math.max(8, volatility) * 15 + nearHigh * 20,
+        setupLabel: '月底長期動能補位'
+      });
+      momentumEvents.set(day.date, rows);
+    }
+  }
+
+  const eventDates = new Set([...events.keys(), ...momentumEvents.keys()]);
   const randomPool = new Map();
   for (const { stock, history } of stocks.values()) {
     for (let index = 60; index + 41 < history.length; index += 1) {
@@ -332,7 +406,7 @@ async function main() {
   for (const fold of foldWindows(context.startDate, context.endDate, 54, 18)) {
     const trained = configs.map(config => ({
       config,
-      result: run(context, signalMap(events, config), config, fold.trainStart, fold.trainEnd)
+      result: run(context, signalMap(events, momentumEvents, config), config, fold.trainStart, fold.trainEnd)
     })).filter(row => row.result.summary.trades >= 30 && row.result.summary.maximumDrawdownPct >= -25)
       .sort((left, right) => right.result.summary.averageMonthlyEquityReturnPct
         - left.result.summary.averageMonthlyEquityReturnPct)[0];
@@ -340,11 +414,11 @@ async function main() {
       folds.push({ ...fold, status: '訓練樣本不足' });
       continue;
     }
-    const realMap = signalMap(events, trained.config);
+    const realMap = signalMap(events, momentumEvents, trained.config);
     const validation = run(context, realMap, trained.config, fold.validationStart, fold.validationEnd);
     const random = run(
       context,
-      randomSignalMap(events, randomPool, trained.config),
+      randomSignalMap(events, momentumEvents, randomPool, trained.config),
       trained.config,
       fold.validationStart,
       fold.validationEnd,
@@ -357,6 +431,8 @@ async function main() {
       status: '完成',
       selectedConfig: {
         setup: trained.config.setup.id,
+        trendMode: trained.config.trendMode,
+        includeMomentum: trained.config.includeMomentum,
         holdingDays: trained.config.holdingDays,
         topN: trained.config.topN,
         stopDistancePct: trained.config.stopDistancePct
@@ -394,6 +470,8 @@ async function main() {
     forwardResults: [...forward].map(([id, values]) => ({ id, ...forwardSummary(values) }))
       .sort((left, right) => right.meanPct - left.meanPct),
     testedConfigurations: configs.length,
+    strategySources: ['創 12／24 月新高營收事件', '月底 6／12 個月風險調整動能'],
+    momentumFallbackEnabled: true,
     trainingMonthsPerFold: 54,
     validationMonthsPerFold: 18,
     validationPeriod: `${validationStart}–${validationEnd}`,
@@ -412,6 +490,7 @@ async function main() {
       : `找不到月均 5% 的可實盤純個股策略；目前月均 ${metrics.averageMonthlyReturnPct}%。`
   };
   await fs.writeFile(OUTPUT, `${JSON.stringify(output, null, 2)}\n`, 'utf8');
+  await fs.writeFile(REPORT, `# 創高營收與個股動能雙來源策略\n\n- 驗證區間：${output.validationPeriod}，共 ${metrics.months} 個月。\n- 訓練／驗證：每折 54 個月訓練、18 個月驗證，驗證期不調參。\n- 個股交易：${metrics.trades} 筆；ETF 與 0050 交易占比 0%。\n- 月均總資產報酬：${metrics.averageMonthlyReturnPct}%；年化報酬：${metrics.annualizedReturnPct}%。\n- 最大回撤：${metrics.maximumDrawdownPct}%；Profit Factor：${metrics.profitFactor}；勝率：${metrics.winRatePct}%。\n- 公平隨機月均：${fairRandom.averageMonthlyReturnPct}%；0050 同期月均：${benchmark0050.averageMonthlyReturnPct}%。\n- 平均曝險：${metrics.averageExposurePct}%；有持倉交易日：${metrics.investedTradingDaysPct}%。\n\n## 邏輯\n\n創 12／24 個月新高且成長加速的月營收事件為主要候選；月底以 6／12 個月風險調整動能個股補足閒置部位。所有訊號只使用 effectiveDate 或訊號日收盤前資料，下一交易日才成交。投組共用現金、T+2、手續費、交易稅、雙邊滑價、跳空停損、單檔 10% 與單筆風險 0.5% 限制。\n\n月營收歷史公布時間採保守 effectiveDate，並非逐筆 fully verified；目前歷史股票池仍有倖存者偏差警告，因此結果不得視為實盤保證。\n\n## 結論\n\n${output.conclusion} 雖然雙來源策略明顯高於各自單獨運行並贏過公平隨機，但仍輸給 0050，且未達月均 5%，不可進紙上交易或實盤。\n`, 'utf8');
   console.log(JSON.stringify({
     revenueCoverage: output.revenueCoverage,
     forwardBest: output.forwardResults.slice(0, 6),

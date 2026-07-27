@@ -26,7 +26,8 @@ const rejectedRiskExperiments = [
   { id: 'momentum_profit_trailing_stop', monthlyReturnPct: 0.9099, maximumDrawdownPct: -14.6982, trades: 302, reason: '獲利後移動停利仍破壞動能報酬，且最大回撤惡化。' },
   { id: 'sue_overlay_three_slots', monthlyReturnPct: 1.307, maximumDrawdownPct: -14.2722, trades: 481, reason: 'SUE 疊加增加交易數，但資金競爭稀釋較強的月營收事件，報酬與回撤同時惡化。' },
   { id: 'train_selected_source_risk_budget', monthlyReturnPct: 1.5134, maximumDrawdownPct: -13.8924, trades: 434, reason: '來源別風險預算略增交易與 PF，但月均下降且最大回撤沒有改善。' },
-  { id: 'revenue_trend_refresh_20_40', monthlyReturnPct: 1.4559, maximumDrawdownPct: -15.6168, trades: 380, reason: '第 20／40 日趨勢刷新使候選更集中，月均、回撤與交易數皆惡化。' }
+  { id: 'revenue_trend_refresh_20_40', monthlyReturnPct: 1.4559, maximumDrawdownPct: -15.6168, trades: 380, reason: '第 20／40 日趨勢刷新使候選更集中，月均、回撤與交易數皆惡化。' },
+  { id: 'train_selected_revenue_priority', monthlyReturnPct: 1.5223, maximumDrawdownPct: -13.8924, trades: 430, reason: '四個訓練折皆選回全域分數排序，營收優先沒有邊際貢獻。' }
 ];
 const mean = values => values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : 0;
 

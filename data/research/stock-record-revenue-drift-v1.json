@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-27T13:52:23.664Z",
+  "generatedAt": "2026-07-27T13:58:10.408Z",
   "strategyFamilyId": "stock_revenue_momentum_ensemble_v1:9b9fa09fcb486e062b4951cc",
   "experimentHash": "be2f3251eba2f0ab771120f5",
   "universe": "台股個股；ETF 與 0050 實際交易比重 0%",
@@ -2620,6 +2620,13 @@
       "maximumDrawdownPct": -15.6168,
       "trades": 380,
       "reason": "第 20／40 日趨勢刷新使候選更集中，月均、回撤與交易數皆惡化。"
+    },
+    {
+      "id": "train_selected_revenue_priority",
+      "monthlyReturnPct": 1.5223,
+      "maximumDrawdownPct": -13.8924,
+      "trades": 430,
+      "reason": "四個訓練折皆選回全域分數排序，營收優先沒有邊際貢獻。"
     }
   ],
   "targetMonthlyReturnPct": 5,

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-27T13:58:10.408Z",
+  "generatedAt": "2026-07-27T14:07:37.040Z",
   "strategyFamilyId": "stock_revenue_momentum_ensemble_v1:9b9fa09fcb486e062b4951cc",
   "experimentHash": "be2f3251eba2f0ab771120f5",
   "universe": "台股個股；ETF 與 0050 實際交易比重 0%",
@@ -2543,6 +2543,154 @@
         "averageTradeReturnPct": 6.8047,
         "worstTradeReturnPct": -16.85
       }
+    },
+    "regimeMetrics": {
+      "RANGE_BOUND": {
+        "trades": 131,
+        "winRatePct": 55.7252,
+        "profitFactor": 2.5091,
+        "realizedPnl": 499875,
+        "averageTradeReturnPct": 7.0426,
+        "worstTradeReturnPct": -24.41
+      },
+      "BULL_TREND": {
+        "trades": 150,
+        "winRatePct": 37.3333,
+        "profitFactor": 1.4911,
+        "realizedPnl": 310266,
+        "averageTradeReturnPct": 3.5415,
+        "worstTradeReturnPct": -20.69
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 14,
+        "winRatePct": 57.1429,
+        "profitFactor": 7.4641,
+        "realizedPnl": 219231,
+        "averageTradeReturnPct": 34.2421,
+        "worstTradeReturnPct": -15.58
+      },
+      "BULL_PULLBACK": {
+        "trades": 81,
+        "winRatePct": 34.5679,
+        "profitFactor": 1.4903,
+        "realizedPnl": 147167,
+        "averageTradeReturnPct": 3.5748,
+        "worstTradeReturnPct": -16.29
+      },
+      "BEAR_DEFENSE": {
+        "trades": 54,
+        "winRatePct": 33.3333,
+        "profitFactor": 0.8904,
+        "realizedPnl": -20350,
+        "averageTradeReturnPct": -1.4194,
+        "worstTradeReturnPct": -24.06
+      }
+    },
+    "regimeSourceMetrics": {
+      "RANGE_BOUND|月營收 record24": {
+        "trades": 52,
+        "winRatePct": 59.6154,
+        "profitFactor": 3.87,
+        "realizedPnl": 354798,
+        "averageTradeReturnPct": 10.584,
+        "worstTradeReturnPct": -13.37
+      },
+      "BULL_TREND|月營收 record24": {
+        "trades": 63,
+        "winRatePct": 30.1587,
+        "profitFactor": 1.0633,
+        "realizedPnl": 18748,
+        "averageTradeReturnPct": 0.7257,
+        "worstTradeReturnPct": -19.72
+      },
+      "RANGE_BOUND|月底長期動能補位": {
+        "trades": 47,
+        "winRatePct": 36.1702,
+        "profitFactor": 0.5475,
+        "realizedPnl": -83407,
+        "averageTradeReturnPct": -2.2668,
+        "worstTradeReturnPct": -24.41
+      },
+      "BULL_TREND|月底長期動能補位": {
+        "trades": 60,
+        "winRatePct": 36.6667,
+        "profitFactor": 1.3377,
+        "realizedPnl": 91063,
+        "averageTradeReturnPct": 2.6102,
+        "worstTradeReturnPct": -20.69
+      },
+      "HIGH_VOLATILITY|月底長期動能補位": {
+        "trades": 10,
+        "winRatePct": 60,
+        "profitFactor": 10.723,
+        "realizedPnl": 165650,
+        "averageTradeReturnPct": 41.321,
+        "worstTradeReturnPct": -10.06
+      },
+      "BULL_PULLBACK|月營收 record24": {
+        "trades": 20,
+        "winRatePct": 45,
+        "profitFactor": 4.6124,
+        "realizedPnl": 175196,
+        "averageTradeReturnPct": 15.9995,
+        "worstTradeReturnPct": -10.83
+      },
+      "BEAR_DEFENSE|月營收 record12_acceleration": {
+        "trades": 26,
+        "winRatePct": 30.7692,
+        "profitFactor": 0.9371,
+        "realizedPnl": -5591,
+        "averageTradeReturnPct": -0.7373,
+        "worstTradeReturnPct": -16.47
+      },
+      "BEAR_DEFENSE|月底長期動能補位": {
+        "trades": 28,
+        "winRatePct": 35.7143,
+        "profitFactor": 0.8475,
+        "realizedPnl": -14759,
+        "averageTradeReturnPct": -2.0529,
+        "worstTradeReturnPct": -24.06
+      },
+      "BULL_PULLBACK|月營收 record12_acceleration": {
+        "trades": 21,
+        "winRatePct": 23.8095,
+        "profitFactor": 0.5072,
+        "realizedPnl": -40151,
+        "averageTradeReturnPct": -3.199,
+        "worstTradeReturnPct": -14.23
+      },
+      "RANGE_BOUND|月營收 record12_acceleration": {
+        "trades": 32,
+        "winRatePct": 78.125,
+        "profitFactor": 10.8083,
+        "realizedPnl": 228484,
+        "averageTradeReturnPct": 14.9609,
+        "worstTradeReturnPct": -10.19
+      },
+      "BULL_PULLBACK|月底長期動能補位": {
+        "trades": 40,
+        "winRatePct": 35,
+        "profitFactor": 1.0712,
+        "realizedPnl": 12122,
+        "averageTradeReturnPct": 0.9188,
+        "worstTradeReturnPct": -16.29
+      },
+      "BULL_TREND|月營收 record12_acceleration": {
+        "trades": 27,
+        "winRatePct": 55.5556,
+        "profitFactor": 4.0289,
+        "realizedPnl": 200455,
+        "averageTradeReturnPct": 12.1815,
+        "worstTradeReturnPct": -16.85
+      },
+      "HIGH_VOLATILITY|月營收 record24": {
+        "trades": 4,
+        "winRatePct": 50,
+        "profitFactor": 4.1746,
+        "realizedPnl": 53581,
+        "averageTradeReturnPct": 16.545,
+        "worstTradeReturnPct": -15.58
+      }
     }
   },
   "benchmark0050": {
@@ -2567,6 +2715,90 @@
         "profitFactor": 1.1918,
         "realizedPnl": 162012,
         "averageTradeReturnPct": 0.8242,
+        "worstTradeReturnPct": -21.34
+      }
+    },
+    "regimeMetrics": {
+      "RANGE_BOUND": {
+        "trades": 111,
+        "winRatePct": 52.2523,
+        "profitFactor": 1.7746,
+        "realizedPnl": 148813,
+        "averageTradeReturnPct": 2.6668,
+        "worstTradeReturnPct": -18.08
+      },
+      "BULL_TREND": {
+        "trades": 134,
+        "winRatePct": 37.3134,
+        "profitFactor": 0.8128,
+        "realizedPnl": -71001,
+        "averageTradeReturnPct": -0.9085,
+        "worstTradeReturnPct": -20.55
+      },
+      "HIGH_VOLATILITY": {
+        "trades": 10,
+        "winRatePct": 60,
+        "profitFactor": 3.7488,
+        "realizedPnl": 41922,
+        "averageTradeReturnPct": 8.58,
+        "worstTradeReturnPct": -14.45
+      },
+      "BULL_PULLBACK": {
+        "trades": 73,
+        "winRatePct": 53.4247,
+        "profitFactor": 1.6923,
+        "realizedPnl": 89856,
+        "averageTradeReturnPct": 2.2425,
+        "worstTradeReturnPct": -12.66
+      },
+      "BEAR_DEFENSE": {
+        "trades": 50,
+        "winRatePct": 46,
+        "profitFactor": 0.6287,
+        "realizedPnl": -47578,
+        "averageTradeReturnPct": -2.2444,
+        "worstTradeReturnPct": -21.34
+      }
+    },
+    "regimeSourceMetrics": {
+      "RANGE_BOUND|同日同數量的流動性個股公平隨機": {
+        "trades": 111,
+        "winRatePct": 52.2523,
+        "profitFactor": 1.7746,
+        "realizedPnl": 148813,
+        "averageTradeReturnPct": 2.6668,
+        "worstTradeReturnPct": -18.08
+      },
+      "BULL_TREND|同日同數量的流動性個股公平隨機": {
+        "trades": 134,
+        "winRatePct": 37.3134,
+        "profitFactor": 0.8128,
+        "realizedPnl": -71001,
+        "averageTradeReturnPct": -0.9085,
+        "worstTradeReturnPct": -20.55
+      },
+      "HIGH_VOLATILITY|同日同數量的流動性個股公平隨機": {
+        "trades": 10,
+        "winRatePct": 60,
+        "profitFactor": 3.7488,
+        "realizedPnl": 41922,
+        "averageTradeReturnPct": 8.58,
+        "worstTradeReturnPct": -14.45
+      },
+      "BULL_PULLBACK|同日同數量的流動性個股公平隨機": {
+        "trades": 73,
+        "winRatePct": 53.4247,
+        "profitFactor": 1.6923,
+        "realizedPnl": 89856,
+        "averageTradeReturnPct": 2.2425,
+        "worstTradeReturnPct": -12.66
+      },
+      "BEAR_DEFENSE|同日同數量的流動性個股公平隨機": {
+        "trades": 50,
+        "winRatePct": 46,
+        "profitFactor": 0.6287,
+        "realizedPnl": -47578,
+        "averageTradeReturnPct": -2.2444,
         "worstTradeReturnPct": -21.34
       }
     }
@@ -2627,6 +2859,13 @@
       "maximumDrawdownPct": -13.8924,
       "trades": 430,
       "reason": "四個訓練折皆選回全域分數排序，營收優先沒有邊際貢獻。"
+    },
+    {
+      "id": "train_selected_market_policy",
+      "monthlyReturnPct": 0.8771,
+      "maximumDrawdownPct": -23.8211,
+      "trades": 438,
+      "reason": "前三折選到震盪聚焦，但首段驗證轉負，顯示市場狀態政策跨期不穩定。"
     }
   ],
   "targetMonthlyReturnPct": 5,

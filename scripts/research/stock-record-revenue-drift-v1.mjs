@@ -28,7 +28,9 @@ const rejectedRiskExperiments = [
   { id: 'train_selected_source_risk_budget', monthlyReturnPct: 1.5134, maximumDrawdownPct: -13.8924, trades: 434, reason: '來源別風險預算略增交易與 PF，但月均下降且最大回撤沒有改善。' },
   { id: 'revenue_trend_refresh_20_40', monthlyReturnPct: 1.4559, maximumDrawdownPct: -15.6168, trades: 380, reason: '第 20／40 日趨勢刷新使候選更集中，月均、回撤與交易數皆惡化。' },
   { id: 'train_selected_revenue_priority', monthlyReturnPct: 1.5223, maximumDrawdownPct: -13.8924, trades: 430, reason: '四個訓練折皆選回全域分數排序，營收優先沒有邊際貢獻。' },
-  { id: 'train_selected_market_policy', monthlyReturnPct: 0.8771, maximumDrawdownPct: -23.8211, trades: 438, reason: '前三折選到震盪聚焦，但首段驗證轉負，顯示市場狀態政策跨期不穩定。' }
+  { id: 'train_selected_market_policy', monthlyReturnPct: 0.8771, maximumDrawdownPct: -23.8211, trades: 438, reason: '前三折選到震盪聚焦，但首段驗證轉負，顯示市場狀態政策跨期不穩定。' },
+  { id: 'train_selected_regime_source_quality', monthlyReturnPct: 1.3739, maximumDrawdownPct: -13.841, trades: 397, reason: '來源與市場狀態的歷史品質門檻只微幅改善回撤，卻降低月均與交易數，跨期選擇能力不足。' },
+  { id: 'source_specific_momentum_stop', monthlyReturnPct: 1.3874, maximumDrawdownPct: -15.2464, trades: 385, reason: '動能補位改用 6%／8% 較緊停損後，正常波動被提早洗出，月均、回撤與交易數皆惡化。' }
 ];
 const mean = values => values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : 0;
 
@@ -58,16 +60,18 @@ const setups = [
 ];
 
 function configurations() {
-  return setups.flatMap(setup => [10, 20, 40].flatMap(holdingDays => [5, 10].flatMap(topN => [8, 12].flatMap(stopDistancePct =>
+  return setups.flatMap(setup => [10, 20, 40].flatMap(holdingDays => [20, 40, 60].flatMap(momentumHoldingDays =>
+    [5, 10].flatMap(topN => [8, 12].flatMap(stopDistancePct =>
     ['any', 'above_ma20', 'uptrend', 'relative_strength'].map(trendMode => ({
       setup,
       holdingDays,
+      momentumHoldingDays,
       topN,
       stopDistancePct,
       trendMode,
       includeMomentum: true,
       maximumEntryGapPct: 4
-    }))))));
+    })))))));
 }
 
 function passesTrend(row, mode) {
@@ -78,6 +82,29 @@ function passesTrend(row, mode) {
 }
 
 function baseCandidate(row, config, random = false) {
+  const holdingDays = row.setupLabel ? config.momentumHoldingDays : config.holdingDays;
+  const futureBars = row.history
+    .slice(row.historyIndex + 1, row.historyIndex + holdingDays + 2)
+    .map((bar, offset) => {
+      const priorIndex = row.historyIndex + offset;
+      const priorCloseBelowMa20 = row.setupLabel
+        && row.history[priorIndex].close < movingAverage(row.history, priorIndex, 20);
+      return {
+        date: bar.date,
+        open: bar.open,
+        high: bar.high,
+        low: bar.low,
+        close: bar.close,
+        price: bar.close,
+        ...(priorCloseBelowMa20 ? {
+          forcedExit: {
+            price: bar.open,
+            reason: '前一日收盤跌破 MA20',
+            type: 'momentum_ma20_exit'
+          }
+        } : {})
+      };
+    });
   return {
     signalDate: row.signalDate,
     entryDate: row.entryDate,
@@ -89,24 +116,17 @@ function baseCandidate(row, config, random = false) {
       ? deterministicScore(`${row.signalDate}|${row.symbol}|營收事件公平隨機`)
       : row.score,
     entryGapRange: { minimumPct: -5, maximumPct: config.maximumEntryGapPct },
-    futureBars: row.history.slice(row.historyIndex + 1, row.historyIndex + config.holdingDays + 2).map(bar => ({
-      date: bar.date,
-      open: bar.open,
-      high: bar.high,
-      low: bar.low,
-      close: bar.close,
-      price: bar.close
-    })),
+    futureBars,
     stopDistancePct: config.stopDistancePct,
     stopLossMode: 'close',
     rewardRisk: 0,
-    maxHoldingDays: config.holdingDays,
+    maxHoldingDays: holdingDays,
     positionPct: 10,
     accountRiskPct: 0.5,
     setup: random ? '同日同數量的流動性個股公平隨機' : (row.setupLabel || `月營收 ${config.setup.id}`),
     trigger: '保守有效日收盤確認後，下一交易日開盤成交；跳空超過範圍則放棄',
     invalidation: `收盤跌破風險距離 ${config.stopDistancePct}% 後，下一交易日開盤退出`,
-    exitPlan: `最多持有 ${config.holdingDays} 個交易日`,
+    exitPlan: `最多持有 ${holdingDays} 個交易日`,
     reason: random ? '公平隨機比較' : '月營收創高公告後漂移',
     orderIntent: {
       action: 'BUY',
@@ -143,7 +163,11 @@ function randomSignalMap(events, momentumEvents, randomPool, config) {
       .sort((left, right) => deterministicScore(`${date}|${left.symbol}|公平隨機`)
         - deterministicScore(`${date}|${right.symbol}|公平隨機`))
       .slice(0, count)
-      .map(row => baseCandidate(row, config, true));
+      .map((row, index) => baseCandidate(
+        index >= Math.min(config.topN, revenueCount) ? { ...row, setupLabel: 'random_momentum_slot' } : row,
+        config,
+        true
+      ));
     if (selected.length) map.set(date, selected);
   }
   return map;
@@ -280,13 +304,14 @@ async function main() {
     setupRules: ['創 12／24 月營收新高與成長加速', '月底 6／12 個月風險調整動能補位'],
     triggerRules: ['訊號日收盤確認，下一交易日開盤成交'],
     invalidationRules: ['8%／12% 停損與投組風控熔斷'],
-    exitRules: ['固定 10／20／40 交易日與跳空停損'],
+    exitRules: ['營收最長 10／20／40 日；動能最長 20／40／60 日且跌破 MA20 隔日退出'],
     blockedWhen: ['開盤跳空超過 4%', '市場狀態曝險上限或資金不足'],
     parameters: {
       trainMonths: 54,
       validationMonths: 18,
       topN: [5, 10],
       revenueTrendModes: ['any', 'above_ma20', 'uptrend', 'relative_strength'],
+      momentumHoldingDays: [20, 40, 60],
       momentumFallback: true
     },
     trainPeriod: 'rolling 54 months',
@@ -468,6 +493,7 @@ async function main() {
         trendMode: trained.config.trendMode,
         includeMomentum: trained.config.includeMomentum,
         holdingDays: trained.config.holdingDays,
+        momentumHoldingDays: trained.config.momentumHoldingDays,
         topN: trained.config.topN,
         stopDistancePct: trained.config.stopDistancePct
       },
@@ -514,6 +540,14 @@ async function main() {
     benchmark0050,
     fairRandom,
     rejectedRiskExperiments,
+    priorBaselineComparison: {
+      priorMonthlyReturnPct: 1.5223,
+      priorMaximumDrawdownPct: -13.8924,
+      priorTrades: 430,
+      monthlyReturnChangePct: round(metrics.averageMonthlyReturnPct - 1.5223),
+      maximumDrawdownImprovementPct: round(metrics.maximumDrawdownPct - (-13.8924)),
+      tradeCountChange: metrics.trades - 430
+    },
     targetMonthlyReturnPct: 5,
     gapToTargetPct: round(5 - metrics.averageMonthlyReturnPct),
     targetMet,
@@ -525,7 +559,7 @@ async function main() {
       : `找不到月均 5% 的可實盤純個股策略；目前月均 ${metrics.averageMonthlyReturnPct}%。`
   };
   await fs.writeFile(OUTPUT, `${JSON.stringify(output, null, 2)}\n`, 'utf8');
-  await fs.writeFile(REPORT, `# 創高營收與個股動能雙來源策略\n\n- 驗證區間：${output.validationPeriod}，共 ${metrics.months} 個月。\n- 訓練／驗證：每折 54 個月訓練、18 個月驗證，驗證期不調參。\n- 個股交易：${metrics.trades} 筆；ETF 與 0050 交易占比 0%。\n- 月均總資產報酬：${metrics.averageMonthlyReturnPct}%；年化報酬：${metrics.annualizedReturnPct}%。\n- 最大回撤：${metrics.maximumDrawdownPct}%；Profit Factor：${metrics.profitFactor}；勝率：${metrics.winRatePct}%。\n- 公平隨機月均：${fairRandom.averageMonthlyReturnPct}%；0050 同期月均：${benchmark0050.averageMonthlyReturnPct}%。\n- 平均曝險：${metrics.averageExposurePct}%；有持倉交易日：${metrics.investedTradingDaysPct}%。\n\n## 邏輯\n\n創 12／24 個月新高且成長加速的月營收事件為主要候選；月底以 6／12 個月風險調整動能個股補足閒置部位。所有訊號只使用 effectiveDate 或訊號日收盤前資料，下一交易日才成交。投組共用現金、T+2、手續費、交易稅、雙邊滑價、跳空停損、單檔 10% 與單筆風險 0.5% 限制。\n\n月營收歷史公布時間採保守 effectiveDate，並非逐筆 fully verified；目前歷史股票池仍有倖存者偏差警告，因此結果不得視為實盤保證。\n\n## 結論\n\n${output.conclusion} 雖然雙來源策略明顯高於各自單獨運行並贏過公平隨機，但仍輸給 0050，且未達月均 5%，不可進紙上交易或實盤。\n`, 'utf8');
+  await fs.writeFile(REPORT, `# 創高營收與個股動能雙來源策略\n\n- 驗證區間：${output.validationPeriod}，共 ${metrics.months} 個月。\n- 訓練／驗證：每折 54 個月訓練、18 個月驗證，驗證期不調參。\n- 個股交易：${metrics.trades} 筆；ETF 與 0050 交易占比 0%。\n- 月均總資產報酬：${metrics.averageMonthlyReturnPct}%；年化報酬：${metrics.annualizedReturnPct}%。\n- 最大回撤：${metrics.maximumDrawdownPct}%；Profit Factor：${metrics.profitFactor}；勝率：${metrics.winRatePct}%。\n- 公平隨機月均：${fairRandom.averageMonthlyReturnPct}%；0050 同期月均：${benchmark0050.averageMonthlyReturnPct}%。\n- 平均曝險：${metrics.averageExposurePct}%；有持倉交易日：${metrics.investedTradingDaysPct}%。\n\n## 本輪改善\n\n相較前一可信基準，月均增加 ${output.priorBaselineComparison.monthlyReturnChangePct} 個百分點，最大回撤改善 ${output.priorBaselineComparison.maximumDrawdownImprovementPct} 個百分點，交易數增加 ${output.priorBaselineComparison.tradeCountChange} 筆。\n\n## 邏輯\n\n創 12／24 個月新高且成長加速的月營收事件為主要候選；月底以 6／12 個月風險調整動能個股補足閒置部位。營收事件與動能補位分開選擇持有週期；動能股若前一日收盤跌破 MA20，隔日開盤退出。所有訊號只使用 effectiveDate 或訊號日收盤前資料，下一交易日才成交。投組共用現金、T+2、手續費、交易稅、雙邊滑價、跳空停損、單檔 10% 與單筆風險 0.5% 限制。\n\n月營收歷史公布時間採保守 effectiveDate，並非逐筆 fully verified；目前歷史股票池仍有倖存者偏差警告，因此結果不得視為實盤保證。\n\n## 結論\n\n${output.conclusion} 雖然雙來源策略明顯高於各自單獨運行並贏過公平隨機，但仍輸給 0050，且未達月均 5%，不可進紙上交易或實盤。\n`, 'utf8');
   await fs.appendFile(REPORT, `\n## 市場狀態歸因\n\n${Object.entries(metrics.regimeMetrics).map(([regime, row]) => `- ${regime}：${row.trades} 筆，PF ${row.profitFactor}，平均每筆 ${row.averageTradeReturnPct}%，已實現損益 ${row.realizedPnl}。`).join('\n')}\n\n## 來源績效與風控覆檢\n\n主要正期望來自月營收創高事件；月底長期動能補位增加交易機會，但獲利品質較弱。已拒絕的風控實驗如下，後續不可重複測試：\n\n${rejectedRiskExperiments.map(row => `- ${row.id}：月均 ${row.monthlyReturnPct}%，最大回撤 ${row.maximumDrawdownPct}%，${row.trades} 筆；${row.reason}`).join('\n')}\n`, 'utf8');
   console.log(JSON.stringify({
     revenueCoverage: output.revenueCoverage,

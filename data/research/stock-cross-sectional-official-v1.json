@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-27T12:51:40.771Z",
+  "generatedAt": "2026-07-27T13:02:01.574Z",
   "strategyFamilyId": "stock_cross_sectional_official_v1:f24d537e46d004ecd6dd4c93",
   "experimentHash": "60599dd2270d28ac368d301b",
   "registryChecked": true,
@@ -2941,6 +2941,32 @@
     }
   ],
   "rejectedExperiments": [
+    {
+      "id": "multi_horizon_candidate_ensemble",
+      "selectedFolds": 0,
+      "reason": "六個月與十二個月共用候選池未在任何訓練折勝出，沒有新增樣本外優勢。"
+    },
+    {
+      "id": "momentum_9_skip_2",
+      "monthlyReturnPct": 0.5186,
+      "maximumDrawdownPct": -10.76,
+      "trades": 238,
+      "reason": "交易增加但月均下降且回撤惡化，延長跳過期無效。"
+    },
+    {
+      "id": "quiet_momentum",
+      "monthlyReturnPct": 0.5724,
+      "maximumDrawdownPct": -5.86,
+      "trades": 187,
+      "reason": "低成交值限制錯失有效領先股，月均與交易數皆下降。"
+    },
+    {
+      "id": "quarterly_consistent_momentum",
+      "monthlyReturnPct": 0.6538,
+      "maximumDrawdownPct": -5.18,
+      "trades": 202,
+      "reason": "回撤略降且交易略增，但第一折樣本外失效，月均明顯低於基準。"
+    },
     {
       "id": "learned_factor_ranking",
       "monthlyReturnPct": 0.1574,

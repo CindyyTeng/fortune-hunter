@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-27T13:16:35.097Z",
+  "generatedAt": "2026-07-27T13:28:04.460Z",
   "strategyFamilyId": "stock_revenue_momentum_ensemble_v1:9b9fa09fcb486e062b4951cc",
   "experimentHash": "be2f3251eba2f0ab771120f5",
   "universe": "台股個股；ETF 與 0050 實際交易比重 0%",
@@ -2517,7 +2517,33 @@
     "concentrationPct": 1.6279,
     "negativeMonths": 27,
     "averageExposurePct": 27.5195,
-    "investedTradingDaysPct": 91.8571
+    "investedTradingDaysPct": 91.8571,
+    "sourceMetrics": {
+      "月營收 record24": {
+        "trades": 139,
+        "winRatePct": 43.8849,
+        "profitFactor": 2.2419,
+        "realizedPnl": 602323,
+        "averageTradeReturnPct": 7.0666,
+        "worstTradeReturnPct": -19.72
+      },
+      "月底長期動能補位": {
+        "trades": 185,
+        "winRatePct": 37.2973,
+        "profitFactor": 1.2313,
+        "realizedPnl": 170669,
+        "averageTradeReturnPct": 2.3922,
+        "worstTradeReturnPct": -24.41
+      },
+      "月營收 record12_acceleration": {
+        "trades": 106,
+        "winRatePct": 50,
+        "profitFactor": 2.4747,
+        "realizedPnl": 383197,
+        "averageTradeReturnPct": 6.8047,
+        "worstTradeReturnPct": -16.85
+      }
+    }
   },
   "benchmark0050": {
     "averageMonthlyReturnPct": 2.2346
@@ -2533,8 +2559,48 @@
     "concentrationPct": 1.0582,
     "negativeMonths": 31,
     "averageExposurePct": 29.3019,
-    "investedTradingDaysPct": 91
+    "investedTradingDaysPct": 91,
+    "sourceMetrics": {
+      "同日同數量的流動性個股公平隨機": {
+        "trades": 378,
+        "winRatePct": 46.5608,
+        "profitFactor": 1.1918,
+        "realizedPnl": 162012,
+        "averageTradeReturnPct": 0.8242,
+        "worstTradeReturnPct": -21.34
+      }
+    }
   },
+  "rejectedRiskExperiments": [
+    {
+      "id": "source_blind_defensive_risk",
+      "monthlyReturnPct": 0.7924,
+      "maximumDrawdownPct": -13.3188,
+      "trades": 338,
+      "reason": "全面降低曝險使報酬大幅下降，回撤改善不足。"
+    },
+    {
+      "id": "momentum_intraday_stop",
+      "monthlyReturnPct": 0.7755,
+      "maximumDrawdownPct": -12.6012,
+      "trades": 435,
+      "reason": "盤中硬停損造成反覆洗出，報酬損失大於風險改善。"
+    },
+    {
+      "id": "momentum_hold_cap_20",
+      "monthlyReturnPct": 1.0283,
+      "maximumDrawdownPct": -12.1865,
+      "trades": 457,
+      "reason": "強制縮短持有期截斷獲利延續，月均報酬下降。"
+    },
+    {
+      "id": "momentum_profit_trailing_stop",
+      "monthlyReturnPct": 0.9099,
+      "maximumDrawdownPct": -14.6982,
+      "trades": 302,
+      "reason": "獲利後移動停利仍破壞動能報酬，且最大回撤惡化。"
+    }
+  ],
   "targetMonthlyReturnPct": 5,
   "gapToTargetPct": 3.4777,
   "targetMet": false,

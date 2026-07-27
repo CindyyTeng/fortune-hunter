@@ -19,6 +19,12 @@ const ETF_HISTORY = new URL('../../data/research/deployable-etf-rotation-history
 const STRATEGY_ID = 'stock_record_revenue_drift_v1';
 const INITIAL_CAPITAL = 1_000_000;
 const COST_PCT = 0.6;
+const rejectedRiskExperiments = [
+  { id: 'source_blind_defensive_risk', monthlyReturnPct: 0.7924, maximumDrawdownPct: -13.3188, trades: 338, reason: '全面降低曝險使報酬大幅下降，回撤改善不足。' },
+  { id: 'momentum_intraday_stop', monthlyReturnPct: 0.7755, maximumDrawdownPct: -12.6012, trades: 435, reason: '盤中硬停損造成反覆洗出，報酬損失大於風險改善。' },
+  { id: 'momentum_hold_cap_20', monthlyReturnPct: 1.0283, maximumDrawdownPct: -12.1865, trades: 457, reason: '強制縮短持有期截斷獲利延續，月均報酬下降。' },
+  { id: 'momentum_profit_trailing_stop', monthlyReturnPct: 0.9099, maximumDrawdownPct: -14.6982, trades: 302, reason: '獲利後移動停利仍破壞動能報酬，且最大回撤惡化。' }
+];
 const mean = values => values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : 0;
 
 function movingAverage(history, index, days) {
@@ -184,6 +190,20 @@ function summarizeRuns(runs) {
   const losses = Math.abs(trades.filter(row => row.realizedPnl <= 0).reduce((sum, row) => sum + row.realizedPnl, 0));
   const symbols = new Map();
   for (const trade of trades) symbols.set(trade.symbol, (symbols.get(trade.symbol) || 0) + 1);
+  const sourceMetrics = {};
+  for (const source of new Set(trades.map(row => row.setup))) {
+    const rows = trades.filter(row => row.setup === source);
+    const sourceGains = rows.filter(row => row.realizedPnl > 0).reduce((sum, row) => sum + row.realizedPnl, 0);
+    const sourceLosses = Math.abs(rows.filter(row => row.realizedPnl <= 0).reduce((sum, row) => sum + row.realizedPnl, 0));
+    sourceMetrics[source] = {
+      trades: rows.length,
+      winRatePct: round(rows.filter(row => row.realizedPnl > 0).length / Math.max(1, rows.length) * 100),
+      profitFactor: sourceLosses ? round(sourceGains / sourceLosses) : null,
+      realizedPnl: round(rows.reduce((sum, row) => sum + row.realizedPnl, 0), 0),
+      averageTradeReturnPct: round(mean(rows.map(row => row.tradeReturnPct))),
+      worstTradeReturnPct: round(Math.min(...rows.map(row => row.tradeReturnPct)))
+    };
+  }
   return {
     months: monthly.length,
     averageMonthlyReturnPct: round(mean(monthly.map(row => row.equityReturnPct))),
@@ -195,7 +215,8 @@ function summarizeRuns(runs) {
     concentrationPct: round(Math.max(0, ...symbols.values()) / Math.max(1, trades.length) * 100),
     negativeMonths: monthly.filter(row => row.equityReturnPct < 0).length,
     averageExposurePct: round(mean(curve.map(row => row.exposurePct || 0))),
-    investedTradingDaysPct: round(curve.filter(row => row.openPositions > 0).length / Math.max(1, curve.length) * 100)
+    investedTradingDaysPct: round(curve.filter(row => row.openPositions > 0).length / Math.max(1, curve.length) * 100),
+    sourceMetrics
   };
 }
 
@@ -479,6 +500,7 @@ async function main() {
     metrics,
     benchmark0050,
     fairRandom,
+    rejectedRiskExperiments,
     targetMonthlyReturnPct: 5,
     gapToTargetPct: round(5 - metrics.averageMonthlyReturnPct),
     targetMet,
@@ -491,6 +513,7 @@ async function main() {
   };
   await fs.writeFile(OUTPUT, `${JSON.stringify(output, null, 2)}\n`, 'utf8');
   await fs.writeFile(REPORT, `# 創高營收與個股動能雙來源策略\n\n- 驗證區間：${output.validationPeriod}，共 ${metrics.months} 個月。\n- 訓練／驗證：每折 54 個月訓練、18 個月驗證，驗證期不調參。\n- 個股交易：${metrics.trades} 筆；ETF 與 0050 交易占比 0%。\n- 月均總資產報酬：${metrics.averageMonthlyReturnPct}%；年化報酬：${metrics.annualizedReturnPct}%。\n- 最大回撤：${metrics.maximumDrawdownPct}%；Profit Factor：${metrics.profitFactor}；勝率：${metrics.winRatePct}%。\n- 公平隨機月均：${fairRandom.averageMonthlyReturnPct}%；0050 同期月均：${benchmark0050.averageMonthlyReturnPct}%。\n- 平均曝險：${metrics.averageExposurePct}%；有持倉交易日：${metrics.investedTradingDaysPct}%。\n\n## 邏輯\n\n創 12／24 個月新高且成長加速的月營收事件為主要候選；月底以 6／12 個月風險調整動能個股補足閒置部位。所有訊號只使用 effectiveDate 或訊號日收盤前資料，下一交易日才成交。投組共用現金、T+2、手續費、交易稅、雙邊滑價、跳空停損、單檔 10% 與單筆風險 0.5% 限制。\n\n月營收歷史公布時間採保守 effectiveDate，並非逐筆 fully verified；目前歷史股票池仍有倖存者偏差警告，因此結果不得視為實盤保證。\n\n## 結論\n\n${output.conclusion} 雖然雙來源策略明顯高於各自單獨運行並贏過公平隨機，但仍輸給 0050，且未達月均 5%，不可進紙上交易或實盤。\n`, 'utf8');
+  await fs.appendFile(REPORT, `\n## 來源績效與風控覆檢\n\n主要正期望來自月營收創高事件；月底長期動能補位增加交易機會，但獲利品質較弱。已拒絕的風控實驗如下，後續不可重複測試：\n\n${rejectedRiskExperiments.map(row => `- ${row.id}：月均 ${row.monthlyReturnPct}%，最大回撤 ${row.maximumDrawdownPct}%，${row.trades} 筆；${row.reason}`).join('\n')}\n`, 'utf8');
   console.log(JSON.stringify({
     revenueCoverage: output.revenueCoverage,
     forwardBest: output.forwardResults.slice(0, 6),

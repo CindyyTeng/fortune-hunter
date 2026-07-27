@@ -23,7 +23,8 @@ const rejectedRiskExperiments = [
   { id: 'source_blind_defensive_risk', monthlyReturnPct: 0.7924, maximumDrawdownPct: -13.3188, trades: 338, reason: '全面降低曝險使報酬大幅下降，回撤改善不足。' },
   { id: 'momentum_intraday_stop', monthlyReturnPct: 0.7755, maximumDrawdownPct: -12.6012, trades: 435, reason: '盤中硬停損造成反覆洗出，報酬損失大於風險改善。' },
   { id: 'momentum_hold_cap_20', monthlyReturnPct: 1.0283, maximumDrawdownPct: -12.1865, trades: 457, reason: '強制縮短持有期截斷獲利延續，月均報酬下降。' },
-  { id: 'momentum_profit_trailing_stop', monthlyReturnPct: 0.9099, maximumDrawdownPct: -14.6982, trades: 302, reason: '獲利後移動停利仍破壞動能報酬，且最大回撤惡化。' }
+  { id: 'momentum_profit_trailing_stop', monthlyReturnPct: 0.9099, maximumDrawdownPct: -14.6982, trades: 302, reason: '獲利後移動停利仍破壞動能報酬，且最大回撤惡化。' },
+  { id: 'sue_overlay_three_slots', monthlyReturnPct: 1.307, maximumDrawdownPct: -14.2722, trades: 481, reason: 'SUE 疊加增加交易數，但資金競爭稀釋較強的月營收事件，報酬與回撤同時惡化。' }
 ];
 const mean = values => values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : 0;
 

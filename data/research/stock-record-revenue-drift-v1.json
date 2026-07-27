@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-27T13:28:04.460Z",
+  "generatedAt": "2026-07-27T13:38:58.239Z",
   "strategyFamilyId": "stock_revenue_momentum_ensemble_v1:9b9fa09fcb486e062b4951cc",
   "experimentHash": "be2f3251eba2f0ab771120f5",
   "universe": "台股個股；ETF 與 0050 實際交易比重 0%",
@@ -2599,6 +2599,13 @@
       "maximumDrawdownPct": -14.6982,
       "trades": 302,
       "reason": "獲利後移動停利仍破壞動能報酬，且最大回撤惡化。"
+    },
+    {
+      "id": "sue_overlay_three_slots",
+      "monthlyReturnPct": 1.307,
+      "maximumDrawdownPct": -14.2722,
+      "trades": 481,
+      "reason": "SUE 疊加增加交易數，但資金競爭稀釋較強的月營收事件，報酬與回撤同時惡化。"
     }
   ],
   "targetMonthlyReturnPct": 5,

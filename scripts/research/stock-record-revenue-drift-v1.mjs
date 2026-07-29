@@ -548,6 +548,25 @@ async function main() {
     trainingMonthsPerFold: 54,
     validationMonthsPerFold: 18,
     validationPeriod: `${validationStart}–${validationEnd}`,
+    validationTradeCandidates: validations.flatMap(run => run.trades).map(trade => ({
+      tradeId: `revenue-${trade.tradeId}`,
+      symbol: trade.symbol,
+      name: trade.name,
+      signal: '營收動能補位',
+      signalScore: 0,
+      signalDate: trade.signalDate,
+      entryDate: trade.entryDate,
+      entryPrice: trade.entryPrice,
+      stopLoss: trade.stopLoss,
+      exitDate: trade.exitDate,
+      exitPrice: trade.exitPrice,
+      exitReason: trade.exitReason,
+      plannedHoldDays: trade.maxHoldingDays,
+      gapUpPct: 0,
+      markPrices: trade.bars
+        .filter(bar => bar.date >= trade.entryDate && bar.date <= trade.exitDate)
+        .map(bar => ({ date: bar.date, open: bar.open, price: bar.close }))
+    })),
     folds,
     metrics,
     benchmark0050,

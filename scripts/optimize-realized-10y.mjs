@@ -808,7 +808,11 @@ function simulate(allDays, months, config, marketRegimes = new Map()) {
     let entriesOpenedToday = 0;
     for (const trade of rank(day.entries, config.rankMode)) {
       if (config.maxEntriesPerDay && entriesOpenedToday >= config.maxEntriesPerDay) continue;
-      if (open.length >= config.maxOpenPositions || !passes(trade, config)) continue;
+      if (trade.alphaSource === 'revenue_overlay'
+        && open.filter(position => position.trade.alphaSource === 'revenue_overlay').length
+          >= (config.maxRevenueOverlayPositions ?? Infinity)) continue;
+      if (open.length >= config.maxOpenPositions
+        || (trade.alphaSource !== 'revenue_overlay' && !passes(trade, config))) continue;
       if (profitLocked
         || lossBraked
         || drawdownLocked
@@ -831,6 +835,9 @@ function simulate(allDays, months, config, marketRegimes = new Map()) {
         if (themeConcentration) continue;
       }
       let plannedPct = plannedPositionPct(trade, config);
+      if (trade.alphaSource === 'revenue_overlay') {
+        plannedPct = Math.min(plannedPct, config.revenueOverlayPositionPct ?? plannedPct);
+      }
       if (config.monthPerformancePositioning) {
         plannedPct *= monthReturnPct >= config.monthPerformanceTriggerPct
           ? config.positiveMonthPositionMultiplier
@@ -4441,6 +4448,136 @@ async function main() {
     trail: null,
     noFollow: false
   })));
+  if (process.argv.includes('--stock-shared-alpha-pool-v1')) {
+    const outputFile = new URL('../data/research/stock-shared-alpha-pool-v1.json', import.meta.url);
+    const reportFile = new URL('../docs/STOCK_SHARED_ALPHA_POOL_V1.md', import.meta.url);
+    const [search, top5, revenue] = await Promise.all([
+      fs.readFile(OUTPUT, 'utf8').then(JSON.parse),
+      fs.readFile(new URL('../data/research/stock-fixed-top5-oos-v15.json', import.meta.url), 'utf8').then(JSON.parse),
+      fs.readFile(new URL('../data/research/stock-record-revenue-drift-v1.json', import.meta.url), 'utf8').then(JSON.parse)
+    ]);
+    const selectedConfig = top5.selection.fullSelectedConfig || top5.selection.selectedConfig;
+    const config = {
+      ...(top5.selection.fullSelectedConfig ? {} : search.bestBalanced.config),
+      ...selectedConfig,
+      exitRule: selectedConfig.exitRule
+    };
+    delete config.collectTrades;
+    const topTrades = broadDaysForExitRule(config.exitRule)
+      .flatMap(([, day]) => day.entries);
+    const revenueTrades = revenue.validationTradeCandidates.map(trade => ({
+      ...trade,
+      alphaSource: 'revenue_overlay',
+      signal: BUY_SIGNAL,
+      signalScore: 64,
+      targetFast: trade.entryPrice + Math.max(0.01, trade.entryPrice - trade.stopLoss) * 2,
+      marketRegime: marketRegimes.get(trade.signalDate) || null
+    }));
+    const validationDays = buildDays([...topTrades, ...revenueTrades]);
+    const overlayConfigs = [1, 2, 3].flatMap(maxRevenueOverlayPositions =>
+      [2, 4, 6].map(revenueOverlayPositionPct => ({
+        ...config,
+        maxRevenueOverlayPositions,
+        revenueOverlayPositionPct
+      })));
+    const selectedOverlay = overlayConfigs.map(candidate => {
+      const train = simulateRange(
+        validationDays,
+        candidate,
+        marketRegimes,
+        '2020-09',
+        '2021-12',
+        true,
+        false
+      );
+      const trainQuality = tradeQuality(train);
+      return {
+        config: candidate,
+        train,
+        score: train.full.average
+          + Math.min(trainQuality.profitFactor ?? 0, 2)
+          + train.maxDrawdownPct * 0.08
+      };
+    }).filter(row => row.train.trades >= 50 && row.train.maxDrawdownPct >= -20)
+      .sort((a, b) => b.score - a.score)[0];
+    if (!selectedOverlay) throw new Error('共用資金池沒有符合訓練期風控條件的補位設定');
+    const validation = simulateRange(
+      validationDays,
+      selectedOverlay.config,
+      marketRegimes,
+      '2022-01',
+      '2026-05',
+      true,
+      false
+    );
+    const quality = tradeQuality(validation);
+    const etfHistory = JSON.parse(await fs.readFile(ETF_HISTORY, 'utf8'));
+    const benchmark0050 = benchmarkStats(etfHistory.series['0050.TW'] || [], '2022-01-01', '2026-05-31');
+    const revenueTradeCount = validation.closedTrades
+      .filter(trade => trade.tradeId.startsWith('revenue-')).length;
+    const metrics = {
+      averageMonthlyReturnPct: round(validation.full.average),
+      annualizedReturnPct: annualizedReturn(validation.monthly),
+      maximumDrawdownPct: validation.maxDrawdownPct,
+      trades: validation.trades,
+      revenueOverlayTrades: revenueTradeCount,
+      top5Trades: validation.trades - revenueTradeCount,
+      winRatePct: quality.winRatePct,
+      profitFactor: quality.profitFactor,
+      beats0050: validation.full.average > benchmark0050.averageMonthlyReturnPct
+    };
+    const targetMet = metrics.averageMonthlyReturnPct >= 5
+      && metrics.maximumDrawdownPct >= -20
+      && metrics.trades >= 300
+      && metrics.beats0050;
+    const output = {
+      generatedAt: new Date().toISOString(),
+      strategyId: 'stock_shared_alpha_pool_v1',
+      selection: {
+        trainPeriod: '2020-09~2021-12',
+        testedConfigs: overlayConfigs.length,
+        maxRevenueOverlayPositions: selectedOverlay.config.maxRevenueOverlayPositions,
+        revenueOverlayPositionPct: selectedOverlay.config.revenueOverlayPositionPct,
+        trainAverageMonthlyReturnPct: round(selectedOverlay.train.full.average),
+        trainMaximumDrawdownPct: selectedOverlay.train.maxDrawdownPct,
+        trainTrades: selectedOverlay.train.trades
+      },
+      universe: '純個股；ETF 與 0050 交易占比 0%',
+      validation: {
+        period: '2022-01～2026-05',
+        parametersFrozen: true,
+        monthly: validation.monthly
+      },
+      execution: 'Top5 訊號優先；只有共用資金、持倉格與 T+2 允許時，營收事件才補空位。',
+      metrics,
+      benchmark0050,
+      targetMonthlyReturnPct: 5,
+      targetMet,
+      paperTradingReady: false,
+      liveTradingReady: false,
+      conclusion: targetMet
+        ? '達到研究門檻，但仍只能進紙上交易驗證。'
+        : `未達月均 5% 與超越 0050 門檻，目前月均 ${metrics.averageMonthlyReturnPct}%。`
+    };
+    await fs.writeFile(outputFile, `${JSON.stringify(output, null, 2)}\n`, 'utf8');
+    await fs.writeFile(reportFile, `# 純個股共用資金池 v1
+
+- 驗證期間：2022-01～2026-05
+- 月均報酬：${metrics.averageMonthlyReturnPct}%
+- 年化報酬：${metrics.annualizedReturnPct}%
+- 最大回撤：${metrics.maximumDrawdownPct}%
+- 交易筆數：${metrics.trades}（Top5 ${metrics.top5Trades}；營收補位 ${metrics.revenueOverlayTrades}）
+- Profit Factor：${metrics.profitFactor}
+- 勝率：${metrics.winRatePct}%
+- 0050 同期月均：${benchmark0050.averageMonthlyReturnPct}%
+
+Top5 使用訓練期凍結配置並優先取得資金；營收候選僅在資金、持倉格與 T+2 允許時補位。兩個來源共用手續費、交易稅、滑價、停損與帳戶熔斷，不使用 ETF。
+
+結論：${output.conclusion} 未通過前不可紙上交易或實盤。
+`, 'utf8');
+    console.log(JSON.stringify({ metrics, benchmark0050, conclusion: output.conclusion }, null, 2));
+    return;
+  }
   if (process.argv.includes('--stock-fixed-top5-oos-v8')) {
     const search = JSON.parse(await fs.readFile(OUTPUT, 'utf8'));
     const base = { ...search.bestBalanced.config };
@@ -6337,6 +6474,7 @@ async function main() {
         rule: '沿用 v14 子集合條件，只搜尋較小範圍的出場、停損、月熔斷與風險配置。',
         testedConfigs: variants.length,
         selectedConfig: riskConfig(selected.config),
+        fullSelectedConfig: selected.config,
         trainAverageMonthlyReturnPct: round(selected.full.average),
         trainMaximumDrawdownPct: selected.maxDrawdownPct,
         trainTrades: selected.trades,

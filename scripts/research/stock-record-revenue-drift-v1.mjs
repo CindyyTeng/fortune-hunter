@@ -37,7 +37,10 @@ const rejectedRiskExperiments = [
   { id: 'stable_segment_training_score', monthlyReturnPct: 0.8763, maximumDrawdownPct: -13.1272, trades: 541, reason: '訓練期子區間穩定性評分選到較弱動能配置，驗證月均與回撤同步惡化。' },
   { id: 'momentum_regime_restriction', monthlyReturnPct: 1.5076, maximumDrawdownPct: -10.6531, trades: 528, reason: '限制動能補位的市場狀態降低月均與交易數，最大回撤沒有改善。' },
   { id: 'expanded_revenue_setups', monthlyReturnPct: 1.6239, maximumDrawdownPct: -10.6353, trades: 547, reason: '擴大營收創高加速條件只增加少量交易並微幅改善回撤，月均仍低於既有基準。' },
-  { id: 'longer_holding_top15', monthlyReturnPct: 1.3577, maximumDrawdownPct: -10.6531, trades: 549, reason: '60 日持有提高單筆遠期報酬，但資金占用使投組月均下降；Top 15 只小幅增加交易。' }
+  { id: 'longer_holding_top15', monthlyReturnPct: 1.3577, maximumDrawdownPct: -10.6531, trades: 549, reason: '60 日持有提高單筆遠期報酬，但資金占用使投組月均下降；Top 15 只小幅增加交易。' },
+  { id: 'pre_announcement_institutional_flow', monthlyReturnPct: 1.6094, maximumDrawdownPct: -10.6442, trades: 546, reason: '公告前法人淨賣超排序只在一折被選用，驗證月均低於原策略，無法轉成穩定 alpha。' },
+  { id: 'revenue_confirmation_entry', monthlyReturnPct: 1.6429, maximumDrawdownPct: -10.6531, trades: 544, reason: '四個訓練折都選回立即進場；隔日轉強與三日回測轉強沒有穩定增益。' },
+  { id: 'weekly_momentum_frequency', monthlyReturnPct: 1.6429, maximumDrawdownPct: -10.6531, trades: 544, reason: '四個訓練折都選回月底訊號；提高到每週選股沒有穩定的訓練期優勢。' }
 ];
 const mean = values => values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : 0;
 

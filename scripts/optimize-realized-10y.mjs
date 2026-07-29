@@ -6210,40 +6210,51 @@ async function main() {
       maxDistanceToMa20Pct: Math.min(config.maxDistanceToMa20Pct ?? 100, 22),
       minMarketMom5Pct: Math.max(config.minMarketMom5Pct ?? -100, -5)
     });
-    const daysByExitRule = new Map();
+    let cachedExitRuleKey = null;
+    let cachedExitRuleDays = null;
     const daysFor = config => {
       const key = JSON.stringify(config.exitRule);
-      if (!daysByExitRule.has(key)) daysByExitRule.set(key, broadDaysForExitRule(config.exitRule));
-      return daysByExitRule.get(key);
+      if (key !== cachedExitRuleKey) {
+        cachedExitRuleKey = key;
+        cachedExitRuleDays = broadDaysForExitRule(config.exitRule);
+      }
+      return cachedExitRuleDays;
     };
     const trainSegments = [
       { start: '2016-08', end: '2018-05' },
       { start: '2018-06', end: '2020-03' },
       { start: '2020-04', end: '2021-12' }
     ];
-    const baseRows = seedConfigs.map(config => {
+    let baseSelected = null;
+    for (const config of seedConfigs) {
       const filtered = withSubset(config);
-      const fullTrain = simulateRange(daysFor(filtered), filtered, marketRegimes, '2016-08', '2021-12', true, true);
+      const fullTrain = simulateRange(daysFor(filtered), filtered, marketRegimes, '2016-08', '2021-12', true, false);
       const quality = tradeQuality(fullTrain);
-      const segments = trainSegments.map(segment => simulateRange(daysFor(filtered), filtered, marketRegimes, segment.start, segment.end, true, true));
+      const segments = trainSegments.map(segment =>
+        simulateRange(daysFor(filtered), filtered, marketRegimes, segment.start, segment.end));
       const worstSegmentAveragePct = Math.min(...segments.map(row => row.full.average));
       const worstSegmentDrawdownPct = Math.min(...segments.map(row => row.maxDrawdownPct));
-      return {
-        ...fullTrain,
+      const candidate = {
+        full: fullTrain.full,
+        trades: fullTrain.trades,
+        maxDrawdownPct: fullTrain.maxDrawdownPct,
         config: filtered,
         profitFactor: quality.profitFactor,
         worstSegmentAveragePct,
         worstSegmentDrawdownPct,
         stabilityScore: fullTrain.full.average + worstSegmentAveragePct + Math.min(quality.profitFactor, 2.5) + fullTrain.maxDrawdownPct * 0.03
       };
-    });
-    const baseSelected = baseRows.filter(row => (
-      row.trades >= 250
-      && row.maxDrawdownPct >= -22
-      && row.profitFactor >= 1.15
-      && row.worstSegmentAveragePct >= -0.5
-      && row.worstSegmentDrawdownPct >= -20
-    )).sort((a, b) => b.stabilityScore - a.stabilityScore || b.full.average - a.full.average)[0];
+      if (candidate.trades >= 250
+        && candidate.maxDrawdownPct >= -22
+        && candidate.profitFactor >= 1.15
+        && candidate.worstSegmentAveragePct >= -0.5
+        && candidate.worstSegmentDrawdownPct >= -20
+        && (!baseSelected || candidate.stabilityScore > baseSelected.stabilityScore
+          || (candidate.stabilityScore === baseSelected.stabilityScore
+            && candidate.full.average > baseSelected.full.average))) {
+        baseSelected = candidate;
+      }
+    }
     if (!baseSelected) throw new Error('fixed top5 v15 no qualified base candidate');
     const variants = [];
     for (const holdDays of [10, 15, 20]) {
@@ -6271,28 +6282,35 @@ async function main() {
         }
       }
     }
-    const rows = variants.map(config => {
-      const fullTrain = simulateRange(daysFor(config), config, marketRegimes, '2016-08', '2021-12', true, true);
+    let selected = null;
+    for (const config of variants) {
+      const fullTrain = simulateRange(daysFor(config), config, marketRegimes, '2016-08', '2021-12', true, false);
       const quality = tradeQuality(fullTrain);
-      const segments = trainSegments.map(segment => simulateRange(daysFor(config), config, marketRegimes, segment.start, segment.end, true, true));
+      const segments = trainSegments.map(segment =>
+        simulateRange(daysFor(config), config, marketRegimes, segment.start, segment.end));
       const worstSegmentAveragePct = Math.min(...segments.map(row => row.full.average));
       const worstSegmentDrawdownPct = Math.min(...segments.map(row => row.maxDrawdownPct));
-      return {
-        ...fullTrain,
+      const candidate = {
+        full: fullTrain.full,
+        trades: fullTrain.trades,
+        maxDrawdownPct: fullTrain.maxDrawdownPct,
         config,
         profitFactor: quality.profitFactor,
         worstSegmentAveragePct,
         worstSegmentDrawdownPct,
         stabilityScore: fullTrain.full.average * 1.2 + worstSegmentAveragePct + Math.min(quality.profitFactor, 2.5) + fullTrain.maxDrawdownPct * 0.04 + Math.min(fullTrain.trades, 600) / 600
       };
-    });
-    const selected = rows.filter(row => (
-      row.trades >= 300
-      && row.maxDrawdownPct >= -20
-      && row.profitFactor >= 1.2
-      && row.worstSegmentAveragePct >= -0.25
-      && row.worstSegmentDrawdownPct >= -18
-    )).sort((a, b) => b.stabilityScore - a.stabilityScore || b.full.average - a.full.average)[0];
+      if (candidate.trades >= 300
+        && candidate.maxDrawdownPct >= -20
+        && candidate.profitFactor >= 1.2
+        && candidate.worstSegmentAveragePct >= -0.25
+        && candidate.worstSegmentDrawdownPct >= -18
+        && (!selected || candidate.stabilityScore > selected.stabilityScore
+          || (candidate.stabilityScore === selected.stabilityScore
+            && candidate.full.average > selected.full.average))) {
+        selected = candidate;
+      }
+    }
     if (!selected) throw new Error('fixed top5 v15 no qualified train variant');
     const validation = simulateRange(daysFor(selected.config), selected.config, marketRegimes, '2022-01', '2026-05', true, true);
     const quality = tradeQuality(validation);
@@ -6326,7 +6344,12 @@ async function main() {
         worstSegmentAveragePct: round(selected.worstSegmentAveragePct),
         worstSegmentDrawdownPct: selected.worstSegmentDrawdownPct
       },
-      validation: { period: '2022-01~2026-05', months: validation.full.months, parametersFrozen: true },
+      validation: {
+        period: '2022-01~2026-05',
+        months: validation.full.months,
+        parametersFrozen: true,
+        monthly: validation.monthly
+      },
       metrics,
       benchmark0050,
       targetMonthlyReturnPct: 5,

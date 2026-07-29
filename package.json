@@ -73,6 +73,7 @@
     "research:stock-shared-alpha-pool-v1": "node scripts/optimize-realized-10y.mjs --stock-shared-alpha-pool-v1",
     "research:stock-winner-pyramiding-v1": "node scripts/optimize-realized-10y.mjs --stock-winner-pyramiding-v1",
     "research:stock-asymmetric-exit-v1": "node scripts/optimize-realized-10y.mjs --stock-asymmetric-exit-v1",
+    "research:stock-nonlinear-factor-v1": "node scripts/research/stock-factor-weight-hunter-v1.mjs --nonlinear-v1",
     "data:probe-quality-sources": "node scripts/data/probe-quality-sources.mjs",
     "data:build-quality": "node scripts/data/build-quality-dataset.mjs",
     "data:validate-quality": "node scripts/data/validate-quality-dataset.mjs",

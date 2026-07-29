@@ -1,0 +1,502 @@
+{
+  "generatedAt": "2026-07-29T18:27:09.185Z",
+  "strategyId": "stock_asymmetric_exit_v1",
+  "universe": "純個股；ETF 與 0050 交易占比 0%",
+  "selection": {
+    "trainPeriod": "2016-08~2021-12",
+    "validationPeriod": "2022-01~2026-05",
+    "testedConfigs": 24,
+    "selectedExitRule": {
+      "holdDays": 20,
+      "trail": {
+        "triggerPct": 8,
+        "givebackPct": 5,
+        "lockPct": 2
+      },
+      "noFollow": false,
+      "stopLossPct": null,
+      "overrideStopLossPct": 7,
+      "stopMode": "intraday",
+      "breakEven": {
+        "triggerR": 1.25,
+        "lockR": 0.25
+      }
+    },
+    "trainAverageMonthlyReturnPct": -0.91,
+    "trainMaximumDrawdownPct": -45.98,
+    "trainTrades": 681,
+    "trainProfitFactor": 0.63,
+    "worstSegmentAveragePct": -1.05,
+    "worstSegmentDrawdownPct": -23.19
+  },
+  "trainingQualified": false,
+  "validation": {
+    "period": "2022-01~2026-05",
+    "months": 53,
+    "parametersFrozen": true,
+    "monthly": [
+      {
+        "month": "2021-12",
+        "returnPct": 0,
+        "realizedReturnPct": 0,
+        "realizedPnl": 0,
+        "endingEquity": null,
+        "trades": 0
+      },
+      {
+        "month": "2022-01",
+        "returnPct": -5.18,
+        "realizedReturnPct": -5.18,
+        "realizedPnl": -51790,
+        "endingEquity": 948210,
+        "trades": 10
+      },
+      {
+        "month": "2022-02",
+        "returnPct": 0,
+        "realizedReturnPct": 0,
+        "realizedPnl": 0,
+        "endingEquity": 948210,
+        "trades": 0
+      },
+      {
+        "month": "2022-03",
+        "returnPct": 0,
+        "realizedReturnPct": 0,
+        "realizedPnl": 0,
+        "endingEquity": 948210,
+        "trades": 0
+      },
+      {
+        "month": "2022-04",
+        "returnPct": -0.63,
+        "realizedReturnPct": -0.63,
+        "realizedPnl": -5933,
+        "endingEquity": 942276,
+        "trades": 1
+      },
+      {
+        "month": "2022-05",
+        "returnPct": 0,
+        "realizedReturnPct": 0,
+        "realizedPnl": 0,
+        "endingEquity": 942276,
+        "trades": 0
+      },
+      {
+        "month": "2022-06",
+        "returnPct": -3.26,
+        "realizedReturnPct": -3.26,
+        "realizedPnl": -30741,
+        "endingEquity": 911535,
+        "trades": 8
+      },
+      {
+        "month": "2022-07",
+        "returnPct": 0,
+        "realizedReturnPct": 0,
+        "realizedPnl": 0,
+        "endingEquity": 911535,
+        "trades": 0
+      },
+      {
+        "month": "2022-08",
+        "returnPct": 0.14,
+        "realizedReturnPct": 0.23,
+        "realizedPnl": 2122,
+        "endingEquity": 912771,
+        "trades": 21
+      },
+      {
+        "month": "2022-09",
+        "returnPct": -0.18,
+        "realizedReturnPct": -0.27,
+        "realizedPnl": -2497,
+        "endingEquity": 911159,
+        "trades": 3
+      },
+      {
+        "month": "2022-10",
+        "returnPct": 0,
+        "realizedReturnPct": 0,
+        "realizedPnl": 0,
+        "endingEquity": 911159,
+        "trades": 0
+      },
+      {
+        "month": "2022-11",
+        "returnPct": -0.23,
+        "realizedReturnPct": -0.14,
+        "realizedPnl": -1310,
+        "endingEquity": 909054,
+        "trades": 3
+      },
+      {
+        "month": "2022-12",
+        "returnPct": -1.26,
+        "realizedReturnPct": -1.66,
+        "realizedPnl": -15060,
+        "endingEquity": 897625,
+        "trades": 7
+      },
+      {
+        "month": "2023-01",
+        "returnPct": -0.05,
+        "realizedReturnPct": 0.54,
+        "realizedPnl": 4863,
+        "endingEquity": 897200,
+        "trades": 4
+      },
+      {
+        "month": "2023-02",
+        "returnPct": -0.41,
+        "realizedReturnPct": -0.12,
+        "realizedPnl": -1097,
+        "endingEquity": 893549,
+        "trades": 17
+      },
+      {
+        "month": "2023-03",
+        "returnPct": -1.52,
+        "realizedReturnPct": -1.54,
+        "realizedPnl": -13876,
+        "endingEquity": 879985,
+        "trades": 9
+      },
+      {
+        "month": "2023-04",
+        "returnPct": -2.6,
+        "realizedReturnPct": -3.12,
+        "realizedPnl": -27588,
+        "endingEquity": 857093,
+        "trades": 15
+      },
+      {
+        "month": "2023-05",
+        "returnPct": 0.11,
+        "realizedReturnPct": 0.81,
+        "realizedPnl": 6926,
+        "endingEquity": 857998,
+        "trades": 8
+      },
+      {
+        "month": "2023-06",
+        "returnPct": -1.66,
+        "realizedReturnPct": -2.71,
+        "realizedPnl": -23372,
+        "endingEquity": 843794,
+        "trades": 31
+      },
+      {
+        "month": "2023-07",
+        "returnPct": -0.71,
+        "realizedReturnPct": -0.34,
+        "realizedPnl": -2831,
+        "endingEquity": 837815,
+        "trades": 13
+      },
+      {
+        "month": "2023-08",
+        "returnPct": 0,
+        "realizedReturnPct": 0,
+        "realizedPnl": 0,
+        "endingEquity": 837815,
+        "trades": 0
+      },
+      {
+        "month": "2023-09",
+        "returnPct": -0.63,
+        "realizedReturnPct": -0.63,
+        "realizedPnl": -5237,
+        "endingEquity": 832579,
+        "trades": 1
+      },
+      {
+        "month": "2023-10",
+        "returnPct": -1.92,
+        "realizedReturnPct": -1.95,
+        "realizedPnl": -16212,
+        "endingEquity": 816609,
+        "trades": 4
+      },
+      {
+        "month": "2023-11",
+        "returnPct": -0.42,
+        "realizedReturnPct": -0.39,
+        "realizedPnl": -3185,
+        "endingEquity": 813182,
+        "trades": 27
+      },
+      {
+        "month": "2023-12",
+        "returnPct": -1.18,
+        "realizedReturnPct": -0.02,
+        "realizedPnl": -155,
+        "endingEquity": 803606,
+        "trades": 3
+      },
+      {
+        "month": "2024-01",
+        "returnPct": -3.22,
+        "realizedReturnPct": -4.34,
+        "realizedPnl": -35264,
+        "endingEquity": 777764,
+        "trades": 8
+      },
+      {
+        "month": "2024-02",
+        "returnPct": -0.34,
+        "realizedReturnPct": 0.62,
+        "realizedPnl": 4784,
+        "endingEquity": 775102,
+        "trades": 18
+      },
+      {
+        "month": "2024-03",
+        "returnPct": -2.65,
+        "realizedReturnPct": -3.58,
+        "realizedPnl": -28012,
+        "endingEquity": 754537,
+        "trades": 15
+      },
+      {
+        "month": "2024-04",
+        "returnPct": -3.3,
+        "realizedReturnPct": -3.18,
+        "realizedPnl": -24005,
+        "endingEquity": 729635,
+        "trades": 16
+      },
+      {
+        "month": "2024-05",
+        "returnPct": -4.75,
+        "realizedReturnPct": -4.86,
+        "realizedPnl": -35530,
+        "endingEquity": 695002,
+        "trades": 25
+      },
+      {
+        "month": "2024-06",
+        "returnPct": -6.26,
+        "realizedReturnPct": -6.26,
+        "realizedPnl": -43534,
+        "endingEquity": 651468,
+        "trades": 18
+      },
+      {
+        "month": "2024-07",
+        "returnPct": -3.19,
+        "realizedReturnPct": -3.19,
+        "realizedPnl": -20791,
+        "endingEquity": 630677,
+        "trades": 19
+      },
+      {
+        "month": "2024-08",
+        "returnPct": 0,
+        "realizedReturnPct": 0,
+        "realizedPnl": 0,
+        "endingEquity": 630677,
+        "trades": 0
+      },
+      {
+        "month": "2024-09",
+        "returnPct": -1.99,
+        "realizedReturnPct": -1.72,
+        "realizedPnl": -10858,
+        "endingEquity": 618131,
+        "trades": 7
+      },
+      {
+        "month": "2024-10",
+        "returnPct": -3.57,
+        "realizedReturnPct": -3.07,
+        "realizedPnl": -19042,
+        "endingEquity": 596072,
+        "trades": 22
+      },
+      {
+        "month": "2024-11",
+        "returnPct": -2.69,
+        "realizedReturnPct": -3.45,
+        "realizedPnl": -20757,
+        "endingEquity": 580021,
+        "trades": 6
+      },
+      {
+        "month": "2024-12",
+        "returnPct": -3.52,
+        "realizedReturnPct": -3.09,
+        "realizedPnl": -17950,
+        "endingEquity": 559624,
+        "trades": 5
+      },
+      {
+        "month": "2025-01",
+        "returnPct": -1.17,
+        "realizedReturnPct": -1.48,
+        "realizedPnl": -8330,
+        "endingEquity": 553103,
+        "trades": 5
+      },
+      {
+        "month": "2025-02",
+        "returnPct": 0.8,
+        "realizedReturnPct": 0.68,
+        "realizedPnl": 3786,
+        "endingEquity": 557527,
+        "trades": 2
+      },
+      {
+        "month": "2025-03",
+        "returnPct": 0,
+        "realizedReturnPct": 0,
+        "realizedPnl": 0,
+        "endingEquity": 557527,
+        "trades": 0
+      },
+      {
+        "month": "2025-04",
+        "returnPct": 0,
+        "realizedReturnPct": 0,
+        "realizedPnl": 0,
+        "endingEquity": 557527,
+        "trades": 0
+      },
+      {
+        "month": "2025-05",
+        "returnPct": -1.89,
+        "realizedReturnPct": -1,
+        "realizedPnl": -5584,
+        "endingEquity": 546976,
+        "trades": 2
+      },
+      {
+        "month": "2025-06",
+        "returnPct": -2.72,
+        "realizedReturnPct": -3.59,
+        "realizedPnl": -19825,
+        "endingEquity": 532117,
+        "trades": 25
+      },
+      {
+        "month": "2025-07",
+        "returnPct": -1.62,
+        "realizedReturnPct": -1.51,
+        "realizedPnl": -8059,
+        "endingEquity": 523486,
+        "trades": 8
+      },
+      {
+        "month": "2025-08",
+        "returnPct": 0.71,
+        "realizedReturnPct": 1.08,
+        "realizedPnl": 5681,
+        "endingEquity": 527215,
+        "trades": 31
+      },
+      {
+        "month": "2025-09",
+        "returnPct": -4.22,
+        "realizedReturnPct": -4.36,
+        "realizedPnl": -23078,
+        "endingEquity": 504946,
+        "trades": 13
+      },
+      {
+        "month": "2025-10",
+        "returnPct": 3.38,
+        "realizedReturnPct": 2.29,
+        "realizedPnl": 11613,
+        "endingEquity": 522002,
+        "trades": 29
+      },
+      {
+        "month": "2025-11",
+        "returnPct": -5,
+        "realizedReturnPct": -4.32,
+        "realizedPnl": -22370,
+        "endingEquity": 495905,
+        "trades": 13
+      },
+      {
+        "month": "2025-12",
+        "returnPct": -0.43,
+        "realizedReturnPct": -0.01,
+        "realizedPnl": -26,
+        "endingEquity": 493762,
+        "trades": 9
+      },
+      {
+        "month": "2026-01",
+        "returnPct": -4.41,
+        "realizedReturnPct": -4.82,
+        "realizedPnl": -23877,
+        "endingEquity": 472002,
+        "trades": 20
+      },
+      {
+        "month": "2026-02",
+        "returnPct": 3.07,
+        "realizedReturnPct": 0.74,
+        "realizedPnl": 3502,
+        "endingEquity": 486473,
+        "trades": 10
+      },
+      {
+        "month": "2026-03",
+        "returnPct": -4.23,
+        "realizedReturnPct": -2.02,
+        "realizedPnl": -9586,
+        "endingEquity": 465918,
+        "trades": 11
+      },
+      {
+        "month": "2026-04",
+        "returnPct": -0.73,
+        "realizedReturnPct": -0.71,
+        "realizedPnl": -3289,
+        "endingEquity": 462496,
+        "trades": 6
+      },
+      {
+        "month": "2026-05",
+        "returnPct": -1.79,
+        "realizedReturnPct": -1.82,
+        "realizedPnl": -8421,
+        "endingEquity": 454208,
+        "trades": 34
+      },
+      {
+        "month": "2026-06",
+        "returnPct": 0,
+        "realizedReturnPct": 0,
+        "realizedPnl": 0,
+        "endingEquity": null,
+        "trades": 0
+      }
+    ]
+  },
+  "metrics": {
+    "averageMonthlyReturnPct": -1.46,
+    "annualizedReturnPct": -16.37,
+    "maximumDrawdownPct": -54.58,
+    "trades": 562,
+    "winRatePct": 42.17,
+    "profitFactor": 0.48,
+    "beats0050": false
+  },
+  "benchmark0050": {
+    "startDate": "2022-01-03",
+    "endDate": "2026-05-29",
+    "months": 52,
+    "averageMonthlyReturnPct": 2.38,
+    "annualizedReturnPct": 27.18,
+    "maxDrawdownPct": -36.38
+  },
+  "targetMonthlyReturnPct": 5,
+  "targetMet": false,
+  "paperTradingReady": false,
+  "liveTradingReady": false,
+  "conclusion": "所有設定均未通過訓練期風控，策略淘汰。"
+}

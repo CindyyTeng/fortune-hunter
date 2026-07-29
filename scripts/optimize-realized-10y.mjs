@@ -511,16 +511,21 @@ function applyExitRule(trade, rule) {
   let exitPrice = forward[endIndex].price;
   let exitReason = `固定持有 ${holdDays} 天`;
   let maxHigh = trade.entryPrice;
+  const initialRisk = Math.max(0.01, trade.entryPrice - stopLoss);
 
   for (let index = 0; index <= endIndex; index += 1) {
     const day = forward[index];
     maxHigh = Math.max(maxHigh, day.high ?? day.price);
     const trailPrice = trailingStopPrice(trade.entryPrice, maxHigh, rule.trail);
+    const breakEvenPrice = rule.breakEven
+      && maxHigh >= trade.entryPrice + initialRisk * rule.breakEven.triggerR
+      ? trade.entryPrice + initialRisk * rule.breakEven.lockR
+      : null;
     const executionExit = simulateExit({
       day,
-      stopLoss,
+      stopLoss: Math.max(stopLoss, breakEvenPrice ?? stopLoss),
       takeProfit,
-      trailingStop: trailPrice,
+      trailingStop: Math.max(trailPrice ?? -Infinity, breakEvenPrice ?? -Infinity),
       closeStop: rule.stopMode === 'close'
     });
     if (executionExit?.price) {
@@ -713,7 +718,8 @@ function simulate(allDays, months, config, marketRegimes = new Map()) {
         marketVol20Pct: position.trade.marketRegime?.vol20,
         marketAboveMa40: position.trade.marketRegime
           ? position.trade.marketRegime.close >= position.trade.marketRegime.ma40
-          : null
+          : null,
+        pyramided: position.pyramided
       });
     }
   };
@@ -825,7 +831,17 @@ function simulate(allDays, months, config, marketRegimes = new Map()) {
         rewardRisk(trade) < config.recoveryMinRewardRisk
         || trade.gapUpPct < config.recoveryMinGapPct
       )) continue;
-      if (open.some(position => position.trade.symbol === trade.symbol)
+      const sameSymbolPositions = open.filter(position => position.trade.symbol === trade.symbol);
+      const existingSymbolValue = sameSymbolPositions
+        .reduce((sum, position) => sum + position.markValue, 0);
+      const canPyramid = config.allowWinnerPyramiding
+        && sameSymbolPositions.length > 0
+        && sameSymbolPositions.length < (config.maxPyramidTranches ?? 2)
+        && sameSymbolPositions.every(position => (
+          position.markPrice / position.trade.entryPrice - 1
+        ) * 100 >= (config.pyramidMinProfitPct ?? 3))
+        && existingSymbolValue < equity * (config.maxSymbolExposurePct ?? 15) / 100;
+      if ((sameSymbolPositions.length > 0 && !canPyramid)
         || index <= (cooldownUntilBySymbol.get(trade.symbol) ?? -1)) continue;
       if (config.maxPositionsPerTheme) {
         const themes = themesOf(trade);
@@ -835,6 +851,9 @@ function simulate(allDays, months, config, marketRegimes = new Map()) {
         if (themeConcentration) continue;
       }
       let plannedPct = plannedPositionPct(trade, config);
+      if (canPyramid) {
+        plannedPct = Math.min(plannedPct, config.pyramidPositionPct ?? plannedPct);
+      }
       if (trade.alphaSource === 'revenue_overlay') {
         plannedPct = Math.min(plannedPct, config.revenueOverlayPositionPct ?? plannedPct);
       }
@@ -859,6 +878,7 @@ function simulate(allDays, months, config, marketRegimes = new Map()) {
       availableCash -= buy.total;
       const position = {
         trade,
+        pyramided: canPyramid,
         quantity,
         buy,
         entryEquity: equity,
@@ -4448,6 +4468,304 @@ async function main() {
     trail: null,
     noFollow: false
   })));
+  if (process.argv.includes('--stock-asymmetric-exit-v1')) {
+    const outputFile = new URL('../data/research/stock-asymmetric-exit-v1.json', import.meta.url);
+    const reportFile = new URL('../docs/STOCK_ASYMMETRIC_EXIT_V1.md', import.meta.url);
+    const top5 = JSON.parse(await fs.readFile(
+      new URL('../data/research/stock-fixed-top5-oos-v15.json', import.meta.url),
+      'utf8'
+    ));
+    const base = top5.selection.fullSelectedConfig;
+    if (!base) throw new Error('缺少 v15 完整凍結設定');
+    const configs = [];
+    for (const holdDays of [15, 20, 30]) {
+      for (const overrideStopLossPct of [5, 7]) {
+        for (const triggerR of [0.75, 1.25]) {
+          for (const lockR of [0, 0.25]) {
+            configs.push({
+              ...base,
+              exitRule: {
+                ...base.exitRule,
+                holdDays,
+                overrideStopLossPct,
+                stopMode: 'intraday',
+                breakEven: { triggerR, lockR },
+                trail: { triggerPct: 8, givebackPct: 5, lockPct: 2 }
+              }
+            });
+          }
+        }
+      }
+    }
+    const segments = [
+      { start: '2016-08', end: '2018-05' },
+      { start: '2018-06', end: '2020-03' },
+      { start: '2020-04', end: '2021-12' }
+    ];
+    let selected = null;
+    let bestObserved = null;
+    for (const config of configs) {
+      const days = broadDaysForExitRule(config.exitRule);
+      const train = simulateRange(days, config, marketRegimes, '2016-08', '2021-12', true, false);
+      const quality = tradeQuality(train);
+      const segmentRows = segments.map(segment =>
+        simulateRange(days, config, marketRegimes, segment.start, segment.end));
+      const worstSegmentAveragePct = Math.min(...segmentRows.map(row => row.full.average));
+      const worstSegmentDrawdownPct = Math.min(...segmentRows.map(row => row.maxDrawdownPct));
+      const candidate = {
+        config,
+        train,
+        quality,
+        worstSegmentAveragePct,
+        worstSegmentDrawdownPct,
+        score: train.full.average * 2
+          + Math.min(quality.profitFactor ?? 0, 2)
+          + train.maxDrawdownPct * 0.08
+          + worstSegmentAveragePct
+      };
+      if (!bestObserved || candidate.score > bestObserved.score) bestObserved = candidate;
+      if (train.trades >= 300
+        && train.maxDrawdownPct >= -20
+        && quality.profitFactor >= 1.2
+        && worstSegmentAveragePct >= -0.25
+        && worstSegmentDrawdownPct >= -20
+        && (!selected || candidate.score > selected.score)) {
+        selected = candidate;
+      }
+    }
+    const trainingQualified = Boolean(selected);
+    selected ||= bestObserved;
+    if (!selected) throw new Error('非對稱出場沒有可評估設定');
+    const validationDays = broadDaysForExitRule(selected.config.exitRule);
+    const validation = simulateRange(
+      validationDays,
+      selected.config,
+      marketRegimes,
+      '2022-01',
+      '2026-05',
+      true,
+      false
+    );
+    const quality = tradeQuality(validation);
+    const etfHistory = JSON.parse(await fs.readFile(ETF_HISTORY, 'utf8'));
+    const benchmark0050 = benchmarkStats(
+      etfHistory.series['0050.TW'] || [],
+      '2022-01-01',
+      '2026-05-31'
+    );
+    const metrics = {
+      averageMonthlyReturnPct: round(validation.full.average),
+      annualizedReturnPct: annualizedReturn(validation.monthly),
+      maximumDrawdownPct: validation.maxDrawdownPct,
+      trades: validation.trades,
+      winRatePct: quality.winRatePct,
+      profitFactor: quality.profitFactor,
+      beats0050: validation.full.average > benchmark0050.averageMonthlyReturnPct
+    };
+    const targetMet = metrics.averageMonthlyReturnPct >= 5
+      && metrics.maximumDrawdownPct >= -20
+      && metrics.trades >= 300
+      && metrics.beats0050;
+    const output = {
+      generatedAt: new Date().toISOString(),
+      strategyId: 'stock_asymmetric_exit_v1',
+      universe: '純個股；ETF 與 0050 交易占比 0%',
+      selection: {
+        trainPeriod: '2016-08~2021-12',
+        validationPeriod: '2022-01~2026-05',
+        testedConfigs: configs.length,
+        selectedExitRule: selected.config.exitRule,
+        trainAverageMonthlyReturnPct: round(selected.train.full.average),
+        trainMaximumDrawdownPct: selected.train.maxDrawdownPct,
+        trainTrades: selected.train.trades,
+        trainProfitFactor: selected.quality.profitFactor,
+        worstSegmentAveragePct: round(selected.worstSegmentAveragePct),
+        worstSegmentDrawdownPct: selected.worstSegmentDrawdownPct
+      },
+      trainingQualified,
+      validation: {
+        period: '2022-01~2026-05',
+        months: validation.full.months,
+        parametersFrozen: true,
+        monthly: validation.monthly
+      },
+      metrics,
+      benchmark0050,
+      targetMonthlyReturnPct: 5,
+      targetMet,
+      paperTradingReady: false,
+      liveTradingReady: false,
+      conclusion: !trainingQualified
+        ? '所有設定均未通過訓練期風控，策略淘汰。'
+        : targetMet
+        ? '達到歷史研究門檻，但仍須全新期間紙上交易驗證。'
+        : `未達月均 5% 與超越 0050 門檻，目前月均 ${metrics.averageMonthlyReturnPct}%。`
+    };
+    await fs.writeFile(outputFile, `${JSON.stringify(output, null, 2)}\n`, 'utf8');
+    await fs.writeFile(reportFile, `# 純個股非對稱出場策略 v1
+
+- 訓練期間：2016-08～2021-12
+- 凍結驗證：2022-01～2026-05
+- 月均報酬：${metrics.averageMonthlyReturnPct}%
+- 年化報酬：${metrics.annualizedReturnPct}%
+- 最大回撤：${metrics.maximumDrawdownPct}%
+- 交易筆數：${metrics.trades}
+- Profit Factor：${metrics.profitFactor}
+- 勝率：${metrics.winRatePct}%
+- 0050 同期月均：${benchmark0050.averageMonthlyReturnPct}%
+
+獲利達訓練期選定的 R 倍數後，停損上移至成本附近，並以移動停利保留趨勢；跳空停損仍按較差開盤價成交。共用現金、T+2、費稅、滑價與帳戶熔斷。
+
+結論：${output.conclusion} 未通過前不可紙上交易或實盤。
+`, 'utf8');
+    console.log(JSON.stringify({ selection: output.selection, metrics, benchmark0050, conclusion: output.conclusion }, null, 2));
+    return;
+  }
+  if (process.argv.includes('--stock-winner-pyramiding-v1')) {
+    const outputFile = new URL('../data/research/stock-winner-pyramiding-v1.json', import.meta.url);
+    const reportFile = new URL('../docs/STOCK_WINNER_PYRAMIDING_V1.md', import.meta.url);
+    const top5 = JSON.parse(await fs.readFile(
+      new URL('../data/research/stock-fixed-top5-oos-v15.json', import.meta.url),
+      'utf8'
+    ));
+    if (!top5.selection.fullSelectedConfig) {
+      throw new Error('缺少 v15 完整凍結設定，無法重播基準');
+    }
+    const base = { ...top5.selection.fullSelectedConfig };
+    delete base.collectTrades;
+    const days = broadDaysForExitRule(base.exitRule);
+    const configs = [2, 4, 6].flatMap(pyramidMinProfitPct =>
+      [2, 4, 6].flatMap(pyramidPositionPct =>
+        [2, 3].flatMap(maxPyramidTranches =>
+          [12, 16].map(maxSymbolExposurePct => ({
+            ...base,
+            allowWinnerPyramiding: true,
+            pyramidMinProfitPct,
+            pyramidPositionPct,
+            maxPyramidTranches,
+            maxSymbolExposurePct,
+            maxOpenPositions: base.maxOpenPositions + maxPyramidTranches - 1
+          })))));
+    const segments = [
+      { start: '2016-08', end: '2018-05' },
+      { start: '2018-06', end: '2020-03' },
+      { start: '2020-04', end: '2021-12' }
+    ];
+    const candidates = configs.map(config => {
+      const train = simulateRange(days, config, marketRegimes, '2016-08', '2021-12', true, false);
+      const quality = tradeQuality(train);
+      const segmentRows = segments.map(segment =>
+        simulateRange(days, config, marketRegimes, segment.start, segment.end));
+      const worstSegmentAveragePct = Math.min(...segmentRows.map(row => row.full.average));
+      const worstSegmentDrawdownPct = Math.min(...segmentRows.map(row => row.maxDrawdownPct));
+      return {
+        config,
+        train,
+        quality,
+        worstSegmentAveragePct,
+        worstSegmentDrawdownPct,
+        score: train.full.average * 2
+          + Math.min(quality.profitFactor ?? 0, 2)
+          + train.maxDrawdownPct * 0.08
+          + worstSegmentAveragePct
+      };
+    }).filter(row => (
+      row.train.trades >= 300
+      && row.train.maxDrawdownPct >= -20
+      && row.quality.profitFactor >= 1.2
+      && row.worstSegmentAveragePct >= -0.25
+      && row.worstSegmentDrawdownPct >= -20
+    )).sort((a, b) => b.score - a.score);
+    const selected = candidates[0];
+    if (!selected) throw new Error('獲利加碼策略沒有符合訓練期風控的設定');
+    const validation = simulateRange(
+      days,
+      selected.config,
+      marketRegimes,
+      '2022-01',
+      '2026-05',
+      true,
+      false
+    );
+    const quality = tradeQuality(validation);
+    const etfHistory = JSON.parse(await fs.readFile(ETF_HISTORY, 'utf8'));
+    const benchmark0050 = benchmarkStats(
+      etfHistory.series['0050.TW'] || [],
+      '2022-01-01',
+      '2026-05-31'
+    );
+    const metrics = {
+      averageMonthlyReturnPct: round(validation.full.average),
+      annualizedReturnPct: annualizedReturn(validation.monthly),
+      maximumDrawdownPct: validation.maxDrawdownPct,
+      trades: validation.trades,
+      pyramidTrades: validation.closedTrades.filter(trade => trade.pyramided).length,
+      winRatePct: quality.winRatePct,
+      profitFactor: quality.profitFactor,
+      beats0050: validation.full.average > benchmark0050.averageMonthlyReturnPct
+    };
+    const targetMet = metrics.averageMonthlyReturnPct >= 5
+      && metrics.maximumDrawdownPct >= -20
+      && metrics.trades >= 300
+      && metrics.beats0050;
+    const output = {
+      generatedAt: new Date().toISOString(),
+      strategyId: 'stock_winner_pyramiding_v1',
+      universe: '純個股；ETF 與 0050 交易占比 0%',
+      selection: {
+        trainPeriod: '2016-08~2021-12',
+        validationPeriod: '2022-01~2026-05',
+        testedConfigs: configs.length,
+        selectedConfig: {
+          pyramidMinProfitPct: selected.config.pyramidMinProfitPct,
+          pyramidPositionPct: selected.config.pyramidPositionPct,
+          maxPyramidTranches: selected.config.maxPyramidTranches,
+          maxSymbolExposurePct: selected.config.maxSymbolExposurePct
+        },
+        trainAverageMonthlyReturnPct: round(selected.train.full.average),
+        trainMaximumDrawdownPct: selected.train.maxDrawdownPct,
+        trainTrades: selected.train.trades,
+        trainProfitFactor: selected.quality.profitFactor,
+        worstSegmentAveragePct: round(selected.worstSegmentAveragePct),
+        worstSegmentDrawdownPct: selected.worstSegmentDrawdownPct
+      },
+      validation: {
+        period: '2022-01~2026-05',
+        months: validation.full.months,
+        parametersFrozen: true,
+        monthly: validation.monthly
+      },
+      execution: '只加碼已有未實現獲利的部位；禁止攤平。共用現金、T+2、手續費、交易稅、滑價、停損與帳戶熔斷。',
+      metrics,
+      benchmark0050,
+      targetMonthlyReturnPct: 5,
+      targetMet,
+      paperTradingReady: false,
+      liveTradingReady: false,
+      conclusion: targetMet
+        ? '達到歷史研究門檻，但仍須全新期間紙上交易驗證。'
+        : `未達月均 5% 與超越 0050 門檻，目前月均 ${metrics.averageMonthlyReturnPct}%。`
+    };
+    await fs.writeFile(outputFile, `${JSON.stringify(output, null, 2)}\n`, 'utf8');
+    await fs.writeFile(reportFile, `# 純個股獲利加碼策略 v1
+
+- 訓練期間：2016-08～2021-12
+- 凍結驗證：2022-01～2026-05
+- 月均報酬：${metrics.averageMonthlyReturnPct}%
+- 年化報酬：${metrics.annualizedReturnPct}%
+- 最大回撤：${metrics.maximumDrawdownPct}%
+- 交易筆數：${metrics.trades}（加碼 ${metrics.pyramidTrades}）
+- Profit Factor：${metrics.profitFactor}
+- 勝率：${metrics.winRatePct}%
+- 0050 同期月均：${benchmark0050.averageMonthlyReturnPct}%
+
+策略只在既有部位已獲利時分批加碼，不對虧損攤平；限制加碼次數與單檔總曝險。所有交易共用真實現金、T+2、費稅、滑價、停損與帳戶熔斷。
+
+結論：${output.conclusion} 未通過前不可紙上交易或實盤。
+`, 'utf8');
+    console.log(JSON.stringify({ selection: output.selection, metrics, benchmark0050, conclusion: output.conclusion }, null, 2));
+    return;
+  }
   if (process.argv.includes('--stock-shared-alpha-pool-v1')) {
     const outputFile = new URL('../data/research/stock-shared-alpha-pool-v1.json', import.meta.url);
     const reportFile = new URL('../docs/STOCK_SHARED_ALPHA_POOL_V1.md', import.meta.url);

@@ -30,7 +30,14 @@ const rejectedRiskExperiments = [
   { id: 'train_selected_revenue_priority', monthlyReturnPct: 1.5223, maximumDrawdownPct: -13.8924, trades: 430, reason: '四個訓練折皆選回全域分數排序，營收優先沒有邊際貢獻。' },
   { id: 'train_selected_market_policy', monthlyReturnPct: 0.8771, maximumDrawdownPct: -23.8211, trades: 438, reason: '前三折選到震盪聚焦，但首段驗證轉負，顯示市場狀態政策跨期不穩定。' },
   { id: 'train_selected_regime_source_quality', monthlyReturnPct: 1.3739, maximumDrawdownPct: -13.841, trades: 397, reason: '來源與市場狀態的歷史品質門檻只微幅改善回撤，卻降低月均與交易數，跨期選擇能力不足。' },
-  { id: 'source_specific_momentum_stop', monthlyReturnPct: 1.3874, maximumDrawdownPct: -15.2464, trades: 385, reason: '動能補位改用 6%／8% 較緊停損後，正常波動被提早洗出，月均、回撤與交易數皆惡化。' }
+  { id: 'source_specific_momentum_stop', monthlyReturnPct: 1.3874, maximumDrawdownPct: -15.2464, trades: 385, reason: '動能補位改用 6%／8% 較緊停損後，正常波動被提早洗出，月均、回撤與交易數皆惡化。' },
+  { id: 'train_selected_bear_defense_block', monthlyReturnPct: 1.6216, maximumDrawdownPct: -10.6531, trades: 541, reason: '由訓練期選擇是否封鎖空頭新倉，月均與交易數略降，回撤沒有改善。' },
+  { id: 'train_selected_source_risk_tilt', monthlyReturnPct: 1.6429, maximumDrawdownPct: -10.6531, trades: 544, reason: '四個訓練折都選回等風險，偏重月營收來源沒有穩定的訓練期優勢。' },
+  { id: 'higher_risk_with_bear_block', monthlyReturnPct: 1.3972, maximumDrawdownPct: -14.9219, trades: 446, reason: '訓練期偏好較高風險後驗證失效，月均、回撤與交易數同步惡化，屬於風險放大過度擬合。' },
+  { id: 'stable_segment_training_score', monthlyReturnPct: 0.8763, maximumDrawdownPct: -13.1272, trades: 541, reason: '訓練期子區間穩定性評分選到較弱動能配置，驗證月均與回撤同步惡化。' },
+  { id: 'momentum_regime_restriction', monthlyReturnPct: 1.5076, maximumDrawdownPct: -10.6531, trades: 528, reason: '限制動能補位的市場狀態降低月均與交易數，最大回撤沒有改善。' },
+  { id: 'expanded_revenue_setups', monthlyReturnPct: 1.6239, maximumDrawdownPct: -10.6353, trades: 547, reason: '擴大營收創高加速條件只增加少量交易並微幅改善回撤，月均仍低於既有基準。' },
+  { id: 'longer_holding_top15', monthlyReturnPct: 1.3577, maximumDrawdownPct: -10.6531, trades: 549, reason: '60 日持有提高單筆遠期報酬，但資金占用使投組月均下降；Top 15 只小幅增加交易。' }
 ];
 const mean = values => values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : 0;
 
@@ -463,12 +470,15 @@ async function main() {
   const randoms = [];
   const folds = [];
   for (const fold of foldWindows(context.startDate, context.endDate, 54, 18)) {
-    const trained = configs.map(config => ({
-      config,
-      result: run(context, signalMap(events, momentumEvents, config), config, fold.trainStart, fold.trainEnd)
-    })).filter(row => row.result.summary.trades >= 30 && row.result.summary.maximumDrawdownPct >= -25)
-      .sort((left, right) => right.result.summary.averageMonthlyEquityReturnPct
-        - left.result.summary.averageMonthlyEquityReturnPct)[0];
+    let trained = null;
+    for (const config of configs) {
+      const result = run(context, signalMap(events, momentumEvents, config), config, fold.trainStart, fold.trainEnd);
+      if (result.summary.trades < 30 || result.summary.maximumDrawdownPct < -25) continue;
+      if (!trained || result.summary.averageMonthlyEquityReturnPct
+        > trained.result.summary.averageMonthlyEquityReturnPct) {
+        trained = { config, result };
+      }
+    }
     if (!trained) {
       folds.push({ ...fold, status: '訓練樣本不足' });
       continue;

@@ -1,0 +1,62 @@
+{
+  "generatedAt": "2026-07-30T16:32:36.287Z",
+  "strategyId": "stock_buyback_signal_overlay_v1",
+  "strategyFamilyId": "stock_buyback_signal_overlay_v1:b8eb50b542f470d01bb2b121",
+  "experimentHash": "b3a4ced295ff57658718e81f",
+  "trainPeriod": [
+    "2022-01-01",
+    "2023-12-31"
+  ],
+  "validationPeriod": [
+    "2024-01-01",
+    "2025-12-31"
+  ],
+  "sourceEvents": 530,
+  "candidateTrades": 27796,
+  "testedConfigurations": 24,
+  "selected": {
+    "config": {
+      "purpose": 1,
+      "maxEventAgeDays": 90,
+      "minScore": 65,
+      "requireTrend": false,
+      "holdDays": 20
+    },
+    "train": {
+      "samples": 38,
+      "averageReturnPct": 1.427,
+      "medianReturnPct": 3.8866,
+      "winRatePct": 55.2632,
+      "profitFactor": 1.3615,
+      "top5PctProfitContributionPct": 27.7206
+    },
+    "control": {
+      "samples": 38,
+      "averageReturnPct": -0.1575,
+      "medianReturnPct": -0.2645,
+      "winRatePct": 42.1053,
+      "profitFactor": 0.961,
+      "top5PctProfitContributionPct": 46.2495
+    },
+    "excessReturnPct": 1.5845
+  },
+  "validation": {
+    "samples": 100,
+    "averageReturnPct": 2.052,
+    "medianReturnPct": -3.3301,
+    "winRatePct": 40,
+    "profitFactor": 1.4102,
+    "top5PctProfitContributionPct": 37.2162
+  },
+  "matchedControl": {
+    "samples": 100,
+    "averageReturnPct": 4.0117,
+    "medianReturnPct": 0.8867,
+    "winRatePct": 53,
+    "profitFactor": 1.9069,
+    "top5PctProfitContributionPct": 37.3604
+  },
+  "validationExcessReturnPct": -1.9597,
+  "incrementalPassed": false,
+  "conclusion": "庫藏股事件未改善既有技術訊號，不接入正式選股。"
+}

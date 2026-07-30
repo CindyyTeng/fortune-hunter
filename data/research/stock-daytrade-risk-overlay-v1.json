@@ -1,0 +1,59 @@
+{
+  "generatedAt": "2026-07-30T16:34:19.740Z",
+  "strategyId": "stock_daytrade_risk_overlay_v1",
+  "strategyFamilyId": "stock_daytrade_risk_overlay_v1:42429a6d82d971b2db2fb62f",
+  "experimentHash": "d1efaf0855606ed929873bc2",
+  "trainPeriod": [
+    "2022-01-01",
+    "2023-12-31"
+  ],
+  "validationPeriod": [
+    "2024-01-01",
+    "2025-12-31"
+  ],
+  "sourceDates": 194,
+  "effectiveDates": 194,
+  "candidateTrades": 27796,
+  "candidatesWithDayTradeData": 27252,
+  "testedConfigurations": 42,
+  "selected": {
+    "config": {
+      "maxDayTradeRank": 0.7,
+      "minScore": 65,
+      "requireTrend": false,
+      "holdDays": 20
+    },
+    "baseline": {
+      "samples": 7508,
+      "averageReturnPct": -0.8234,
+      "medianReturnPct": -2.1397,
+      "winRatePct": 40.3969,
+      "profitFactor": 0.8347
+    },
+    "filtered": {
+      "samples": 4108,
+      "averageReturnPct": -0.3638,
+      "medianReturnPct": -1.281,
+      "winRatePct": 42.8676,
+      "profitFactor": 0.9077
+    },
+    "improvementPct": 0.4596
+  },
+  "validationBaseline": {
+    "samples": 7528,
+    "averageReturnPct": 0.7803,
+    "medianReturnPct": -1.9877,
+    "winRatePct": 42.8268,
+    "profitFactor": 1.1476
+  },
+  "validationFiltered": {
+    "samples": 3883,
+    "averageReturnPct": -0.318,
+    "medianReturnPct": -1.9484,
+    "winRatePct": 41.0507,
+    "profitFactor": 0.9331
+  },
+  "validationImprovementPct": -1.0983,
+  "riskOverlayPassed": false,
+  "conclusion": "排除當沖過熱未穩定改善既有候選股，不接入正式選股。"
+}

@@ -1,0 +1,83 @@
+{
+  "generatedAt": "2026-07-30T16:18:45.927Z",
+  "strategyId": "stock_buyback_alpha_v1",
+  "strategyFamilyId": "stock_buyback_alpha_v1:b8a36dc48dbbc94e053bea07",
+  "experimentHash": "5e3824a1140bf9c39693a27d",
+  "universe": "TWSE_TPEX_COMMON_STOCKS_ONLY",
+  "pointInTimeRule": "董事會決議資訊僅於下一交易日使用；實際執行率不參與選股。",
+  "trainPeriod": [
+    "2022-01-01",
+    "2023-12-31"
+  ],
+  "validationPeriod": [
+    "2024-01-01",
+    "2025-12-31"
+  ],
+  "sourceEvents": 530,
+  "observations": 477,
+  "gatingDiagnostics": {
+    "firstDecisionDate": "2022-04-11",
+    "lastDecisionDate": "2025-11-27",
+    "trainRows": 137,
+    "validationRows": 340,
+    "trainLiquidRows": 31,
+    "trainWithVolumeDays": 137,
+    "trainWithPricePremium": 137
+  },
+  "testedConfigurations": 45,
+  "selected": {
+    "config": {
+      "purpose": 1,
+      "minPlannedVolumeDays": 0,
+      "minMomentum20Pct": -100,
+      "minPriceHighPremiumPct": 10,
+      "minTradeValue20": 10000000,
+      "requireTrend": false,
+      "holdDays": 20
+    },
+    "train": {
+      "samples": 50,
+      "averageReturnPct": 6.7123,
+      "medianReturnPct": 4.5794,
+      "winRatePct": 74,
+      "profitFactor": 6.4422,
+      "top5PctProfitContributionPct": 24.458
+    },
+    "trainRandom": {
+      "samples": 50,
+      "averageReturnPct": -0.3636,
+      "medianReturnPct": -1.7619,
+      "winRatePct": 48,
+      "profitFactor": 0.9257,
+      "top5PctProfitContributionPct": 32.9825
+    },
+    "trainExcessPct": 7.0759
+  },
+  "validation": {
+    "samples": 137,
+    "averageReturnPct": 6.0072,
+    "medianReturnPct": 6.2633,
+    "winRatePct": 64.9635,
+    "profitFactor": 3.3483,
+    "top5PctProfitContributionPct": 19.7663
+  },
+  "fairRandom": {
+    "samples": 137,
+    "averageReturnPct": 7.5328,
+    "medianReturnPct": 4.9806,
+    "winRatePct": 70.8029,
+    "profitFactor": 4.5718,
+    "top5PctProfitContributionPct": 23.4236
+  },
+  "benchmark0050": {
+    "samples": 137,
+    "averageReturnPct": 4.598,
+    "medianReturnPct": 5.3061,
+    "winRatePct": 78.1022,
+    "profitFactor": 6.9793,
+    "top5PctProfitContributionPct": 12.6459
+  },
+  "alphaPassed": false,
+  "fullPortfolioBacktestRequired": false,
+  "conclusion": "庫藏股事件未通過完整樣本外門檻，不接入正式選股。"
+}

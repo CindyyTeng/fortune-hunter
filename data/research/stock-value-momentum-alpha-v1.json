@@ -1,0 +1,54 @@
+{
+  "generatedAt": "2026-07-30T15:04:31.644Z",
+  "strategyId": "stock_value_momentum_alpha_v1",
+  "strategyFamilyId": "stock_value_momentum_alpha_v1:45ead7927f6d45b6813a9ed0",
+  "experimentHash": "be2a03ad4c6dcf9b53893ed4",
+  "universe": "TWSE_TPEX_COMMON_STOCKS_ONLY",
+  "pointInTimeRule": "官方資料不回溯重算；月末資料只能於下一交易日使用",
+  "trainPeriod": [
+    "2016-03-01",
+    "2021-12-31"
+  ],
+  "validationPeriod": [
+    "2022-01-01",
+    "2025-12-31"
+  ],
+  "valuationDates": 118,
+  "observations": 196269,
+  "testedConfigurations": 105,
+  "selected": {
+    "config": {
+      "mode": "cheap_momentum",
+      "valueCutoff": 0.7,
+      "momentumCutoff": 0.6,
+      "holdDays": 20
+    },
+    "train": {
+      "samples": 1001,
+      "averageReturnPct": -0.2744,
+      "medianReturnPct": -1.6409,
+      "winRatePct": 41.5584,
+      "profitFactor": 0.9295,
+      "top5ContributionPct": 41.6827
+    }
+  },
+  "validation": {
+    "samples": 989,
+    "averageReturnPct": 0.1031,
+    "medianReturnPct": -1.1037,
+    "winRatePct": 45.2983,
+    "profitFactor": 1.0267,
+    "top5ContributionPct": 41.7591
+  },
+  "fairRandom": {
+    "samples": 989,
+    "averageReturnPct": -0.301,
+    "medianReturnPct": -2.3532,
+    "winRatePct": 40.6471,
+    "profitFactor": 0.9416,
+    "top5ContributionPct": 40.9427
+  },
+  "alphaPassed": false,
+  "fullPortfolioBacktestRequired": false,
+  "conclusion": "估值與動能組合未通過跨期正期望門檻，不建立可實盤策略。"
+}

@@ -1,0 +1,56 @@
+{
+  "generatedAt": "2026-07-30T15:20:50.575Z",
+  "strategyId": "stock_securities_lending_alpha_v1",
+  "strategyFamilyId": "stock_securities_lending_alpha_v1:538107d80aa4b835d0f18e44",
+  "experimentHash": "eb12bee07d31a03b44ceb74b",
+  "universe": "TWSE_TPEX_COMMON_STOCKS_ONLY",
+  "sampling": "每五個交易日取樣一次",
+  "pointInTimeRule": "T 日收盤後借券資料只能於 T+1 使用",
+  "trainPeriod": [
+    "2022-01-01",
+    "2023-12-31"
+  ],
+  "validationPeriod": [
+    "2024-01-01",
+    "2025-12-31"
+  ],
+  "sourceDates": 194,
+  "downloadFailures": [],
+  "observations": 303540,
+  "testedConfigurations": 54,
+  "selected": {
+    "config": {
+      "mode": "covering_momentum",
+      "tail": 0.1,
+      "minimumMomentum": 10,
+      "holdDays": 20
+    },
+    "train": {
+      "samples": 178,
+      "averageReturnPct": 1.3535,
+      "medianReturnPct": -1.0909,
+      "winRatePct": 46.6292,
+      "profitFactor": 1.2079,
+      "top5ContributionPct": 36.0773
+    }
+  },
+  "validation": {
+    "samples": 411,
+    "averageReturnPct": -1.5177,
+    "medianReturnPct": -3.8327,
+    "winRatePct": 40.3893,
+    "profitFactor": 0.8167,
+    "top5ContributionPct": 40.3764
+  },
+  "fairRandom": {
+    "samples": 411,
+    "averageReturnPct": -0.8295,
+    "medianReturnPct": -3.2056,
+    "winRatePct": 39.6594,
+    "profitFactor": 0.8663,
+    "top5ContributionPct": 43.8304
+  },
+  "alphaPassed": false,
+  "fullPortfolioBacktestRequired": false,
+  "conclusion": "借券流量未通過跨期正期望門檻，不建立可實盤策略。"
+}

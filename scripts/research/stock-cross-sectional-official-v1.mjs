@@ -11,13 +11,35 @@ import {
   round,
   simulate
 } from './stock-official-market-walk-forward-v2.mjs';
-import { buildExperimentIdentity, loadRegistry, shouldSkipExperiment } from './strategy-experiment-registry.mjs';
+import {
+  appendExperiment,
+  buildExperimentIdentity,
+  loadRegistry,
+  shouldSkipExperiment
+} from './strategy-experiment-registry.mjs';
 
 const ETF_HISTORY = new URL('../../data/research/deployable-etf-rotation-history.json', import.meta.url);
 const QUALITY = new URL('../../data/quality/financial-quality.json', import.meta.url);
 const FUNDAMENTAL_BASELINE = new URL('../../data/research/stock-fundamental-official-walk-forward-v1.json', import.meta.url);
-const OUTPUT = new URL('../../data/research/stock-cross-sectional-official-v1.json', import.meta.url);
-const REPORT = new URL('../../docs/STOCK_CROSS_SECTIONAL_OFFICIAL_V1.md', import.meta.url);
+const RANK_PERSISTENCE = process.argv.includes('--rank-persistence');
+const RETURN_DECOMPOSITION = process.argv.includes('--return-decomposition');
+const COMBINED_CONFIRMATION = process.argv.includes('--combined-confirmation');
+const MODE_SUFFIX = RANK_PERSISTENCE
+  ? 'rank-persistence-v1'
+  : RETURN_DECOMPOSITION
+    ? 'return-decomposition-v1'
+    : COMBINED_CONFIRMATION
+      ? 'combined-confirmation-v1'
+      : 'v1';
+const OUTPUT = new URL(`../../data/research/stock-cross-sectional-official-${MODE_SUFFIX}.json`, import.meta.url);
+const REPORT = new URL(`../../docs/STOCK_CROSS_SECTIONAL_OFFICIAL_${MODE_SUFFIX.replaceAll('-', '_').toUpperCase()}.md`, import.meta.url);
+const REPORT_TITLE = RANK_PERSISTENCE
+  ? '官方個股排名持續性'
+  : RETURN_DECOMPOSITION
+    ? '官方個股隔夜與盤中報酬拆解'
+    : COMBINED_CONFIRMATION
+      ? '官方個股長期動能與報酬確認'
+      : '官方全市場個股橫斷面動能';
 
 function deviation(values) {
   const mean = avg(values);
@@ -55,6 +77,15 @@ function buildSetups(histories, qualityRows) {
         offset ? (item.close / source[offset - 1].close - 1) * 100 : 0
       )).slice(1);
       const volatility60 = deviation(returns60) * Math.sqrt(252);
+      const decomposition = rows.slice(index - 119, index + 1);
+      const overnight = decomposition.slice(1).map((item, offset) =>
+        Math.log(item.open / decomposition[offset].close) * 100
+      );
+      const intraday = decomposition.map(item => Math.log(item.close / item.open) * 100);
+      const overnight120 = overnight.reduce((sum, value) => sum + value, 0);
+      const intraday120 = intraday.reduce((sum, value) => sum + value, 0);
+      const overnight60 = overnight.slice(-60).reduce((sum, value) => sum + value, 0);
+      const intraday60 = intraday.slice(-60).reduce((sum, value) => sum + value, 0);
       const mom12Skip1 = (rows[index - 20].close / rows[index - 252].close - 1) * 100;
       const mom6Skip1 = (rows[index - 20].close / rows[index - 126].close - 1) * 100;
       const nearHigh252 = row.close / Math.max(...rows.slice(index - 251, index + 1).map(item => item.high));
@@ -74,6 +105,10 @@ function buildSetups(histories, qualityRows) {
         mom12Skip1,
         mom6Skip1,
         volatility60,
+        overnight60,
+        overnight120,
+        intraday60,
+        intraday120,
         nearHigh252,
         ma20,
         distanceToMa20Pct: (row.close / ma20 - 1) * 100,
@@ -98,6 +133,33 @@ function buildSetups(histories, qualityRows) {
       if (mom12Skip1 >= 10 && mom6Skip1 >= 8 && nearHigh252 >= 0.75 && common.ma20AboveMa60) {
         setups.push({ ...common, setup: 'dual_horizon_momentum', score: riskAdjusted12 * 18 + riskAdjusted6 * 18 + nearHigh252 * 20 + qualityBoost });
       }
+      if (overnight120 >= 5 && overnight60 >= 0 && nearHigh252 >= 0.7 && common.ma20AboveMa60) {
+        setups.push({
+          ...common,
+          setup: 'overnight_information_momentum',
+          score: overnight120 / Math.max(8, volatility60) * 25 + overnight60 * 0.4
+            - Math.max(0, intraday120) * 0.1 + nearHigh252 * 20 + qualityBoost
+        });
+      }
+      if (overnight120 >= 3 && intraday120 >= 3 && overnight60 >= 0 && intraday60 >= 0
+        && nearHigh252 >= 0.75 && common.ma20AboveMa60) {
+        setups.push({
+          ...common,
+          setup: 'overnight_intraday_confirmation',
+          score: (overnight120 + intraday120) / Math.max(8, volatility60) * 20
+            + (overnight60 + intraday60) * 0.2 + nearHigh252 * 20 + qualityBoost
+        });
+      }
+      if (mom12Skip1 >= 10 && mom6Skip1 >= 8 && overnight120 >= 3 && intraday120 >= 3
+        && overnight60 >= 0 && intraday60 >= 0 && nearHigh252 >= 0.75 && common.ma20AboveMa60) {
+        setups.push({
+          ...common,
+          setup: 'dual_momentum_return_confirmation',
+          score: riskAdjusted12 * 15 + riskAdjusted6 * 15
+            + (overnight120 + intraday120) / Math.max(8, volatility60) * 15
+            + nearHigh252 * 20 + qualityBoost
+        });
+      }
     }
   }
   const groups = new Map();
@@ -113,11 +175,48 @@ function buildSetups(histories, qualityRows) {
       row.score += row.strengthRankPct * 20;
     });
   }
+  const additions = [];
+  const priorRanks = new Map();
+  const dualByDate = new Map();
+  for (const setup of setups.filter(row => row.setup === 'dual_horizon_momentum')) {
+    const rows = dualByDate.get(setup.signalDate) || [];
+    rows.push(setup);
+    dualByDate.set(setup.signalDate, rows);
+  }
+  for (const [, rows] of [...dualByDate].sort(([left], [right]) => left.localeCompare(right))) {
+    for (const row of rows) {
+      const prior = priorRanks.get(row.symbol);
+      if (prior >= 0.7 && row.strengthRankPct >= 0.8) {
+        additions.push({
+          ...row,
+          setup: 'rank_persistence',
+          score: row.score + prior * 25
+        });
+      }
+      if (prior !== undefined && prior < 0.5 && row.strengthRankPct >= 0.9) {
+        additions.push({
+          ...row,
+          setup: 'rank_acceleration',
+          score: row.score + (row.strengthRankPct - prior) * 30
+        });
+      }
+    }
+    for (const row of rows) priorRanks.set(row.symbol, row.strengthRankPct);
+  }
+  setups.push(...additions);
   return setups;
 }
 
 function configs() {
-  const families = [
+  const families = RANK_PERSISTENCE ? [
+    { setup: 'rank_persistence', minValue: 50e6, minMom20: -10, minMom60: 0, maxAtr: 8, minVolumeRatio: 0.3, maxDistance: 25, minRank: 0 },
+    { setup: 'rank_acceleration', minValue: 50e6, minMom20: -5, minMom60: 0, maxAtr: 8, minVolumeRatio: 0.5, maxDistance: 20, minRank: 0 }
+  ] : RETURN_DECOMPOSITION ? [
+    { setup: 'overnight_information_momentum', minValue: 50e6, minMom20: -10, minMom60: 0, maxAtr: 8, minVolumeRatio: 0.3, maxDistance: 25, minRank: 0.75 },
+    { setup: 'overnight_intraday_confirmation', minValue: 50e6, minMom20: -10, minMom60: 0, maxAtr: 8, minVolumeRatio: 0.3, maxDistance: 25, minRank: 0.75 }
+  ] : COMBINED_CONFIRMATION ? [
+    { setup: 'dual_momentum_return_confirmation', minValue: 50e6, minMom20: -10, minMom60: 0, maxAtr: 8, minVolumeRatio: 0.3, maxDistance: 25, minRank: 0.7 }
+  ] : [
     { setup: 'momentum_12_1', minValue: 50e6, minMom20: -10, minMom60: 0, maxAtr: 8, minVolumeRatio: 0.3, maxDistance: 25, minRank: 0.8 },
     { setup: 'momentum_6_1', minValue: 50e6, minMom20: -10, minMom60: 0, maxAtr: 8, minVolumeRatio: 0.3, maxDistance: 25, minRank: 0.8 },
     { setup: 'dual_horizon_momentum', minValue: 50e6, minMom20: -10, minMom60: 0, maxAtr: 8, minVolumeRatio: 0.3, maxDistance: 25, minRank: 0.75 }
@@ -158,15 +257,27 @@ function trainScore(metrics) {
 }
 
 const experiment = {
-  strategyId: 'stock_cross_sectional_official_v1',
+  strategyId: RANK_PERSISTENCE
+    ? 'stock_cross_sectional_official_rank_persistence_v1'
+    : RETURN_DECOMPOSITION
+      ? 'stock_cross_sectional_official_return_decomposition_v1'
+      : COMBINED_CONFIRMATION
+        ? 'stock_cross_sectional_official_combined_confirmation_v1'
+      : 'stock_cross_sectional_official_v1',
   dataSources: ['官方上市上櫃普通股日線 OHLCV', '保守 effectiveDate 財報品質資料'],
-  setupRules: ['月底計算 12-1、6-1 風險調整動能，並測試 EPS 與利潤率改善加權'],
+  setupRules: RANK_PERSISTENCE
+    ? ['月底計算風險調整動能', '連續兩期維持前段排名', '新進前段排名的加速領先股']
+    : RETURN_DECOMPOSITION
+      ? ['分離 60／120 日隔夜與盤中報酬', '隔夜資訊動能', '隔夜與盤中同步確認']
+      : COMBINED_CONFIRMATION
+        ? ['6／12 月風險調整動能', '隔夜與盤中報酬同步為正', '財報品質只使用 effectiveDate 後資料']
+      : ['月底計算 12-1、6-1 風險調整動能，並測試 EPS 與利潤率改善加權'],
   triggerRules: ['月底排名後下一交易日開盤成交'],
   invalidationRules: ['盤中停損與移動停利'],
   exitRules: ['固定目標、移動停利、最長持有日'],
   riskRules: { accountRiskPct: 0.5, maximumPositionPct: 10, tPlusTwo: true },
   blockedWhen: ['大盤弱勢、波動過高、流動性不足'],
-  parameters: { families: 3, configurationsPerFold: 486, trainStabilitySegments: 3, recentSegmentWeight: 5, qualityInteraction: true, tradeSampleWeight: 300, drawdownPenaltyWeight: 0.08, drawdownBlockPct: 6 },
+  parameters: { families: COMBINED_CONFIRMATION ? 1 : RANK_PERSISTENCE || RETURN_DECOMPOSITION ? 2 : 3, configurationsPerFold: configs().length, trainStabilitySegments: 3, recentSegmentWeight: 5, qualityInteraction: true, tradeSampleWeight: 300, drawdownPenaltyWeight: 0.08, drawdownBlockPct: 6 },
   trainPeriod: '每段 72 個月',
   validationPeriod: '每段 24 個月，合併 2020-2025',
   costModel: '手續費、交易稅、雙邊滑價、最低手續費',
@@ -291,5 +402,15 @@ const output = {
   conclusion: passed ? '通過研究門檻，仍須先紙上交易。' : `未達可信月均 5%；目前 ${metrics.averageMonthlyReturnPct}%，不可宣稱完成或可實盤。`
 };
 await fs.writeFile(OUTPUT, `${JSON.stringify(output, null, 2)}\n`, 'utf8');
-await fs.writeFile(REPORT, `# 官方全市場個股橫斷面動能 v1\n\n## Rolling 樣本外結果\n\n- 驗證：2020-01-01 至 2025-12-31，共 ${metrics.validationMonths} 個月\n- 個股交易：${metrics.trades} 筆；ETF 交易占比 0%\n- 月均總資產報酬：${metrics.averageMonthlyReturnPct}%\n- 年化報酬：${metrics.annualizedReturnPct}%\n- 最大回撤：${metrics.maximumDrawdownPct}%\n- Profit Factor：${metrics.profitFactor}\n- 勝率：${metrics.winRatePct}%\n- 0050 月均：${benchmark.averageMonthlyReturnPct}%\n- 候選池隨機排序月均：${candidateRandom.averageMonthlyReturnPct}%\n- 分段月均：${folds.map(row => `${row.validationPeriod.join('～')} 為 ${row.validation.averageMonthlyReturnPct}%`).join('；')}\n\n## 六年完全凍結檢查\n\n只用 2014～2019 選一次規則，2020～2025 不再重新選參數：月均 ${longHoldout.averageMonthlyReturnPct}%、年化 ${longHoldout.annualizedReturnPct}%、最大回撤 ${longHoldout.maximumDrawdownPct}%、${longHoldout.trades} 筆、PF ${longHoldout.profitFactor}；相同候選池隨機排序月均 ${longHoldoutRandom.averageMonthlyReturnPct}%。這項結果顯示核心為正，但排名優勢仍偏薄。\n\n## 資料與限制\n\n- 品質資料 ${(qualityPayload.records || qualityPayload).length.toLocaleString('en-US')} 筆、${new Set((qualityPayload.records || qualityPayload).map(row => row.symbol)).size} 檔，只在保守 effectiveDate 後使用。\n- 每月底只使用當時以前 6 至 12 個月資料，跳過最近 20 日，隔月開盤成交。\n- 已納入手續費、交易稅、雙邊滑價、最低手續費、T+2、跳空停損與每日總資產計價。\n- 已記錄 ${output.rejectedExperiments.length} 項失敗實驗；完整數字保存在 JSON，避免重複測試。\n- 本輪一致性動能、低成交值動能、九個月跳兩月動能與多週期候選池均未改善可信月均，已全部淘汰。\n- 訓練期學習因子權重在修正同分百分位假訊號後，月均只剩 0.1574%、最大回撤 -10.41%、267 筆，並輸給公平隨機，已淘汰。\n- 平滑動能前緣：月均 0.7792%、最大回撤 -5.42%、228 筆；交易與回撤較佳，但月均未超越保留版。\n- 高周轉前緣：月均 0.702%、最大回撤 -6.62%、315 筆。\n\n## 結論\n\n${output.conclusion} Rolling 月均仍輸給 0050，且六年完全凍結優勢只略高於隨機排序，不可進紙上交易或實盤。\n`, 'utf8');
+await fs.writeFile(REPORT, `# ${REPORT_TITLE} v1\n\n## Rolling 樣本外結果\n\n- 驗證：2020-01-01 至 2025-12-31，共 ${metrics.validationMonths} 個月\n- 個股交易：${metrics.trades} 筆；ETF 交易占比 0%\n- 月均總資產報酬：${metrics.averageMonthlyReturnPct}%\n- 年化報酬：${metrics.annualizedReturnPct}%\n- 最大回撤：${metrics.maximumDrawdownPct}%\n- Profit Factor：${metrics.profitFactor}\n- 勝率：${metrics.winRatePct}%\n- 0050 月均：${benchmark.averageMonthlyReturnPct}%\n- 候選池隨機排序月均：${candidateRandom.averageMonthlyReturnPct}%\n- 分段月均：${folds.map(row => `${row.validationPeriod.join('～')} 為 ${row.validation.averageMonthlyReturnPct}%`).join('；')}\n\n## 六年完全凍結檢查\n\n只用 2014～2019 選一次規則，2020～2025 不再重新選參數：月均 ${longHoldout.averageMonthlyReturnPct}%、年化 ${longHoldout.annualizedReturnPct}%、最大回撤 ${longHoldout.maximumDrawdownPct}%、${longHoldout.trades} 筆、PF ${longHoldout.profitFactor}；相同候選池隨機排序月均 ${longHoldoutRandom.averageMonthlyReturnPct}%。這項結果顯示核心為正，但排名優勢仍偏薄。\n\n## 資料與限制\n\n- 品質資料 ${(qualityPayload.records || qualityPayload).length.toLocaleString('en-US')} 筆、${new Set((qualityPayload.records || qualityPayload).map(row => row.symbol)).size} 檔，只在保守 effectiveDate 後使用。\n- 每月底只使用當時以前 6 至 12 個月資料，跳過最近 20 日，隔月開盤成交。\n- 已納入手續費、交易稅、雙邊滑價、最低手續費、T+2、跳空停損與每日總資產計價。\n- 已記錄 ${output.rejectedExperiments.length} 項失敗實驗；完整數字保存在 JSON，避免重複測試。\n- 本輪一致性動能、低成交值動能、九個月跳兩月動能與多週期候選池均未改善可信月均，已全部淘汰。\n- 訓練期學習因子權重在修正同分百分位假訊號後，月均只剩 0.1574%、最大回撤 -10.41%、267 筆，並輸給公平隨機，已淘汰。\n- 平滑動能前緣：月均 0.7792%、最大回撤 -5.42%、228 筆；交易與回撤較佳，但月均未超越保留版。\n- 高周轉前緣：月均 0.702%、最大回撤 -6.62%、315 筆。\n\n## 結論\n\n${output.conclusion} Rolling 月均仍輸給 0050，且六年完全凍結優勢只略高於隨機排序，不可進紙上交易或實盤。\n`, 'utf8');
+await appendExperiment({
+  ...experiment,
+  metrics: { validation: metrics, benchmark0050: benchmark, candidateRandom },
+  resultStatus: passed ? 'passed' : 'failed',
+  failureReason: passed ? null : output.conclusion,
+  passedMinimum: passed,
+  passedHighProfit: false,
+  allowRetest: false,
+  notes: '已完成 rolling 樣本外、六年凍結、成本與公平隨機比較。'
+});
 console.log(JSON.stringify({ metrics, benchmark, candidateRandom, selected: folds.map(row => row.selectedConfig.id), passed, conclusion: output.conclusion }, null, 2));

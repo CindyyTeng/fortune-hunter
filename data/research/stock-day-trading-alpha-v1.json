@@ -1,0 +1,55 @@
+{
+  "generatedAt": "2026-07-30T15:27:59.214Z",
+  "strategyId": "stock_day_trading_alpha_v1",
+  "strategyFamilyId": "stock_day_trading_alpha_v1:28d7098a562b8c798870454b",
+  "experimentHash": "092e16008d4041cd558b88b4",
+  "universe": "TWSE_TPEX_COMMON_STOCKS_ONLY",
+  "pointInTimeRule": "T 日當沖資料保守延後至 T+3 使用",
+  "trainPeriod": [
+    "2022-01-01",
+    "2023-12-31"
+  ],
+  "validationPeriod": [
+    "2024-01-01",
+    "2025-12-31"
+  ],
+  "sourceDates": 194,
+  "downloadFailures": [],
+  "observations": 275529,
+  "testedConfigurations": 84,
+  "selected": {
+    "config": {
+      "mode": "high_churn_momentum",
+      "tail": 0.2,
+      "minimumMomentum": 10,
+      "holdDays": 20
+    },
+    "train": {
+      "samples": 5352,
+      "averageReturnPct": -0.1512,
+      "medianReturnPct": -2.8682,
+      "winRatePct": 41.1061,
+      "profitFactor": 0.9744,
+      "top5ContributionPct": 40.0505
+    }
+  },
+  "validation": {
+    "samples": 6341,
+    "averageReturnPct": -0.1792,
+    "medianReturnPct": -3.4656,
+    "winRatePct": 40.6403,
+    "profitFactor": 0.973,
+    "top5ContributionPct": 39.6335
+  },
+  "fairRandom": {
+    "samples": 6341,
+    "averageReturnPct": -0.323,
+    "medianReturnPct": -2.3926,
+    "winRatePct": 41.6023,
+    "profitFactor": 0.9428,
+    "top5ContributionPct": 41.7726
+  },
+  "alphaPassed": false,
+  "fullPortfolioBacktestRequired": false,
+  "conclusion": "個股當沖熱度未通過跨期正期望門檻，不建立可實盤策略。"
+}

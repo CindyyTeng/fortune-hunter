@@ -1,0 +1,53 @@
+{
+  "generatedAt": "2026-07-30T15:34:38.342Z",
+  "strategyId": "stock_attention_risk_v1",
+  "strategyFamilyId": "stock_attention_risk_v1:6c699c7a047b398acbd7277c",
+  "experimentHash": "9ffcc16db385c4af69115faa",
+  "universe": "TWSE_TPEX_COMMON_STOCKS_ONLY",
+  "pointInTimeRule": "公告日收盤後資料只能於下一交易日使用",
+  "trainPeriod": [
+    "2022-01-01",
+    "2023-12-31"
+  ],
+  "validationPeriod": [
+    "2024-01-01",
+    "2025-12-31"
+  ],
+  "sourceEvents": 23411,
+  "downloadFailures": [],
+  "observations": 21364,
+  "testedConfigurations": 135,
+  "selected": {
+    "config": {
+      "category": "turnover",
+      "minimumMomentum": 5,
+      "minimumCount": 5,
+      "holdDays": 10
+    },
+    "train": {
+      "samples": 1259,
+      "averageReturnPct": 0.7624,
+      "medianReturnPct": -1.4884,
+      "winRatePct": 44.9563,
+      "profitFactor": 1.142
+    }
+  },
+  "validation": {
+    "samples": 2096,
+    "averageReturnPct": 0.2924,
+    "medianReturnPct": -1.2531,
+    "winRatePct": 46.1355,
+    "profitFactor": 1.0508
+  },
+  "fairRandom": {
+    "samples": 2096,
+    "averageReturnPct": -0.3079,
+    "medianReturnPct": -1.629,
+    "winRatePct": 42.4618,
+    "profitFactor": 0.9299
+  },
+  "longAlphaPassed": false,
+  "riskFilterUseful": false,
+  "fullPortfolioBacktestRequired": false,
+  "conclusion": "注意股既不是正期望買點，也未證明排除後能顯著改善績效。"
+}

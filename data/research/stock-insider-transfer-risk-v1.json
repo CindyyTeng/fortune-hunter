@@ -1,0 +1,125 @@
+{
+  "generatedAt": "2026-07-30T15:59:21.757Z",
+  "strategyId": "stock_insider_transfer_risk_v1",
+  "strategyFamilyId": "stock_insider_transfer_risk_v1:70b52c03807003293921c744",
+  "experimentHash": "4dc571d78e2189a5a86699ae",
+  "universe": "TWSE_TPEX_COMMON_STOCKS_ONLY",
+  "pointInTimeRule": "申報日資料只在下一個交易日使用。",
+  "trainPeriod": [
+    "2022-01-01",
+    "2023-12-31"
+  ],
+  "validationPeriod": [
+    "2024-01-01",
+    "2025-12-31"
+  ],
+  "tradingDatesQueried": 970,
+  "sourceEvents": 2411,
+  "marketSaleEvents": 479,
+  "downloadFailures": [],
+  "observations": 405,
+  "testedConfigurations": 30,
+  "selected": {
+    "config": {
+      "minTransferRatioPct": 0,
+      "holdDays": 20,
+      "requireUptrend": false,
+      "minMomentum20Pct": -100
+    },
+    "train": {
+      "samples": 116,
+      "averageReturnPct": -0.9066,
+      "medianReturnPct": -1.6133,
+      "winRatePct": 43.1034,
+      "profitFactor": 0.8189
+    }
+  },
+  "validation": {
+    "samples": 132,
+    "averageReturnPct": 2.3331,
+    "medianReturnPct": -0.9617,
+    "winRatePct": 46.9697,
+    "profitFactor": 1.6028
+  },
+  "fairRandom": {
+    "samples": 132,
+    "averageReturnPct": 1.4576,
+    "medianReturnPct": -0.3046,
+    "winRatePct": 49.2424,
+    "profitFactor": 1.4141
+  },
+  "candidateOverlay": {
+    "5": {
+      "flagged": {
+        "samples": 23,
+        "averageReturnPct": -2.3951,
+        "medianReturnPct": -2.8668,
+        "winRatePct": 34.7826,
+        "profitFactor": 0.3833
+      },
+      "clean": {
+        "samples": 14037,
+        "averageReturnPct": 0.0296,
+        "medianReturnPct": -1.3797,
+        "winRatePct": 41.9605,
+        "profitFactor": 1.0075
+      },
+      "improvementIfExcludedPct": 2.4247
+    },
+    "10": {
+      "flagged": {
+        "samples": 44,
+        "averageReturnPct": 0.4129,
+        "medianReturnPct": -0.1942,
+        "winRatePct": 47.7273,
+        "profitFactor": 1.1607
+      },
+      "clean": {
+        "samples": 14016,
+        "averageReturnPct": 0.0244,
+        "medianReturnPct": -1.3873,
+        "winRatePct": 41.9307,
+        "profitFactor": 1.0062
+      },
+      "improvementIfExcludedPct": -0.3885
+    },
+    "20": {
+      "flagged": {
+        "samples": 83,
+        "averageReturnPct": 1.7296,
+        "medianReturnPct": 0.5712,
+        "winRatePct": 54.2169,
+        "profitFactor": 1.6965
+      },
+      "clean": {
+        "samples": 13977,
+        "averageReturnPct": 0.0155,
+        "medianReturnPct": -1.4,
+        "winRatePct": 41.8759,
+        "profitFactor": 1.0039
+      },
+      "improvementIfExcludedPct": -1.7141
+    },
+    "30": {
+      "flagged": {
+        "samples": 124,
+        "averageReturnPct": 2.4326,
+        "medianReturnPct": 0.1854,
+        "winRatePct": 52.4194,
+        "profitFactor": 2.0704
+      },
+      "clean": {
+        "samples": 13936,
+        "averageReturnPct": 0.0042,
+        "medianReturnPct": -1.4047,
+        "winRatePct": 41.8556,
+        "profitFactor": 1.0011
+      },
+      "improvementIfExcludedPct": -2.4284
+    }
+  },
+  "riskFilterUseful": false,
+  "candidateOverlayUseful": false,
+  "fullPortfolioBacktestRequired": false,
+  "conclusion": "內部人市場轉讓申報未在驗證期呈現足夠穩定的負向差異，不接入正式選股。"
+}

@@ -130,27 +130,61 @@ function observations(stocks, events) {
     const rows = stocks.get(event.symbol);
     if (!rows) continue;
     const index = rows.findIndex(row => row.date >= event.decisionDate);
-    if (index < 60 || index + 21 >= rows.length) continue;
+    if (index < 60 || index + 31 >= rows.length) continue;
     const decisionDay = rows[index];
-    const entry = rows[index + 1];
     const averageVolume20 = mean(rows.slice(index - 19, index + 1).map(row => row.volume));
     const ma20 = mean(rows.slice(index - 19, index + 1).map(row => row.close));
     const ma60 = mean(rows.slice(index - 59, index + 1).map(row => row.close));
-    const returns = {};
-    for (const holdDays of [5, 10, 20]) {
-      returns[holdDays] = netReturn(entry.open, rows[index + 1 + holdDays].close);
-    }
-    result.push({
-      ...event,
-      effectiveDate: entry.date,
+    const base = {
       plannedVolumeDays: averageVolume20 ? event.plannedShares / averageVolume20 : 0,
       priceHighPremiumPct: event.priceHigh ? (event.priceHigh / decisionDay.close - 1) * 100 : 0,
       momentum20Pct: (decisionDay.close / rows[index - 20].close - 1) * 100,
       aboveMa20: decisionDay.close >= ma20,
       ma20AboveMa60: ma20 >= ma60,
-      tradeValue20: mean(rows.slice(index - 19, index + 1).map(row => row.tradeValue)),
-      returns
-    });
+      tradeValue20: mean(rows.slice(index - 19, index + 1).map(row => row.tradeValue))
+    };
+    const triggers = [
+      { entryMode: 'next_open', signalIndex: index },
+      {
+        entryMode: 'breakout_confirm',
+        signalIndex: rows.findIndex((row, rowIndex) => {
+          if (rowIndex <= index || rowIndex > index + 10) return false;
+          const priorHigh = Math.max(...rows.slice(rowIndex - 20, rowIndex).map(item => item.high));
+          return row.close > priorHigh && row.close > row.open;
+        })
+      },
+      {
+        entryMode: 'ma20_rebound',
+        signalIndex: rows.findIndex((row, rowIndex) => {
+          if (rowIndex <= index || rowIndex > index + 10) return false;
+          const movingAverage = mean(rows.slice(rowIndex - 19, rowIndex + 1).map(item => item.close));
+          return row.low <= movingAverage * 1.015 && row.close >= movingAverage && row.close > row.open;
+        })
+      },
+      {
+        entryMode: 'reacceleration',
+        signalIndex: rows.findIndex((row, rowIndex) => rowIndex >= index + 3
+          && rowIndex <= index + 10
+          && row.close > rows[rowIndex - 1].high
+          && row.close > mean(rows.slice(rowIndex - 19, rowIndex + 1).map(item => item.close)))
+      }
+    ];
+    for (const trigger of triggers) {
+      if (trigger.signalIndex < index || trigger.signalIndex + 21 >= rows.length) continue;
+      const entry = rows[trigger.signalIndex + 1];
+      const returns = {};
+      for (const holdDays of [5, 10, 20]) {
+        returns[holdDays] = netReturn(entry.open, rows[trigger.signalIndex + 1 + holdDays].close);
+      }
+      result.push({
+        ...event,
+        ...base,
+        entryMode: trigger.entryMode,
+        signalDate: rows[trigger.signalIndex].date,
+        effectiveDate: entry.date,
+        returns
+      });
+    }
   }
   return result;
 }
@@ -179,15 +213,18 @@ function configs() {
         [-100, 0, 10].flatMap(minPriceHighPremiumPct =>
           [10_000_000, 30_000_000, 50_000_000].flatMap(minTradeValue20 =>
             [false, true].flatMap(requireTrend =>
-              [5, 10, 20].map(holdDays => ({
-                purpose,
-                minPlannedVolumeDays,
-                minMomentum20Pct,
-                minPriceHighPremiumPct,
-                minTradeValue20,
-                requireTrend,
-                holdDays
-              }))
+              ['next_open', 'breakout_confirm', 'ma20_rebound', 'reacceleration'].flatMap(entryMode =>
+                [5, 10, 20].map(holdDays => ({
+                  purpose,
+                  minPlannedVolumeDays,
+                  minMomentum20Pct,
+                  minPriceHighPremiumPct,
+                  minTradeValue20,
+                  requireTrend,
+                  entryMode,
+                  holdDays
+                }))
+              )
             )
           )
         )
@@ -198,6 +235,7 @@ function configs() {
 
 function passes(row, config) {
   return (config.purpose === 'all' || row.purpose === config.purpose)
+    && row.entryMode === config.entryMode
     && row.plannedVolumeDays >= config.minPlannedVolumeDays
     && row.momentum20Pct >= config.minMomentum20Pct
     && row.tradeValue20 >= config.minTradeValue20
@@ -210,18 +248,21 @@ function fairRandom(stocks, selected, holdDays) {
     const candidates = [];
     for (const [symbol, rows] of stocks) {
       if (symbol.startsWith('00')) continue;
-      const index = rows.findIndex(row => row.date >= event.decisionDate);
-      if (index < 60 || index + holdDays + 1 >= rows.length) continue;
+      const index = rows.findIndex(row => row.date >= event.effectiveDate);
+      if (index < 60 || index + holdDays >= rows.length) continue;
       const tradeValue20 = mean(rows.slice(index - 19, index + 1).map(row => row.tradeValue));
-      if (tradeValue20 >= 50_000_000) candidates.push({ symbol, rows, index });
+      const liquidityRatio = tradeValue20 / Math.max(1, event.tradeValue20);
+      if (tradeValue20 >= 10_000_000 && liquidityRatio >= 0.5 && liquidityRatio <= 2) {
+        candidates.push({ symbol, rows, index });
+      }
     }
     const picked = candidates[(Number(event.symbol.slice(0, 4)) * 31 + sequence * 17) % Math.max(1, candidates.length)];
     if (!picked) return { returns: {} };
     return {
       returns: {
         [holdDays]: netReturn(
-          picked.rows[picked.index + 1].open,
-          picked.rows[picked.index + 1 + holdDays].close
+          picked.rows[picked.index].open,
+          picked.rows[picked.index + holdDays].close
         )
       }
     };
@@ -230,21 +271,21 @@ function fairRandom(stocks, selected, holdDays) {
 
 function benchmarkRows(rows, selected, holdDays) {
   return selected.map(event => {
-    const index = rows.findIndex(row => row.date >= event.decisionDate);
-    if (index < 0 || index + holdDays + 1 >= rows.length) return { returns: {} };
+    const index = rows.findIndex(row => row.date >= event.effectiveDate);
+    if (index < 0 || index + holdDays >= rows.length) return { returns: {} };
     return {
       returns: {
-        [holdDays]: netReturn(rows[index + 1].open, rows[index + 1 + holdDays].close)
+        [holdDays]: netReturn(rows[index].open, rows[index + holdDays].close)
       }
     };
   });
 }
 
 const experiment = {
-  strategyId: 'stock_buyback_alpha_v1',
+  strategyId: 'stock_buyback_confirmation_alpha_v1',
   dataSources: ['official_mops_t35sc09_buyback', 'official_ohlcv'],
   setupRules: ['董事會決議買回庫藏股', '預定買回量相對近期成交量', '決議時價格趨勢'],
-  triggerRules: ['董事會決議日後下一交易日開盤'],
+  triggerRules: ['隔日開盤', '十日內突破確認', '十日內回測 MA20 轉強', '整理後重新加速'],
   invalidationRules: ['不得使用日後才知道的實際買回股數或執行率'],
   exitRules: ['固定持有 5、10、20 個交易日進行因子驗證'],
   riskRules: { diagnosticOnly: true, minimumTradeValue20: 50_000_000 },
@@ -253,7 +294,7 @@ const experiment = {
   trainPeriod: TRAIN,
   validationPeriod: VALIDATION,
   costModel: COSTS,
-  executionModel: 'next_open_with_slippage'
+  executionModel: 'confirmation_then_next_open_with_slippage'
 };
 const identity = buildExperimentIdentity(experiment);
 const skip = shouldSkipExperiment(await loadRegistry(), identity, { ...experiment, coreRulesChanged: true });
@@ -277,8 +318,8 @@ for (const holdDays of [5, 10, 20]) {
     row.randomReturns[holdDays] = randomRows[index].returns[holdDays];
   });
 }
-const trainRows = rows.filter(row => row.decisionDate >= TRAIN[0] && row.decisionDate <= TRAIN[1]);
-const validationRows = rows.filter(row => row.decisionDate >= VALIDATION[0] && row.decisionDate <= VALIDATION[1]);
+const trainRows = rows.filter(row => row.effectiveDate >= TRAIN[0] && row.effectiveDate <= TRAIN[1]);
+const validationRows = rows.filter(row => row.effectiveDate >= VALIDATION[0] && row.effectiveDate <= VALIDATION[1]);
 const gatingDiagnostics = {
   firstDecisionDate: rows.map(row => row.decisionDate).sort()[0] || null,
   lastDecisionDate: rows.map(row => row.decisionDate).sort().at(-1) || null,
@@ -333,7 +374,7 @@ const output = {
   strategyId: experiment.strategyId,
   ...identity,
   universe: 'TWSE_TPEX_COMMON_STOCKS_ONLY',
-  pointInTimeRule: '董事會決議資訊僅於下一交易日使用；實際執行率不參與選股。',
+  pointInTimeRule: '董事會決議後等待當下可知的價格確認，確認後下一交易日開盤成交；實際執行率不參與選股。',
   trainPeriod: TRAIN,
   validationPeriod: VALIDATION,
   sourceEvents: events.length,
@@ -352,10 +393,10 @@ await fs.writeFile(OUTPUT, `${JSON.stringify(output, null, 2)}\n`, 'utf8');
 await fs.writeFile(REPORT, `# 庫藏股事件 alpha v1
 
 - 資料：公開資訊觀測站 t35sc09，上市與上櫃公司庫藏股案件。
-- 防止偷看：只用董事會決議當時可知的預定資料；實際買回結果不作為進場條件。
+- 防止偷看：只用董事會決議與其後當下已知的價格確認；確認後下一交易日開盤成交，實際買回結果不作為進場條件。
 - 範圍：普通股，不含 ETF；訓練 ${TRAIN.join(' 至 ')}，驗證 ${VALIDATION.join(' 至 ')}。
 - 成本：手續費、交易稅、雙邊滑價與最低手續費均已納入。
-- 案件：${events.length} 件，可配對價格資料 ${rows.length} 件。
+- 案件：${events.length} 件，可配對「隔日、突破、MA20 回測、整理轉強」觀察值 ${rows.length} 件。
 - 驗證：${validation.samples} 筆，平均 ${validation.averageReturnPct}%，中位數 ${validation.medianReturnPct}%，PF ${validation.profitFactor}。
 - 公平隨機：平均 ${random.averageReturnPct}%，0050 同期平均 ${benchmark0050.averageReturnPct}%。
 - 結論：${conclusion}

@@ -1,10 +1,10 @@
 {
-  "generatedAt": "2026-07-30T16:18:45.927Z",
-  "strategyId": "stock_buyback_alpha_v1",
-  "strategyFamilyId": "stock_buyback_alpha_v1:b8a36dc48dbbc94e053bea07",
-  "experimentHash": "5e3824a1140bf9c39693a27d",
+  "generatedAt": "2026-07-30T16:28:39.957Z",
+  "strategyId": "stock_buyback_confirmation_alpha_v1",
+  "strategyFamilyId": "stock_buyback_confirmation_alpha_v1:7c75f49f5d206f627a47c1a9",
+  "experimentHash": "91f641e459bc9fa98abf3c9d",
   "universe": "TWSE_TPEX_COMMON_STOCKS_ONLY",
-  "pointInTimeRule": "董事會決議資訊僅於下一交易日使用；實際執行率不參與選股。",
+  "pointInTimeRule": "董事會決議後等待當下可知的價格確認，確認後下一交易日開盤成交；實際執行率不參與選股。",
   "trainPeriod": [
     "2022-01-01",
     "2023-12-31"
@@ -14,68 +14,69 @@
     "2025-12-31"
   ],
   "sourceEvents": 530,
-  "observations": 477,
+  "observations": 1188,
   "gatingDiagnostics": {
     "firstDecisionDate": "2022-04-11",
-    "lastDecisionDate": "2025-11-27",
-    "trainRows": 137,
-    "validationRows": 340,
-    "trainLiquidRows": 31,
-    "trainWithVolumeDays": 137,
-    "trainWithPricePremium": 137
+    "lastDecisionDate": "2025-11-17",
+    "trainRows": 380,
+    "validationRows": 808,
+    "trainLiquidRows": 86,
+    "trainWithVolumeDays": 380,
+    "trainWithPricePremium": 380
   },
-  "testedConfigurations": 45,
+  "testedConfigurations": 72,
   "selected": {
     "config": {
-      "purpose": 1,
+      "purpose": "all",
       "minPlannedVolumeDays": 0,
-      "minMomentum20Pct": -100,
-      "minPriceHighPremiumPct": 10,
+      "minMomentum20Pct": -10,
+      "minPriceHighPremiumPct": -100,
       "minTradeValue20": 10000000,
       "requireTrend": false,
-      "holdDays": 20
+      "entryMode": "next_open",
+      "holdDays": 10
     },
     "train": {
       "samples": 50,
-      "averageReturnPct": 6.7123,
-      "medianReturnPct": 4.5794,
-      "winRatePct": 74,
-      "profitFactor": 6.4422,
-      "top5PctProfitContributionPct": 24.458
+      "averageReturnPct": 4.0219,
+      "medianReturnPct": 3.2943,
+      "winRatePct": 72,
+      "profitFactor": 4.3472,
+      "top5PctProfitContributionPct": 32.0675
     },
     "trainRandom": {
       "samples": 50,
-      "averageReturnPct": -0.3636,
-      "medianReturnPct": -1.7619,
-      "winRatePct": 48,
-      "profitFactor": 0.9257,
-      "top5PctProfitContributionPct": 32.9825
+      "averageReturnPct": -0.0905,
+      "medianReturnPct": 0.7894,
+      "winRatePct": 52,
+      "profitFactor": 0.9715,
+      "top5PctProfitContributionPct": 41.7792
     },
-    "trainExcessPct": 7.0759
+    "trainExcessPct": 4.1124
   },
   "validation": {
-    "samples": 137,
-    "averageReturnPct": 6.0072,
-    "medianReturnPct": 6.2633,
-    "winRatePct": 64.9635,
-    "profitFactor": 3.3483,
-    "top5PctProfitContributionPct": 19.7663
+    "samples": 104,
+    "averageReturnPct": -0.4801,
+    "medianReturnPct": -0.4636,
+    "winRatePct": 41.3462,
+    "profitFactor": 0.8421,
+    "top5PctProfitContributionPct": 37.6955
   },
   "fairRandom": {
-    "samples": 137,
-    "averageReturnPct": 7.5328,
-    "medianReturnPct": 4.9806,
-    "winRatePct": 70.8029,
-    "profitFactor": 4.5718,
-    "top5PctProfitContributionPct": 23.4236
+    "samples": 104,
+    "averageReturnPct": 0.9339,
+    "medianReturnPct": -0.5052,
+    "winRatePct": 44.2308,
+    "profitFactor": 1.3129,
+    "top5PctProfitContributionPct": 46.8141
   },
   "benchmark0050": {
-    "samples": 137,
-    "averageReturnPct": 4.598,
-    "medianReturnPct": 5.3061,
-    "winRatePct": 78.1022,
-    "profitFactor": 6.9793,
-    "top5PctProfitContributionPct": 12.6459
+    "samples": 104,
+    "averageReturnPct": -0.0899,
+    "medianReturnPct": -0.3842,
+    "winRatePct": 47.1154,
+    "profitFactor": 0.9388,
+    "top5PctProfitContributionPct": 28.3941
   },
   "alphaPassed": false,
   "fullPortfolioBacktestRequired": false,

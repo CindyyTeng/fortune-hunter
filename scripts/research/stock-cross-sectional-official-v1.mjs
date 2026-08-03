@@ -1,4 +1,5 @@
 import fs from 'node:fs/promises';
+import { pathToFileURL } from 'node:url';
 import {
   FOLDS,
   aggregate,
@@ -58,7 +59,7 @@ function groupQuality(rows) {
   return groups;
 }
 
-function buildSetups(histories, qualityRows) {
+export function buildSetups(histories, qualityRows) {
   const setups = [];
   const qualityBySymbol = groupQuality(qualityRows);
   for (const [symbol, rows] of histories) {
@@ -256,6 +257,7 @@ function trainScore(metrics) {
     + metrics.profitFactor + metrics.maximumDrawdownPct * 0.08 + Math.min(metrics.trades, 500) / 300;
 }
 
+export async function runCrossSectionalOfficial() {
 const experiment = {
   strategyId: RANK_PERSISTENCE
     ? 'stock_cross_sectional_official_rank_persistence_v1'
@@ -414,3 +416,8 @@ await appendExperiment({
   notes: '已完成 rolling 樣本外、六年凍結、成本與公平隨機比較。'
 });
 console.log(JSON.stringify({ metrics, benchmark, candidateRandom, selected: folds.map(row => row.selectedConfig.id), passed, conclusion: output.conclusion }, null, 2));
+}
+
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  await runCrossSectionalOfficial();
+}

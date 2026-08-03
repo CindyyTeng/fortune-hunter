@@ -1,0 +1,65 @@
+{
+  "generatedAt": "2026-08-03T12:52:18.120Z",
+  "conclusion": {
+    "officialDailySnapshotAvailable": true,
+    "companyAnnualHistoryAvailable": true,
+    "allMarketHistoricalBulkEndpointConfirmed": false,
+    "recommendedPlan": "每日排程累積官方 CSV；歷史研究先人工匯入，避免對 MOPS 逐公司大量請求。"
+  },
+  "daily": [
+    {
+      "source": "TWSE",
+      "url": "https://mopsfin.twse.com.tw/opendata/t187ap04_L.csv",
+      "status": 200,
+      "rows": 7,
+      "dates": [
+        "2026-08-02"
+      ],
+      "hasPrecisePublishedAt": true,
+      "supportsHistoricalBulkDate": false,
+      "suitability": "適合每日排程累積，不是多年歷史批次端點"
+    },
+    {
+      "source": "TPEX",
+      "url": "https://mopsfin.twse.com.tw/opendata/t187ap04_O.csv",
+      "status": 200,
+      "rows": 8,
+      "dates": [
+        "2026-08-02"
+      ],
+      "hasPrecisePublishedAt": true,
+      "supportsHistoricalBulkDate": false,
+      "suitability": "適合每日排程累積，不是多年歷史批次端點"
+    }
+  ],
+  "companyHistory": [
+    {
+      "symbol": "2330",
+      "rocYear": 113,
+      "status": 200,
+      "rowCount": 272,
+      "supportsHistoricalDate": true
+    },
+    {
+      "symbol": "2330",
+      "rocYear": 110,
+      "status": 200,
+      "rowCount": 232,
+      "supportsHistoricalDate": true
+    },
+    {
+      "symbol": "6488",
+      "rocYear": 113,
+      "status": 200,
+      "rowCount": 53,
+      "supportsHistoricalDate": true
+    },
+    {
+      "symbol": "6488",
+      "rocYear": 110,
+      "status": 200,
+      "rowCount": 68,
+      "supportsHistoricalDate": true
+    }
+  ]
+}

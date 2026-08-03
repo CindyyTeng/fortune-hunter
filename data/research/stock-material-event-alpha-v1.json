@@ -1,0 +1,1011 @@
+{
+  "generatedAt": "2026-08-03T13:14:53.755Z",
+  "dataPeriod": [
+    "2021-01-01",
+    "2025-12-31"
+  ],
+  "trainPeriod": [
+    "2021-01-01",
+    "2023-12-31"
+  ],
+  "validationPeriod": [
+    "2024-01-01",
+    "2025-12-31"
+  ],
+  "universe": "2025 年成交值前 60 檔普通股",
+  "survivorshipBiasWarning": true,
+  "observations": 2915,
+  "transactionCostsIncluded": true,
+  "methodology": "公告後下一個交易日開盤進場；固定持有；同日同市場隨機個股與 0050 比較",
+  "candidates": [
+    {
+      "category": "capital_cash_raise",
+      "holdDays": 20,
+      "train": {
+        "samples": 135,
+        "averageReturnPct": 1.0222,
+        "medianReturnPct": 0.3189,
+        "winRatePct": 51.8519,
+        "profitFactor": 1.256,
+        "randomAverageReturnPct": -0.1726,
+        "benchmarkAverageReturnPct": -0.6358,
+        "alphaVsRandomPct": 1.1948,
+        "alphaVsBenchmarkPct": 1.658,
+        "top5PctProfitContributionPct": 29.404
+      },
+      "validation": {
+        "samples": 120,
+        "averageReturnPct": 3.5684,
+        "medianReturnPct": 0.8304,
+        "winRatePct": 52.5,
+        "profitFactor": 2.0647,
+        "randomAverageReturnPct": 0.0054,
+        "benchmarkAverageReturnPct": 1.7001,
+        "alphaVsRandomPct": 3.5631,
+        "alphaVsBenchmarkPct": 1.8683,
+        "top5PctProfitContributionPct": 32.7514
+      },
+      "validationAlphaCandidate": true
+    }
+  ],
+  "results": [
+    {
+      "category": "buyback",
+      "holdDays": 20,
+      "train": {
+        "samples": 107,
+        "averageReturnPct": 0.7614,
+        "medianReturnPct": -1.2447,
+        "winRatePct": 47.6636,
+        "profitFactor": 1.2132,
+        "randomAverageReturnPct": 0.6233,
+        "benchmarkAverageReturnPct": -1.247,
+        "alphaVsRandomPct": 0.1382,
+        "alphaVsBenchmarkPct": 2.0084,
+        "top5PctProfitContributionPct": 44.0669
+      },
+      "validation": {
+        "samples": 61,
+        "averageReturnPct": 10.3178,
+        "medianReturnPct": 7.4429,
+        "winRatePct": 68.8525,
+        "profitFactor": 6.4346,
+        "randomAverageReturnPct": 1.3853,
+        "benchmarkAverageReturnPct": 3.9663,
+        "alphaVsRandomPct": 8.9324,
+        "alphaVsBenchmarkPct": 6.3515,
+        "top5PctProfitContributionPct": 34.6503
+      },
+      "validationAlphaCandidate": false
+    },
+    {
+      "category": "negative_event",
+      "holdDays": 10,
+      "train": {
+        "samples": 60,
+        "averageReturnPct": -0.8551,
+        "medianReturnPct": -1.7151,
+        "winRatePct": 40,
+        "profitFactor": 0.7486,
+        "randomAverageReturnPct": 0.8111,
+        "benchmarkAverageReturnPct": -1.5862,
+        "alphaVsRandomPct": -1.6662,
+        "alphaVsBenchmarkPct": 0.7311,
+        "top5PctProfitContributionPct": 43.976
+      },
+      "validation": {
+        "samples": 22,
+        "averageReturnPct": 5.1194,
+        "medianReturnPct": 3.8799,
+        "winRatePct": 63.6364,
+        "profitFactor": 2.738,
+        "randomAverageReturnPct": 0.706,
+        "benchmarkAverageReturnPct": 1.6004,
+        "alphaVsRandomPct": 4.4134,
+        "alphaVsBenchmarkPct": 3.5191,
+        "top5PctProfitContributionPct": 40.6649
+      },
+      "validationAlphaCandidate": false
+    },
+    {
+      "category": "buyback",
+      "holdDays": 10,
+      "train": {
+        "samples": 107,
+        "averageReturnPct": -0.6498,
+        "medianReturnPct": -0.4194,
+        "winRatePct": 46.729,
+        "profitFactor": 0.7753,
+        "randomAverageReturnPct": 0.0168,
+        "benchmarkAverageReturnPct": -0.9313,
+        "alphaVsRandomPct": -0.6665,
+        "alphaVsBenchmarkPct": 0.2816,
+        "top5PctProfitContributionPct": 32.5567
+      },
+      "validation": {
+        "samples": 61,
+        "averageReturnPct": 5.7074,
+        "medianReturnPct": 4.7621,
+        "winRatePct": 80.3279,
+        "profitFactor": 6.0759,
+        "randomAverageReturnPct": 0.7346,
+        "benchmarkAverageReturnPct": 2.2285,
+        "alphaVsRandomPct": 4.9729,
+        "alphaVsBenchmarkPct": 3.4789,
+        "top5PctProfitContributionPct": 31.582
+      },
+      "validationAlphaCandidate": false
+    },
+    {
+      "category": "capital_private_placement",
+      "holdDays": 20,
+      "train": {
+        "samples": 36,
+        "averageReturnPct": 4.4685,
+        "medianReturnPct": 2.134,
+        "winRatePct": 58.3333,
+        "profitFactor": 2.4035,
+        "randomAverageReturnPct": -0.2489,
+        "benchmarkAverageReturnPct": -0.2391,
+        "alphaVsRandomPct": 4.7174,
+        "alphaVsBenchmarkPct": 4.7076,
+        "top5PctProfitContributionPct": 43.5418
+      },
+      "validation": {
+        "samples": 39,
+        "averageReturnPct": 4.5432,
+        "medianReturnPct": 2.8935,
+        "winRatePct": 61.5385,
+        "profitFactor": 2.0168,
+        "randomAverageReturnPct": -0.5912,
+        "benchmarkAverageReturnPct": 1.6222,
+        "alphaVsRandomPct": 5.1345,
+        "alphaVsBenchmarkPct": 2.9211,
+        "top5PctProfitContributionPct": 20.7382
+      },
+      "validationAlphaCandidate": false
+    },
+    {
+      "category": "negative_event",
+      "holdDays": 20,
+      "train": {
+        "samples": 60,
+        "averageReturnPct": -0.1746,
+        "medianReturnPct": -1.8688,
+        "winRatePct": 38.3333,
+        "profitFactor": 0.9624,
+        "randomAverageReturnPct": 0.8261,
+        "benchmarkAverageReturnPct": -2.3463,
+        "alphaVsRandomPct": -1.0007,
+        "alphaVsBenchmarkPct": 2.1716,
+        "top5PctProfitContributionPct": 37.8544
+      },
+      "validation": {
+        "samples": 22,
+        "averageReturnPct": 4.0305,
+        "medianReturnPct": 0.9116,
+        "winRatePct": 50,
+        "profitFactor": 2.0695,
+        "randomAverageReturnPct": 0.4224,
+        "benchmarkAverageReturnPct": 1.2861,
+        "alphaVsRandomPct": 3.6081,
+        "alphaVsBenchmarkPct": 2.7444,
+        "top5PctProfitContributionPct": 32.7821
+      },
+      "validationAlphaCandidate": false
+    },
+    {
+      "category": "buyback",
+      "holdDays": 5,
+      "train": {
+        "samples": 107,
+        "averageReturnPct": -0.1571,
+        "medianReturnPct": 0.2338,
+        "winRatePct": 53.271,
+        "profitFactor": 0.9182,
+        "randomAverageReturnPct": -0.7071,
+        "benchmarkAverageReturnPct": -0.5545,
+        "alphaVsRandomPct": 0.5499,
+        "alphaVsBenchmarkPct": 0.3974,
+        "top5PctProfitContributionPct": 25.9828
+      },
+      "validation": {
+        "samples": 61,
+        "averageReturnPct": 2.8345,
+        "medianReturnPct": 1.4933,
+        "winRatePct": 63.9344,
+        "profitFactor": 3.3719,
+        "randomAverageReturnPct": 0.4412,
+        "benchmarkAverageReturnPct": 0.3824,
+        "alphaVsRandomPct": 2.3933,
+        "alphaVsBenchmarkPct": 2.4521,
+        "top5PctProfitContributionPct": 34.1446
+      },
+      "validationAlphaCandidate": false
+    },
+    {
+      "category": "capital_cash_raise",
+      "holdDays": 20,
+      "train": {
+        "samples": 135,
+        "averageReturnPct": 1.0222,
+        "medianReturnPct": 0.3189,
+        "winRatePct": 51.8519,
+        "profitFactor": 1.256,
+        "randomAverageReturnPct": -0.1726,
+        "benchmarkAverageReturnPct": -0.6358,
+        "alphaVsRandomPct": 1.1948,
+        "alphaVsBenchmarkPct": 1.658,
+        "top5PctProfitContributionPct": 29.404
+      },
+      "validation": {
+        "samples": 120,
+        "averageReturnPct": 3.5684,
+        "medianReturnPct": 0.8304,
+        "winRatePct": 52.5,
+        "profitFactor": 2.0647,
+        "randomAverageReturnPct": 0.0054,
+        "benchmarkAverageReturnPct": 1.7001,
+        "alphaVsRandomPct": 3.5631,
+        "alphaVsBenchmarkPct": 1.8683,
+        "top5PctProfitContributionPct": 32.7514
+      },
+      "validationAlphaCandidate": true
+    },
+    {
+      "category": "capital_private_placement",
+      "holdDays": 10,
+      "train": {
+        "samples": 36,
+        "averageReturnPct": 1.8785,
+        "medianReturnPct": 0.1642,
+        "winRatePct": 50,
+        "profitFactor": 1.8669,
+        "randomAverageReturnPct": -0.1996,
+        "benchmarkAverageReturnPct": 0.2732,
+        "alphaVsRandomPct": 2.0781,
+        "alphaVsBenchmarkPct": 1.6053,
+        "top5PctProfitContributionPct": 36.5839
+      },
+      "validation": {
+        "samples": 39,
+        "averageReturnPct": 1.8986,
+        "medianReturnPct": 0.2707,
+        "winRatePct": 51.2821,
+        "profitFactor": 1.6456,
+        "randomAverageReturnPct": -0.5921,
+        "benchmarkAverageReturnPct": 0.3717,
+        "alphaVsRandomPct": 2.4907,
+        "alphaVsBenchmarkPct": 1.5269,
+        "top5PctProfitContributionPct": 27.3924
+      },
+      "validationAlphaCandidate": false
+    },
+    {
+      "category": "capital_convertible_bond",
+      "holdDays": 20,
+      "train": {
+        "samples": 83,
+        "averageReturnPct": 1.952,
+        "medianReturnPct": -0.7834,
+        "winRatePct": 48.1928,
+        "profitFactor": 1.4563,
+        "randomAverageReturnPct": 0.021,
+        "benchmarkAverageReturnPct": -0.7109,
+        "alphaVsRandomPct": 1.931,
+        "alphaVsBenchmarkPct": 2.6629,
+        "top5PctProfitContributionPct": 41.7363
+      },
+      "validation": {
+        "samples": 176,
+        "averageReturnPct": 3.0526,
+        "medianReturnPct": 1.1938,
+        "winRatePct": 55.1136,
+        "profitFactor": 1.7402,
+        "randomAverageReturnPct": -0.8985,
+        "benchmarkAverageReturnPct": 1.7856,
+        "alphaVsRandomPct": 3.951,
+        "alphaVsBenchmarkPct": 1.267,
+        "top5PctProfitContributionPct": 29.9168
+      },
+      "validationAlphaCandidate": false
+    },
+    {
+      "category": "capital_private_placement",
+      "holdDays": 5,
+      "train": {
+        "samples": 36,
+        "averageReturnPct": 0.8342,
+        "medianReturnPct": 0.7038,
+        "winRatePct": 52.7778,
+        "profitFactor": 1.3661,
+        "randomAverageReturnPct": -0.5516,
+        "benchmarkAverageReturnPct": 0.0533,
+        "alphaVsRandomPct": 1.3858,
+        "alphaVsBenchmarkPct": 0.7809,
+        "top5PctProfitContributionPct": 37.0695
+      },
+      "validation": {
+        "samples": 39,
+        "averageReturnPct": 1.6888,
+        "medianReturnPct": 0.0674,
+        "winRatePct": 51.2821,
+        "profitFactor": 1.8934,
+        "randomAverageReturnPct": -0.6024,
+        "benchmarkAverageReturnPct": 0.5193,
+        "alphaVsRandomPct": 2.2912,
+        "alphaVsBenchmarkPct": 1.1696,
+        "top5PctProfitContributionPct": 32.8609
+      },
+      "validationAlphaCandidate": false
+    },
+    {
+      "category": "negative_event",
+      "holdDays": 5,
+      "train": {
+        "samples": 60,
+        "averageReturnPct": -1.3833,
+        "medianReturnPct": -0.7834,
+        "winRatePct": 43.3333,
+        "profitFactor": 0.5043,
+        "randomAverageReturnPct": 0.4797,
+        "benchmarkAverageReturnPct": -1.1154,
+        "alphaVsRandomPct": -1.863,
+        "alphaVsBenchmarkPct": -0.2679,
+        "top5PctProfitContributionPct": 39.9255
+      },
+      "validation": {
+        "samples": 22,
+        "averageReturnPct": 1.8566,
+        "medianReturnPct": 4.4162,
+        "winRatePct": 63.6364,
+        "profitFactor": 1.7641,
+        "randomAverageReturnPct": 0.4907,
+        "benchmarkAverageReturnPct": 0.8352,
+        "alphaVsRandomPct": 1.3659,
+        "alphaVsBenchmarkPct": 1.0214,
+        "top5PctProfitContributionPct": 33.4794
+      },
+      "validationAlphaCandidate": false
+    },
+    {
+      "category": "earnings",
+      "holdDays": 20,
+      "train": {
+        "samples": 38,
+        "averageReturnPct": 0.0005,
+        "medianReturnPct": -0.4458,
+        "winRatePct": 44.7368,
+        "profitFactor": 1.0002,
+        "randomAverageReturnPct": -0.5247,
+        "benchmarkAverageReturnPct": -0.6348,
+        "alphaVsRandomPct": 0.5252,
+        "alphaVsBenchmarkPct": 0.6353,
+        "top5PctProfitContributionPct": 46.7602
+      },
+      "validation": {
+        "samples": 31,
+        "averageReturnPct": 2.9488,
+        "medianReturnPct": 0.3276,
+        "winRatePct": 51.6129,
+        "profitFactor": 2.0153,
+        "randomAverageReturnPct": 2.3518,
+        "benchmarkAverageReturnPct": 1.9951,
+        "alphaVsRandomPct": 0.597,
+        "alphaVsBenchmarkPct": 0.9537,
+        "top5PctProfitContributionPct": 32.0782
+      },
+      "validationAlphaCandidate": false
+    },
+    {
+      "category": "capital_cash_raise",
+      "holdDays": 10,
+      "train": {
+        "samples": 135,
+        "averageReturnPct": -0.1912,
+        "medianReturnPct": 0.0564,
+        "winRatePct": 50.3704,
+        "profitFactor": 0.9381,
+        "randomAverageReturnPct": -0.5068,
+        "benchmarkAverageReturnPct": -0.4459,
+        "alphaVsRandomPct": 0.3157,
+        "alphaVsBenchmarkPct": 0.2547,
+        "top5PctProfitContributionPct": 31.7236
+      },
+      "validation": {
+        "samples": 120,
+        "averageReturnPct": 0.9243,
+        "medianReturnPct": -0.2607,
+        "winRatePct": 45.8333,
+        "profitFactor": 1.3403,
+        "randomAverageReturnPct": -0.118,
+        "benchmarkAverageReturnPct": -0.0178,
+        "alphaVsRandomPct": 1.0423,
+        "alphaVsBenchmarkPct": 0.9421,
+        "top5PctProfitContributionPct": 38.7013
+      },
+      "validationAlphaCandidate": false
+    },
+    {
+      "category": "order_contract",
+      "holdDays": 20,
+      "train": {
+        "samples": 23,
+        "averageReturnPct": 8.2977,
+        "medianReturnPct": 2.7524,
+        "winRatePct": 56.5217,
+        "profitFactor": 4.5861,
+        "randomAverageReturnPct": -0.6852,
+        "benchmarkAverageReturnPct": -1.7011,
+        "alphaVsRandomPct": 8.9829,
+        "alphaVsBenchmarkPct": 9.9988,
+        "top5PctProfitContributionPct": 47.4741
+      },
+      "validation": {
+        "samples": 27,
+        "averageReturnPct": 1.599,
+        "medianReturnPct": -1.5012,
+        "winRatePct": 44.4444,
+        "profitFactor": 1.3751,
+        "randomAverageReturnPct": -2.2882,
+        "benchmarkAverageReturnPct": 0.753,
+        "alphaVsRandomPct": 3.8871,
+        "alphaVsBenchmarkPct": 0.846,
+        "top5PctProfitContributionPct": 39.2961
+      },
+      "validationAlphaCandidate": false
+    },
+    {
+      "category": "capital_convertible_bond",
+      "holdDays": 10,
+      "train": {
+        "samples": 83,
+        "averageReturnPct": 0.0403,
+        "medianReturnPct": -0.6226,
+        "winRatePct": 48.1928,
+        "profitFactor": 1.0107,
+        "randomAverageReturnPct": -0.7345,
+        "benchmarkAverageReturnPct": -0.725,
+        "alphaVsRandomPct": 0.7747,
+        "alphaVsBenchmarkPct": 0.7653,
+        "top5PctProfitContributionPct": 40.0257
+      },
+      "validation": {
+        "samples": 176,
+        "averageReturnPct": 0.4842,
+        "medianReturnPct": -0.3947,
+        "winRatePct": 48.8636,
+        "profitFactor": 1.1274,
+        "randomAverageReturnPct": -1.1218,
+        "benchmarkAverageReturnPct": -0.2185,
+        "alphaVsRandomPct": 1.606,
+        "alphaVsBenchmarkPct": 0.7027,
+        "top5PctProfitContributionPct": 33.9884
+      },
+      "validationAlphaCandidate": false
+    },
+    {
+      "category": "earnings",
+      "holdDays": 10,
+      "train": {
+        "samples": 38,
+        "averageReturnPct": -1.5099,
+        "medianReturnPct": -1.7852,
+        "winRatePct": 34.2105,
+        "profitFactor": 0.4491,
+        "randomAverageReturnPct": -0.8112,
+        "benchmarkAverageReturnPct": -1.3671,
+        "alphaVsRandomPct": -0.6987,
+        "alphaVsBenchmarkPct": -0.1427,
+        "top5PctProfitContributionPct": 28.8692
+      },
+      "validation": {
+        "samples": 31,
+        "averageReturnPct": 0.0758,
+        "medianReturnPct": -1.6066,
+        "winRatePct": 41.9355,
+        "profitFactor": 1.0236,
+        "randomAverageReturnPct": 0.1056,
+        "benchmarkAverageReturnPct": -0.3117,
+        "alphaVsRandomPct": -0.0298,
+        "alphaVsBenchmarkPct": 0.3875,
+        "top5PctProfitContributionPct": 41.6475
+      },
+      "validationAlphaCandidate": false
+    },
+    {
+      "category": "investor_conference",
+      "holdDays": 10,
+      "train": {
+        "samples": 459,
+        "averageReturnPct": 0.8866,
+        "medianReturnPct": 0.1184,
+        "winRatePct": 50.9804,
+        "profitFactor": 1.312,
+        "randomAverageReturnPct": -0.064,
+        "benchmarkAverageReturnPct": -0.416,
+        "alphaVsRandomPct": 0.9507,
+        "alphaVsBenchmarkPct": 1.3027,
+        "top5PctProfitContributionPct": 32.8271
+      },
+      "validation": {
+        "samples": 336,
+        "averageReturnPct": 1.0611,
+        "medianReturnPct": -0.41,
+        "winRatePct": 48.2143,
+        "profitFactor": 1.3391,
+        "randomAverageReturnPct": -0.7363,
+        "benchmarkAverageReturnPct": 0.781,
+        "alphaVsRandomPct": 1.7975,
+        "alphaVsBenchmarkPct": 0.2801,
+        "top5PctProfitContributionPct": 34.8418
+      },
+      "validationAlphaCandidate": false
+    },
+    {
+      "category": "capital_cash_raise",
+      "holdDays": 5,
+      "train": {
+        "samples": 135,
+        "averageReturnPct": -0.5747,
+        "medianReturnPct": -0.511,
+        "winRatePct": 44.4444,
+        "profitFactor": 0.7637,
+        "randomAverageReturnPct": -0.8352,
+        "benchmarkAverageReturnPct": -0.4886,
+        "alphaVsRandomPct": 0.2605,
+        "alphaVsBenchmarkPct": -0.0861,
+        "top5PctProfitContributionPct": 36.9197
+      },
+      "validation": {
+        "samples": 120,
+        "averageReturnPct": -0.4045,
+        "medianReturnPct": -0.7839,
+        "winRatePct": 41.6667,
+        "profitFactor": 0.8417,
+        "randomAverageReturnPct": -0.6912,
+        "benchmarkAverageReturnPct": -0.601,
+        "alphaVsRandomPct": 0.2867,
+        "alphaVsBenchmarkPct": 0.1965,
+        "top5PctProfitContributionPct": 41.5074
+      },
+      "validationAlphaCandidate": false
+    },
+    {
+      "category": "earnings",
+      "holdDays": 5,
+      "train": {
+        "samples": 38,
+        "averageReturnPct": -0.833,
+        "medianReturnPct": -0.5295,
+        "winRatePct": 39.4737,
+        "profitFactor": 0.618,
+        "randomAverageReturnPct": -0.5752,
+        "benchmarkAverageReturnPct": -1.121,
+        "alphaVsRandomPct": -0.2578,
+        "alphaVsBenchmarkPct": 0.288,
+        "top5PctProfitContributionPct": 29.0378
+      },
+      "validation": {
+        "samples": 31,
+        "averageReturnPct": -0.3149,
+        "medianReturnPct": -0.7987,
+        "winRatePct": 48.3871,
+        "profitFactor": 0.8924,
+        "randomAverageReturnPct": -0.4165,
+        "benchmarkAverageReturnPct": -0.4917,
+        "alphaVsRandomPct": 0.1016,
+        "alphaVsBenchmarkPct": 0.1768,
+        "top5PctProfitContributionPct": 34.9037
+      },
+      "validationAlphaCandidate": false
+    },
+    {
+      "category": "investor_conference",
+      "holdDays": 5,
+      "train": {
+        "samples": 459,
+        "averageReturnPct": 0.2204,
+        "medianReturnPct": -0.783,
+        "winRatePct": 45.098,
+        "profitFactor": 1.0945,
+        "randomAverageReturnPct": -0.578,
+        "benchmarkAverageReturnPct": -0.7018,
+        "alphaVsRandomPct": 0.7984,
+        "alphaVsBenchmarkPct": 0.9222,
+        "top5PctProfitContributionPct": 39.8403
+      },
+      "validation": {
+        "samples": 336,
+        "averageReturnPct": 0.2011,
+        "medianReturnPct": -0.3301,
+        "winRatePct": 47.3214,
+        "profitFactor": 1.0754,
+        "randomAverageReturnPct": -0.8792,
+        "benchmarkAverageReturnPct": 0.154,
+        "alphaVsRandomPct": 1.0803,
+        "alphaVsBenchmarkPct": 0.0471,
+        "top5PctProfitContributionPct": 33.0348
+      },
+      "validationAlphaCandidate": false
+    },
+    {
+      "category": "capacity_product",
+      "holdDays": 5,
+      "train": {
+        "samples": 2,
+        "averageReturnPct": 2.8262,
+        "medianReturnPct": 4.8864,
+        "winRatePct": 100,
+        "profitFactor": null,
+        "randomAverageReturnPct": -0.5219,
+        "benchmarkAverageReturnPct": 2.0934,
+        "alphaVsRandomPct": 3.3481,
+        "alphaVsBenchmarkPct": 0.7327,
+        "top5PctProfitContributionPct": 86.4489
+      },
+      "validation": {
+        "samples": 0,
+        "averageReturnPct": 0,
+        "medianReturnPct": 0,
+        "winRatePct": 0,
+        "profitFactor": null,
+        "randomAverageReturnPct": 0,
+        "benchmarkAverageReturnPct": 0,
+        "alphaVsRandomPct": 0,
+        "alphaVsBenchmarkPct": 0,
+        "top5PctProfitContributionPct": null
+      },
+      "validationAlphaCandidate": false
+    },
+    {
+      "category": "capacity_product",
+      "holdDays": 10,
+      "train": {
+        "samples": 2,
+        "averageReturnPct": 19.3955,
+        "medianReturnPct": 28.6712,
+        "winRatePct": 100,
+        "profitFactor": null,
+        "randomAverageReturnPct": -1.0168,
+        "benchmarkAverageReturnPct": 3.6886,
+        "alphaVsRandomPct": 20.4123,
+        "alphaVsBenchmarkPct": 15.707,
+        "top5PctProfitContributionPct": 73.912
+      },
+      "validation": {
+        "samples": 0,
+        "averageReturnPct": 0,
+        "medianReturnPct": 0,
+        "winRatePct": 0,
+        "profitFactor": null,
+        "randomAverageReturnPct": 0,
+        "benchmarkAverageReturnPct": 0,
+        "alphaVsRandomPct": 0,
+        "alphaVsBenchmarkPct": 0,
+        "top5PctProfitContributionPct": null
+      },
+      "validationAlphaCandidate": false
+    },
+    {
+      "category": "capacity_product",
+      "holdDays": 20,
+      "train": {
+        "samples": 2,
+        "averageReturnPct": 31.7378,
+        "medianReturnPct": 45.7238,
+        "winRatePct": 100,
+        "profitFactor": null,
+        "randomAverageReturnPct": 0.6131,
+        "benchmarkAverageReturnPct": 4.4889,
+        "alphaVsRandomPct": 31.1247,
+        "alphaVsBenchmarkPct": 27.2489,
+        "top5PctProfitContributionPct": 72.0336
+      },
+      "validation": {
+        "samples": 0,
+        "averageReturnPct": 0,
+        "medianReturnPct": 0,
+        "winRatePct": 0,
+        "profitFactor": null,
+        "randomAverageReturnPct": 0,
+        "benchmarkAverageReturnPct": 0,
+        "alphaVsRandomPct": 0,
+        "alphaVsBenchmarkPct": 0,
+        "top5PctProfitContributionPct": null
+      },
+      "validationAlphaCandidate": false
+    },
+    {
+      "category": "investor_conference",
+      "holdDays": 20,
+      "train": {
+        "samples": 459,
+        "averageReturnPct": 1.02,
+        "medianReturnPct": 0.1615,
+        "winRatePct": 50.5447,
+        "profitFactor": 1.2914,
+        "randomAverageReturnPct": 0.5753,
+        "benchmarkAverageReturnPct": -0.3444,
+        "alphaVsRandomPct": 0.4447,
+        "alphaVsBenchmarkPct": 1.3644,
+        "top5PctProfitContributionPct": 33.5957
+      },
+      "validation": {
+        "samples": 336,
+        "averageReturnPct": 2.0701,
+        "medianReturnPct": -0.2367,
+        "winRatePct": 48.8095,
+        "profitFactor": 1.4778,
+        "randomAverageReturnPct": -0.666,
+        "benchmarkAverageReturnPct": 2.2193,
+        "alphaVsRandomPct": 2.7361,
+        "alphaVsBenchmarkPct": -0.1492,
+        "top5PctProfitContributionPct": 33.9631
+      },
+      "validationAlphaCandidate": false
+    },
+    {
+      "category": "dividend",
+      "holdDays": 5,
+      "train": {
+        "samples": 493,
+        "averageReturnPct": -0.1858,
+        "medianReturnPct": -0.3523,
+        "winRatePct": 46.2475,
+        "profitFactor": 0.921,
+        "randomAverageReturnPct": -0.9443,
+        "benchmarkAverageReturnPct": -0.9226,
+        "alphaVsRandomPct": 0.7585,
+        "alphaVsBenchmarkPct": 0.7368,
+        "top5PctProfitContributionPct": 38.3893
+      },
+      "validation": {
+        "samples": 407,
+        "averageReturnPct": -0.4313,
+        "medianReturnPct": -0.7838,
+        "winRatePct": 43.2432,
+        "profitFactor": 0.8288,
+        "randomAverageReturnPct": -0.8442,
+        "benchmarkAverageReturnPct": -0.0926,
+        "alphaVsRandomPct": 0.4129,
+        "alphaVsBenchmarkPct": -0.3387,
+        "top5PctProfitContributionPct": 37.448
+      },
+      "validationAlphaCandidate": false
+    },
+    {
+      "category": "leadership",
+      "holdDays": 20,
+      "train": {
+        "samples": 143,
+        "averageReturnPct": -0.4444,
+        "medianReturnPct": -0.6771,
+        "winRatePct": 47.5524,
+        "profitFactor": 0.9039,
+        "randomAverageReturnPct": -0.496,
+        "benchmarkAverageReturnPct": -1.1515,
+        "alphaVsRandomPct": 0.0516,
+        "alphaVsBenchmarkPct": 0.7071,
+        "top5PctProfitContributionPct": 38.1558
+      },
+      "validation": {
+        "samples": 117,
+        "averageReturnPct": 2.5522,
+        "medianReturnPct": 0.5001,
+        "winRatePct": 52.1368,
+        "profitFactor": 1.7846,
+        "randomAverageReturnPct": -0.2021,
+        "benchmarkAverageReturnPct": 2.9655,
+        "alphaVsRandomPct": 2.7543,
+        "alphaVsBenchmarkPct": -0.4133,
+        "top5PctProfitContributionPct": 31.2219
+      },
+      "validationAlphaCandidate": false
+    },
+    {
+      "category": "capital_convertible_bond",
+      "holdDays": 5,
+      "train": {
+        "samples": 83,
+        "averageReturnPct": -1.2114,
+        "medianReturnPct": -1.2775,
+        "winRatePct": 42.1687,
+        "profitFactor": 0.6113,
+        "randomAverageReturnPct": -0.7767,
+        "benchmarkAverageReturnPct": -0.627,
+        "alphaVsRandomPct": -0.4348,
+        "alphaVsBenchmarkPct": -0.5844,
+        "top5PctProfitContributionPct": 42.5757
+      },
+      "validation": {
+        "samples": 176,
+        "averageReturnPct": -0.8857,
+        "medianReturnPct": -0.7839,
+        "winRatePct": 38.6364,
+        "profitFactor": 0.7318,
+        "randomAverageReturnPct": -0.8189,
+        "benchmarkAverageReturnPct": -0.4715,
+        "alphaVsRandomPct": -0.0668,
+        "alphaVsBenchmarkPct": -0.4142,
+        "top5PctProfitContributionPct": 39.8051
+      },
+      "validationAlphaCandidate": false
+    },
+    {
+      "category": "order_contract",
+      "holdDays": 10,
+      "train": {
+        "samples": 23,
+        "averageReturnPct": 4.5032,
+        "medianReturnPct": -0.9591,
+        "winRatePct": 47.8261,
+        "profitFactor": 3.313,
+        "randomAverageReturnPct": -1.0073,
+        "benchmarkAverageReturnPct": -0.5858,
+        "alphaVsRandomPct": 5.5105,
+        "alphaVsBenchmarkPct": 5.089,
+        "top5PctProfitContributionPct": 50.2287
+      },
+      "validation": {
+        "samples": 27,
+        "averageReturnPct": -0.9735,
+        "medianReturnPct": -2.5844,
+        "winRatePct": 40.7407,
+        "profitFactor": 0.7394,
+        "randomAverageReturnPct": -1.8278,
+        "benchmarkAverageReturnPct": -0.5348,
+        "alphaVsRandomPct": 0.8542,
+        "alphaVsBenchmarkPct": -0.4388,
+        "top5PctProfitContributionPct": 47.8983
+      },
+      "validationAlphaCandidate": false
+    },
+    {
+      "category": "dividend",
+      "holdDays": 10,
+      "train": {
+        "samples": 493,
+        "averageReturnPct": -0.4631,
+        "medianReturnPct": -0.7835,
+        "winRatePct": 45.0304,
+        "profitFactor": 0.859,
+        "randomAverageReturnPct": -1.1628,
+        "benchmarkAverageReturnPct": -1.1913,
+        "alphaVsRandomPct": 0.6998,
+        "alphaVsBenchmarkPct": 0.7282,
+        "top5PctProfitContributionPct": 39.3378
+      },
+      "validation": {
+        "samples": 407,
+        "averageReturnPct": 0.0916,
+        "medianReturnPct": -0.4533,
+        "winRatePct": 47.6658,
+        "profitFactor": 1.0295,
+        "randomAverageReturnPct": -0.7308,
+        "benchmarkAverageReturnPct": 0.7307,
+        "alphaVsRandomPct": 0.8224,
+        "alphaVsBenchmarkPct": -0.6391,
+        "top5PctProfitContributionPct": 34.849
+      },
+      "validationAlphaCandidate": false
+    },
+    {
+      "category": "order_contract",
+      "holdDays": 5,
+      "train": {
+        "samples": 23,
+        "averageReturnPct": 1.3923,
+        "medianReturnPct": 0.2588,
+        "winRatePct": 52.1739,
+        "profitFactor": 2.007,
+        "randomAverageReturnPct": -0.898,
+        "benchmarkAverageReturnPct": -0.3297,
+        "alphaVsRandomPct": 2.2903,
+        "alphaVsBenchmarkPct": 1.722,
+        "top5PctProfitContributionPct": 43.2695
+      },
+      "validation": {
+        "samples": 27,
+        "averageReturnPct": -0.83,
+        "medianReturnPct": -0.9424,
+        "winRatePct": 37.037,
+        "profitFactor": 0.6801,
+        "randomAverageReturnPct": -0.9334,
+        "benchmarkAverageReturnPct": -0.0699,
+        "alphaVsRandomPct": 0.1034,
+        "alphaVsBenchmarkPct": -0.7601,
+        "top5PctProfitContributionPct": 41.7212
+      },
+      "validationAlphaCandidate": false
+    },
+    {
+      "category": "leadership",
+      "holdDays": 5,
+      "train": {
+        "samples": 143,
+        "averageReturnPct": -0.8273,
+        "medianReturnPct": -0.9401,
+        "winRatePct": 42.6573,
+        "profitFactor": 0.6619,
+        "randomAverageReturnPct": -0.4172,
+        "benchmarkAverageReturnPct": -0.8705,
+        "alphaVsRandomPct": -0.4101,
+        "alphaVsBenchmarkPct": 0.0433,
+        "top5PctProfitContributionPct": 44.5416
+      },
+      "validation": {
+        "samples": 117,
+        "averageReturnPct": -1.2464,
+        "medianReturnPct": -1.3585,
+        "winRatePct": 41.0256,
+        "profitFactor": 0.6058,
+        "randomAverageReturnPct": -1.3741,
+        "benchmarkAverageReturnPct": -0.2206,
+        "alphaVsRandomPct": 0.1277,
+        "alphaVsBenchmarkPct": -1.0258,
+        "top5PctProfitContributionPct": 40.2191
+      },
+      "validationAlphaCandidate": false
+    },
+    {
+      "category": "dividend",
+      "holdDays": 20,
+      "train": {
+        "samples": 493,
+        "averageReturnPct": -0.4837,
+        "medianReturnPct": -1.8639,
+        "winRatePct": 43.002,
+        "profitFactor": 0.8988,
+        "randomAverageReturnPct": -0.9346,
+        "benchmarkAverageReturnPct": -1.3256,
+        "alphaVsRandomPct": 0.4509,
+        "alphaVsBenchmarkPct": 0.8419,
+        "top5PctProfitContributionPct": 42.4974
+      },
+      "validation": {
+        "samples": 407,
+        "averageReturnPct": 0.4991,
+        "medianReturnPct": -0.7829,
+        "winRatePct": 46.9287,
+        "profitFactor": 1.0998,
+        "randomAverageReturnPct": -1.1457,
+        "benchmarkAverageReturnPct": 1.6427,
+        "alphaVsRandomPct": 1.6448,
+        "alphaVsBenchmarkPct": -1.1436,
+        "top5PctProfitContributionPct": 40.0729
+      },
+      "validationAlphaCandidate": false
+    },
+    {
+      "category": "leadership",
+      "holdDays": 10,
+      "train": {
+        "samples": 143,
+        "averageReturnPct": -0.7402,
+        "medianReturnPct": -1.3336,
+        "winRatePct": 44.0559,
+        "profitFactor": 0.7874,
+        "randomAverageReturnPct": -0.3554,
+        "benchmarkAverageReturnPct": -1.0886,
+        "alphaVsRandomPct": -0.3848,
+        "alphaVsBenchmarkPct": 0.3483,
+        "top5PctProfitContributionPct": 43.4681
+      },
+      "validation": {
+        "samples": 117,
+        "averageReturnPct": 0.4296,
+        "medianReturnPct": 0.3727,
+        "winRatePct": 51.2821,
+        "profitFactor": 1.1512,
+        "randomAverageReturnPct": -0.832,
+        "benchmarkAverageReturnPct": 1.611,
+        "alphaVsRandomPct": 1.2615,
+        "alphaVsBenchmarkPct": -1.1814,
+        "top5PctProfitContributionPct": 35.5366
+      },
+      "validationAlphaCandidate": false
+    }
+  ],
+  "conclusion": "找到 1 個事件前瞻報酬候選，仍須完整投組 walk-forward 才能判斷是否可交易。"
+}

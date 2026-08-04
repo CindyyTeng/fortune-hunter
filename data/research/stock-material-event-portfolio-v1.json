@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-03T13:15:02.977Z",
+  "generatedAt": "2026-08-04T14:22:55.686Z",
   "experimentHash": "df4b0fdf026c2ef5157d3550",
   "selectedUsingTrainOnly": true,
   "selectedCategory": "capital_cash_raise",
@@ -389,6 +389,46 @@
   "benchmark0050": {
     "totalReturnPct": 91.9889,
     "annualizedReturnPct": 38.591
+  },
+  "statisticalEvidence": {
+    "train": {
+      "sampleSize": 88,
+      "meanReturnPct": 0.5859,
+      "medianReturnPct": -2.135,
+      "standardDeviationPct": 10.8029,
+      "tStatistic": 0.5088,
+      "tTestPValue": 0.612194,
+      "centeredBootstrapPValue": 0.631789,
+      "confidenceInterval95Pct": [
+        -1.4867,
+        2.8671
+      ],
+      "topFivePercentProfitContributionPct": 37.388,
+      "verdict": "insufficient",
+      "passed": false,
+      "reason": "樣本僅 88 筆，低於最低 300 筆。"
+    },
+    "validation": {
+      "sampleSize": 88,
+      "meanReturnPct": 0.8943,
+      "medianReturnPct": -2.565,
+      "standardDeviationPct": 12.7853,
+      "tStatistic": 0.6562,
+      "tTestPValue": 0.513441,
+      "centeredBootstrapPValue": 0.505498,
+      "confidenceInterval95Pct": [
+        -1.6569,
+        3.6059
+      ],
+      "topFivePercentProfitContributionPct": 38.0619,
+      "verdict": "insufficient",
+      "passed": false,
+      "reason": "樣本僅 88 筆，低於最低 300 筆。"
+    },
+    "outOfSampleDecayPct": -52.637,
+    "maximumAllowedDecayPct": 50,
+    "passed": false,
+    "reason": "訓練期：樣本僅 88 筆，低於最低 300 筆。"
   },
   "passedResearchThreshold": false,
   "paperTradingAllowed": false,

@@ -11,7 +11,7 @@ import {
 } from '../lib/portfolio-simulator.mjs';
 import { buyExecution, sellExecution } from '../lib/execution-simulator.mjs';
 import { evaluateStrategyEvidence } from '../lib/strategy-statistical-validator.mjs';
-import { buildExperimentIdentity, loadRegistry, shouldSkipExperiment } from './strategy-experiment-registry.mjs';
+import { appendExperiment, buildExperimentIdentity, loadRegistry, shouldSkipExperiment } from './strategy-experiment-registry.mjs';
 
 const EVENTS = new URL('../../data/material-information/processed/history-liquid-universe.json.gz', import.meta.url);
 const MARKET = new URL('../../data/market-history/processed/', import.meta.url);
@@ -249,6 +249,18 @@ const report = {
     ? '通過本次初步投組門檻，但因倖存者偏差與資料範圍有限，仍不可進 paper trading。'
     : '未通過完整投組門檻，不可進 paper trading 或實盤。'
 };
+await fs.writeFile(OUTPUT, `${JSON.stringify(report, null, 2)}\n`, 'utf8');
+const registryResult = await appendExperiment({
+  ...experiment,
+  metrics: { train: train.metrics, validation: validation.metrics, statisticalEvidence },
+  resultStatus: passed ? 'passed' : 'failed',
+  failureReason: passed ? null : statisticalEvidence.reason,
+  passedMinimum: passed,
+  passedHighProfit: false,
+  allowRetest: false,
+  notes: '重大訊息事件投組；需先通過統計證據與樣本外門檻才可進入紙上交易。'
+});
+report.registryAppended = registryResult.appended;
 await fs.writeFile(OUTPUT, `${JSON.stringify(report, null, 2)}\n`, 'utf8');
 await fs.writeFile(REPORT, `# 重大訊息事件投組驗證\n\n- 訓練：${PERIODS.train.join(' 至 ')}；驗證：${PERIODS.validation.join(' 至 ')}。\n- 訓練期選出：${selected.category}，持有 ${selected.holdDays} 日；validation 未參與選擇。\n- 規則：公告後下一交易日開盤進場，8% 停損。\n- 驗證：${validation.metrics.trades} 筆，月均 ${validation.metrics.averageMonthlyReturnPct}%，年化 ${validation.metrics.annualizedReturnPct}%，PF ${validation.metrics.profitFactor}，最大回撤 ${validation.metrics.maxDrawdownPct}%。\n- 統計驗證：${statisticalEvidence.validation.verdict}；t 檢定 p=${statisticalEvidence.validation.tTestPValue}；置中 Bootstrap p=${statisticalEvidence.validation.centeredBootstrapPValue}；95% 平均報酬區間 ${statisticalEvidence.validation.confidenceInterval95Pct.join('% 至 ')}%。\n- 統計閘門：${statisticalEvidence.reason}\n- 0050 年化：${benchmark.annualizedReturnPct}%；公平隨機年化：${randomValidation.metrics.annualizedReturnPct}%。\n- 結論：${report.conclusion}\n`, 'utf8');
 console.log(`事件投組驗證：${validation.metrics.trades} 筆、月均 ${validation.metrics.averageMonthlyReturnPct}%、年化 ${validation.metrics.annualizedReturnPct}%、PF ${validation.metrics.profitFactor}、回撤 ${validation.metrics.maxDrawdownPct}%。`);

@@ -1,0 +1,185 @@
+{
+  "generatedAt": "2026-08-06T15:46:50.004Z",
+  "date": "2026-06-25",
+  "strategyId": "stock-meta-label-v1",
+  "mode": "paper_dry_run",
+  "noFutureDataAttestation": true,
+  "source": "tw-backtest-10y candidate features",
+  "actionCounts": {
+    "BUY": 3,
+    "SELL": 0,
+    "HOLD": 0,
+    "SKIP": 0
+  },
+  "candidates": [
+    {
+      "symbol": "2527",
+      "name": "宏璟",
+      "score": 2.9155
+    },
+    {
+      "symbol": "8105",
+      "name": "凌巨",
+      "score": 2.5651
+    },
+    {
+      "symbol": "6197",
+      "name": "佳必琪",
+      "score": 1.898
+    }
+  ],
+  "orderIntents": [
+    {
+      "intentId": "570d205cd116cbc6eac6",
+      "createdAt": "2026-08-06T15:46:50.004Z",
+      "tradeDate": "2026-06-25",
+      "symbol": "2527",
+      "strategyId": "stock-meta-label-v1",
+      "action": "BUY",
+      "status": "PENDING_REVIEW",
+      "submitToRealBroker": false,
+      "reason": "meta-label 分數 2.9155",
+      "warnings": [
+        "歷史 paper dry-run；尚未取得當日即時報價",
+        "需要人工審核，不送出真實券商"
+      ],
+      "audit": {
+        "setup": [
+          "訓練期因子分箱分數為正",
+          "個股流動性與波動通過"
+        ],
+        "trigger": [
+          "模型分數進入當日候選前段",
+          "隔日開盤成交"
+        ],
+        "invalidation": [
+          "收盤跌破停損 40.0222"
+        ],
+        "noFutureDataAttestation": true,
+        "humanApprovalRequired": true
+      },
+      "side": "BUY",
+      "quantity": 1933,
+      "boardLotQuantity": 1000,
+      "oddLotQuantity": 933,
+      "orderType": "MARKET",
+      "limitPrice": 41.4663,
+      "stopPrice": 40.0222,
+      "targetPrice": 43.116699999999994,
+      "riskRewardRatio": 1.5,
+      "timeInForce": "ROD",
+      "session": "REGULAR",
+      "brokerPayload": {
+        "symbol": "2527",
+        "side": "BUY",
+        "quantity": 1933,
+        "orderType": "MARKET",
+        "price": 41.4663,
+        "triggerPrice": 41.26,
+        "timeInForce": "ROD"
+      }
+    },
+    {
+      "intentId": "25e91b98b07cffd94405",
+      "createdAt": "2026-08-06T15:46:50.004Z",
+      "tradeDate": "2026-06-25",
+      "symbol": "8105",
+      "strategyId": "stock-meta-label-v1",
+      "action": "BUY",
+      "status": "PENDING_REVIEW",
+      "submitToRealBroker": false,
+      "reason": "meta-label 分數 2.5651",
+      "warnings": [
+        "歷史 paper dry-run；尚未取得當日即時報價",
+        "需要人工審核，不送出真實券商"
+      ],
+      "audit": {
+        "setup": [
+          "訓練期因子分箱分數為正",
+          "個股流動性與波動通過"
+        ],
+        "trigger": [
+          "模型分數進入當日候選前段",
+          "隔日開盤成交"
+        ],
+        "invalidation": [
+          "收盤跌破停損 23.9105"
+        ],
+        "noFutureDataAttestation": true,
+        "humanApprovalRequired": true
+      },
+      "side": "BUY",
+      "quantity": 3235,
+      "boardLotQuantity": 3000,
+      "oddLotQuantity": 235,
+      "orderType": "MARKET",
+      "limitPrice": 24.773249999999997,
+      "stopPrice": 23.9105,
+      "targetPrice": 25.759249999999998,
+      "riskRewardRatio": 1.5,
+      "timeInForce": "ROD",
+      "session": "REGULAR",
+      "brokerPayload": {
+        "symbol": "8105",
+        "side": "BUY",
+        "quantity": 3235,
+        "orderType": "MARKET",
+        "price": 24.773249999999997,
+        "triggerPrice": 24.65,
+        "timeInForce": "ROD"
+      }
+    },
+    {
+      "intentId": "423184ee83bc99cf57ac",
+      "createdAt": "2026-08-06T15:46:50.004Z",
+      "tradeDate": "2026-06-25",
+      "symbol": "6197",
+      "strategyId": "stock-meta-label-v1",
+      "action": "BUY",
+      "status": "PENDING_REVIEW",
+      "submitToRealBroker": false,
+      "reason": "meta-label 分數 1.898",
+      "warnings": [
+        "歷史 paper dry-run；尚未取得當日即時報價",
+        "需要人工審核，不送出真實券商"
+      ],
+      "audit": {
+        "setup": [
+          "訓練期因子分箱分數為正",
+          "個股流動性與波動通過"
+        ],
+        "trigger": [
+          "模型分數進入當日候選前段",
+          "隔日開盤成交"
+        ],
+        "invalidation": [
+          "收盤跌破停損 356.96"
+        ],
+        "noFutureDataAttestation": true,
+        "humanApprovalRequired": true
+      },
+      "side": "BUY",
+      "quantity": 216,
+      "boardLotQuantity": 0,
+      "oddLotQuantity": 216,
+      "orderType": "MARKET",
+      "limitPrice": 369.84,
+      "stopPrice": 356.96,
+      "targetPrice": 384.56000000000006,
+      "riskRewardRatio": 1.5,
+      "timeInForce": "ROD",
+      "session": "REGULAR",
+      "brokerPayload": {
+        "symbol": "6197",
+        "side": "BUY",
+        "quantity": 216,
+        "orderType": "MARKET",
+        "price": 369.84,
+        "triggerPrice": 368,
+        "timeInForce": "ROD"
+      }
+    }
+  ],
+  "submitToRealBroker": false,
+  "humanApprovalRequired": true
+}

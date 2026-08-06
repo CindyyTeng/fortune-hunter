@@ -646,6 +646,7 @@ export function simulateSignalMap(context, signalMap, options = {}) {
     settlementDays: 2,
     maxOpenPositions: options.maxOpenPositions ?? 6,
     riskControls: true,
+    executionCosts: options.executionCosts,
     riskRules: options.riskRules
   });
   for (let dayIndex = 0; dayIndex < dates.length; dayIndex += 1) {

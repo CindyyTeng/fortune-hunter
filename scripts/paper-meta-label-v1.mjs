@@ -149,9 +149,42 @@ async function loadQuotes(symbols) {
 
 async function loadState() {
   try {
-    return JSON.parse(await fs.readFile(STATE, 'utf8'));
+    const state = JSON.parse(await fs.readFile(STATE, 'utf8'));
+    const orders = state.orders || [];
+    const positions = (state.positions || []).map(position => {
+      if (position.entryCost != null) return position;
+      const buy = orders.find(order =>
+        order.side === 'BUY'
+        && order.status === 'FILLED'
+        && order.symbol === position.symbol
+      );
+      return {
+        ...position,
+        entryCost: buy
+          ? Number(buy.fillPrice) * Number(buy.filledQuantity) + Number(buy.fee || 0)
+          : Number(position.entryPrice) * Number(position.quantity)
+      };
+    });
+    return {
+      ...state,
+      initialCash: Number(state.initialCash ?? INITIAL_CASH),
+      realizedPnl: Number(state.realizedPnl ?? 0),
+      cash: Number(state.cash ?? INITIAL_CASH),
+      positions,
+      orders,
+      runs: state.runs || [],
+      pendingSettlements: state.pendingSettlements || []
+    };
   } catch {
-    return { cash: INITIAL_CASH, positions: [], orders: [], runs: [] };
+    return {
+      initialCash: INITIAL_CASH,
+      realizedPnl: 0,
+      cash: INITIAL_CASH,
+      positions: [],
+      orders: [],
+      runs: [],
+      pendingSettlements: []
+    };
   }
 }
 
@@ -161,7 +194,34 @@ function account(state, quotes) {
     const price = Number(bySymbol.get(symbolKey(position.symbol))?.price) || position.entryPrice;
     return sum + position.quantity * price;
   }, 0);
-  return { equity: state.cash + marketValue, availableCash: state.cash };
+  const pendingCash = (state.pendingSettlements || [])
+    .reduce((sum, item) => sum + Number(item.amount || 0), 0);
+  return {
+    equity: state.cash + pendingCash + marketValue,
+    availableCash: state.cash,
+    pendingCash
+  };
+}
+
+function settlementDate(date, tradingDates) {
+  const index = tradingDates.indexOf(date);
+  if (index >= 0 && tradingDates[index + 2]) return tradingDates[index + 2];
+  const cursor = new Date(`${date}T00:00:00Z`);
+  let businessDays = 0;
+  while (businessDays < 2) {
+    cursor.setUTCDate(cursor.getUTCDate() + 1);
+    const day = cursor.getUTCDay();
+    if (day !== 0 && day !== 6) businessDays += 1;
+  }
+  return cursor.toISOString().slice(0, 10);
+}
+
+function settlePendingCash(state, date) {
+  const pending = state.pendingSettlements || [];
+  const due = pending.filter(item => item.settlementDate <= date);
+  if (!due.length) return;
+  state.cash = round(state.cash + due.reduce((sum, item) => sum + Number(item.amount || 0), 0), 2);
+  state.pendingSettlements = pending.filter(item => item.settlementDate > date);
 }
 
 function positionDecision(position, quote, date, config) {
@@ -175,6 +235,11 @@ function positionDecision(position, quote, date, config) {
     date, symbol: position.symbol, action: 'SELL', strategyId: 'stock-meta-label-v1',
     exit: '停損', reason: `價格 ${round(price)} 跌破停損 ${round(position.stopPrice)}`,
     warnings: ['目前僅送至模擬券商']
+  };
+  if (price >= position.targetPrice) return {
+    date, symbol: position.symbol, action: 'SELL', strategyId: 'stock-meta-label-v1',
+    exit: '停利', reason: `現價 ${round(price)} 已達 1.5R 停利 ${round(position.targetPrice)}`,
+    warnings: []
   };
   if (heldDays >= (position.maxHoldingDays ?? config.holdDays)) return {
     date, symbol: position.symbol, action: 'SELL', strategyId: 'stock-meta-label-v1',
@@ -196,6 +261,7 @@ function buyDecision(row, quote, model, config, date) {
   return {
     date,
     symbol: `${row.symbol}.${marketSuffix(row.market)}`,
+    name: row.name,
     action: 'BUY',
     strategyId: 'stock-meta-label-v1',
     setup: '個股動能與風險因子通過篩選',
@@ -222,26 +288,63 @@ function buyDecision(row, quote, model, config, date) {
   };
 }
 
-function applyFills(state, results, decisions, date) {
+function markPositions(state, quotes, date) {
+  const bySymbol = quoteMap(quotes);
+  for (const position of state.positions) {
+    const quote = bySymbol.get(symbolKey(position.symbol));
+    const price = Number(quote?.price);
+    if (Number.isFinite(price)) {
+      position.lastPrice = price;
+      position.lastPriceDate = date;
+    }
+    if (!position.name && quote?.name) position.name = quote.name;
+  }
+}
+
+function applyFills(state, results, decisions, date, quotes, dueDate) {
   const bySymbol = new Map(decisions.map(decision => [decision.symbol, decision]));
   for (const result of results) {
-    state.orders.push(result);
+    const order = result.side === 'SELL' ? { ...result, settlementDate: dueDate } : result;
+    state.orders.push(order);
     if (!['FILLED', 'PARTIALLY_FILLED'].includes(result.status) || !result.filledQuantity) continue;
     const decision = bySymbol.get(result.symbol);
-    state.cash = round(state.cash + result.cashImpact, 2);
     if (result.side === 'BUY') {
+      state.cash = round(state.cash + result.cashImpact, 2);
       state.positions.push({
         symbol: result.symbol,
+        name: decision?.name || result.symbol,
         quantity: result.filledQuantity,
         entryPrice: result.fillPrice,
+        entryCost: -result.cashImpact,
+        targetPrice: decision.riskPlan.targetPrice,
         entryDate: date,
         stopPrice: decision.riskPlan.stopPrice,
-        maxHoldingDays: decision.maxHoldingDays
+        maxHoldingDays: decision.maxHoldingDays,
+        lastPrice: result.fillPrice,
+        lastPriceDate: date
       });
     } else if (result.side === 'SELL') {
-      state.positions = state.positions.filter(position => position.symbol !== result.symbol);
+      state.pendingSettlements ||= [];
+      state.pendingSettlements.push({
+        settlementDate: dueDate,
+        amount: result.cashImpact,
+        symbol: result.symbol,
+        orderId: result.orderId
+      });
+      const position = state.positions.find(item => item.symbol === result.symbol);
+      if (!position) continue;
+      const soldQuantity = Math.min(result.filledQuantity, position.quantity);
+      const entryCost = Number(position.entryCost ?? position.entryPrice * position.quantity);
+      const allocatedEntryCost = entryCost * soldQuantity / position.quantity;
+      state.realizedPnl = round(Number(state.realizedPnl || 0) + result.cashImpact - allocatedEntryCost, 2);
+      position.quantity -= soldQuantity;
+      position.entryCost = Math.max(0, entryCost - allocatedEntryCost);
+      if (position.quantity <= 0) {
+        state.positions = state.positions.filter(item => item !== position);
+      }
     }
   }
+  markPositions(state, quotes, date);
 }
 
 async function saveAndReport(state, payload) {
@@ -255,6 +358,14 @@ async function main() {
   const runDate = todayKey();
   const input = JSON.parse(await fs.readFile(INPUT, 'utf8'));
   const context = await loadResearchContext();
+  const tradingDates = context.marketHistory.map(row => row.date).filter(Boolean);
+  const nameBySymbol = new Map(context.ohlcv.stocks.map(({ stock }) => [
+    symbolKey(`${stock.symbol}.${marketSuffix(stock.market)}`),
+    stock.name
+  ]));
+  for (const position of state.positions) {
+    position.name ||= nameBySymbol.get(symbolKey(position.symbol)) || position.symbol;
+  }
   const dataDate = context.marketHistory.at(-1)?.date;
   const dataAgeDays = dataDate ? dateDiff(dataDate, runDate) : null;
   const base = {
@@ -278,6 +389,11 @@ async function main() {
   if (!config) return saveAndReport(state, {
     ...base, status: 'BLOCKED', reason: '研究報告缺少可用的紙上交易設定。'
   });
+  for (const position of state.positions) {
+    position.targetPrice ||= position.entryPrice
+      + (position.entryPrice - position.stopPrice) * config.rewardRisk;
+  }
+  settlePendingCash(state, runDate);
   const trainingRows = (input.candidateTrades || []).filter(row =>
     stockOnly(row) && row.forwardPrices?.length >= 12
   );
@@ -327,7 +443,7 @@ async function main() {
     executionCosts: COSTS
   });
   const results = broker.submitOrderIntents(intents, marketMap(quotes), accountSnapshot);
-  applyFills(state, results, decisions, runDate);
+  applyFills(state, results, decisions, runDate, quotes, settlementDate(runDate, tradingDates));
   state.updatedAt = new Date().toISOString();
   state.status = 'OK';
   state.lastRun = {

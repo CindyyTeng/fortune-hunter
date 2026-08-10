@@ -211,6 +211,68 @@ button { font:inherit; }
   color:#51363b;
   line-height:1.7;
 }
+.paper-panel {
+  margin:18px 0;
+  padding:20px;
+  border:1px solid rgba(32,40,51,.14);
+  border-radius:18px;
+  background:linear-gradient(135deg, #202833, #33202a 70%, #7f1630);
+  color:#fff7f1;
+  box-shadow:var(--shadow);
+}
+.paper-head {
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:16px;
+  margin-bottom:16px;
+}
+.paper-head h2 { margin:0; font-size:22px; }
+.paper-head p { margin:5px 0 0; color:#f5dfe2; font-size:13px; }
+.paper-badge {
+  padding:7px 10px;
+  border:1px solid rgba(255,255,255,.25);
+  border-radius:999px;
+  color:#ffe0a7;
+  font-size:12px;
+  font-weight:800;
+  white-space:nowrap;
+}
+.paper-grid { display:grid; grid-template-columns:repeat(5, 1fr); gap:10px; }
+.paper-stat {
+  min-height:76px;
+  padding:12px;
+  border:1px solid rgba(255,255,255,.16);
+  border-radius:12px;
+  background:rgba(255,255,255,.08);
+}
+.paper-stat strong { display:block; font-size:20px; color:#fff; }
+.paper-stat span { display:block; margin-top:5px; color:#f4dfe2; font-size:12px; }
+.paper-actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
+.paper-action {
+  padding:7px 10px;
+  border-radius:999px;
+  background:#fff8f2;
+  color:#321c22;
+  font-size:12px;
+  font-weight:800;
+}
+.paper-action.buy { color:#a51f3d; }
+.paper-action.sell { color:#b26a16; }
+.paper-action.hold { color:#2b6172; }
+.paper-action.skip { color:#66707b; }
+.paper-positions { display:grid; grid-template-columns:repeat(3, 1fr); gap:10px; margin-top:14px; }
+.paper-position {
+  padding:12px;
+  border:1px solid rgba(255,255,255,.16);
+  border-radius:12px;
+  background:rgba(0,0,0,.16);
+}
+.paper-position b { display:block; font-size:15px; }
+.paper-position span { display:block; margin-top:5px; color:#f4dfe2; font-size:12px; }
+.paper-empty { margin:14px 0 0; color:#f4dfe2; font-size:13px; }
+.paper-positive { color:#ffcf9a !important; }
+.paper-negative { color:#ffb5b5 !important; }
 .cards { display:grid; gap:16px; }
 .card {
   border:1px solid var(--line);
@@ -564,6 +626,7 @@ footer {
 @media (max-width: 980px) {
   .hero { grid-template-columns:1fr; }
   .stats { grid-template-columns:repeat(2, 1fr); }
+  .paper-positions { grid-template-columns:repeat(2, 1fr); }
   .card-summary { grid-template-columns:1fr auto; }
   .summary-mini { grid-column:1 / -1; }
   .card-detail { grid-template-columns:1fr; }
@@ -586,6 +649,7 @@ footer {
   .brand strong { font-size:23px; }
   .hero-copy h1 { font-size:34px; }
   .stats, .metrics { grid-template-columns:1fr; }
+  .paper-grid, .paper-positions { grid-template-columns:1fr; }
   .card-summary { grid-template-columns:1fr; }
   .summary-mini { grid-template-columns:repeat(2, minmax(0, 1fr)); }
   .card-toggle { width:100%; }
@@ -637,8 +701,20 @@ footer {
     </section>
   </section>
 
-  <section id="message" class="notice">正在準備最新資料。</section>
-  <section id="cards" class="cards"></section>
+   <section id="message" class="notice">正在準備最新資料。</section>
+   <section id="paperPanel" class="paper-panel" aria-live="polite">
+     <div class="paper-head">
+       <div>
+         <h2>紙上交易總覽</h2>
+         <p id="paperUpdated">尚未載入紙上交易資料</p>
+       </div>
+       <span class="paper-badge">只用模擬資金</span>
+     </div>
+     <div id="paperSummary" class="paper-grid"></div>
+     <div id="paperActions" class="paper-actions"></div>
+     <div id="paperPositions" class="paper-positions"></div>
+   </section>
+   <section id="cards" class="cards"></section>
 
   <footer>
     資料來源整合 TWSE OpenAPI、TPEX API、Yahoo Finance 與即時 SSE 報價。
@@ -657,7 +733,11 @@ const els = {
   heroCount: document.getElementById('heroCount'),
   heroCopy: document.getElementById('heroCopy'),
   message: document.getElementById('message'),
-  cards: document.getElementById('cards')
+  cards: document.getElementById('cards'),
+  paperUpdated: document.getElementById('paperUpdated'),
+  paperSummary: document.getElementById('paperSummary'),
+  paperActions: document.getElementById('paperActions'),
+  paperPositions: document.getElementById('paperPositions')
 };
 
 let currentData = null;
@@ -687,6 +767,82 @@ function fmt(value, suffix = '') {
 
 function money(value) {
   return value === null || value === undefined ? '-' : `NT$ ${Number(value).toLocaleString('zh-TW')}`;
+}
+
+function paperPnl(value) {
+  if (value === null || value === undefined || !Number.isFinite(Number(value))) return '-';
+  const number = Number(value);
+  return `${number >= 0 ? '+' : ''}${money(number)}`;
+}
+
+const PAPER_COSTS = {
+  sellFeePct: 0.1425,
+  sellTaxPct: 0.3,
+  sellSlippagePct: 0.15,
+  minimumFee: 20
+};
+
+function estimatedNetPnl(position, currentPrice) {
+  if (!Number.isFinite(currentPrice)) return null;
+  const quantity = Number(position.quantity);
+  const proceeds = currentPrice * (1 - PAPER_COSTS.sellSlippagePct / 100) * quantity;
+  const fee = Math.max(PAPER_COSTS.minimumFee, Math.ceil(proceeds * PAPER_COSTS.sellFeePct / 100));
+  const tax = Math.ceil(proceeds * PAPER_COSTS.sellTaxPct / 100);
+  const entryCost = Number(position.entryCost ?? Number(position.entryPrice) * quantity);
+  return proceeds - fee - tax - entryCost;
+}
+
+function renderPaperState(state, marketData) {
+  if (!state) {
+    els.paperUpdated.textContent = '尚未建立紙上交易資料';
+    els.paperSummary.innerHTML = '<div class="paper-empty">請先執行一次紙上交易。</div>';
+    els.paperActions.innerHTML = '';
+    els.paperPositions.innerHTML = '';
+    return;
+  }
+
+  const actions = { BUY:0, SELL:0, HOLD:0, SKIP:0, ...(state.lastRun?.actions || {}) };
+  const positions = state.positions || [];
+  const priceMap = new Map((marketData?.recommendations || []).map(item => [String(item.code), Number(item.latestPrice)]));
+  const nameMap = new Map((marketData?.recommendations || []).map(item => [String(item.code), item.name]));
+  const markedPositions = positions.map(position => {
+    const code = String(position.symbol || '').split('.')[0];
+    const currentPrice = priceMap.get(code) ?? Number(position.lastPrice);
+    const pnl = estimatedNetPnl(position, currentPrice);
+    return { ...position, code, name: position.name || nameMap.get(code) || '名稱待補', currentPrice, pnl };
+  });
+  const knownPnl = markedPositions.filter(position => position.pnl !== null).map(position => position.pnl);
+  const unrealized = knownPnl.length ? knownPnl.reduce((sum, value) => sum + value, 0) : null;
+  const pendingCash = (state.pendingSettlements || [])
+    .reduce((sum, item) => sum + Number(item.amount || 0), 0);
+  const filledOrders = (state.orders || []).filter(order => order.status === 'FILLED');
+  const realized = Number(state.realizedPnl ?? 0);
+  const historyActions = (state.runs || []).reduce((counts, run) => {
+    for (const [action, count] of Object.entries(run.actions || {})) counts[action] = (counts[action] || 0) + count;
+    return counts;
+  }, { BUY:0, SELL:0, HOLD:0, SKIP:0 });
+  const latestActions = Object.entries(actions).map(([action, count]) => `${action} ${count}`).join(' / ');
+  const cumulativeActions = Object.entries(historyActions).map(([action, count]) => `${action} ${count}`).join(' / ');
+
+  els.paperUpdated.textContent = `最後執行：${state.lastRun?.runDate || state.runDate || '-'}，資料日：${state.lastRun?.dataDate || state.dataDate || '-'}；未實現損益已估算賣出滑價、手續費與交易稅；賣出款依 T+2 入帳`;
+  els.paperSummary.innerHTML = `
+    <div class="paper-stat"><strong>${positions.length}</strong><span>目前紙上持股</span></div>
+    <div class="paper-stat"><strong>${money(state.cash)}</strong><span>可用現金</span></div>
+    <div class="paper-stat"><strong>${money(pendingCash)}</strong><span>待 T+2 入帳</span></div>
+    <div class="paper-stat"><strong>${paperPnl(realized)}</strong><span>已實現損益（已賣出）</span></div>
+    <div class="paper-stat"><strong class="${unrealized >= 0 ? 'paper-positive' : 'paper-negative'}">${paperPnl(unrealized)}</strong><span>未實現損益估算</span></div>`;
+  els.paperActions.innerHTML = `<span class="paper-action">本次訊號：${latestActions}</span>
+    <span class="paper-action">累計訊號：${cumulativeActions}</span>
+    <span class="paper-action">模擬成交 ${filledOrders.length} 筆</span>`;
+  els.paperPositions.innerHTML = markedPositions.length
+    ? markedPositions.map(position => `
+      <div class="paper-position">
+        <b>${esc(position.name)}（${esc(position.code)}）</b>
+        <span>數量：${Number(position.quantity).toLocaleString('zh-TW')} 股</span>
+        <span>進場：${money(position.entryPrice)}｜現價：${money(position.currentPrice)}</span>
+        <span class="${position.pnl === null || position.pnl >= 0 ? 'paper-positive' : 'paper-negative'}">未實現損益：${paperPnl(position.pnl)}</span>
+      </div>`).join('')
+    : '<div class="paper-empty">目前沒有紙上持股。</div>';
 }
 
 function localTime(iso) {
@@ -895,7 +1051,11 @@ async function loadData() {
     const response = await fetch(`data/recommendations.json?ts=${Date.now()}`, { cache: 'no-store' });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const data = await response.json();
+    let paperState = null;
+    const paperResponse = await fetch(`data/paper-meta-label-state.json?ts=${Date.now()}`, { cache: 'no-store' });
+    if (paperResponse.ok) paperState = await paperResponse.json();
     currentData = data;
+    renderPaperState(paperState, data);
     const count = data.recommendations?.length || 0;
 
     els.asOf.textContent = data.generatedAtTaipei || localTime(data.asOf);

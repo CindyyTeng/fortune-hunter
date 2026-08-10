@@ -1,7 +1,8 @@
 import fs from 'node:fs/promises';
-import { deterministicScore, loadResearchContext, simulateSignalMap } from './research-core.mjs';
+import { loadResearchContext, simulateSignalMap } from './research-core.mjs';
 import { generateOrderIntents } from '../lib/order-intent-generator.mjs';
 import { appendExperiment, buildExperimentIdentity, loadRegistry, shouldSkipExperiment } from './strategy-experiment-registry.mjs';
+import { eligible, fitModel, modelScore, signalMap, stockOnly } from '../lib/stock-meta-label-engine.mjs';
 
 const INPUT = new URL('../../data/tw-backtest-10y.json', import.meta.url);
 const ETF = new URL('../../data/research/deployable-etf-rotation-history.json', import.meta.url);
@@ -14,124 +15,14 @@ const PAPER_OUTPUT = new URL('../../data/research/stock-meta-label-paper-snapsho
 const INITIAL_CAPITAL = 1_000_000;
 const TARGET_MONTHLY = 5;
 const COSTS = { buyFeePct: 0.1425, sellFeePct: 0.1425, sellTaxPct: 0.3, buySlippagePct: STRESS ? 0.3 : 0.15, sellSlippagePct: STRESS ? 0.3 : 0.15, minimumFee: 20, boardLotShares: 1 };
-const FEATURES = ['return5Pct', 'return20Pct', 'nearYearHigh', 'ma20Slope5Pct', 'volumeRatio1To20', 'atr14Pct', 'distanceToMa20Pct', 'upperWickRatio', 'marketMovePct', 'themeMovePct', 'rsi14'];
-const OUTCOME_CACHE = new WeakMap();
 const round = (value, digits = 4) => Number.isFinite(value) ? Number(value.toFixed(digits)) : null;
 const mean = values => values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : 0;
 const monthKey = date => String(date).slice(0, 7);
-const stockOnly = row => /^\d{4}$/.test(String(row.symbol || '')) && !String(row.symbol).startsWith('00');
 
 function folds(monthList) {
   const result = [];
   for (let index = 0; index + 72 <= monthList.length; index += 12) result.push({ trainStart: monthList[index], trainEnd: monthList[index + 59], validationStart: monthList[index + 60], validationEnd: monthList[index + 71] });
   return result;
-}
-
-function forwardReturn(row, holdDays) {
-  const cached = OUTCOME_CACHE.get(row);
-  if (cached?.has(holdDays)) return cached.get(holdDays);
-  const bars = row.forwardPrices || [];
-  if (bars.length < holdDays) return null;
-  const entry = bars[0].open;
-  const exit = bars[holdDays - 1].close ?? bars[holdDays - 1].price;
-  if (!Number.isFinite(entry) || !Number.isFinite(exit) || !entry) return null;
-  const result = (exit / entry - 1) * 100 - 0.7425;
-  if (cached) cached.set(holdDays, result);
-  else OUTCOME_CACHE.set(row, new Map([[holdDays, result]]));
-  return result;
-}
-
-function quantileCuts(values) {
-  const sorted = [...values].sort((a, b) => a - b);
-  return [0.2, 0.4, 0.6, 0.8].map(p => sorted[Math.min(sorted.length - 1, Math.floor(sorted.length * p))]);
-}
-
-function bucket(value, cuts) {
-  if (!Number.isFinite(value)) return null;
-  let index = 0;
-  while (index < cuts.length && value > cuts[index]) index += 1;
-  return index;
-}
-
-function fitModel(rows, config, trainEnd) {
-  const training = rows.filter(row => row.signalDate <= trainEnd && stockOnly(row) && row.forwardPrices?.at(-1)?.date <= `${trainEnd}-31` && Number.isFinite(forwardReturn(row, config.holdDays)));
-  const model = { holdDays: config.holdDays, overall: mean(training.map(row => forwardReturn(row, config.holdDays))), factors: {} };
-  const selectedFeatures = config.featureMode === 'momentum' ? FEATURES.slice(0, 5) : config.featureMode === 'risk' ? FEATURES.slice(5) : FEATURES;
-  for (const feature of selectedFeatures) {
-    const values = training.map(row => Number(row[feature])).filter(Number.isFinite);
-    if (values.length < 100) continue;
-    const cuts = quantileCuts(values);
-    const groups = Array.from({ length: 5 }, () => []);
-    for (const row of training) {
-      const value = Number(row[feature]);
-      const index = bucket(value, cuts);
-      const result = forwardReturn(row, config.holdDays);
-      if (index !== null && Number.isFinite(result)) groups[index].push(result);
-    }
-    model.factors[feature] = { cuts, means: groups.map(group => mean(group)), counts: groups.map(group => group.length) };
-  }
-  return model;
-}
-
-function modelScore(row, model, config) {
-  let score = 0;
-  let used = 0;
-  for (const [feature, factor] of Object.entries(model.factors)) {
-    const index = bucket(Number(row[feature]), factor.cuts);
-    if (index === null || factor.counts[index] < 30) continue;
-    score += (factor.means[index] - model.overall) * Math.min(1, Math.sqrt(factor.counts[index] / 100));
-    used += 1;
-  }
-  score += (row.return20Pct || 0) * 0.03 + (row.nearYearHigh || 0) * 0.5;
-  return used ? score : -999;
-}
-
-function eligible(row, config) {
-  return stockOnly(row)
-    && (row.avg20TradeValue || 0) >= 20_000_000
-    && (row.atr14Pct || 999) <= 8
-    && (row.rsi14 || 999) <= 88
-    && (row.gapUpPct || 999) <= 6
-    && (row.upperWickRatio || 999) <= 0.75
-    && (row.distanceToMa20Pct || 999) <= 20
-    && (row.return20Pct || -999) >= -2
-    && (row.marketMovePct || -999) >= -1.5
-    && (row.themeMovePct || -999) >= -1.5;
-}
-
-function makeCandidate(row, model, config) {
-  const bars = (row.forwardPrices || []).slice(0, config.holdDays + 2).map(bar => ({ ...bar, close: bar.close ?? bar.price, price: bar.price ?? bar.close })).filter(bar => [bar.open, bar.high, bar.low, bar.close].every(Number.isFinite));
-  if (bars.length < config.holdDays) return null;
-  const entry = bars[0].open;
-  return {
-    symbol: row.symbol, name: row.name, signalDate: row.signalDate, entryDate: row.entryDate, entryMode: 'next_open_market',
-    signalDay: { date: row.signalDate, open: row.entryPrice, high: row.entryPrice, low: row.entryPrice, close: row.entryPrice, price: row.entryPrice },
-    futureBars: bars, close: row.entryPrice, stopLossPrice: entry * (1 - config.stopLossPct / 100), stopDistancePct: config.stopLossPct,
-    rewardRisk: config.rewardRisk, positionPct: config.positionPct, accountRiskPct: 0.5, maxHoldingDays: config.holdDays,
-    trailingStopRule: config.trailingStop ? { triggerPct: 5, lockPct: 1, givebackPct: 4 } : null, stopLossMode: 'close',
-    setup: '訓練期學到的因子分箱有正向未來報酬，且個股流動性、波動與市場條件通過。',
-    trigger: '模型分數進入當日候選前段，隔日開盤成交。', invalidation: `收盤跌破 ${config.stopLossPct}% 停損。`,
-    exitPlan: config.trailingStop ? '移動停利搭配持有期限。' : '固定停利搭配持有期限。', reason: 'walk-forward 因子分箱預測分數。',
-    orderIntent: { action: 'BUY', orderType: 'MARKET', timing: 'NEXT_OPEN', quantityMode: 'RISK_BASED' }, score: modelScore(row, model, config), alphaSource: '訓練期因子分箱 meta-label'
-  };
-}
-
-function signalMap(rows, model, config, context, random = false) {
-  const byDate = new Map();
-  for (const row of rows) {
-    if (!eligible(row, config)) continue;
-    const regime = context.marketByDate.get(row.signalDate)?.regime;
-    if (config.regimeGate === 'bull' && !['BULL_TREND', 'BULL_PULLBACK', 'THEME_MOMENTUM'].includes(regime)) continue;
-    if (config.regimeGate === 'trend' && !['BULL_TREND', 'THEME_MOMENTUM'].includes(regime)) continue;
-    const item = makeCandidate(row, model, config);
-    if (item && item.score > -900) (byDate.get(item.signalDate) || byDate.set(item.signalDate, []).get(item.signalDate)).push({ row, item });
-  }
-  const output = new Map();
-  for (const [date, list] of byDate) {
-    list.sort((left, right) => random ? deterministicScore(`${date}|${left.row.tradeId}|公平隨機`) - deterministicScore(`${date}|${right.row.tradeId}|公平隨機`) : right.item.score - left.item.score);
-    output.set(date, list.slice(0, config.maxEntriesPerDay).map(row => row.item));
-  }
-  return output;
 }
 
 function exactPf(foldsResult) {

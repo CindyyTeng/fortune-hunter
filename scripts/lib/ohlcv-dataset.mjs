@@ -7,6 +7,11 @@ const gunzipAsync = promisify(gunzip);
 const CACHE = new URL('../../.cache/regime-ohlcv-10y.json.gz', import.meta.url);
 const USER_AGENT = 'fortune-hunter-regime-research/1.0';
 
+export async function saveOhlcvDataset(dataset) {
+  await fs.mkdir(new URL('../../.cache/', import.meta.url), { recursive: true });
+  await fs.writeFile(CACHE, await gzipAsync(JSON.stringify(dataset)));
+}
+
 async function exists(url) {
   try {
     await fs.access(url);
@@ -96,7 +101,6 @@ export async function loadOhlcvDataset(backtest, options = {}) {
     failures,
     stocks: rows.filter(Boolean)
   };
-  await fs.mkdir(new URL('../../.cache/', import.meta.url), { recursive: true });
-  await fs.writeFile(CACHE, await gzipAsync(JSON.stringify(dataset)));
+  if (options.writeCache !== false) await saveOhlcvDataset(dataset);
   return dataset;
 }

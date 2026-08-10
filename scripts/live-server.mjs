@@ -293,7 +293,7 @@ async function pollAndBroadcast() {
   }
 }
 
-const server = http.createServer((req, res) => {
+const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, `http://${req.headers.host}`);
 
   if (req.method === 'OPTIONS') {
@@ -312,6 +312,19 @@ const server = http.createServer((req, res) => {
   }
 
   if (url.pathname === '/quotes') {
+    const requested = (url.searchParams.get('symbols') || '')
+      .split(',')
+      .map(normalizeSymbol)
+      .filter(Boolean)
+      .slice(0, 100);
+    if (requested.length) {
+      try {
+        send(res, 200, JSON.stringify(await fetchQuotes(requested)));
+      } catch (error) {
+        send(res, 502, JSON.stringify({ type: 'error', message: error.message, quotes: [] }));
+      }
+      return;
+    }
     if (lastPayload) send(res, 200, JSON.stringify(lastPayload));
     else send(res, 200, JSON.stringify({ type: 'quotes', asOf: new Date().toISOString(), source: 'warming-up', quotes: [] }));
     return;

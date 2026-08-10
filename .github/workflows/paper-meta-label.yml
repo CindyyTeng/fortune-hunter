@@ -1,0 +1,35 @@
+name: 每日紙上交易
+
+on:
+  workflow_dispatch:
+  schedule:
+    # 台灣收盤後約 15:30 執行，週一至週五。
+    - cron: "30 7 * * 1-5"
+
+permissions:
+  contents: write
+
+jobs:
+  paper-trading:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: 取出專案
+        uses: actions/checkout@v4
+      - name: 設定 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: 更新紙上交易資料
+        run: npm run data:refresh-paper
+      - name: 啟動即時報價服務
+        run: |
+          npm run live > live-server.log 2>&1 &
+          sleep 5
+      - name: 執行紙上交易
+        run: npm run paper:meta-label-v1
+      - name: 提交紙上交易紀錄
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "紙上交易：每日更新模擬交易紀錄"
+          file_pattern: "data/paper-meta-label-state.json data/market-regime-history-10y.json"

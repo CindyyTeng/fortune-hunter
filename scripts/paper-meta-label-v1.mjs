@@ -348,8 +348,16 @@ function applyFills(state, results, decisions, date, quotes, dueDate) {
 }
 
 async function saveAndReport(state, payload) {
-  await fs.writeFile(STATE, `${JSON.stringify({ ...state, ...payload }, null, 2)}\n`, 'utf8');
+  const next = { ...state, ...payload };
+  recordRun(next, payload);
+  await fs.writeFile(STATE, `${JSON.stringify(next, null, 2)}\n`, 'utf8');
   console.log(`紙上交易安全停止：${payload.status}；${payload.reason}`);
+}
+
+function recordRun(state, run) {
+  const previous = (state.runs || []).filter(item => item.runDate !== run.runDate);
+  state.lastRun = run;
+  state.runs = [...previous, run].slice(-60);
 }
 
 async function main() {
@@ -446,7 +454,7 @@ async function main() {
   applyFills(state, results, decisions, runDate, quotes, settlementDate(runDate, tradingDates));
   state.updatedAt = new Date().toISOString();
   state.status = 'OK';
-  state.lastRun = {
+  const run = {
     ...base,
     actions: decisions.reduce((counts, decision) => ({
       ...counts,
@@ -455,7 +463,7 @@ async function main() {
     orderIntents: intents.length,
     brokerResults: results.length
   };
-  state.runs = [...(state.runs || []), state.lastRun].slice(-60);
+  recordRun(state, run);
   await fs.writeFile(STATE, `${JSON.stringify(state, null, 2)}\n`, 'utf8');
   console.log(`紙上交易完成：${runDate}，資料日 ${dataDate}，訊號 ${decisions.length}，委託意圖 ${intents.length}，模擬成交結果 ${results.length}。`);
 }

@@ -1,0 +1,137 @@
+{
+  "initialCash": 1000000,
+  "realizedPnl": 0,
+  "cash": 761386.53,
+  "positions": [
+    {
+      "symbol": "3533.TW",
+      "quantity": 40,
+      "entryPrice": 1962.94,
+      "entryDate": "2026-08-10",
+      "stopPrice": 1901.2,
+      "maxHoldingDays": 3,
+      "name": "嘉澤",
+      "lastPrice": 1960,
+      "lastPriceDate": "2026-08-10",
+      "entryCost": 78629.6,
+      "targetPrice": 2055.55
+    },
+    {
+      "symbol": "6598.TW",
+      "quantity": 2713,
+      "entryPrice": 29.4441,
+      "entryDate": "2026-08-10",
+      "stopPrice": 28.517999999999997,
+      "maxHoldingDays": 3,
+      "name": "ABC-KY",
+      "lastPrice": 29.4,
+      "lastPriceDate": "2026-08-10",
+      "entryCost": 79995.8433,
+      "targetPrice": 30.83325
+    },
+    {
+      "symbol": "2206.TW",
+      "quantity": 1272,
+      "entryPrice": 62.794050000000006,
+      "entryDate": "2026-08-10",
+      "stopPrice": 60.819,
+      "maxHoldingDays": 3,
+      "name": "三陽工業",
+      "lastPrice": 62.7,
+      "lastPriceDate": "2026-08-10",
+      "entryCost": 79988.0316,
+      "targetPrice": 65.75662500000001
+    }
+  ],
+  "orders": [
+    {
+      "orderId": "MOCK-a0ede198a43e55d4f5c8",
+      "intentId": "a0ede198a43e55d4f5c8",
+      "symbol": "3533.TW",
+      "side": "BUY",
+      "requestedQuantity": 40,
+      "submittedAt": "2026-08-10T12:36:47.869Z",
+      "isMock": true,
+      "status": "FILLED",
+      "filledQuantity": 40,
+      "remainingQuantity": 0,
+      "fillPrice": 1962.94,
+      "fee": 112,
+      "tax": 0,
+      "cashImpact": -78629.6,
+      "reason": "模擬全部成交"
+    },
+    {
+      "orderId": "MOCK-57ed916122aea8a0c3ed",
+      "intentId": "57ed916122aea8a0c3ed",
+      "symbol": "6598.TW",
+      "side": "BUY",
+      "requestedQuantity": 2713,
+      "submittedAt": "2026-08-10T12:36:47.869Z",
+      "isMock": true,
+      "status": "FILLED",
+      "filledQuantity": 2713,
+      "remainingQuantity": 0,
+      "fillPrice": 29.4441,
+      "fee": 114,
+      "tax": 0,
+      "cashImpact": -79995.8433,
+      "reason": "模擬全部成交"
+    },
+    {
+      "orderId": "MOCK-744548513e68ba170c9d",
+      "intentId": "744548513e68ba170c9d",
+      "symbol": "2206.TW",
+      "side": "BUY",
+      "requestedQuantity": 1272,
+      "submittedAt": "2026-08-10T12:36:47.869Z",
+      "isMock": true,
+      "status": "FILLED",
+      "filledQuantity": 1272,
+      "remainingQuantity": 0,
+      "fillPrice": 62.794050000000006,
+      "fee": 114,
+      "tax": 0,
+      "cashImpact": -79988.0316,
+      "reason": "模擬全部成交"
+    }
+  ],
+  "runs": [
+    {
+      "runDate": "2026-08-10",
+      "dataDate": "2026-08-10",
+      "dataAgeDays": 0,
+      "strategyId": "stock-meta-label-v1",
+      "paperOnly": true,
+      "submitToRealBroker": false,
+      "actions": {
+        "HOLD": 3
+      },
+      "orderIntents": 0,
+      "brokerResults": 0
+    }
+  ],
+  "runDate": "2026-08-10",
+  "dataDate": "2026-08-10",
+  "dataAgeDays": 0,
+  "strategyId": "stock-meta-label-v1",
+  "paperOnly": true,
+  "submitToRealBroker": false,
+  "status": "OK",
+  "reason": "沒有可用即時報價。",
+  "updatedAt": "2026-08-10T14:47:28.591Z",
+  "lastRun": {
+    "runDate": "2026-08-10",
+    "dataDate": "2026-08-10",
+    "dataAgeDays": 0,
+    "strategyId": "stock-meta-label-v1",
+    "paperOnly": true,
+    "submitToRealBroker": false,
+    "actions": {
+      "HOLD": 3
+    },
+    "orderIntents": 0,
+    "brokerResults": 0
+  },
+  "pendingSettlements": []
+}

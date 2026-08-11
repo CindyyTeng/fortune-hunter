@@ -446,32 +446,30 @@ async function main() {
   settlePendingCash(state, dataDate || runDate);
   const pendingExecution = openMarketMap(state.pendingOrders, context, dataDate);
   const duePending = pendingExecution.due;
-  const dueDecisions = duePending.map(item => item.decision);
   const broker = createMockBroker({
     failureRate: 0.02,
     partialFillRate: 0.05,
     executionCosts: COSTS
   });
-  const pendingResults = duePending.length
-    ? broker.submitOrderIntents(
-      duePending.map(item => item.intent),
-      pendingExecution.market,
+  const pendingResults = [];
+  for (const item of duePending) {
+    const result = broker.submitOrderIntent(
+      item.intent,
+      pendingExecution.market[item.intent.symbol],
       account(state, [])
-    )
-    : [];
-  const dueIntentIds = new Set(duePending.map(item => item.intent.intentId));
-  state.pendingOrders = state.pendingOrders.filter(item => !dueIntentIds.has(item.intent.intentId));
-  if (pendingResults.length) {
-    const executionDate = duePending[0].executionDate;
+    );
+    pendingResults.push(result);
     applyFills(
       state,
-      pendingResults,
-      dueDecisions,
-      executionDate,
+      [result],
+      [item.decision],
+      item.executionDate,
       [],
-      settlementDate(executionDate, tradingDates)
+      settlementDate(item.executionDate, tradingDates)
     );
   }
+  const dueIntentIds = new Set(duePending.map(item => item.intent.intentId));
+  state.pendingOrders = state.pendingOrders.filter(item => !dueIntentIds.has(item.intent.intentId));
   const trainingRows = (input.candidateTrades || []).filter(row =>
     stockOnly(row) && row.forwardPrices?.length >= 12
   );
@@ -534,6 +532,7 @@ async function main() {
   state.pendingOrders.push(...queued);
   state.updatedAt = new Date().toISOString();
   state.status = 'OK';
+  state.reason = '本次紙上交易執行成功，僅使用模擬成交。';
   const run = {
     ...base,
     actions: decisions.reduce((counts, decision) => ({

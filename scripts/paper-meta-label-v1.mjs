@@ -236,7 +236,7 @@ function nextAvailableBar(pendingOrder, context, dataDate) {
     symbolKey(stock.symbol) === symbolKey(pendingOrder.intent.symbol)
   );
   const bar = stock?.history.find(row => row.date === executionDate);
-  return bar ? { executionDate, bar } : null;
+  return { executionDate, bar: bar || null };
 }
 
 function openMarketMap(pendingOrders, context, dataDate) {
@@ -246,14 +246,16 @@ function openMarketMap(pendingOrders, context, dataDate) {
     const next = nextAvailableBar(pendingOrder, context, dataDate);
     if (!next) continue;
     due.push({ ...pendingOrder, ...next });
-    market[pendingOrder.intent.symbol] = {
-      symbol: pendingOrder.intent.symbol,
-      price: next.bar.open,
-      open: next.bar.open,
-      high: next.bar.high,
-      low: next.bar.low,
-      close: next.bar.close
-    };
+    if (next.bar) {
+      market[pendingOrder.intent.symbol] = {
+        symbol: pendingOrder.intent.symbol,
+        price: next.bar.open,
+        open: next.bar.open,
+        high: next.bar.high,
+        low: next.bar.low,
+        close: next.bar.close
+      };
+    }
   }
   return { due, market };
 }

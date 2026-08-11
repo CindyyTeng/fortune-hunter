@@ -69,7 +69,7 @@ export class MockBrokerAdapter {
     }
 
     const limitPrice = intent.limitPrice == null ? null : Number(intent.limitPrice);
-    if (Number.isFinite(limitPrice)
+    if (intent.orderType !== 'MARKET' && Number.isFinite(limitPrice)
       && ((intent.side === 'BUY' && marketPrice > limitPrice)
         || (intent.side === 'SELL' && marketPrice < limitPrice))) {
       return this.#record({

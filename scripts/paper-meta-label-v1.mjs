@@ -173,6 +173,7 @@ async function loadState() {
       positions,
       orders,
       runs: state.runs || [],
+      pendingOrders: state.pendingOrders || [],
       pendingSettlements: state.pendingSettlements || []
     };
   } catch {
@@ -183,6 +184,7 @@ async function loadState() {
       positions: [],
       orders: [],
       runs: [],
+      pendingOrders: [],
       pendingSettlements: []
     };
   }
@@ -222,6 +224,38 @@ function settlePendingCash(state, date) {
   if (!due.length) return;
   state.cash = round(state.cash + due.reduce((sum, item) => sum + Number(item.amount || 0), 0), 2);
   state.pendingSettlements = pending.filter(item => item.settlementDate > date);
+}
+
+function nextAvailableBar(pendingOrder, context, dataDate) {
+  const signalDate = pendingOrder.signalDate;
+  const executionDate = context.marketHistory
+    .map(row => row.date)
+    .find(date => date > signalDate && date <= dataDate);
+  if (!executionDate) return null;
+  const stock = context.ohlcv.stocks.find(({ stock }) =>
+    symbolKey(stock.symbol) === symbolKey(pendingOrder.intent.symbol)
+  );
+  const bar = stock?.history.find(row => row.date === executionDate);
+  return bar ? { executionDate, bar } : null;
+}
+
+function openMarketMap(pendingOrders, context, dataDate) {
+  const market = {};
+  const due = [];
+  for (const pendingOrder of pendingOrders) {
+    const next = nextAvailableBar(pendingOrder, context, dataDate);
+    if (!next) continue;
+    due.push({ ...pendingOrder, ...next });
+    market[pendingOrder.intent.symbol] = {
+      symbol: pendingOrder.intent.symbol,
+      price: next.bar.open,
+      open: next.bar.open,
+      high: next.bar.high,
+      low: next.bar.low,
+      close: next.bar.close
+    };
+  }
+  return { due, market };
 }
 
 function positionDecision(position, quote, date, config) {
@@ -271,6 +305,7 @@ function buyDecision(row, quote, model, config, date) {
       referencePrice: entry,
       maximumAcceptablePrice: entry * 1.005,
       orderType: 'MARKET',
+      timing: 'NEXT_OPEN',
       timeInForce: 'ROD',
       session: 'REGULAR'
     },
@@ -309,6 +344,13 @@ function applyFills(state, results, decisions, date, quotes, dueDate) {
     if (!['FILLED', 'PARTIALLY_FILLED'].includes(result.status) || !result.filledQuantity) continue;
     const decision = bySymbol.get(result.symbol);
     if (result.side === 'BUY') {
+      const referencePrice = Number(decision?.entryPlan?.referencePrice) || result.fillPrice;
+      const referenceStop = Number(decision?.riskPlan?.stopPrice) || referencePrice;
+      const stopPct = referencePrice > 0
+        ? Math.max(0, 1 - referenceStop / referencePrice)
+        : 0.03;
+      const stopPrice = result.fillPrice * (1 - stopPct);
+      const rewardRisk = Number(decision?.riskPlan?.riskRewardRatio) || 1.5;
       state.cash = round(state.cash + result.cashImpact, 2);
       state.positions.push({
         symbol: result.symbol,
@@ -316,10 +358,10 @@ function applyFills(state, results, decisions, date, quotes, dueDate) {
         quantity: result.filledQuantity,
         entryPrice: result.fillPrice,
         entryCost: -result.cashImpact,
-        targetPrice: decision.riskPlan.targetPrice,
+        targetPrice: result.fillPrice + (result.fillPrice - stopPrice) * rewardRisk,
         entryDate: date,
-        stopPrice: decision.riskPlan.stopPrice,
-        maxHoldingDays: decision.maxHoldingDays,
+        stopPrice,
+        maxHoldingDays: decision?.maxHoldingDays,
         lastPrice: result.fillPrice,
         lastPriceDate: date
       });
@@ -401,7 +443,35 @@ async function main() {
     position.targetPrice ||= position.entryPrice
       + (position.entryPrice - position.stopPrice) * config.rewardRisk;
   }
-  settlePendingCash(state, runDate);
+  settlePendingCash(state, dataDate || runDate);
+  const pendingExecution = openMarketMap(state.pendingOrders, context, dataDate);
+  const duePending = pendingExecution.due;
+  const dueDecisions = duePending.map(item => item.decision);
+  const broker = createMockBroker({
+    failureRate: 0.02,
+    partialFillRate: 0.05,
+    executionCosts: COSTS
+  });
+  const pendingResults = duePending.length
+    ? broker.submitOrderIntents(
+      duePending.map(item => item.intent),
+      pendingExecution.market,
+      account(state, [])
+    )
+    : [];
+  const dueIntentIds = new Set(duePending.map(item => item.intent.intentId));
+  state.pendingOrders = state.pendingOrders.filter(item => !dueIntentIds.has(item.intent.intentId));
+  if (pendingResults.length) {
+    const executionDate = duePending[0].executionDate;
+    applyFills(
+      state,
+      pendingResults,
+      dueDecisions,
+      executionDate,
+      [],
+      settlementDate(executionDate, tradingDates)
+    );
+  }
   const trainingRows = (input.candidateTrades || []).filter(row =>
     stockOnly(row) && row.forwardPrices?.length >= 12
   );
@@ -429,13 +499,20 @@ async function main() {
     ...base, status: 'SKIP', reason: '沒有可用即時報價。'
   });
   const byQuote = quoteMap(quotes);
-  const decisions = state.positions.map(position =>
-    positionDecision(position, byQuote.get(symbolKey(position.symbol)), runDate, config)
-  );
+  const pendingSymbols = new Set(state.pendingOrders.map(item => item.intent.symbol));
+  const decisions = state.positions
+    .map(position => positionDecision(
+      position,
+      byQuote.get(symbolKey(position.symbol)),
+      dataDate,
+      config
+    ))
+    .filter(decision => !pendingSymbols.has(decision.symbol));
   for (const { row } of liveRows) {
     const symbol = `${row.symbol}.${marketSuffix(row.market)}`;
-    if (!state.positions.some(position => position.symbol === symbol)) {
-      decisions.push(buyDecision(row, byQuote.get(row.symbol), model, config, runDate));
+    if (!state.positions.some(position => position.symbol === symbol)
+      && !pendingSymbols.has(symbol)) {
+      decisions.push(buyDecision(row, byQuote.get(row.symbol), model, config, dataDate));
     }
   }
   const accountSnapshot = account(state, quotes);
@@ -445,13 +522,16 @@ async function main() {
     positions: state.positions,
     executionCosts: COSTS
   });
-  const broker = createMockBroker({
-    failureRate: 0.02,
-    partialFillRate: 0.05,
-    executionCosts: COSTS
-  });
-  const results = broker.submitOrderIntents(intents, marketMap(quotes), accountSnapshot);
-  applyFills(state, results, decisions, runDate, quotes, settlementDate(runDate, tradingDates));
+  const queued = intents
+    .filter(intent => intent.status === 'PENDING_REVIEW')
+    .map(intent => ({
+      intent,
+      decision: decisions.find(decision => decision.symbol === intent.symbol
+        && decision.action === intent.action),
+      signalDate: dataDate
+    }))
+    .filter(item => item.decision);
+  state.pendingOrders.push(...queued);
   state.updatedAt = new Date().toISOString();
   state.status = 'OK';
   const run = {
@@ -461,11 +541,12 @@ async function main() {
       [decision.action]: (counts[decision.action] || 0) + 1
     }), {}),
     orderIntents: intents.length,
-    brokerResults: results.length
+    brokerResults: pendingResults.length,
+    queuedOrders: queued.length
   };
   recordRun(state, run);
   await fs.writeFile(STATE, `${JSON.stringify(state, null, 2)}\n`, 'utf8');
-  console.log(`紙上交易完成：${runDate}，資料日 ${dataDate}，訊號 ${decisions.length}，委託意圖 ${intents.length}，模擬成交結果 ${results.length}。`);
+  console.log(`紙上交易完成：${runDate}，資料日 ${dataDate}，訊號 ${decisions.length}，委託意圖 ${intents.length}，待執行 ${queued.length}，模擬成交結果 ${pendingResults.length}。`);
 }
 
 main().catch(error => {

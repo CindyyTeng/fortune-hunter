@@ -815,6 +815,10 @@ function renderPaperState(state, marketData) {
   const unrealized = knownPnl.length ? knownPnl.reduce((sum, value) => sum + value, 0) : null;
   const pendingCash = (state.pendingSettlements || [])
     .reduce((sum, item) => sum + Number(item.amount || 0), 0);
+  const pendingOrders = state.pendingOrders || [];
+  const pendingOrderLabel = pendingOrders.length
+    ? `隔日待執行：${pendingOrders.map(item => `${item.intent.action} ${String(item.intent.symbol).split('.')[0]}`).join('、')}`
+    : '隔日待執行：無';
   const filledOrders = (state.orders || []).filter(order => order.status === 'FILLED');
   const realized = Number(state.realizedPnl ?? 0);
   const historyActions = (state.runs || []).reduce((counts, run) => {
@@ -833,7 +837,8 @@ function renderPaperState(state, marketData) {
     <div class="paper-stat"><strong class="${unrealized >= 0 ? 'paper-positive' : 'paper-negative'}">${paperPnl(unrealized)}</strong><span>未實現損益估算</span></div>`;
   els.paperActions.innerHTML = `<span class="paper-action">本次訊號：${latestActions}</span>
     <span class="paper-action">累計訊號：${cumulativeActions}</span>
-    <span class="paper-action">模擬成交 ${filledOrders.length} 筆</span>`;
+    <span class="paper-action">模擬成交 ${filledOrders.length} 筆</span>
+    <span class="paper-action">${esc(pendingOrderLabel)}</span>`;
   els.paperPositions.innerHTML = markedPositions.length
     ? markedPositions.map(position => `
       <div class="paper-position">

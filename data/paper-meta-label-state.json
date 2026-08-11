@@ -109,29 +109,93 @@
       },
       "orderIntents": 0,
       "brokerResults": 0
+    },
+    {
+      "runDate": "2026-08-11",
+      "dataDate": "2026-08-10",
+      "dataAgeDays": 1,
+      "strategyId": "stock-meta-label-v1",
+      "paperOnly": true,
+      "submitToRealBroker": false,
+      "actions": {
+        "HOLD": 2
+      },
+      "orderIntents": 0,
+      "brokerResults": 0,
+      "queuedOrders": 0
     }
   ],
-  "runDate": "2026-08-10",
+  "runDate": "2026-08-11",
   "dataDate": "2026-08-10",
-  "dataAgeDays": 0,
+  "dataAgeDays": 1,
   "strategyId": "stock-meta-label-v1",
   "paperOnly": true,
   "submitToRealBroker": false,
   "status": "OK",
-  "reason": "沒有可用即時報價。",
-  "updatedAt": "2026-08-10T14:47:28.591Z",
+  "reason": "即時報價取得失敗：HTTP 502",
+  "updatedAt": "2026-08-11T12:06:51.578Z",
   "lastRun": {
-    "runDate": "2026-08-10",
+    "runDate": "2026-08-11",
     "dataDate": "2026-08-10",
-    "dataAgeDays": 0,
+    "dataAgeDays": 1,
     "strategyId": "stock-meta-label-v1",
     "paperOnly": true,
     "submitToRealBroker": false,
     "actions": {
-      "HOLD": 3
+      "HOLD": 2
     },
     "orderIntents": 0,
-    "brokerResults": 0
+    "brokerResults": 0,
+    "queuedOrders": 0
   },
-  "pendingSettlements": []
+  "pendingSettlements": [],
+  "pendingOrders": [
+    {
+      "intent": {
+        "intentId": "2953748afd0edf4976a7",
+        "createdAt": "2026-08-11T12:06:20.126Z",
+        "tradeDate": "2026-08-10",
+        "symbol": "6598.TW",
+        "strategyId": "stock-meta-label-v1",
+        "action": "SELL",
+        "status": "PENDING_REVIEW",
+        "submitToRealBroker": false,
+        "reason": "價格 27.65 跌破停損 28.518",
+        "warnings": [
+          "目前僅送至模擬券商"
+        ],
+        "audit": {
+          "noFutureDataAttestation": true,
+          "humanApprovalRequired": true
+        },
+        "side": "SELL",
+        "quantity": 2713,
+        "orderType": "MARKETABLE_LIMIT",
+        "timing": "NEXT_OPEN",
+        "limitPrice": null,
+        "timeInForce": "ROD",
+        "session": "REGULAR",
+        "brokerPayload": {
+          "symbol": "6598.TW",
+          "side": "SELL",
+          "quantity": 2713,
+          "orderType": "MARKETABLE_LIMIT",
+          "price": null,
+          "timeInForce": "ROD"
+        }
+      },
+      "decision": {
+        "date": "2026-08-10",
+        "symbol": "6598.TW",
+        "action": "SELL",
+        "strategyId": "stock-meta-label-v1",
+        "exit": "停損",
+        "reason": "價格 27.65 跌破停損 28.518",
+        "warnings": [
+          "目前僅送至模擬券商"
+        ]
+      },
+      "signalDate": "2026-08-10"
+    }
+  ]
 }

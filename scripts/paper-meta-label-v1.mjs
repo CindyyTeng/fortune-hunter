@@ -2,6 +2,7 @@ import fs from 'node:fs/promises';
 import { loadResearchContext } from './research/research-core.mjs';
 import { generateOrderIntents } from './lib/order-intent-generator.mjs';
 import { createMockBroker } from './lib/broker-adapter.mock.mjs';
+import { buyExecution } from './lib/execution-simulator.mjs';
 import { eligible, fitModel, modelScore, stockOnly } from './lib/stock-meta-label-engine.mjs';
 
 const INPUT = new URL('../data/tw-backtest-10y.json', import.meta.url);
@@ -516,12 +517,28 @@ async function main() {
     }
   }
   const accountSnapshot = account(state, quotes);
-  const intents = generateOrderIntents({
-    decisions,
-    account: accountSnapshot,
-    positions: state.positions,
-    executionCosts: COSTS
-  });
+  let reservedCash = 0;
+  const intents = [];
+  for (const decision of decisions) {
+    const [intent] = generateOrderIntents({
+      decisions: [decision],
+      account: {
+        ...accountSnapshot,
+        availableCash: Math.max(0, accountSnapshot.availableCash - reservedCash)
+      },
+      positions: state.positions,
+      executionCosts: COSTS
+    });
+    if (!intent) continue;
+    intents.push(intent);
+    if (intent.side === 'BUY' && intent.status === 'PENDING_REVIEW') {
+      reservedCash += buyExecution(
+        decision.entryPlan.referencePrice,
+        intent.quantity,
+        COSTS
+      ).total;
+    }
+  }
   const queued = intents
     .filter(intent => intent.status === 'PENDING_REVIEW')
     .map(intent => ({

@@ -1,18 +1,18 @@
 {
-  "asOf": "2026-09-01T06:11:40.429Z",
-  "generatedAtTaipei": "2026年9月1日 下午2:11:40",
+  "asOf": "2026-09-01T09:42:17.003Z",
+  "generatedAtTaipei": "2026年9月1日 下午5:42:17",
   "source": "TWSE OpenAPI、TPEX API、Yahoo Finance chart API（夜盤風險因子）",
   "universeSize": 1949,
   "scanned": 240,
   "scanStrategy": "上市成交值前 120 檔 + 上櫃成交值前 120 檔，套用趨勢/型態/價格行為/隔夜風險後取前 7 檔。",
   "overnightContext": {
-    "asOf": "2026-09-01T06:11:36.705Z",
+    "asOf": "2026-09-01T09:42:14.454Z",
     "bias": "neutral",
-    "marketComposite": -0.52,
+    "marketComposite": -0.63,
     "techComposite": -1.89,
     "taiwanComposite": 0.01,
-    "asiaComposite": -0.08,
-    "globalComposite": -0.34,
+    "asiaComposite": -0.3,
+    "globalComposite": -0.5,
     "groups": {
       "taiwanSentiment": {
         "symbols": [
@@ -195,7 +195,7 @@
         "symbol": "^GSPC",
         "date": "2026-08-31",
         "close": 7686.14,
-        "change": -0.33
+        "change": -0.58
       },
       "nasdaq": {
         "symbol": "^IXIC",
@@ -218,20 +218,20 @@
       "nikkei": {
         "symbol": "^N225",
         "date": "2026-09-01",
-        "close": 66517.52,
-        "change": 0.31
+        "close": 66215.34,
+        "change": -0.15
       },
       "kospi": {
         "symbol": "^KS11",
         "date": "2026-09-01",
-        "close": 6837.29,
-        "change": 0.25
+        "close": 6835.8,
+        "change": 0.23
       },
       "kosdaq": {
         "symbol": "^KQ11",
         "date": "2026-09-01",
-        "close": 821.41,
-        "change": -1.54
+        "close": 821.25,
+        "change": -1.56
       }
     }
   },
@@ -313,11 +313,11 @@
         "themes": [
           "finance"
         ],
-        "marketComposite": -0.52,
+        "marketComposite": -0.63,
         "techComposite": -1.89,
         "taiwanComposite": 0.01,
-        "asiaComposite": -0.08,
-        "globalComposite": -0.34,
+        "asiaComposite": -0.3,
+        "globalComposite": -0.5,
         "groupImpacts": {},
         "soxChange": -2.92,
         "dowChange": -0.72
@@ -426,11 +426,11 @@
         "themes": [
           "semiconductor"
         ],
-        "marketComposite": -0.52,
+        "marketComposite": -0.63,
         "techComposite": -1.89,
         "taiwanComposite": 0.01,
-        "asiaComposite": -0.08,
-        "globalComposite": -0.34,
+        "asiaComposite": -0.3,
+        "globalComposite": -0.5,
         "groupImpacts": {
           "semiconductor": -2.92
         },
@@ -547,11 +547,11 @@
         "themes": [
           "semiconductor"
         ],
-        "marketComposite": -0.52,
+        "marketComposite": -0.63,
         "techComposite": -1.89,
         "taiwanComposite": 0.01,
-        "asiaComposite": -0.08,
-        "globalComposite": -0.34,
+        "asiaComposite": -0.3,
+        "globalComposite": -0.5,
         "groupImpacts": {
           "semiconductor": -2.92
         },
@@ -659,11 +659,11 @@
         "themes": [
           "broad-market"
         ],
-        "marketComposite": -0.52,
+        "marketComposite": -0.63,
         "techComposite": -1.89,
         "taiwanComposite": 0.01,
-        "asiaComposite": -0.08,
-        "globalComposite": -0.34,
+        "asiaComposite": -0.3,
+        "globalComposite": -0.5,
         "groupImpacts": {},
         "soxChange": -2.92,
         "dowChange": -0.72
@@ -773,11 +773,11 @@
         "themes": [
           "broad-market"
         ],
-        "marketComposite": -0.52,
+        "marketComposite": -0.63,
         "techComposite": -1.89,
         "taiwanComposite": 0.01,
-        "asiaComposite": -0.08,
-        "globalComposite": -0.34,
+        "asiaComposite": -0.3,
+        "globalComposite": -0.5,
         "groupImpacts": {},
         "soxChange": -2.92,
         "dowChange": -0.72
@@ -889,11 +889,11 @@
         "themes": [
           "broad-market"
         ],
-        "marketComposite": -0.52,
+        "marketComposite": -0.63,
         "techComposite": -1.89,
         "taiwanComposite": 0.01,
-        "asiaComposite": -0.08,
-        "globalComposite": -0.34,
+        "asiaComposite": -0.3,
+        "globalComposite": -0.5,
         "groupImpacts": {},
         "soxChange": -2.92,
         "dowChange": -0.72
@@ -1001,11 +1001,11 @@
         "themes": [
           "finance"
         ],
-        "marketComposite": -0.52,
+        "marketComposite": -0.63,
         "techComposite": -1.89,
         "taiwanComposite": 0.01,
-        "asiaComposite": -0.08,
-        "globalComposite": -0.34,
+        "asiaComposite": -0.3,
+        "globalComposite": -0.5,
         "groupImpacts": {},
         "soxChange": -2.92,
         "dowChange": -0.72
@@ -1066,5 +1066,7 @@
       ]
     }
   ],
-  "warnings": []
+  "warnings": [
+    "3594 磐儀: 400 Bad Request"
+  ]
 }

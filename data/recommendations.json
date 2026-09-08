@@ -1,18 +1,18 @@
 {
-  "asOf": "2026-09-08T05:47:42.589Z",
-  "generatedAtTaipei": "2026年9月8日 下午1:47:42",
+  "asOf": "2026-09-08T09:17:31.352Z",
+  "generatedAtTaipei": "2026年9月8日 下午5:17:31",
   "source": "TWSE OpenAPI、TPEX API、Yahoo Finance chart API（夜盤風險因子）",
-  "universeSize": 1962,
+  "universeSize": 1953,
   "scanned": 240,
   "scanStrategy": "上市成交值前 120 檔 + 上櫃成交值前 120 檔，套用趨勢/型態/價格行為/隔夜風險後取前 7 檔。",
   "overnightContext": {
-    "asOf": "2026-09-08T05:47:39.754Z",
-    "bias": "neutral",
+    "asOf": "2026-09-08T09:17:28.859Z",
+    "bias": "risk-off",
     "marketComposite": -0.37,
     "techComposite": 1.72,
     "taiwanComposite": 2.65,
-    "asiaComposite": 0.33,
-    "globalComposite": -0.09,
+    "asiaComposite": -1.22,
+    "globalComposite": -0.71,
     "groups": {
       "taiwanSentiment": {
         "symbols": [
@@ -218,41 +218,41 @@
       "nikkei": {
         "symbol": "^N225",
         "date": "2026-09-08",
-        "close": 66122.96,
-        "change": -0.42
+        "close": 65269.33,
+        "change": -1.7
       },
       "kospi": {
         "symbol": "^KS11",
         "date": "2026-09-08",
-        "close": 7082.79,
-        "change": 1.25
+        "close": 6954.52,
+        "change": -0.58
       },
       "kosdaq": {
         "symbol": "^KQ11",
         "date": "2026-09-08",
-        "close": 825.51,
-        "change": 0.4
+        "close": 811.88,
+        "change": -1.25
       }
     }
   },
   "marketContext": {
     "markets": {
       "上市": -0.94,
-      "上櫃": -0.42
+      "上櫃": -0.82
     },
     "themes": {
-      "semiconductor": 0.13,
-      "passiveComponents": 0.72,
-      "memory": -0.09,
-      "broad-market": -0.74,
+      "semiconductor": -0.55,
+      "passiveComponents": -0.74,
+      "memory": -0.78,
+      "broad-market": -0.89,
       "powerEquipment": -1.06,
-      "ai-hardware": -1.96,
-      "finance": -0.38
+      "ai-hardware": -2.17,
+      "finance": -0.88
     }
   },
   "marketCoverage": {
     "twse": 1087,
-    "tpex": 875
+    "tpex": 866
   },
   "recommendations": [
     {
@@ -264,35 +264,35 @@
       "score": 72,
       "signal": "等待進場",
       "latestDate": "2026-09-08",
-      "latestPrice": 2475,
-      "change5d": 1.43,
-      "change10d": 3.13,
-      "change20d": 3.34,
-      "change60d": 4.21,
+      "latestPrice": 2470,
+      "change5d": 1.23,
+      "change10d": 2.92,
+      "change20d": 3.13,
+      "change60d": 4,
       "metrics": {
-        "ma5": 2424,
-        "ma10": 2421,
-        "ma20": 2407.25,
-        "ma60": 2397.67,
-        "rsi14": 68.1,
-        "macd": 16.79,
-        "volume20d": 17216936,
+        "ma5": 2423,
+        "ma10": 2420.5,
+        "ma20": 2407,
+        "ma60": 2397.58,
+        "rsi14": 67.6,
+        "macd": 16.4,
+        "volume20d": 17527617,
         "std20": 0.0114,
         "std60": 0.0232,
-        "avg20TradeValue": 41486317619,
+        "avg20TradeValue": 42248163727,
         "maxRange20": 2.13,
-        "rsv60": 0.887,
-        "intentFactor60": 0.0446,
+        "rsv60": 0.871,
+        "intentFactor60": 0.0424,
         "momentum126_21": 31.86,
-        "nearYearHigh": 0.986,
+        "nearYearHigh": 0.984,
         "drawdown20": 0,
-        "priceActionScore": 24,
+        "priceActionScore": 14,
         "maDeduct": 3,
-        "volumeRatio": 1.29,
+        "volumeRatio": 1.62,
         "support": 2335,
         "resistance": 2460,
         "rewardRisk": 1.7,
-        "resistanceRoomPct": -0.61,
+        "resistanceRoomPct": -0.4,
         "patternScore": 0,
         "stopPct": 5,
         "strictRisk": false
@@ -307,15 +307,15 @@
         ]
       },
       "overnight": {
-        "bias": "tailwind",
+        "bias": "neutral",
         "themes": [
           "semiconductor"
         ],
         "marketComposite": -0.37,
         "techComposite": 1.72,
         "taiwanComposite": 2.65,
-        "asiaComposite": 0.33,
-        "globalComposite": -0.09,
+        "asiaComposite": -1.22,
+        "globalComposite": -0.71,
         "groupImpacts": {
           "semiconductor": 3.37
         },
@@ -327,401 +327,50 @@
           "semiconductor"
         ],
         "marketMove": -0.94,
-        "themeMove": 0.13,
+        "themeMove": -0.55,
         "isHeadwind": true
       },
       "sellWarning": {
-        "score": 0,
+        "score": 6,
         "level": "無",
-        "reasons": [],
+        "reasons": [
+          "價格行為出現壓力或假突破風險。"
+        ],
         "action": "暫無明確賣出警告，持續依停損與持有週期管理。"
       },
       "reasons": [
         "價格位於 20 日線上方，且 20 日線高於 60 日線，趨勢偏多。",
         "價格與 5 日線、20 日線維持多方排列，短中期動能一致。",
         "流動性足夠，進出場較不容易卡住。",
-        "近 10 日漲幅 3.1%，動能穩定且不過熱。",
-        "60 日相對位置 0.89，接近強勢區但仍有空間。",
+        "近 10 日漲幅 2.9%，動能穩定且不過熱。",
+        "60 日相對位置 0.87，接近強勢區但仍有空間。",
         "短期波動低於中期波動，結構較穩定。",
+        "RSI 67.6 位於健康強勢區。",
         "MACD 在零軸上方，動能結構偏多。",
         "成交量高於 20 日均量，突破可信度提升。",
         "價格貼近 20 日線上方，適合順勢回測布局。",
-        "原壓力區被突破後沒有明顯跌回，符合壓力轉支撐觀察。",
         "收盤價高於多條均線扣抵值，有利 5/10/20 日線延續上揚。",
         "均線糾結後向上發散，屬等待表態後的偏多訊號。",
-        "拉回上揚 5 日線有撐，符合順勢拉回觀察。",
+        "量比約 1.6 倍且收盤不弱，代表當日資金有表態。",
         "台股 ADR/ETF 夜盤情緒偏多（2.65%），有利隔日風險承接。",
         "費半強彈（3.37%），半導體族群有助攻。",
         "動能(126-21) 31.9%，位於可延續區間。",
         "預估風險報酬比約 1.7，符合先規劃停損再進場。"
       ],
       "risks": [
-        "價格意圖因子 0.045 偏低，可能是盤整末端。",
+        "價格意圖因子 0.042 偏低，可能是盤整末端。",
+        "收盤貼近近 25 日壓力，上方空間不足，需等有效突破後再追。",
+        "日韓股市同步下跌（-1.22%），台股盤中承壓風險升高。",
         "同市場當日平均下跌 -0.94%，大盤環境逆風。",
         "20 日波動低於 2%，突破後月績效貢獻不足。"
       ],
       "plan": {
         "horizon": "建議持有 5 個交易日，若提前達標或轉弱可提早調整。",
-        "entry": "分批區間 NT$ 2395.21 - 2504.70。優先等回測 5 日線/20 日線或支撐區不破；若走突破，盤中突破近壓 NT$ 2460 後才觸發，且不要追超過突破價約 6%。本版回測以 5 個交易日節奏為主，不過早被 5 日線洗出。",
-        "takeProfit": "先看 NT$ 2611.13；收盤淨報酬曾達 3% 後，若自高點回落 5 個百分點則提前停利，5 天內續強再看 NT$ 2685.38。",
-        "stopLoss": "收盤跌破 NT$ 2351.25 或走勢轉弱先退，若 2 天內都站不上 5 日線也要主動降部位。",
+        "entry": "分批區間 NT$ 2394.97 - 2499.64。優先等回測 5 日線/20 日線或支撐區不破；若走突破，盤中突破近壓 NT$ 2460 後才觸發，且不要追超過突破價約 6%。本版回測以 5 個交易日節奏為主，不過早被 5 日線洗出。",
+        "takeProfit": "先看 NT$ 2605.85；收盤淨報酬曾達 3% 後，若自高點回落 5 個百分點則提前停利，5 天內續強再看 NT$ 2679.95。",
+        "stopLoss": "收盤跌破 NT$ 2346.50 或走勢轉弱先退，若 2 天內都站不上 5 日線也要主動降部位。",
         "exitWarning": "偏短打節奏：若在 5 天內沒有延續上攻，先減碼保留現金。 已有獲利時，以約 1% 報酬保護線作為最低停利參考。",
         "positionSizing": "單筆風險建議控制在總資金 1.2%，以止損幅度 5% 推估，單檔資金上限約 24%。"
-      },
-      "backtest": []
-    },
-    {
-      "code": "2408",
-      "name": "南亞科",
-      "market": "上市",
-      "pe": null,
-      "tradeValue": 29517982313,
-      "score": 72,
-      "signal": "等待進場",
-      "latestDate": "2026-09-08",
-      "latestPrice": 531,
-      "change5d": 2.51,
-      "change10d": 4.12,
-      "change20d": 8.59,
-      "change60d": 34.26,
-      "metrics": {
-        "ma5": 507.9,
-        "ma10": 519.85,
-        "ma20": 514.15,
-        "ma60": 457.78,
-        "rsi14": 60.5,
-        "macd": 16.98,
-        "volume20d": 82080952,
-        "std20": 0.0405,
-        "std60": 0.0592,
-        "avg20TradeValue": 42223253359,
-        "maxRange20": 12.88,
-        "rsv60": 0.944,
-        "intentFactor60": 0.1158,
-        "momentum126_21": 69.02,
-        "nearYearHigh": 0.978,
-        "drawdown20": -2.21,
-        "priceActionScore": 14,
-        "maDeduct": 3,
-        "volumeRatio": 0.89,
-        "support": 470,
-        "resistance": 569,
-        "rewardRisk": 1.32,
-        "resistanceRoomPct": 7.16,
-        "patternScore": 0,
-        "stopPct": 5,
-        "strictRisk": true
-      },
-      "patterns": {
-        "score": 0,
-        "bias": "中性",
-        "bullish": [],
-        "bearish": [],
-        "watch": []
-      },
-      "overnight": {
-        "bias": "tailwind",
-        "themes": [
-          "memory"
-        ],
-        "marketComposite": -0.37,
-        "techComposite": 1.72,
-        "taiwanComposite": 2.65,
-        "asiaComposite": 0.33,
-        "globalComposite": -0.09,
-        "groupImpacts": {
-          "memory": 6.1
-        },
-        "soxChange": 3.37,
-        "dowChange": -0.51
-      },
-      "marketFlow": {
-        "themes": [
-          "memory"
-        ],
-        "marketMove": -0.94,
-        "themeMove": -0.09,
-        "isHeadwind": true
-      },
-      "sellWarning": {
-        "score": 22,
-        "level": "中",
-        "reasons": [
-          "5 日線仍低於 20 日線，較像反彈而非趨勢續攻。",
-          "反彈量比僅 0.9 倍，缺少放量確認。",
-          "20 日波動偏高，單日回撤風險提高。",
-          "價格行為出現壓力或假突破風險。"
-        ],
-        "action": "控制風險：先減碼到半倉，若 2 天內無法站回 5 日線則續降部位。"
-      },
-      "reasons": [
-        "價格位於 20 日線上方，且 20 日線高於 60 日線，趨勢偏多。",
-        "流動性足夠，進出場較不容易卡住。",
-        "近 10 日漲幅 4.1%，動能穩定且不過熱。",
-        "60 日相對位置 0.94，接近強勢區但仍有空間。",
-        "短期波動低於中期波動，結構較穩定。",
-        "RSI 60.5 位於健康強勢區。",
-        "MACD 在零軸上方，動能結構偏多。",
-        "價格貼近 20 日線上方，適合順勢回測布局。",
-        "收盤價高於多條均線扣抵值，有利 5/10/20 日線延續上揚。",
-        "均線糾結後向上發散，屬等待表態後的偏多訊號。",
-        "20 日線附近守穩，中短期防守線明確。",
-        "台股 ADR/ETF 夜盤情緒偏多（2.65%），有利隔日風險承接。",
-        "美股記憶體族群強漲（6.10%），同族群隔日有利多延伸。",
-        "動能(126-21) 69.0%，位於可延續區間。",
-        "接近年高 97.8%，強勢結構完整。"
-      ],
-      "risks": [
-        "5 日線仍低於 20 日線，這比較像短線反彈，不是完整多方排列。",
-        "量比 0.89 未放大，上漲缺少成交量確認。",
-        "接近近期長黑高點後仍壓回，空方壓力尚未解除。",
-        "同市場當日平均下跌 -0.94%，大盤環境逆風。",
-        "此股屬上櫃、低流動性或高波動條件，需套用更嚴格的進場門檻。",
-        "預估風險報酬比不足，需等更靠近支撐才有操作價值。"
-      ],
-      "plan": {
-        "horizon": "建議持有 5 個交易日，若提前達標或轉弱可提早調整。",
-        "entry": "分批區間 NT$ 505.36 - 537.37。優先等回測 5 日線/20 日線或支撐區不破；若走突破，盤中突破近壓 NT$ 569 後才觸發，且不要追超過突破價約 6%。本版回測以 5 個交易日節奏為主，不過早被 5 日線洗出。",
-        "takeProfit": "先看 NT$ 560.21；收盤淨報酬曾達 3% 後，若自高點回落 5 個百分點則提前停利，5 天內續強再看 NT$ 566.15。",
-        "stopLoss": "收盤跌破 NT$ 504.45 或走勢轉弱先退，若 2 天內都站不上 5 日線也要主動降部位。",
-        "exitWarning": "控制風險：先減碼到半倉，若 2 天內無法站回 5 日線則續降部位。 已有獲利時，以約 1% 報酬保護線作為最低停利參考。",
-        "positionSizing": "單筆風險建議控制在總資金 0.7%，以止損幅度 5% 推估，單檔資金上限約 14%。"
-      },
-      "backtest": []
-    },
-    {
-      "code": "2344",
-      "name": "華邦電",
-      "market": "上市",
-      "pe": null,
-      "tradeValue": 21504459494,
-      "score": 72,
-      "signal": "等待進場",
-      "latestDate": "2026-09-08",
-      "latestPrice": 188,
-      "change5d": 6.82,
-      "change10d": 5.03,
-      "change20d": 5.62,
-      "change60d": -0.53,
-      "metrics": {
-        "ma5": 178,
-        "ma10": 179.75,
-        "ma20": 178.72,
-        "ma60": 176.27,
-        "rsi14": 64.3,
-        "macd": 3.25,
-        "volume20d": 152758275,
-        "std20": 0.0303,
-        "std60": 0.0537,
-        "avg20TradeValue": 27386174918,
-        "maxRange20": 10.6,
-        "rsv60": 0.671,
-        "intentFactor60": -0.002,
-        "momentum126_21": 38.08,
-        "nearYearHigh": 0.847,
-        "drawdown20": 0,
-        "priceActionScore": 14,
-        "maDeduct": 3,
-        "volumeRatio": 1.41,
-        "support": 165,
-        "resistance": 193,
-        "rewardRisk": 0.34,
-        "resistanceRoomPct": 2.66,
-        "patternScore": 0,
-        "stopPct": 6.4,
-        "strictRisk": false
-      },
-      "patterns": {
-        "score": 0,
-        "bias": "中性",
-        "bullish": [],
-        "bearish": [],
-        "watch": []
-      },
-      "overnight": {
-        "bias": "tailwind",
-        "themes": [
-          "memory",
-          "semiconductor"
-        ],
-        "marketComposite": -0.37,
-        "techComposite": 1.72,
-        "taiwanComposite": 2.65,
-        "asiaComposite": 0.33,
-        "globalComposite": -0.09,
-        "groupImpacts": {
-          "semiconductor": 3.37,
-          "memory": 6.1
-        },
-        "soxChange": 3.37,
-        "dowChange": -0.51
-      },
-      "marketFlow": {
-        "themes": [
-          "memory",
-          "semiconductor"
-        ],
-        "marketMove": -0.94,
-        "themeMove": 0.02,
-        "isHeadwind": true
-      },
-      "sellWarning": {
-        "score": 0,
-        "level": "無",
-        "reasons": [],
-        "action": "暫無明確賣出警告，持續依停損與持有週期管理。"
-      },
-      "reasons": [
-        "價格位於 20 日線上方，且 20 日線高於 60 日線，趨勢偏多。",
-        "流動性足夠，進出場較不容易卡住。",
-        "近 10 日漲幅 5.0%，動能穩定且不過熱。",
-        "短期波動低於中期波動，結構較穩定。",
-        "RSI 64.3 位於健康強勢區。",
-        "MACD 在零軸上方，動能結構偏多。",
-        "成交量高於 20 日均量，突破可信度提升。",
-        "價格貼近 20 日線上方，適合順勢回測布局。",
-        "收盤價高於多條均線扣抵值，有利 5/10/20 日線延續上揚。",
-        "均線糾結後向上發散，屬等待表態後的偏多訊號。",
-        "台股 ADR/ETF 夜盤情緒偏多（2.65%），有利隔日風險承接。",
-        "費半強彈（3.37%），半導體族群有助攻。",
-        "美股記憶體族群強漲（6.10%），同族群隔日有利多延伸。",
-        "動能(126-21) 38.1%，位於可延續區間。"
-      ],
-      "risks": [
-        "5 日線仍低於 20 日線，這比較像短線反彈，不是完整多方排列。",
-        "價格意圖因子 -0.002 偏低，可能是盤整末端。",
-        "距離近 25 日壓力只剩 2.7%，追價風險報酬不佳。",
-        "同市場當日平均下跌 -0.94%，大盤環境逆風。",
-        "預估風險報酬比不足，需等更靠近支撐才有操作價值。"
-      ],
-      "plan": {
-        "horizon": "建議持有 5 個交易日，若提前達標或轉弱可提早調整。",
-        "entry": "分批區間 NT$ 177.11 - 190.26。優先等回測 5 日線/20 日線或支撐區不破；若走突破，盤中突破近壓 NT$ 193 後才觸發，且不要追超過突破價約 6%。本版回測以 5 個交易日節奏為主，不過早被 5 日線洗出。",
-        "takeProfit": "先看 NT$ 192.03；收盤淨報酬曾達 3% 後，若自高點回落 5 個百分點則提前停利，5 天內續強再看 NT$ 192.03。",
-        "stopLoss": "收盤跌破 NT$ 176.04 或走勢轉弱先退，若 2 天內都站不上 5 日線也要主動降部位。",
-        "exitWarning": "偏短打節奏：若在 5 天內沒有延續上攻，先減碼保留現金。 已有獲利時，以約 1% 報酬保護線作為最低停利參考。",
-        "positionSizing": "單筆風險建議控制在總資金 0.9%，以止損幅度 6.4% 推估，單檔資金上限約 14%。"
-      },
-      "backtest": []
-    },
-    {
-      "code": "6669",
-      "name": "緯穎",
-      "market": "上市",
-      "pe": null,
-      "tradeValue": 13654829125,
-      "score": 72,
-      "signal": "等待進場",
-      "latestDate": "2026-09-08",
-      "latestPrice": 2345,
-      "change5d": -10.32,
-      "change10d": 8.61,
-      "change20d": 17.95,
-      "change60d": 42.75,
-      "metrics": {
-        "ma5": 2497,
-        "ma10": 2445.2,
-        "ma20": 2282.76,
-        "ma60": 1923.81,
-        "rsi14": 59.6,
-        "macd": 148.15,
-        "volume20d": 4459749,
-        "std20": 0.0383,
-        "std60": 0.0436,
-        "avg20TradeValue": 10384899235,
-        "maxRange20": 11.22,
-        "rsv60": 0.771,
-        "intentFactor60": 0.2155,
-        "momentum126_21": 61.56,
-        "nearYearHigh": 0.897,
-        "drawdown20": -10.32,
-        "priceActionScore": 1,
-        "maDeduct": 2,
-        "volumeRatio": 1.01,
-        "support": 1962.92,
-        "resistance": 2875,
-        "rewardRisk": 1.7,
-        "resistanceRoomPct": 22.6,
-        "patternScore": 14,
-        "stopPct": 5,
-        "strictRisk": true
-      },
-      "patterns": {
-        "score": 14,
-        "bias": "偏多",
-        "bullish": [
-          "W 底（雙底）成形且突破頸線，屬偏多訊號。"
-        ],
-        "bearish": [],
-        "watch": []
-      },
-      "overnight": {
-        "bias": "tailwind",
-        "themes": [
-          "ai-hardware"
-        ],
-        "marketComposite": -0.37,
-        "techComposite": 1.72,
-        "taiwanComposite": 2.65,
-        "asiaComposite": 0.33,
-        "globalComposite": -0.09,
-        "groupImpacts": {
-          "aiHardware": 2.36
-        },
-        "soxChange": 3.37,
-        "dowChange": -0.51
-      },
-      "marketFlow": {
-        "themes": [
-          "ai-hardware"
-        ],
-        "marketMove": -0.94,
-        "themeMove": -1.96,
-        "isHeadwind": true
-      },
-      "sellWarning": {
-        "score": 22,
-        "level": "中",
-        "reasons": [
-          "長紅低點失守，代表原先買盤防線被破壞。",
-          "價格跌破 5 日線，短線轉弱。",
-          "20 日波動偏高，單日回撤風險提高。"
-        ],
-        "action": "控制風險：先減碼到半倉，若 2 天內無法站回 5 日線則續降部位。"
-      },
-      "reasons": [
-        "價格位於 20 日線上方，且 20 日線高於 60 日線，趨勢偏多。",
-        "流動性足夠，進出場較不容易卡住。",
-        "近 10 日漲幅 8.6%，動能穩定且不過熱。",
-        "60 日相對位置 0.77，接近強勢區但仍有空間。",
-        "短期波動低於中期波動，結構較穩定。",
-        "RSI 59.6 位於健康強勢區。",
-        "MACD 在零軸上方，動能結構偏多。",
-        "價格貼近 20 日線上方，適合順勢回測布局。",
-        "W 底（雙底）成形且突破頸線，屬偏多訊號。",
-        "收盤價高於多條均線扣抵值，有利 5/10/20 日線延續上揚。",
-        "20 日線附近守穩，中短期防守線明確。",
-        "台股 ADR/ETF 夜盤情緒偏多（2.65%），有利隔日風險承接。",
-        "美股 AI 硬體族群偏多（2.36%），族群情緒改善。",
-        "動能(126-21) 61.6%，位於可延續區間。",
-        "接近年高 89.7%，強勢結構完整。",
-        "預估風險報酬比約 1.7，符合先規劃停損再進場。"
-      ],
-      "risks": [
-        "價格跌破 5 日線，短線節奏可能轉弱。",
-        "跌破近期長紅低點，多方駐守區失守。",
-        "同市場當日平均下跌 -0.94%，大盤環境逆風。",
-        "同族群當日平均下跌 -1.96%，族群資金逆風。",
-        "近 20 日回檔 -10.3%，波動風險提高。",
-        "此股屬上櫃、低流動性或高波動條件，需套用更嚴格的進場門檻。"
-      ],
-      "plan": {
-        "horizon": "建議持有 5 個交易日，若提前達標或轉弱可提早調整。",
-        "entry": "分批區間 NT$ 2271.35 - 2373.14。優先等回測 5 日線/20 日線或支撐區不破；若走突破，盤中突破近壓 NT$ 2875 後才觸發，且不要追超過突破價約 6%。本版回測以 5 個交易日節奏為主，不過早被 5 日線洗出。",
-        "takeProfit": "先看 NT$ 2473.97；收盤淨報酬曾達 3% 後，若自高點回落 5 個百分點則提前停利，5 天內續強再看 NT$ 2544.32。",
-        "stopLoss": "收盤跌破 NT$ 2227.75 或走勢轉弱先退，若 2 天內都站不上 5 日線也要主動降部位。",
-        "exitWarning": "控制風險：先減碼到半倉，若 2 天內無法站回 5 日線則續降部位。 已有獲利時，以約 1% 報酬保護線作為最低停利參考。",
-        "positionSizing": "單筆風險建議控制在總資金 0.7%，以止損幅度 5% 推估，單檔資金上限約 14%。"
       },
       "backtest": []
     },
@@ -746,10 +395,10 @@
         "ma60": 170.35,
         "rsi14": 54.6,
         "macd": 4,
-        "volume20d": 52908612,
+        "volume20d": 53289842,
         "std20": 0.0237,
         "std60": 0.0327,
-        "avg20TradeValue": 9911066480,
+        "avg20TradeValue": 9982165837,
         "maxRange20": 6.96,
         "rsv60": 0.805,
         "intentFactor60": 0.1053,
@@ -758,7 +407,7 @@
         "drawdown20": -5.81,
         "priceActionScore": 6,
         "maDeduct": 2,
-        "volumeRatio": 2.18,
+        "volumeRatio": 2.31,
         "support": 172.5,
         "resistance": 206,
         "rewardRisk": 1.7,
@@ -775,15 +424,15 @@
         "watch": []
       },
       "overnight": {
-        "bias": "tailwind",
+        "bias": "neutral",
         "themes": [
           "ai-hardware"
         ],
         "marketComposite": -0.37,
         "techComposite": 1.72,
         "taiwanComposite": 2.65,
-        "asiaComposite": 0.33,
-        "globalComposite": -0.09,
+        "asiaComposite": -1.22,
+        "globalComposite": -0.71,
         "groupImpacts": {
           "aiHardware": 2.36
         },
@@ -795,7 +444,7 @@
           "ai-hardware"
         ],
         "marketMove": -0.94,
-        "themeMove": -1.96,
+        "themeMove": -2.17,
         "isHeadwind": true
       },
       "sellWarning": {
@@ -825,8 +474,9 @@
       ],
       "risks": [
         "價格跌破 5 日線，短線節奏可能轉弱。",
+        "日韓股市同步下跌（-1.22%），台股盤中承壓風險升高。",
         "同市場當日平均下跌 -0.94%，大盤環境逆風。",
-        "同族群當日平均下跌 -1.96%，族群資金逆風。"
+        "同族群當日平均下跌 -2.17%，族群資金逆風。"
       ],
       "plan": {
         "horizon": "建議持有 5 個交易日，若提前達標或轉弱可提早調整。",
@@ -847,37 +497,37 @@
       "score": 72,
       "signal": "等待進場",
       "latestDate": "2026-09-08",
-      "latestPrice": 5950,
-      "change5d": -0.75,
-      "change10d": 6.82,
-      "change20d": 20.08,
-      "change60d": 23.57,
+      "latestPrice": 5960,
+      "change5d": -0.58,
+      "change10d": 7,
+      "change20d": 20.28,
+      "change60d": 23.78,
       "metrics": {
-        "ma5": 5878,
-        "ma10": 5954.5,
-        "ma20": 5726.25,
-        "ma60": 4841.08,
-        "rsi14": 64.9,
-        "macd": 331.96,
-        "volume20d": 2143153,
+        "ma5": 5880,
+        "ma10": 5955.5,
+        "ma20": 5726.75,
+        "ma60": 4841.25,
+        "rsi14": 65.1,
+        "macd": 332.75,
+        "volume20d": 2147134,
         "std20": 0.0422,
         "std60": 0.0517,
-        "avg20TradeValue": 12229000016,
+        "avg20TradeValue": 12253490845,
         "maxRange20": 11.75,
-        "rsv60": 0.938,
-        "intentFactor60": 0.0968,
+        "rsv60": 0.942,
+        "intentFactor60": 0.0975,
         "momentum126_21": 68.09,
-        "nearYearHigh": 0.971,
-        "drawdown20": -2.86,
+        "nearYearHigh": 0.973,
+        "drawdown20": -2.69,
         "priceActionScore": 11,
         "maDeduct": 2,
-        "volumeRatio": 0.71,
+        "volumeRatio": 0.74,
         "support": 4615,
         "resistance": 6490,
-        "rewardRisk": 1.64,
-        "resistanceRoomPct": 9.08,
+        "rewardRisk": 1.56,
+        "resistanceRoomPct": 8.89,
         "patternScore": 10,
-        "stopPct": 5.2,
+        "stopPct": 5.4,
         "strictRisk": true
       },
       "patterns": {
@@ -892,15 +542,15 @@
         ]
       },
       "overnight": {
-        "bias": "tailwind",
+        "bias": "neutral",
         "themes": [
           "semiconductor"
         ],
         "marketComposite": -0.37,
         "techComposite": 1.72,
         "taiwanComposite": 2.65,
-        "asiaComposite": 0.33,
-        "globalComposite": -0.09,
+        "asiaComposite": -1.22,
+        "globalComposite": -0.71,
         "groupImpacts": {
           "semiconductor": 3.37
         },
@@ -912,14 +562,14 @@
           "semiconductor"
         ],
         "marketMove": -0.94,
-        "themeMove": 0.13,
+        "themeMove": -0.55,
         "isHeadwind": true
       },
       "sellWarning": {
         "score": 15,
         "level": "中",
         "reasons": [
-          "近 20 日漲幅 20.1% 偏熱，易震盪。",
+          "近 20 日漲幅 20.3% 偏熱，易震盪。",
           "反彈量比僅 0.7 倍，缺少放量確認。",
           "20 日波動偏高，單日回撤風險提高。"
         ],
@@ -931,7 +581,7 @@
         "流動性足夠，進出場較不容易卡住。",
         "60 日相對位置 0.94，接近強勢區但仍有空間。",
         "短期波動低於中期波動，結構較穩定。",
-        "RSI 64.9 位於健康強勢區。",
+        "RSI 65.1 位於健康強勢區。",
         "MACD 在零軸上方，動能結構偏多。",
         "價格貼近 20 日線上方，適合順勢回測布局。",
         "上升旗形整理後延續上攻，屬趨勢中繼。",
@@ -940,23 +590,24 @@
         "台股 ADR/ETF 夜盤情緒偏多（2.65%），有利隔日風險承接。",
         "費半強彈（3.37%），半導體族群有助攻。",
         "動能(126-21) 68.1%，位於可延續區間。",
-        "接近年高 97.1%，強勢結構完整。",
+        "接近年高 97.3%，強勢結構完整。",
         "預估風險報酬比約 1.6，符合先規劃停損再進場。"
       ],
       "risks": [
-        "量比 0.71 未放大，上漲缺少成交量確認。",
-        "近 20 日漲幅 20.1% 偏熱，短線震盪風險升高。",
+        "量比 0.74 未放大，上漲缺少成交量確認。",
+        "近 20 日漲幅 20.3% 偏熱，短線震盪風險升高。",
         "量比約 0.7 倍，量能不足時突破容易失真。",
+        "日韓股市同步下跌（-1.22%），台股盤中承壓風險升高。",
         "同市場當日平均下跌 -0.94%，大盤環境逆風。",
         "此股屬上櫃、低流動性或高波動條件，需套用更嚴格的進場門檻。"
       ],
       "plan": {
         "horizon": "建議持有 5 個交易日，若提前達標或轉弱可提早調整。",
-        "entry": "分批區間 NT$ 5697.62 - 6021.40。優先等回測 5 日線/20 日線或支撐區不破；若走突破，盤中突破近壓 NT$ 6490 後才觸發，且不要追超過突破價約 6%。本版回測以 5 個交易日節奏為主，不過早被 5 日線洗出。",
-        "takeProfit": "先看 NT$ 6290.61；收盤淨報酬曾達 3% 後，若自高點回落 5 個百分點則提前停利，5 天內續強再看 NT$ 6457.55。",
-        "stopLoss": "收盤跌破 NT$ 5640.36 或走勢轉弱先退，若 2 天內都站不上 5 日線也要主動降部位。",
+        "entry": "分批區間 NT$ 5698.12 - 6031.52。優先等回測 5 日線/20 日線或支撐區不破；若走突破，盤中突破近壓 NT$ 6490 後才觸發，且不要追超過突破價約 6%。本版回測以 5 個交易日節奏為主，不過早被 5 日線洗出。",
+        "takeProfit": "先看 NT$ 6311.07；收盤淨報酬曾達 3% 後，若自高點回落 5 個百分點則提前停利，5 天內續強再看 NT$ 6457.55。",
+        "stopLoss": "收盤跌破 NT$ 5640.85 或走勢轉弱先退，若 2 天內都站不上 5 日線也要主動降部位。",
         "exitWarning": "控制風險：先減碼到半倉，若 2 天內無法站回 5 日線則續降部位。 已有獲利時，以約 1% 報酬保護線作為最低停利參考。",
-        "positionSizing": "單筆風險建議控制在總資金 0.7%，以止損幅度 5.2% 推估，單檔資金上限約 13%。"
+        "positionSizing": "單筆風險建議控制在總資金 0.7%，以止損幅度 5.4% 推估，單檔資金上限約 13%。"
       },
       "backtest": []
     },
@@ -969,37 +620,37 @@
       "score": 72,
       "signal": "等待進場",
       "latestDate": "2026-09-08",
-      "latestPrice": 292.5,
-      "change5d": 5.03,
-      "change10d": 8.13,
-      "change20d": 13.81,
-      "change60d": 24.2,
+      "latestPrice": 294,
+      "change5d": 5.57,
+      "change10d": 8.69,
+      "change20d": 14.4,
+      "change60d": 24.84,
       "metrics": {
-        "ma5": 283.2,
-        "ma10": 281.7,
-        "ma20": 277.95,
-        "ma60": 260.97,
-        "rsi14": 53,
-        "macd": 10.22,
-        "volume20d": 5019101,
-        "std20": 0.0386,
-        "std60": 0.0483,
-        "avg20TradeValue": 1413723536,
+        "ma5": 283.5,
+        "ma10": 281.85,
+        "ma20": 278.02,
+        "ma60": 260.99,
+        "rsi14": 53.6,
+        "macd": 10.33,
+        "volume20d": 5038969,
+        "std20": 0.0384,
+        "std60": 0.0482,
+        "avg20TradeValue": 1420083129,
         "maxRange20": 10.61,
-        "rsv60": 0.832,
-        "intentFactor60": 0.1007,
+        "rsv60": 0.843,
+        "intentFactor60": 0.1035,
         "momentum126_21": 166.14,
-        "nearYearHigh": 0.929,
-        "drawdown20": -2.34,
+        "nearYearHigh": 0.933,
+        "drawdown20": -1.84,
         "priceActionScore": 7,
         "maDeduct": 3,
-        "volumeRatio": 1.38,
+        "volumeRatio": 1.45,
         "support": 247,
         "resistance": 309.5,
-        "rewardRisk": 0.83,
-        "resistanceRoomPct": 5.81,
+        "rewardRisk": 0.69,
+        "resistanceRoomPct": 5.27,
         "patternScore": 0,
-        "stopPct": 6.4,
+        "stopPct": 6.9,
         "strictRisk": true
       },
       "patterns": {
@@ -1010,15 +661,15 @@
         "watch": []
       },
       "overnight": {
-        "bias": "tailwind",
+        "bias": "neutral",
         "themes": [
           "semiconductor"
         ],
         "marketComposite": -0.37,
         "techComposite": 1.72,
         "taiwanComposite": 2.65,
-        "asiaComposite": 0.33,
-        "globalComposite": -0.09,
+        "asiaComposite": -1.22,
+        "globalComposite": -0.71,
         "groupImpacts": {
           "semiconductor": 3.37
         },
@@ -1030,7 +681,7 @@
           "semiconductor"
         ],
         "marketMove": -0.94,
-        "themeMove": 0.13,
+        "themeMove": -0.55,
         "isHeadwind": true
       },
       "sellWarning": {
@@ -1046,10 +697,10 @@
         "價格位於 20 日線上方，且 20 日線高於 60 日線，趨勢偏多。",
         "價格與 5 日線、20 日線維持多方排列，短中期動能一致。",
         "流動性足夠，進出場較不容易卡住。",
-        "近 10 日漲幅 8.1%，動能穩定且不過熱。",
-        "60 日相對位置 0.83，接近強勢區但仍有空間。",
+        "近 10 日漲幅 8.7%，動能穩定且不過熱。",
+        "60 日相對位置 0.84，接近強勢區但仍有空間。",
         "短期波動低於中期波動，結構較穩定。",
-        "RSI 53.0 位於健康強勢區。",
+        "RSI 53.6 位於健康強勢區。",
         "MACD 在零軸上方，動能結構偏多。",
         "成交量高於 20 日均量，突破可信度提升。",
         "價格貼近 20 日線上方，適合順勢回測布局。",
@@ -1057,10 +708,11 @@
         "均線糾結後向上發散，屬等待表態後的偏多訊號。",
         "台股 ADR/ETF 夜盤情緒偏多（2.65%），有利隔日風險承接。",
         "費半強彈（3.37%），半導體族群有助攻。",
-        "接近年高 92.9%，強勢結構完整。"
+        "接近年高 93.3%，強勢結構完整。"
       ],
       "risks": [
         "突破近 25 日壓力後收不住，留意假突破或上影線壓力。",
+        "日韓股市同步下跌（-1.22%），台股盤中承壓風險升高。",
         "同市場當日平均下跌 -0.94%，大盤環境逆風。",
         "動能(126-21) 166.1% 過熱，留意回檔。",
         "此股屬上櫃、低流動性或高波動條件，需套用更嚴格的進場門檻。",
@@ -1068,11 +720,369 @@
       ],
       "plan": {
         "horizon": "建議持有 5 個交易日，若提前達標或轉弱可提早調整。",
-        "entry": "分批區間 NT$ 276.56 - 296.01。優先等回測 5 日線/20 日線或支撐區不破；若走突破，盤中突破近壓 NT$ 309.5 後才觸發，且不要追超過突破價約 6%。本版回測以 5 個交易日節奏為主，不過早被 5 日線洗出。",
+        "entry": "分批區間 NT$ 276.63 - 297.53。優先等回測 5 日線/20 日線或支撐區不破；若走突破，盤中突破近壓 NT$ 309.5 後才觸發，且不要追超過突破價約 6%。本版回測以 5 個交易日節奏為主，不過早被 5 日線洗出。",
         "takeProfit": "先看 NT$ 307.95；收盤淨報酬曾達 3% 後，若自高點回落 5 個百分點則提前停利，5 天內續強再看 NT$ 307.95。",
-        "stopLoss": "收盤跌破 NT$ 273.78 或走勢轉弱先退，若 2 天內都站不上 5 日線也要主動降部位。",
+        "stopLoss": "收盤跌破 NT$ 273.85 或走勢轉弱先退，若 2 天內都站不上 5 日線也要主動降部位。",
         "exitWarning": "偏短打節奏：若在 5 天內沒有延續上攻，先減碼保留現金。 已有獲利時，以約 1% 報酬保護線作為最低停利參考。",
-        "positionSizing": "單筆風險建議控制在總資金 0.7%，以止損幅度 6.4% 推估，單檔資金上限約 11%。"
+        "positionSizing": "單筆風險建議控制在總資金 0.7%，以止損幅度 6.9% 推估，單檔資金上限約 10%。"
+      },
+      "backtest": []
+    },
+    {
+      "code": "1560",
+      "name": "中砂",
+      "market": "上市",
+      "pe": null,
+      "tradeValue": 1281318751,
+      "score": 72,
+      "signal": "等待進場",
+      "latestDate": "2026-09-08",
+      "latestPrice": 717,
+      "change5d": -3.63,
+      "change10d": 5.91,
+      "change20d": 4.37,
+      "change60d": 1.99,
+      "metrics": {
+        "ma5": 711.4,
+        "ma10": 705.1,
+        "ma20": 705.1,
+        "ma60": 698.65,
+        "rsi14": 52.1,
+        "macd": 7.19,
+        "volume20d": 1248406,
+        "std20": 0.0342,
+        "std60": 0.0398,
+        "avg20TradeValue": 890499224,
+        "maxRange20": 9.84,
+        "rsv60": 0.722,
+        "intentFactor60": 0.011,
+        "momentum126_21": 60.37,
+        "nearYearHigh": 0.932,
+        "drawdown20": -3.63,
+        "priceActionScore": 20,
+        "maDeduct": 2,
+        "volumeRatio": 0.53,
+        "support": 656,
+        "resistance": 749,
+        "rewardRisk": 0.79,
+        "resistanceRoomPct": 4.46,
+        "patternScore": 0,
+        "stopPct": 5,
+        "strictRisk": false
+      },
+      "patterns": {
+        "score": 0,
+        "bias": "中性",
+        "bullish": [],
+        "bearish": [],
+        "watch": []
+      },
+      "overnight": {
+        "bias": "neutral",
+        "themes": [
+          "semiconductor"
+        ],
+        "marketComposite": -0.37,
+        "techComposite": 1.72,
+        "taiwanComposite": 2.65,
+        "asiaComposite": -1.22,
+        "globalComposite": -0.71,
+        "groupImpacts": {
+          "semiconductor": 3.37
+        },
+        "soxChange": 3.37,
+        "dowChange": -0.51
+      },
+      "marketFlow": {
+        "themes": [
+          "semiconductor"
+        ],
+        "marketMove": -0.94,
+        "themeMove": -0.55,
+        "isHeadwind": true
+      },
+      "sellWarning": {
+        "score": 6,
+        "level": "無",
+        "reasons": [
+          "價格行為出現壓力或假突破風險。"
+        ],
+        "action": "暫無明確賣出警告，持續依停損與持有週期管理。"
+      },
+      "reasons": [
+        "價格位於 20 日線上方，且 20 日線高於 60 日線，趨勢偏多。",
+        "價格與 5 日線、20 日線維持多方排列，短中期動能一致。",
+        "流動性足夠，進出場較不容易卡住。",
+        "近 10 日漲幅 5.9%，動能穩定且不過熱。",
+        "60 日相對位置 0.72，接近強勢區但仍有空間。",
+        "短期波動低於中期波動，結構較穩定。",
+        "RSI 52.1 位於健康強勢區。",
+        "MACD 在零軸上方，動能結構偏多。",
+        "價格貼近 20 日線上方，適合順勢回測布局。",
+        "回測近期長紅低點附近仍守住，短線防守點明確。",
+        "收盤價高於多條均線扣抵值，有利 5/10/20 日線延續上揚。",
+        "均線糾結後向上發散，屬等待表態後的偏多訊號。",
+        "20 日線附近守穩，中短期防守線明確。",
+        "台股 ADR/ETF 夜盤情緒偏多（2.65%），有利隔日風險承接。",
+        "費半強彈（3.37%），半導體族群有助攻。",
+        "動能(126-21) 60.4%，位於可延續區間。",
+        "接近年高 93.2%，強勢結構完整。"
+      ],
+      "risks": [
+        "價格意圖因子 0.011 偏低，可能是盤整末端。",
+        "接近近期長黑高點後仍壓回，空方壓力尚未解除。",
+        "日韓股市同步下跌（-1.22%），台股盤中承壓風險升高。",
+        "同市場當日平均下跌 -0.94%，大盤環境逆風。",
+        "預估風險報酬比不足，需等更靠近支撐才有操作價值。"
+      ],
+      "plan": {
+        "horizon": "建議持有 5 個交易日，若提前達標或轉弱可提早調整。",
+        "entry": "分批區間 NT$ 701.57 - 725.60。優先等回測 5 日線/20 日線或支撐區不破；若走突破，盤中突破近壓 NT$ 749 後才觸發，且不要追超過突破價約 6%。本版回測以 5 個交易日節奏為主，不過早被 5 日線洗出。",
+        "takeProfit": "先看 NT$ 745.25；收盤淨報酬曾達 3% 後，若自高點回落 5 個百分點則提前停利，5 天內續強再看 NT$ 745.25。",
+        "stopLoss": "收盤跌破 NT$ 681.15 或走勢轉弱先退，若 2 天內都站不上 5 日線也要主動降部位。",
+        "exitWarning": "偏短打節奏：若在 5 天內沒有延續上攻，先減碼保留現金。 已有獲利時，以約 1% 報酬保護線作為最低停利參考。",
+        "positionSizing": "單筆風險建議控制在總資金 0.9%，以止損幅度 5% 推估，單檔資金上限約 18%。"
+      },
+      "backtest": []
+    },
+    {
+      "code": "4938",
+      "name": "和碩",
+      "market": "上市",
+      "pe": null,
+      "tradeValue": 1181675247,
+      "score": 72,
+      "signal": "等待進場",
+      "latestDate": "2026-09-08",
+      "latestPrice": 91.7,
+      "change5d": 0.77,
+      "change10d": 3.27,
+      "change20d": 3.03,
+      "change60d": 9.82,
+      "metrics": {
+        "ma5": 92.56,
+        "ma10": 91.21,
+        "ma20": 91.01,
+        "ma60": 86.42,
+        "rsi14": 56.6,
+        "macd": 1.39,
+        "volume20d": 13927952,
+        "std20": 0.0224,
+        "std60": 0.0224,
+        "avg20TradeValue": 1284685180,
+        "maxRange20": 7.49,
+        "rsv60": 0.76,
+        "intentFactor60": 0.0941,
+        "momentum126_21": 27.67,
+        "nearYearHigh": 0.931,
+        "drawdown20": -3.88,
+        "priceActionScore": 17,
+        "maDeduct": 3,
+        "volumeRatio": 0.84,
+        "support": 84.7,
+        "resistance": 100.5,
+        "rewardRisk": 1.7,
+        "resistanceRoomPct": 9.6,
+        "patternScore": 0,
+        "stopPct": 5,
+        "strictRisk": false
+      },
+      "patterns": {
+        "score": 0,
+        "bias": "中性",
+        "bullish": [],
+        "bearish": [],
+        "watch": []
+      },
+      "overnight": {
+        "bias": "neutral",
+        "themes": [
+          "ai-hardware"
+        ],
+        "marketComposite": -0.37,
+        "techComposite": 1.72,
+        "taiwanComposite": 2.65,
+        "asiaComposite": -1.22,
+        "globalComposite": -0.71,
+        "groupImpacts": {
+          "aiHardware": 2.36
+        },
+        "soxChange": 3.37,
+        "dowChange": -0.51
+      },
+      "marketFlow": {
+        "themes": [
+          "ai-hardware"
+        ],
+        "marketMove": -0.94,
+        "themeMove": -2.17,
+        "isHeadwind": true
+      },
+      "sellWarning": {
+        "score": 7,
+        "level": "低",
+        "reasons": [
+          "價格跌破 5 日線，短線轉弱。"
+        ],
+        "action": "提高警戒：保留核心部位，5-10 天內若量價轉弱就先出一半。"
+      },
+      "reasons": [
+        "價格位於 20 日線上方，且 20 日線高於 60 日線，趨勢偏多。",
+        "流動性足夠，進出場較不容易卡住。",
+        "近 10 日漲幅 3.3%，動能穩定且不過熱。",
+        "60 日相對位置 0.76，接近強勢區但仍有空間。",
+        "RSI 56.6 位於健康強勢區。",
+        "MACD 在零軸上方，動能結構偏多。",
+        "價格貼近 20 日線上方，適合順勢回測布局。",
+        "回測近期長紅低點附近仍守住，短線防守點明確。",
+        "收盤價高於多條均線扣抵值，有利 5/10/20 日線延續上揚。",
+        "20 日線附近守穩，中短期防守線明確。",
+        "台股 ADR/ETF 夜盤情緒偏多（2.65%），有利隔日風險承接。",
+        "美股 AI 硬體族群偏多（2.36%），族群情緒改善。",
+        "動能(126-21) 27.7%，位於可延續區間。",
+        "接近年高 93.1%，強勢結構完整。",
+        "預估風險報酬比約 1.7，符合先規劃停損再進場。"
+      ],
+      "risks": [
+        "價格跌破 5 日線，短線節奏可能轉弱。",
+        "均線仍糾結，尚未明確表態前不宜重倉。",
+        "日韓股市同步下跌（-1.22%），台股盤中承壓風險升高。",
+        "同市場當日平均下跌 -0.94%，大盤環境逆風。",
+        "同族群當日平均下跌 -2.17%，族群資金逆風。"
+      ],
+      "plan": {
+        "horizon": "建議持有 5 個交易日，若提前達標或轉弱可提早調整。",
+        "entry": "分批區間 NT$ 90.55 - 92.80。優先等回測 5 日線/20 日線或支撐區不破；若走突破，盤中突破近壓 NT$ 100.5 後才觸發，且不要追超過突破價約 6%。本版回測以 5 個交易日節奏為主，不過早被 5 日線洗出。",
+        "takeProfit": "先看 NT$ 96.74；收盤淨報酬曾達 3% 後，若自高點回落 5 個百分點則提前停利，5 天內續強再看 NT$ 99.49。",
+        "stopLoss": "收盤跌破 NT$ 87.11 或走勢轉弱先退，若 2 天內都站不上 5 日線也要主動降部位。",
+        "exitWarning": "偏短打節奏：若在 5 天內沒有延續上攻，先減碼保留現金。 已有獲利時，以約 1% 報酬保護線作為最低停利參考。",
+        "positionSizing": "單筆風險建議控制在總資金 1.2%，以止損幅度 5% 推估，單檔資金上限約 24%。"
+      },
+      "backtest": [
+        {
+          "date": "2026-08-13",
+          "signalScore": 100,
+          "entryPrice": 94.8,
+          "return3d": -4.01,
+          "return10d": -5.7,
+          "maxGain10d": 0,
+          "maxDrawdown10d": -6.54
+        }
+      ]
+    },
+    {
+      "code": "4967",
+      "name": "十銓",
+      "market": "上市",
+      "pe": null,
+      "tradeValue": 952077920,
+      "score": 72,
+      "signal": "等待進場",
+      "latestDate": "2026-09-08",
+      "latestPrice": 280.5,
+      "change5d": 1.63,
+      "change10d": 2.94,
+      "change20d": 2.19,
+      "change60d": 1.26,
+      "metrics": {
+        "ma5": 276.9,
+        "ma10": 275.8,
+        "ma20": 273.05,
+        "ma60": 255.65,
+        "rsi14": 72,
+        "macd": 6.27,
+        "volume20d": 4718941,
+        "std20": 0.0209,
+        "std60": 0.0311,
+        "avg20TradeValue": 1291891800,
+        "maxRange20": 5.95,
+        "rsv60": 0.947,
+        "intentFactor60": 0.0092,
+        "momentum126_21": 12.42,
+        "nearYearHigh": 0.921,
+        "drawdown20": 0,
+        "priceActionScore": 14,
+        "maDeduct": 3,
+        "volumeRatio": 1.51,
+        "support": 248,
+        "resistance": 291.5,
+        "rewardRisk": 0.68,
+        "resistanceRoomPct": 3.92,
+        "patternScore": 12,
+        "stopPct": 5,
+        "strictRisk": false
+      },
+      "patterns": {
+        "score": 12,
+        "bias": "偏多",
+        "bullish": [
+          "上升三角形收斂，接近壓力位，留意放量突破。"
+        ],
+        "bearish": [],
+        "watch": []
+      },
+      "overnight": {
+        "bias": "neutral",
+        "themes": [
+          "memory"
+        ],
+        "marketComposite": -0.37,
+        "techComposite": 1.72,
+        "taiwanComposite": 2.65,
+        "asiaComposite": -1.22,
+        "globalComposite": -0.71,
+        "groupImpacts": {
+          "memory": 6.1
+        },
+        "soxChange": 3.37,
+        "dowChange": -0.51
+      },
+      "marketFlow": {
+        "themes": [
+          "memory"
+        ],
+        "marketMove": -0.94,
+        "themeMove": -0.78,
+        "isHeadwind": true
+      },
+      "sellWarning": {
+        "score": 0,
+        "level": "無",
+        "reasons": [],
+        "action": "暫無明確賣出警告，持續依停損與持有週期管理。"
+      },
+      "reasons": [
+        "價格位於 20 日線上方，且 20 日線高於 60 日線，趨勢偏多。",
+        "價格與 5 日線、20 日線維持多方排列，短中期動能一致。",
+        "流動性足夠，進出場較不容易卡住。",
+        "近 10 日漲幅 2.9%，動能穩定且不過熱。",
+        "60 日相對位置 0.95，接近強勢區但仍有空間。",
+        "短期波動低於中期波動，結構較穩定。",
+        "MACD 在零軸上方，動能結構偏多。",
+        "成交量高於 20 日均量，突破可信度提升。",
+        "價格貼近 20 日線上方，適合順勢回測布局。",
+        "上升三角形收斂，接近壓力位，留意放量突破。",
+        "收盤價高於多條均線扣抵值，有利 5/10/20 日線延續上揚。",
+        "均線糾結後向上發散，屬等待表態後的偏多訊號。",
+        "台股 ADR/ETF 夜盤情緒偏多（2.65%），有利隔日風險承接。",
+        "美股記憶體族群強漲（6.10%），同族群隔日有利多延伸。",
+        "接近年高 92.1%，強勢結構完整。"
+      ],
+      "risks": [
+        "價格意圖因子 0.009 偏低，可能是盤整末端。",
+        "距離近 25 日壓力只剩 3.9%，追價風險報酬不佳。",
+        "日韓股市同步下跌（-1.22%），台股盤中承壓風險升高。",
+        "同市場當日平均下跌 -0.94%，大盤環境逆風。",
+        "同族群當日平均下跌 -0.78%，族群資金逆風。",
+        "預估風險報酬比不足，需等更靠近支撐才有操作價值。"
+      ],
+      "plan": {
+        "horizon": "建議持有 5 個交易日，若提前達標或轉弱可提早調整。",
+        "entry": "分批區間 NT$ 271.68 - 283.87。優先等回測 5 日線/20 日線或支撐區不破；若走突破，盤中突破近壓 NT$ 291.5 後才觸發，且不要追超過突破價約 6%。本版回測以 5 個交易日節奏為主，不過早被 5 日線洗出。",
+        "takeProfit": "先看 NT$ 290.04；收盤淨報酬曾達 3% 後，若自高點回落 5 個百分點則提前停利，5 天內續強再看 NT$ 290.04。",
+        "stopLoss": "收盤跌破 NT$ 266.47 或走勢轉弱先退，若 2 天內都站不上 5 日線也要主動降部位。",
+        "exitWarning": "偏短打節奏：若在 5 天內沒有延續上攻，先減碼保留現金。 已有獲利時，以約 1% 報酬保護線作為最低停利參考。",
+        "positionSizing": "單筆風險建議控制在總資金 1.2%，以止損幅度 5% 推估，單檔資金上限約 24%。"
       },
       "backtest": []
     }

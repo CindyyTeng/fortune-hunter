@@ -1,240 +1,11 @@
 {
-  "asOf": "2026-09-17T05:59:02.471Z",
-  "generatedAtTaipei": "2026年9月17日 下午1:59:02",
+  "asOf": "2026-09-17T09:46:49.435Z",
+  "generatedAtTaipei": "2026年9月17日 下午5:46:49",
   "source": "TWSE OpenAPI、TPEX API、Yahoo Finance chart API（夜盤風險因子）",
   "universeSize": 1075,
   "scanned": 120,
   "scanStrategy": "上市成交值前 120 檔 + 上櫃成交值前 0 檔，套用趨勢/型態/價格行為/隔夜風險後取前 7 檔。",
-  "overnightContext": {
-    "asOf": "2026-09-17T05:59:01.162Z",
-    "bias": "neutral",
-    "marketComposite": -0.45,
-    "techComposite": 0.34,
-    "taiwanComposite": 1.61,
-    "asiaComposite": 0.17,
-    "globalComposite": -0.2,
-    "groups": {
-      "taiwanSentiment": {
-        "symbols": [
-          "EWT",
-          "TSM",
-          "UMC"
-        ],
-        "quotes": [
-          {
-            "symbol": "EWT",
-            "date": "2026-09-16",
-            "close": 108.4,
-            "change": 1.62
-          },
-          {
-            "symbol": "TSM",
-            "date": "2026-09-16",
-            "close": 417.72,
-            "change": 0.96
-          },
-          {
-            "symbol": "UMC",
-            "date": "2026-09-16",
-            "close": 22.53,
-            "change": 4.26
-          }
-        ],
-        "change": 2.28
-      },
-      "memory": {
-        "symbols": [
-          "MU",
-          "WDC",
-          "STX"
-        ],
-        "quotes": [
-          {
-            "symbol": "MU",
-            "date": "2026-09-16",
-            "close": 926.55,
-            "change": -0.11
-          },
-          {
-            "symbol": "WDC",
-            "date": "2026-09-16",
-            "close": 416.97,
-            "change": 1.22
-          },
-          {
-            "symbol": "STX",
-            "date": "2026-09-16",
-            "close": 783.18,
-            "change": 1.47
-          }
-        ],
-        "change": 0.86
-      },
-      "passiveComponents": {
-        "symbols": [
-          "VSH",
-          "APH",
-          "TEL",
-          "GLW"
-        ],
-        "quotes": [
-          {
-            "symbol": "VSH",
-            "date": "2026-09-16",
-            "close": 31.32,
-            "change": -0.35
-          },
-          {
-            "symbol": "APH",
-            "date": "2026-09-16",
-            "close": 77.26,
-            "change": -0.5
-          },
-          {
-            "symbol": "TEL",
-            "date": "2026-09-16",
-            "close": 202.2,
-            "change": 0.39
-          },
-          {
-            "symbol": "GLW",
-            "date": "2026-09-16",
-            "close": 144.16,
-            "change": 0.41
-          }
-        ],
-        "change": -0.01
-      },
-      "aiHardware": {
-        "symbols": [
-          "NVDA",
-          "AMD",
-          "AVGO",
-          "SMCI",
-          "DELL"
-        ],
-        "quotes": [
-          {
-            "symbol": "NVDA",
-            "date": "2026-09-16",
-            "close": 213.9,
-            "change": 0.82
-          },
-          {
-            "symbol": "AMD",
-            "date": "2026-09-16",
-            "close": 512.5,
-            "change": 1.65
-          },
-          {
-            "symbol": "AVGO",
-            "date": "2026-09-16",
-            "close": 339.51,
-            "change": 0.07
-          },
-          {
-            "symbol": "SMCI",
-            "date": "2026-09-16",
-            "close": 36.85,
-            "change": 3.4
-          },
-          {
-            "symbol": "DELL",
-            "date": "2026-09-16",
-            "close": 563.29,
-            "change": 3.64
-          }
-        ],
-        "change": 1.92
-      },
-      "powerEquipment": {
-        "symbols": [
-          "ETN",
-          "PWR",
-          "GEV",
-          "VRT",
-          "HUBB"
-        ],
-        "quotes": [
-          {
-            "symbol": "ETN",
-            "date": "2026-09-16",
-            "close": 397.8,
-            "change": 1.38
-          },
-          {
-            "symbol": "PWR",
-            "date": "2026-09-16",
-            "close": 619.28,
-            "change": 0.97
-          },
-          {
-            "symbol": "GEV",
-            "date": "2026-09-16",
-            "close": 925.09,
-            "change": 4.79
-          },
-          {
-            "symbol": "VRT",
-            "date": "2026-09-16",
-            "close": 239.41,
-            "change": 2.05
-          },
-          {
-            "symbol": "HUBB",
-            "date": "2026-09-16",
-            "close": 439.07,
-            "change": 0.12
-          }
-        ],
-        "change": 1.86
-      }
-    },
-    "indices": {
-      "sp500": {
-        "symbol": "^GSPC",
-        "date": "2026-09-16",
-        "close": 7551.81,
-        "change": -0.45
-      },
-      "nasdaq": {
-        "symbol": "^IXIC",
-        "date": "2026-09-16",
-        "close": 25978.43,
-        "change": -0.01
-      },
-      "dow": {
-        "symbol": "^DJI",
-        "date": "2026-09-16",
-        "close": 51461.9,
-        "change": -1.21
-      },
-      "sox": {
-        "symbol": "^SOX",
-        "date": "2026-09-16",
-        "close": 11246.11,
-        "change": 0.63
-      },
-      "nikkei": {
-        "symbol": "^N225",
-        "date": "2026-09-17",
-        "close": 63928.97,
-        "change": 0.01
-      },
-      "kospi": {
-        "symbol": "^KS11",
-        "date": "2026-09-17",
-        "close": 6722.94,
-        "change": 0.07
-      },
-      "kosdaq": {
-        "symbol": "^KQ11",
-        "date": "2026-09-17",
-        "close": 821.82,
-        "change": 0.72
-      }
-    }
-  },
+  "overnightContext": null,
   "marketContext": {
     "markets": {
       "上市": 0.78
@@ -310,16 +81,13 @@
         "themes": [
           "semiconductor"
         ],
-        "marketComposite": -0.45,
-        "techComposite": 0.34,
-        "taiwanComposite": 1.61,
-        "asiaComposite": 0.17,
-        "globalComposite": -0.2,
-        "groupImpacts": {
-          "semiconductor": 0.63
-        },
-        "soxChange": 0.63,
-        "dowChange": -1.21
+        "marketComposite": null,
+        "techComposite": null,
+        "taiwanComposite": null,
+        "asiaComposite": null,
+        "globalComposite": null,
+        "soxChange": null,
+        "dowChange": null
       },
       "marketFlow": {
         "themes": [
@@ -349,7 +117,6 @@
         "收盤價高於多條均線扣抵值，有利 5/10/20 日線延續上揚。",
         "均線糾結後向上發散，屬等待表態後的偏多訊號。",
         "20 日線附近守穩，中短期防守線明確。",
-        "台股 ADR/ETF 夜盤情緒偏多（1.61%），有利隔日風險承接。",
         "同市場當日平均上漲 0.78%，大盤環境順風。",
         "同族群當日平均上漲 1.67%，族群資金順風。",
         "動能(126-21) 29.5%，位於可延續區間。",
@@ -428,14 +195,13 @@
         "themes": [
           "broad-market"
         ],
-        "marketComposite": -0.45,
-        "techComposite": 0.34,
-        "taiwanComposite": 1.61,
-        "asiaComposite": 0.17,
-        "globalComposite": -0.2,
-        "groupImpacts": {},
-        "soxChange": 0.63,
-        "dowChange": -1.21
+        "marketComposite": null,
+        "techComposite": null,
+        "taiwanComposite": null,
+        "asiaComposite": null,
+        "globalComposite": null,
+        "soxChange": null,
+        "dowChange": null
       },
       "marketFlow": {
         "themes": [
@@ -467,7 +233,6 @@
         "收盤價高於多條均線扣抵值，有利 5/10/20 日線延續上揚。",
         "20 日線附近守穩，中短期防守線明確。",
         "上漲段推進明確且拉回幅度不深，趨勢角度仍偏健康。",
-        "台股 ADR/ETF 夜盤情緒偏多（1.61%），有利隔日風險承接。",
         "同市場當日平均上漲 0.78%，大盤環境順風。",
         "同族群當日平均上漲 0.74%，族群資金順風。",
         "接近年高 96.7%，強勢結構完整。"
@@ -542,14 +307,13 @@
         "themes": [
           "broad-market"
         ],
-        "marketComposite": -0.45,
-        "techComposite": 0.34,
-        "taiwanComposite": 1.61,
-        "asiaComposite": 0.17,
-        "globalComposite": -0.2,
-        "groupImpacts": {},
-        "soxChange": 0.63,
-        "dowChange": -1.21
+        "marketComposite": null,
+        "techComposite": null,
+        "taiwanComposite": null,
+        "asiaComposite": null,
+        "globalComposite": null,
+        "soxChange": null,
+        "dowChange": null
       },
       "marketFlow": {
         "themes": [
@@ -575,7 +339,6 @@
         "成交量高於 20 日均量，突破可信度提升。",
         "回測近期長紅低點附近仍守住，短線防守點明確。",
         "收盤價高於多條均線扣抵值，有利 5/10/20 日線延續上揚。",
-        "台股 ADR/ETF 夜盤情緒偏多（1.61%），有利隔日風險承接。",
         "同市場當日平均上漲 0.78%，大盤環境順風。",
         "同族群當日平均上漲 0.74%，族群資金順風。",
         "動能(126-21) 74.3%，位於可延續區間。",
@@ -649,14 +412,13 @@
         "themes": [
           "broad-market"
         ],
-        "marketComposite": -0.45,
-        "techComposite": 0.34,
-        "taiwanComposite": 1.61,
-        "asiaComposite": 0.17,
-        "globalComposite": -0.2,
-        "groupImpacts": {},
-        "soxChange": 0.63,
-        "dowChange": -1.21
+        "marketComposite": null,
+        "techComposite": null,
+        "taiwanComposite": null,
+        "asiaComposite": null,
+        "globalComposite": null,
+        "soxChange": null,
+        "dowChange": null
       },
       "marketFlow": {
         "themes": [
@@ -688,7 +450,6 @@
         "收盤價高於多條均線扣抵值，有利 5/10/20 日線延續上揚。",
         "均線糾結後向上發散，屬等待表態後的偏多訊號。",
         "20 日線附近守穩，中短期防守線明確。",
-        "台股 ADR/ETF 夜盤情緒偏多（1.61%），有利隔日風險承接。",
         "同市場當日平均上漲 0.78%，大盤環境順風。",
         "同族群當日平均上漲 0.74%，族群資金順風。",
         "預估風險報酬比約 1.7，符合先規劃停損再進場。"
@@ -762,20 +523,17 @@
         ]
       },
       "overnight": {
-        "bias": "tailwind",
+        "bias": "neutral",
         "themes": [
           "ai-hardware"
         ],
-        "marketComposite": -0.45,
-        "techComposite": 0.34,
-        "taiwanComposite": 1.61,
-        "asiaComposite": 0.17,
-        "globalComposite": -0.2,
-        "groupImpacts": {
-          "aiHardware": 1.92
-        },
-        "soxChange": 0.63,
-        "dowChange": -1.21
+        "marketComposite": null,
+        "techComposite": null,
+        "taiwanComposite": null,
+        "asiaComposite": null,
+        "globalComposite": null,
+        "soxChange": null,
+        "dowChange": null
       },
       "marketFlow": {
         "themes": [
@@ -806,8 +564,6 @@
         "收盤價高於多條均線扣抵值，有利 5/10/20 日線延續上揚。",
         "拉回上揚 5 日線有撐，符合順勢拉回觀察。",
         "20 日線附近守穩，中短期防守線明確。",
-        "台股 ADR/ETF 夜盤情緒偏多（1.61%），有利隔日風險承接。",
-        "美股 AI 硬體族群偏多（1.92%），族群情緒改善。",
         "同市場當日平均上漲 0.78%，大盤環境順風。",
         "動能(126-21) 38.9%，位於可延續區間。",
         "接近年高 94.2%，強勢結構完整。",
@@ -887,14 +643,13 @@
         "themes": [
           "finance"
         ],
-        "marketComposite": -0.45,
-        "techComposite": 0.34,
-        "taiwanComposite": 1.61,
-        "asiaComposite": 0.17,
-        "globalComposite": -0.2,
-        "groupImpacts": {},
-        "soxChange": 0.63,
-        "dowChange": -1.21
+        "marketComposite": null,
+        "techComposite": null,
+        "taiwanComposite": null,
+        "asiaComposite": null,
+        "globalComposite": null,
+        "soxChange": null,
+        "dowChange": null
       },
       "marketFlow": {
         "themes": [
@@ -926,7 +681,6 @@
         "收盤價高於多條均線扣抵值，有利 5/10/20 日線延續上揚。",
         "拉回上揚 5 日線有撐，符合順勢拉回觀察。",
         "上漲段推進明確且拉回幅度不深，趨勢角度仍偏健康。",
-        "台股 ADR/ETF 夜盤情緒偏多（1.61%），有利隔日風險承接。",
         "同市場當日平均上漲 0.78%，大盤環境順風。",
         "動能(126-21) 24.8%，位於可延續區間。",
         "預估風險報酬比約 1.7，符合先規劃停損再進場。"
@@ -1005,14 +759,13 @@
         "themes": [
           "finance"
         ],
-        "marketComposite": -0.45,
-        "techComposite": 0.34,
-        "taiwanComposite": 1.61,
-        "asiaComposite": 0.17,
-        "globalComposite": -0.2,
-        "groupImpacts": {},
-        "soxChange": 0.63,
-        "dowChange": -1.21
+        "marketComposite": null,
+        "techComposite": null,
+        "taiwanComposite": null,
+        "asiaComposite": null,
+        "globalComposite": null,
+        "soxChange": null,
+        "dowChange": null
       },
       "marketFlow": {
         "themes": [
@@ -1041,7 +794,6 @@
         "收盤價高於多條均線扣抵值，有利 5/10/20 日線延續上揚。",
         "20 日線附近守穩，中短期防守線明確。",
         "上漲段推進明確且拉回幅度不深，趨勢角度仍偏健康。",
-        "台股 ADR/ETF 夜盤情緒偏多（1.61%），有利隔日風險承接。",
         "同市場當日平均上漲 0.78%，大盤環境順風。",
         "動能(126-21) 27.3%，位於可延續區間。",
         "接近年高 97.0%，強勢結構完整。"
@@ -1081,6 +833,7 @@
     }
   ],
   "warnings": [
-    "TPEx 上櫃資料讀取失敗：terminated"
+    "TPEx 上櫃資料讀取失敗：terminated",
+    "Overnight context fetch failed: 429 Too Many Requests"
   ]
 }

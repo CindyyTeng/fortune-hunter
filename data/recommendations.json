@@ -1,17 +1,17 @@
 {
-  "asOf": "2026-09-25T06:02:20.462Z",
-  "generatedAtTaipei": "2026年9月25日 下午2:02:20",
+  "asOf": "2026-09-25T09:57:14.404Z",
+  "generatedAtTaipei": "2026年9月25日 下午5:57:14",
   "source": "TWSE OpenAPI、TPEX API、Yahoo Finance chart API（夜盤風險因子）",
   "universeSize": 1949,
   "scanned": 240,
   "scanStrategy": "上市成交值前 120 檔 + 上櫃成交值前 120 檔，套用趨勢/型態/價格行為/隔夜風險後取前 7 檔。",
   "overnightContext": {
-    "asOf": "2026-09-25T06:02:16.735Z",
+    "asOf": "2026-09-25T09:57:11.204Z",
     "bias": "risk-on",
     "marketComposite": -0.07,
     "techComposite": -0.18,
     "taiwanComposite": -0.24,
-    "asiaComposite": 1.16,
+    "asiaComposite": 1.15,
     "globalComposite": 0.42,
     "groups": {
       "taiwanSentiment": {
@@ -182,12 +182,12 @@
           },
           {
             "symbol": "HUBB",
-            "date": "2026-09-23",
-            "close": 463.7,
-            "change": 1.06
+            "date": "2026-09-24",
+            "close": 465.88,
+            "change": 0.47
           }
         ],
-        "change": 0.33
+        "change": 0.21
       }
     },
     "indices": {
@@ -218,8 +218,8 @@
       "nikkei": {
         "symbol": "^N225",
         "date": "2026-09-25",
-        "close": 66384.35,
-        "change": 1.33
+        "close": 66364.2,
+        "change": 1.3
       },
       "kospi": {
         "symbol": "^KS11",
@@ -255,118 +255,6 @@
     "tpex": 870
   },
   "recommendations": [
-    {
-      "code": "6196",
-      "name": "帆宣",
-      "market": "上市",
-      "pe": null,
-      "tradeValue": 845269623,
-      "score": 100,
-      "signal": "買入候選",
-      "latestDate": "2026-09-24",
-      "latestPrice": 565,
-      "change5d": 9.5,
-      "change10d": 5.61,
-      "change20d": 13.57,
-      "change60d": -3.91,
-      "metrics": {
-        "ma5": 544.8,
-        "ma10": 531,
-        "ma20": 519.42,
-        "ma60": 517.86,
-        "rsi14": 66.7,
-        "macd": 11.28,
-        "volume20d": 1497720,
-        "std20": 0.0266,
-        "std60": 0.0323,
-        "avg20TradeValue": 781212610,
-        "maxRange20": 5.39,
-        "rsv60": 0.838,
-        "intentFactor60": -0.027,
-        "momentum126_21": 71.23,
-        "nearYearHigh": 0.958,
-        "drawdown20": 0,
-        "priceActionScore": 18,
-        "maDeduct": 3,
-        "volumeRatio": 0.95,
-        "support": 476.5,
-        "resistance": 558,
-        "rewardRisk": 1.7,
-        "resistanceRoomPct": -1.24,
-        "patternScore": 0,
-        "stopPct": 9.4,
-        "strictRisk": false
-      },
-      "patterns": {
-        "score": 0,
-        "bias": "等待",
-        "bullish": [],
-        "bearish": [],
-        "watch": [
-          "擴散三角波動放大，先等止穩或明確突破。"
-        ]
-      },
-      "overnight": {
-        "bias": "neutral",
-        "themes": [
-          "semiconductor"
-        ],
-        "marketComposite": -0.07,
-        "techComposite": -0.18,
-        "taiwanComposite": -0.24,
-        "asiaComposite": 1.16,
-        "globalComposite": 0.42,
-        "groupImpacts": {
-          "semiconductor": -0.33
-        },
-        "soxChange": -0.33,
-        "dowChange": -0.31
-      },
-      "marketFlow": {
-        "themes": [
-          "semiconductor"
-        ],
-        "marketMove": 0.2,
-        "themeMove": 0.92,
-        "isHeadwind": false
-      },
-      "sellWarning": {
-        "score": 0,
-        "level": "無",
-        "reasons": [],
-        "action": "暫無明確賣出警告，持續依停損與持有週期管理。"
-      },
-      "reasons": [
-        "價格位於 20 日線上方，且 20 日線高於 60 日線，趨勢偏多。",
-        "價格與 5 日線、20 日線維持多方排列，短中期動能一致。",
-        "流動性足夠，進出場較不容易卡住。",
-        "近 10 日漲幅 5.6%，動能穩定且不過熱。",
-        "60 日相對位置 0.84，接近強勢區但仍有空間。",
-        "短期波動低於中期波動，結構較穩定。",
-        "RSI 66.7 位於健康強勢區。",
-        "MACD 在零軸上方，動能結構偏多。",
-        "收盤價高於多條均線扣抵值，有利 5/10/20 日線延續上揚。",
-        "拉回上揚 5 日線有撐，符合順勢拉回觀察。",
-        "上漲段推進明確且拉回幅度不深，趨勢角度仍偏健康。",
-        "日韓股市偏多（1.16%），有利亞洲資金情緒。",
-        "同族群當日平均上漲 0.92%，族群資金順風。",
-        "動能(126-21) 71.2%，位於可延續區間。",
-        "接近年高 95.8%，強勢結構完整。",
-        "預估風險報酬比約 1.7，符合先規劃停損再進場。"
-      ],
-      "risks": [
-        "價格意圖因子 -0.027 偏低，可能是盤整末端。"
-      ],
-      "plan": {
-        "horizon": "建議持有 5 個交易日，若提前達標或轉弱可提早調整。",
-        "entry": "買入候選仍需同市場、同族群、全球、亞洲與隔日開盤五項至少兩項確認，環境全面逆風時維持現金。分批區間 NT$ 516.83 - 571.78。優先等回測 5 日線/20 日線或支撐區不破；若走突破，盤中突破近壓 NT$ 558 後才觸發，且不要追超過突破價約 6%。本版回測以 5 個交易日節奏為主，不過早被 5 日線洗出。",
-        "takeProfit": "先看 NT$ 623.70；收盤淨報酬曾達 3% 後，若自高點回落 5 個百分點則提前停利，5 天內續強再看 NT$ 655.72。",
-        "stopLoss": "收盤跌破 NT$ 511.63 或走勢轉弱先退，若 2 天內都站不上 5 日線也要主動降部位。",
-        "exitWarning": "偏短打節奏：若在 5 天內沒有延續上攻，先減碼保留現金。 已有獲利時，以約 1% 報酬保護線作為最低停利參考。",
-        "positionSizing": "單筆風險建議控制在總資金 0.9%，以止損幅度 9.4% 推估，單檔資金上限約 10%。"
-      },
-      "backtest": []
-    },
     {
       "code": "2330",
       "name": "台積電",
@@ -426,7 +314,7 @@
         "marketComposite": -0.07,
         "techComposite": -0.18,
         "taiwanComposite": -0.24,
-        "asiaComposite": 1.16,
+        "asiaComposite": 1.15,
         "globalComposite": 0.42,
         "groupImpacts": {
           "semiconductor": -0.33
@@ -460,7 +348,7 @@
         "價格貼近 20 日線上方，適合順勢回測布局。",
         "收盤價高於多條均線扣抵值，有利 5/10/20 日線延續上揚。",
         "20 日線附近守穩，中短期防守線明確。",
-        "日韓股市偏多（1.16%），有利亞洲資金情緒。",
+        "日韓股市偏多（1.15%），有利亞洲資金情緒。",
         "同族群當日平均上漲 0.92%，族群資金順風。",
         "動能(126-21) 19.9%，位於可延續區間。"
       ],
@@ -540,7 +428,7 @@
         "marketComposite": -0.07,
         "techComposite": -0.18,
         "taiwanComposite": -0.24,
-        "asiaComposite": 1.16,
+        "asiaComposite": 1.15,
         "globalComposite": 0.42,
         "groupImpacts": {},
         "soxChange": -0.33,
@@ -578,7 +466,7 @@
         "收盤價高於多條均線扣抵值，有利 5/10/20 日線延續上揚。",
         "上漲段推進明確且拉回幅度不深，趨勢角度仍偏健康。",
         "量比約 2.3 倍且收盤不弱，代表當日資金有表態。",
-        "日韓股市偏多（1.16%），有利亞洲資金情緒。",
+        "日韓股市偏多（1.15%），有利亞洲資金情緒。",
         "動能(126-21) 82.9%，位於可延續區間。",
         "預估風險報酬比約 1.7，符合先規劃停損再進場。"
       ],
@@ -655,7 +543,7 @@
         "marketComposite": -0.07,
         "techComposite": -0.18,
         "taiwanComposite": -0.24,
-        "asiaComposite": 1.16,
+        "asiaComposite": 1.15,
         "globalComposite": 0.42,
         "groupImpacts": {},
         "soxChange": -0.33,
@@ -692,7 +580,7 @@
         "均線糾結後向上發散，屬等待表態後的偏多訊號。",
         "拉回上揚 5 日線有撐，符合順勢拉回觀察。",
         "20 日線附近守穩，中短期防守線明確。",
-        "日韓股市偏多（1.16%），有利亞洲資金情緒。",
+        "日韓股市偏多（1.15%），有利亞洲資金情緒。",
         "接近年高 97.5%，強勢結構完整。"
       ],
       "risks": [
@@ -773,7 +661,7 @@
         "marketComposite": -0.07,
         "techComposite": -0.18,
         "taiwanComposite": -0.24,
-        "asiaComposite": 1.16,
+        "asiaComposite": 1.15,
         "globalComposite": 0.42,
         "groupImpacts": {},
         "soxChange": -0.33,
@@ -809,7 +697,7 @@
         "收盤價高於多條均線扣抵值，有利 5/10/20 日線延續上揚。",
         "拉回上揚 5 日線有撐，符合順勢拉回觀察。",
         "上漲段推進明確且拉回幅度不深，趨勢角度仍偏健康。",
-        "日韓股市偏多（1.16%），有利亞洲資金情緒。",
+        "日韓股市偏多（1.15%），有利亞洲資金情緒。",
         "動能(126-21) 25.8%，位於可延續區間。"
       ],
       "risks": [
@@ -889,7 +777,7 @@
         "marketComposite": -0.07,
         "techComposite": -0.18,
         "taiwanComposite": -0.24,
-        "asiaComposite": 1.16,
+        "asiaComposite": 1.15,
         "globalComposite": 0.42,
         "groupImpacts": {
           "semiconductor": -0.33
@@ -924,7 +812,7 @@
         "收盤價高於多條均線扣抵值，有利 5/10/20 日線延續上揚。",
         "拉回上揚 5 日線有撐，符合順勢拉回觀察。",
         "量比約 3.1 倍且收盤不弱，代表當日資金有表態。",
-        "日韓股市偏多（1.16%），有利亞洲資金情緒。",
+        "日韓股市偏多（1.15%），有利亞洲資金情緒。",
         "同族群當日平均上漲 0.92%，族群資金順風。",
         "預估風險報酬比約 1.7，符合先規劃停損再進場。"
       ],
@@ -1002,7 +890,7 @@
         "marketComposite": -0.07,
         "techComposite": -0.18,
         "taiwanComposite": -0.24,
-        "asiaComposite": 1.16,
+        "asiaComposite": 1.15,
         "globalComposite": 0.42,
         "groupImpacts": {
           "aiHardware": -0.33
@@ -1040,7 +928,7 @@
         "收盤價高於多條均線扣抵值，有利 5/10/20 日線延續上揚。",
         "均線糾結後向上發散，屬等待表態後的偏多訊號。",
         "拉回上揚 5 日線有撐，符合順勢拉回觀察。",
-        "日韓股市偏多（1.16%），有利亞洲資金情緒。",
+        "日韓股市偏多（1.15%），有利亞洲資金情緒。",
         "同族群當日平均上漲 0.81%，族群資金順風。"
       ],
       "risks": [
@@ -1059,9 +947,148 @@
         "positionSizing": "單筆風險建議控制在總資金 0.9%，以止損幅度 6.7% 推估，單檔資金上限約 13%。"
       },
       "backtest": []
+    },
+    {
+      "code": "3711",
+      "name": "日月光投控",
+      "market": "上市",
+      "pe": null,
+      "tradeValue": 7573312111,
+      "score": 72,
+      "signal": "等待進場",
+      "latestDate": "2026-09-24",
+      "latestPrice": 699,
+      "change5d": 13.84,
+      "change10d": 7.54,
+      "change20d": 15.54,
+      "change60d": -3.85,
+      "metrics": {
+        "ma5": 677.2,
+        "ma10": 642.7,
+        "ma20": 626.85,
+        "ma60": 618.93,
+        "rsi14": 73.8,
+        "macd": 19.95,
+        "volume20d": 17109006,
+        "std20": 0.0319,
+        "std60": 0.0425,
+        "avg20TradeValue": 10720565916,
+        "maxRange20": 6.37,
+        "rsv60": 1,
+        "intentFactor60": -0.0206,
+        "momentum126_21": 52.19,
+        "nearYearHigh": 0.961,
+        "drawdown20": 0,
+        "priceActionScore": 18,
+        "maDeduct": 3,
+        "volumeRatio": 0.62,
+        "support": 565,
+        "resistance": 711,
+        "rewardRisk": 0.1,
+        "resistanceRoomPct": 1.72,
+        "patternScore": 14,
+        "stopPct": 11.7,
+        "strictRisk": false
+      },
+      "patterns": {
+        "score": 14,
+        "bias": "偏多",
+        "bullish": [
+          "W 底（雙底）成形且突破頸線，屬偏多訊號。"
+        ],
+        "bearish": [],
+        "watch": [
+          "擴散三角波動放大，先等止穩或明確突破。"
+        ]
+      },
+      "overnight": {
+        "bias": "neutral",
+        "themes": [
+          "semiconductor"
+        ],
+        "marketComposite": -0.07,
+        "techComposite": -0.18,
+        "taiwanComposite": -0.24,
+        "asiaComposite": 1.15,
+        "globalComposite": 0.42,
+        "groupImpacts": {
+          "semiconductor": -0.33
+        },
+        "soxChange": -0.33,
+        "dowChange": -0.31
+      },
+      "marketFlow": {
+        "themes": [
+          "semiconductor"
+        ],
+        "marketMove": 0.2,
+        "themeMove": 0.92,
+        "isHeadwind": false
+      },
+      "sellWarning": {
+        "score": 12,
+        "level": "低",
+        "reasons": [
+          "反彈量比僅 0.6 倍，缺少放量確認。",
+          "60 日相對位置 1.00 偏高，靠近短線高位。"
+        ],
+        "action": "提高警戒：保留核心部位，5-10 天內若量價轉弱就先出一半。"
+      },
+      "reasons": [
+        "價格位於 20 日線上方，且 20 日線高於 60 日線，趨勢偏多。",
+        "價格與 5 日線、20 日線維持多方排列，短中期動能一致。",
+        "流動性足夠，進出場較不容易卡住。",
+        "近 10 日漲幅 7.5%，動能穩定且不過熱。",
+        "短期波動低於中期波動，結構較穩定。",
+        "MACD 在零軸上方，動能結構偏多。",
+        "W 底（雙底）成形且突破頸線，屬偏多訊號。",
+        "收盤價高於多條均線扣抵值，有利 5/10/20 日線延續上揚。",
+        "拉回上揚 5 日線有撐，符合順勢拉回觀察。",
+        "上漲段推進明確且拉回幅度不深，趨勢角度仍偏健康。",
+        "日韓股市偏多（1.15%），有利亞洲資金情緒。",
+        "同族群當日平均上漲 0.92%，族群資金順風。",
+        "動能(126-21) 52.2%，位於可延續區間。",
+        "接近年高 96.1%，強勢結構完整。"
+      ],
+      "risks": [
+        "量比 0.62 未放大，上漲缺少成交量確認。",
+        "價格意圖因子 -0.021 偏低，可能是盤整末端。",
+        "60 日相對位置 1.00 過高，留意拉回風險。",
+        "量比約 0.6 倍，量能不足時突破容易失真。",
+        "距離近 25 日壓力只剩 1.7%，追價風險報酬不佳。",
+        "預估風險報酬比不足，需等更靠近支撐才有操作價值。"
+      ],
+      "plan": {
+        "horizon": "建議持有 5 個交易日，若提前達標或轉弱可提早調整。",
+        "entry": "分批區間 NT$ 623.72 - 707.39。優先等回測 5 日線/20 日線或支撐區不破；若走突破，盤中突破近壓 NT$ 711 後才觸發，且不要追超過突破價約 6%。本版回測以 5 個交易日節奏為主，不過早被 5 日線洗出。",
+        "takeProfit": "先看 NT$ 707.45；收盤淨報酬曾達 3% 後，若自高點回落 5 個百分點則提前停利，5 天內續強再看 NT$ 707.45。",
+        "stopLoss": "收盤跌破 NT$ 617.45 或走勢轉弱先退，若 2 天內都站不上 5 日線也要主動降部位。",
+        "exitWarning": "偏短打節奏：若在 5 天內沒有延續上攻，先減碼保留現金。 已有獲利時，以約 1% 報酬保護線作為最低停利參考。",
+        "positionSizing": "單筆風險建議控制在總資金 0.9%，以止損幅度 11.7% 推估，單檔資金上限約 8%。"
+      },
+      "backtest": []
     }
   ],
   "warnings": [
-    "7856 漢測: 歷史資料不足"
+    "7856 漢測: 歷史資料不足",
+    "3455 由田: 429 Too Many Requests",
+    "3576 聯合再生: 429 Too Many Requests",
+    "6205 詮欣: 429 Too Many Requests",
+    "4542 科嶠: 429 Too Many Requests",
+    "2618 長榮航: 429 Too Many Requests",
+    "3019 亞光: 429 Too Many Requests",
+    "6196 帆宣: 429 Too Many Requests",
+    "2884 玉山金: 429 Too Many Requests",
+    "2883 凱基金: 429 Too Many Requests",
+    "3044 健鼎: 429 Too Many Requests",
+    "6727 亞泰金屬: 429 Too Many Requests",
+    "3680 家登: 429 Too Many Requests",
+    "5351 鈺創: 429 Too Many Requests",
+    "3234 光環: 429 Too Many Requests",
+    "2615 萬海: 429 Too Many Requests",
+    "2609 陽明: 429 Too Many Requests",
+    "4938 和碩: 429 Too Many Requests",
+    "6199 天品: 429 Too Many Requests",
+    "3691 碩禾: 429 Too Many Requests"
   ]
 }
